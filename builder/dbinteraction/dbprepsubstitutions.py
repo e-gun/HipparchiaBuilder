@@ -107,6 +107,7 @@ def dbstrippedliner(dbunreadyversion):
 	unmarkup = re.compile(r'\</hmu_.*?\>')
 	span = re.compile(r'<span .*?>')
 	unspan = re.compile(r'</span>')
+	combininglowerdot = re.compile(u'\u0323')
 	# this will help with some and hurt with others? need to double-check
 	squarebrackets = re.compile(r'\[.*?\]')
 	straydigits = re.compile(r'\d')
@@ -127,6 +128,7 @@ def dbstrippedliner(dbunreadyversion):
 		clean = re.sub(span, '', clean)
 		clean = re.sub(unspan, '', clean)
 		clean = re.sub(straypunct, '', clean)
+		clean = re.sub(combininglowerdot, '', clean)
 		line.append(clean)
 		dbreadyversion.append(line)
 

@@ -203,7 +203,7 @@ def quotesubstitutesa(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_quote_markup value="' + match.group(1) + '" />'
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -230,7 +230,7 @@ def quotesubstitutesb(match):
 		substitute = substitutions[val][0] + core + substitutions[val][1]
 	else:
 		substitute = '<hmu_unhandled_quote_markup value="' + match.group(1) + '" />' + core
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -246,9 +246,12 @@ def poundsubstitutes(match):
 	
 	substitutions = {
 		# u'\u',
-		1135: u'\u002f\u002f',
 		# 1326: idiosync magical char
+		1136: u'\u2112',
+		1135: u'\u002f\u002f',
+		1126: u'\u004f',
 		1115: u'\u007c',
+		1110: u'\u002d',
 		1109: u'\u003d',
 		1108: u'\u0058\u0036',
 		1107: u'\u0053\u0335\u0053\u0336',
@@ -278,7 +281,9 @@ def poundsubstitutes(match):
 		458: u'\u0387',
 		456: u'\u2e0e',
 		454: u'\u2e10',
+		453: u'\u2e11',
 		452: u'\u2310',
+		313: u'\u2e0e',
 		310: u'\u2e0e',
 		305: u'\u2e0e',
 		303: u'›',
@@ -350,7 +355,7 @@ def poundsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_pound_sign value="'+match.group(1)+'" />▦'
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -386,6 +391,7 @@ def percentsubstitutes(match):
 		99: u'\u2248',
 		98: u'\u0022',
 		95: u'\u1dc1',
+		93: u'\u1dc0',
 		94: u'\u0307',
 		91: u'\u0485',
 		49: u'\u23d1\u23d1\u23d1',
@@ -411,6 +417,7 @@ def percentsubstitutes(match):
 		26: u'\u0304',
 		25: u'\u0327',
 		24: u'\u0342',
+		20: u'\u0301',
 		19: u'\u2013',
 		18: u'\u0025', # look out for future problems: '
 		17: u'\u2016',
@@ -433,7 +440,7 @@ def percentsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_percent_sign value="' + match.group(1) + '" />▩'
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -475,7 +482,7 @@ def leftbracketsubstitutions(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_left_bracket value="' + match.group(1) + '" />'
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -511,7 +518,7 @@ def rightbracketsubstitutions(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_right_bracket value="' + match.group(1) + '" />'
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -554,7 +561,7 @@ def atsignsubstitutions(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_atsign value="' + match.group(1) + '" />'
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -583,7 +590,7 @@ def ltcurlybracketsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_ltcurlybracket value="' + match.group(1) + '" />'
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -610,7 +617,7 @@ def rtcurlybracketsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_rtcurlybracket value="' + match.group(1) + '" />'
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -658,7 +665,7 @@ def ltanglebracketsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_ltangle value="' + match.group(1) + '" />'
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -707,7 +714,7 @@ def rtanglebracketsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_rtangle value="' + match.group(1) + '" />'
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -743,7 +750,7 @@ def dollarssubstitutes(match):
 		substitute = substitutions[val][0] + core + substitutions[val][1]
 	else:
 		substitute = '<hmu_unhandled_greek_font_shift value="' + match.group(1) + '" />' + core
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
@@ -777,7 +784,7 @@ def andsubstitutes(match):
 		substitute = substitutions[val][0] + core + substitutions[val][1]
 	else:
 		substitute = '<hmu_unhandled_latin_font_shift value="' + match.group(1) + '" />' + core
-		print(substitute)
+		print('\t',substitute)
 	
 	return substitute
 
