@@ -281,6 +281,7 @@ def poundsubstitutes(match):
 		452: u'\u2310',
 		310: u'\u2e0e',
 		305: u'\u2e0e',
+		303: u'›',
 		223: u'\u2605',
 		220: u'\u260d',
 		219: u'\u2649',
@@ -334,6 +335,7 @@ def poundsubstitutes(match):
 		12: u'\u2014',
 		11: u'\u03ff',
 		10: u'\u03fd',
+		9: u'\u0301',
 		18: u'《',
 		6: u'\u2e0f',
 		8: u'\u2e10',
@@ -452,6 +454,7 @@ def leftbracketsubstitutions(match):
 		22: u'u\23a8',
 		21: u'u\23aa',
 		20: u'u\23a7',
+		17: u'\u230a\u230a',
 		14: u'\u007c\u003a',
 		12: u'\u2192',
 		13: u'\u005b', # supposed to be italic as well
@@ -488,6 +491,7 @@ def rightbracketsubstitutions(match):
 	
 	substitutions = {
 		# u'\u',
+		17: u'\u230b\u230b',
 		14: u'\003a\u007c',
 		13: u'\u005d',  # supposed to be italic as well
 		11: u'u\208e',
@@ -863,6 +867,13 @@ def findromanwithingreek(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
+	
+	# &1Catenae &(Novum Testamentum): on but not off
+	
+	search = r'&\d{0,2}(.*?)(\s{0,1}█)'
+	replace = r'<hmu_roman_in_a_greek_text>\1</hmu_roman_in_a_greek_text>\2'
+	texttoclean = re.sub(search, replace, texttoclean)
+	
 	search = r'(\&(\d{0,2}))(.*?)\$(\d{0,2})'
 	replace = r'<hmu_roman_in_a_greek_text>\3</hmu_roman_in_a_greek_text>'
 	texttoclean = re.sub(search, replace, texttoclean)

@@ -269,7 +269,8 @@ def replacegreekbetacode(texttoclean):
 		# note that the colon is already used in the comments
 		(r'(?<!\d)\:', u'\u00b7'),
 		## combining dot is \u0323 [try \u0325?]: but see the note. The Unicode Standard 5.0 does not have a non-combining clone for Combining Dot Below. Currently, 002E Period represents a ‘best fit’ solution.
-		(r'\?', u'\u002e'),
+		#(r'\?', u'\u002e'),
+		(r'\?', u'\u0323'),
 		## exclmation point not properly documented
 		(r'\!', u'\u2219')
 	)

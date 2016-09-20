@@ -30,6 +30,8 @@ class Author(object):
 	def addauthtabname(self, addauthtabname):
 		self.addauthtabname = addauthtabname
 		self.shortname = re.sub(r'(.*\d)(.*?)(\&(.{0,}))', r'\2', self.addauthtabname)
+		if self.shortname[-1] == ' ':
+			self.shortname = self.shortname[:-1]
 		try:
 			self.name = shortname
 		except:
