@@ -834,7 +834,7 @@ def latinloadcanon(canonfile, cursor):
 # 	d = convertdates(k)
 # 	print(k, ' --> ', d)
 
-def resetbininfo(relativepath):
+def resetbininfo(relativepath, cursor, dbconnection):
 
 	bininfo = {
 		'genre': 'LIST3CLA.BIN',

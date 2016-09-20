@@ -45,7 +45,7 @@ def buildcorpus(greekdatapath, latindatapath,  dbconnection, cursor):
 			dbconnection.commit()
 			time.sleep(.1)
 
-	parse_binfiles.resetbininfo(greekdatapath)
+	parse_binfiles.resetbininfo(greekdatapath, cursor, dbconnection)
 
 	return True
 

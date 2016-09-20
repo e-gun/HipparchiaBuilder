@@ -153,8 +153,8 @@ def dbfindhypens(dbunreadyversion):
 	dbreadyversion = []
 	workingcolumn = 2
 	previous = dbunreadyversion[0]
-	punct = re.compile('[%s]' % re.escape(string.punctuation))
-	hmu = re.compile(r'<(|/)hmu.*?>')
+	punct = re.compile('[%s]' % re.escape(string.punctuation+'“”·'))
+	markup = re.compile(r'<(|/).*?>')
 
 	for line in dbunreadyversion[1:]:
 		try:
@@ -162,19 +162,31 @@ def dbfindhypens(dbunreadyversion):
 			# a good opportunity to skip adding a line to dbreadyversion
 			prevend = previous[workingcolumn].rsplit(None, 1)[1]
 			if prevend[-1] == '-':
+				# kill markup the sneaky way
+				e = prevend.split('>')
+				prevend = e[-1]
 				thisstart = line[workingcolumn].split(None, 1)[0]
+				s = thisstart.split('<')
+				thisstart = s[0]
 				hyphenated = prevend[:-1] + thisstart
-				hyphenated = re.sub(hmu,'',hyphenated)
-				if re.search(punct,hyphenated[-1]) != None:
-					hyphenated = hyphenated[:-1]
+				# hyphenated = re.sub(markup,'',hyphenated)
+				#if re.search(punct,hyphenated[-1]) != None:
+				#	hyphenated = hyphenated[:-1]
+				hyphenated = re.sub(punct, '', hyphenated)
 				stripped = stripaccents(hyphenated)
 				previous.append(hyphenated+' '+stripped)
 			elif prevend[-2:-1] == '- ':
+				# kill markup the sneaky way
+				e = prevend.split('>')
+				prevend = e[-1]
 				thisstart = line[workingcolumn].split(None, 1)[0]
+				s = thisstart.split('<')
+				thisstart = s[0]
 				hyphenated = prevend[:-2] + thisstart
-				hyphenated = re.sub(hmu,'',hyphenated)
-				if re.search(punct,hyphenated[-1]) != None:
-					hyphenated = hyphenated[:-1]
+				# hyphenated = re.sub(markup, '', hyphenated)
+				# if re.search(punct,hyphenated[-1]) != None:
+				#	hyphenated = hyphenated[:-1]
+				hyphenated = re.sub(punct, '', hyphenated)
 				stripped = stripaccents(hyphenated)
 				previous.append(hyphenated+' '+stripped)
 			else:
