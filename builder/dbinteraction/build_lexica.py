@@ -107,6 +107,9 @@ def formatliddellandscott(dbconnection, cursor, topdir):
 				body = re.sub(greekfinder, lexica.gr2betaconverter, body)
 				body = re.sub(groptfinder, lexica.gr2betaconverter, body)
 				body = re.sub(r' lang="greek"','',body)
+				body = re.sub(r' λανγ="γρεεκ"','', body)
+				body = re.sub(r'<γεν ','<gen ',body)
+				body = re.sub(r'<ιτψπε ','<itype ',body)
 				stripped = lexica.stripaccents(entry)
 
 				query = 'INSERT INTO ' + dictdb + ' (entry_name, unaccented_entry, id_number, entry_type, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s)'
@@ -346,23 +349,6 @@ def formatenglishentries(englishdictionary):
 	return newdictionary
 
 
-def uploadenglishdict(englishdictionary):
-	## INCOMPLETE
-	for entry in englishdictionary:
-		query = 'INSERT INTO '
-
-	return
 
 
 
-
-
-# LONG loads for the greek: be careful
-# grammarloader(greeklemmata, greeklemmadb, 'g')
-# analysisloader(greekanalyses, gkanalysisdb, 'g')
-# analysisloader(latinanalyses, latanalysisdb, 'l')
-# grammarloader(latinlemmata, latinlemmadb, 'l')
-
-# if you have done it once and like the results, you probably don't ever want to do it again
-# loadlewisandshort(lewisandshortxml_pt1, lewisandshortxml_pt2)
-# loadlsj(lsjlist)
