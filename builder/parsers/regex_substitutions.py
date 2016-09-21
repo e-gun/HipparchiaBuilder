@@ -394,6 +394,7 @@ def percentsubstitutes(match):
 		93: u'\u1dc0',
 		94: u'\u0307',
 		91: u'\u0485',
+		80: u'\u0076\u002E', # supposed to put the 'v' in italics too
 		49: u'\u23d1\u23d1\u23d1',
 		48: u'u23d1\u23d1',
 		47: u'\u10111',
@@ -876,16 +877,34 @@ def findromanwithingreek(texttoclean):
 	"""
 	
 	# &1Catenae &(Novum Testamentum): on but not off
+	# a line should turn things off; but what if it does not
+	# this yields ordering issues: if you find █, then you should keep it; if you find $, you should drop it
+	# and if you do a before b, then you screw up the ability of b to do its thing
+	# so we do this in two parts: first grab the whole line, then make sure there is not a section with a $ in it
 	
-	search = r'&\d{0,2}(.*?)(\s{0,1}█)'
-	replace = r'<hmu_roman_in_a_greek_text>\1</hmu_roman_in_a_greek_text>\2'
-	texttoclean = re.sub(search, replace, texttoclean)
+	search = re.compile(r'(&\d{0,2})(.*?)(\s{0,1}█)')
+	texttoclean = re.sub(search, doublecheckromanwithingreek, texttoclean)
 	
-	search = r'(\&(\d{0,2}))(.*?)\$(\d{0,2})'
-	replace = r'<hmu_roman_in_a_greek_text>\3</hmu_roman_in_a_greek_text>'
-	texttoclean = re.sub(search, replace, texttoclean)
 	return texttoclean
 
+
+def doublecheckromanwithingreek(match):
+	"""
+	only works in conjunction with findromanwithingreek()
+	:param matchgroups:
+	:return:
+	"""
+	internaltermination = re.compile(r'(\&\d{0,2})(.*?)\$(\d{0,2})')
+	if re.search(internaltermination, match.group(1) + match.group(2)) is not None:
+		substitution = re.sub(internaltermination, r'<hmu_roman_in_a_greek_text>\2</hmu_roman_in_a_greek_text>',
+		                      match.group(1) + match.group(2))
+	else:
+		substitution = r'<hmu_roman_in_a_greek_text>' + match.group(2) + r'</hmu_roman_in_a_greek_text>'
+	
+	substitution += match.group(3)
+	# print(match.group(1) + match.group(2),'\n\t',substitution)
+	
+	return substitution
 
 ##
 ## cleanup of the cleaned up: generative citeable texts
