@@ -390,6 +390,7 @@ def percentsubstitutes(match):
 		100: u'\u003b',
 		99: u'\u2248',
 		98: u'\u0022',
+		97: u'\u0308',
 		95: u'\u1dc1',
 		93: u'\u1dc0',
 		94: u'\u0307',
@@ -790,45 +791,55 @@ def andsubstitutes(match):
 	return substitute
 
 #
-# extras
+# language interchanges
 #
 
+
 def replacelatinbetacode(texttoclean):
-	textualmarkuptuples = []
-
-	# greek within latin: handle it now by calling the greek betacode decoder
-	# a big problem: the accented latin parser will screw up 'A\', etc
-	# problem of lines that start greek and then never close the greek
-	# gellius does this in the preface
-	# search = r'(0x\d\d\s)(\$\d{0,2})(.*?)(\d)'
-	# search = r'(?<=\d)(\s\$\d{0,2})(.*?)(?=\d)'
-	# replace = r' <hmu_greek_in_a_latin_text>\2</hmu_greek_in_a_latin_text> '
-	# textualmarkuptuples.append((search, replace))
-	#
-	# search = r'(?<=(\s/>))(\$\d{0,2})(.*?)(?=\d)'
-	# replace = r' <hmu_greek_in_a_latin_text>\3</hmu_greek_in_a_latin_text> '
-	# textualmarkuptuples.append((search, replace))
-
-	# on but not off again: Plautus, Bacchides, 1163
-	search = r'\$\d{0,2}(.*?)(?=█)'
-	replace = r'<hmu_greek_in_a_latin_text>\1</hmu_greek_in_a_latin_text>'
-	textualmarkuptuples.append((search, replace))
-
-	search = r'\$(.*?)\&'
-	replace = r'<hmu_greek_in_a_latin_text>\1</hmu_greek_in_a_latin_text>'
-	textualmarkuptuples.append((search, replace))
-
-	## guess what: line-ends don't turn the greek off even as line starts turn it back on (and then off again later)
-
-	for reg in textualmarkuptuples:
-		texttoclean = re.sub(reg[0], reg[1], texttoclean)
-
+	"""
+	first look for greek inside of a latin text
+	the add in latin accents
+	
+	:param texttoclean:
+	:return:
+	"""
+	# on but not off again: Plautus, Bacchides, 1163 + Gellius NA pr.
+	# a line should turn things off; but what if it does not?
+	# so we do this in two parts: first grab the whole line, then make sure there is not a section with a $ in it
+	# if there is: turn off roman at the $; if there is not turn of roman at line end
+	
+	search = re.compile(r'(\$\d{0,2})(.*?)(\s{0,1}█)')
+	texttoclean = re.sub(search, doublecheckgreekwithinlatin, texttoclean)
+	
 	search = r'<hmu_greek_in_a_latin_text>.*?</hmu_greek_in_a_latin_text>'
 	texttoclean = re.sub(search, parsegreekinsidelatin, texttoclean)
 	
 	texttoclean = latinadiacriticals(texttoclean)
-
+	
 	return texttoclean
+
+
+def doublecheckgreekwithinlatin(match):
+	"""
+	only works in conjunction with replacelatinbetacode()
+	:param match:
+	:return:
+	"""
+	
+	linetermination = re.compile(r'(\$\d{0,2})(.*?)(\s{0,1}$)')
+	internaltermination = re.compile(r'(\$\d{0,2})(.*?)\&(\d{0,2})')
+	if re.search(internaltermination, match.group(1) + match.group(2)) is not None:
+		substitution = re.sub(internaltermination, r'<hmu_greek_in_a_latin_text>\2</hmu_greek_in_a_latin_text>',
+		                      match.group(1) + match.group(2))
+		# OK, you got the internal ones, but a final $xxx can remain at the end of the line
+		substitution = re.sub(linetermination, r'<hmu_greek_in_a_latin_text>\2</hmu_greek_in_a_latin_text>\3', substitution)
+	else:
+		substitution = r'<hmu_greek_in_a_latin_text>' + match.group(2) + r'</hmu_greek_in_a_latin_text>'
+	
+	substitution += match.group(3)
+	# print(match.group(1) + match.group(2),'\n\t',substitution)
+	
+	return substitution
 
 
 def latinadiacriticals(texttoclean):
@@ -877,10 +888,9 @@ def findromanwithingreek(texttoclean):
 	"""
 	
 	# &1Catenae &(Novum Testamentum): on but not off
-	# a line should turn things off; but what if it does not
-	# this yields ordering issues: if you find █, then you should keep it; if you find $, you should drop it
-	# and if you do a before b, then you screw up the ability of b to do its thing
+	# a line should turn things off; but what if it does not?
 	# so we do this in two parts: first grab the whole line, then make sure there is not a section with a $ in it
+	# if there is: turn off roman at the $; if there is not turn of roman at line end
 	
 	search = re.compile(r'(&\d{0,2})(.*?)(\s{0,1}█)')
 	texttoclean = re.sub(search, doublecheckromanwithingreek, texttoclean)
@@ -894,10 +904,13 @@ def doublecheckromanwithingreek(match):
 	:param matchgroups:
 	:return:
 	"""
+	linetermination = re.compile(r'(\&\d{0,2})(.*?)(\s{0,1}$)')
 	internaltermination = re.compile(r'(\&\d{0,2})(.*?)\$(\d{0,2})')
 	if re.search(internaltermination, match.group(1) + match.group(2)) is not None:
 		substitution = re.sub(internaltermination, r'<hmu_roman_in_a_greek_text>\2</hmu_roman_in_a_greek_text>',
 		                      match.group(1) + match.group(2))
+		substitution = re.sub(linetermination, r'<hmu_roman_in_a_greek_text>\2</hmu_roman_in_a_greek_text>\3',
+		                      substitution)
 	else:
 		substitution = r'<hmu_roman_in_a_greek_text>' + match.group(2) + r'</hmu_roman_in_a_greek_text>'
 	
