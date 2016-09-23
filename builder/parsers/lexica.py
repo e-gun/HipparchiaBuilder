@@ -75,7 +75,7 @@ def stripaccents(greek):
 	return greek
 
 
-def greekvowellengths(texttoclean):
+def greekvowellengths(match):
 	"""
 	the non-documented long-and-short codes
 	this can/will confuse lexical lookups from greek passages
@@ -84,7 +84,7 @@ def greekvowellengths(texttoclean):
 	"""
 	textualmarkuptuples = []
 
-	ttc = texttoclean.group(0)
+	ttc = match.group(0)
 
 	betacodetuples = (
 		(r'A_', u'\u1fb1'),

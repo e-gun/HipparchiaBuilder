@@ -58,4 +58,4 @@ for s in shortnames:
 			# there was no e[1]
 			pass
 		
-pickle.dump(abbreviations, open( outdir+'abbreviations.p', 'wb' ) )
+# pickle.dump(abbreviations, open( outdir+'abbreviations.p', 'wb' ) )

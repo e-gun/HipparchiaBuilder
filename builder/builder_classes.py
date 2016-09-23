@@ -168,7 +168,8 @@ class Opus(object):
 		self.language = language
 		self.worknumber = int(worknumber)
 		if '$' in title:
-			title = betacode_to_unicode.replacegreekbetacode(title)
+			title = regex_substitutions.replacelatinbetacode(title)
+			title = re.sub(r'<(/|)hmu_greek_in_a_latin_text>','',title)
 			self.title = re.sub(r'(\$|\&|\d)', '', title)
 		else:
 			self.title = title

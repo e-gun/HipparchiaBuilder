@@ -117,7 +117,7 @@ def formatliddellandscott(dbconnection, cursor, topdir):
 				cursor.execute(query, data)
 				if int(id[1:]) % 1000 == 0:
 					# very consistently died in the middle of entry n29985, but seemingly from overloading the DB, not from the entry itself
-					# LSJ has a similar problem: c. 30k lines is about all we are good for before a pause
+					# LSJ has a similar problem: c. 30k lines is about all we are good for before a pause; 32,768?
 					print(id)
 					dbconnection.commit()
 					time.sleep(.1)
@@ -298,57 +298,4 @@ def findlemmafiles(lemmalanguage, lemmabasedir):
 
 	fileanddb = [lemmabasedir+lemmadict[lemmalanguage],lemmadb[lemmalanguage]]
 
-
 	return fileanddb
-
-# english not working yet
-
-def formatenglishentries(englishdictionary):
-	## still screwing up some entries where the POS arrives irregularly
-	## just skip that?
-
-	f = open(englishdictionary, 'r')
-	d = f.readlines()
-	f.close()
-
-	# testing
-	# d = englishdictionary
-
-	newdictionary=[]
-	for entry in d:
-		newentry = []
-		# find entry and pos.
-		s = re.match('(.*?)\s',entry)
-		# s = re.search(r'(^.*?)(\s\\.*?\\*\s)(.*?\.)\t(.*?)', entry)
-		newentry.append(s.group(1))
-		entry = entry[len(s.group(0)):]
-		s = re.match(r'\\.*\\', entry)
-		try:
-			entry = entry[len(s.group(0)):]
-		except:
-			pass
-		s = re.match(r'.*?(\w{1,}\.)\t', entry)
-		try:
-			newentry.append(s.group(1))
-		except:
-			newentry.append('')
-		try:
-			entry = entry[len(s.group(0))+1:]
-		except:
-			pass
-		# remove that stuff so we just have the headings left
-		# entry = re.sub(r'(.*?)\s\\.*?\\*\s(.*?\.)\t','',entry)
-		# remove loci
-		entry = re.sub(r'\[.*?\]','',entry)
-		# remove leading + multiple spaces and tabs
-		entry = re.sub(r'^\s{1,}', '', entry)
-		entry = re.sub(r'\t', '', entry)
-		entry = re.sub(r'\s{2,}', ' ', entry)
-		newentry.append(entry)
-		newdictionary.append(newentry)
-	return newdictionary
-
-
-
-
-

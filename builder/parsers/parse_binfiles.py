@@ -722,6 +722,9 @@ def modifygkworksdb(newworkinfo, cursor):
 	except:
 		p = ''
 	
+	p = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, p)
+	p = re.sub(r' $', '', p)
+	
 	try:
 		g = genre.group(1)
 	except:
