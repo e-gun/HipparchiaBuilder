@@ -3,10 +3,15 @@ import struct
 import binascii
 import re
 import psycopg2
+import configparser
 from builder import parsers
 from builder import file_io
 from builder.parsers.swappers import hextohighunicode
 
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+tlg = config['io']['tlg']
 
 """
 labels: H-pack
@@ -869,41 +874,30 @@ def resetbininfo(relativepath, cursor, dbconnection):
 	
 	return
 
-
-# TO DO
-# could try to add in missing genre info via the epithets data
-# a match of the first five chars is a match?
-# at the moment "Isaeus Orat. " is not assigned to a genre...
-
-# testing
-
-# resetbininfo('/Volumes/TLG_E/')
-
-# relativepath = '/Volumes/TLG_E/'
-# bininfo = { 'floruit': 'LIST3DAT.BIN'}
-# bininfo = {'epithet': 'LIST3EPI.BIN'}
-# dates = buildlabellist(relativepath + bininfo['floruit'])
-# epith = buildlabellist(relativepath + bininfo['epithet'])
-# numdates = convertdatelist(dates)
-#
-
-
-# print(dates)
-# print('\n\nintentionally left blank\n\n')
-# print(numdates)
-
-
-def linesout(txt,outfile):
-	f = open(outfile, 'w')
-	for item in txt:
-		f.write("%s\n" % item)
-	f.close()
-	return
-
-def streamout(txt,outfile):
-	f = open(outfile, 'w')
-	f.write(txt)
-	f.close()
-	return
-
-
+def peekatcanon(workdbname):
+	"""
+	an emergency appeal to the canon for a work's structure
+	:param workname:
+	:param worknumber:
+	:return:
+	"""
+	canonfile = tlg[:-3] + 'DOCCAN2.TXT'
+	txt = file_io.filereaders.highunicodefileload(canonfile)
+	txt += '\n<authorentry>'
+	
+	citfinder = re.compile(r'.*<citationformat>(.*?)</citationformat>.*')
+	
+	# regex patterns
+	txt = gkcanoncleaner(txt)
+	
+	structure = []
+	for line in txt:
+		if line[0:6] == '\t<work':
+			if re.search(workdbname[2:],line) is not None:
+				structure = re.sub(citfinder,r'\1',line)
+				# 'Book%3section%3line'
+				structure = structure.split('%3')
+				
+	structure.reverse()
+	
+	return structure

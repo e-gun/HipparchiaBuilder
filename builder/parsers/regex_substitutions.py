@@ -638,9 +638,9 @@ def ltanglebracketsubstitutes(match):
 		2: u'\u2035',
 		16: u'\u2035',
 		19: u'\u2035',
-		3: u'\u0361',
-		4: u'\u035c',
-		5: u'\u035d',
+		3: '',
+		4: '',
+		5: '',
 		6: r'<span class="superscript">', # hmu_shift_font_to_superscript
 		7: r'<span class="subscript">', # hmu_shift_font_to_subscript
 		8: '',
@@ -686,9 +686,9 @@ def rtanglebracketsubstitutes(match):
 		2: u'\u2032',
 		16: u'\u2032',
 		19: u'\u2032',
-		3: '',
-		4: '',
-		5: '',
+		3: u'\u0361',
+		4: u'\u035c',
+		5: u'\u035d',
 		6: r'</span>', # hmu_shift_font_to_superscript
 		7: r'</span>', # hmu_shift_font_to_subscript
 		8: u'\u0333',

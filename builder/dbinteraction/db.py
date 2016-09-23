@@ -2,6 +2,7 @@
 # assuming py35 or higher
 import json
 import re
+from builder.parsers.parse_binfiles import peekatcanon
 
 import psycopg2
 
@@ -52,10 +53,6 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 		else:
 			if index % 2000 == 0:
 				dbconnection.commit()
-				# cursor.close()
-				# del cursor
-				# cursor = dbconnection.cursor()
-				# time.sleep(1)
 
 			index += 1
 			wn = int(line[0])
@@ -70,9 +67,6 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 			workdbname = authorobject.universalid+'w'+wn
 			# workdbname = 'gr9999w999'
 
-			# KeyError: '001' raised for someone like 1646 &1Ptolemaeus &Hist.
-			# his corpus should look like this: "gr1646w003";"Fragmenta";"G";"";"line";"Fragment"
-			# but you can get a work '001' on line one of the file of someone like this: it will get set to '003' vel sim. in line two...
 			try:
 				wk = authorobject.works[authorobject.workdict[wn]]
 				wklvs = list(wk.structure.keys())
@@ -80,12 +74,15 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 					toplvl = wklvs.pop()
 				except:
 					# this does in fact seem to be at the bottom of a certain class of error; and it likely emerges from bad idx parsing: tough
-					ws = json.dumps(wk.structure)
-					# aws = json.dumps(authorobject.works)
-					print('could not find top level; workobject level list is empty: anum='+authorobject.universalid+' wn='+str(wk.worknumber)+' tit='+wk.title+' struct='+ws)
-					# print('compare to the authorobject: '+authorobject.universalid+' wks='+aws)
-					print()
-	
+					print('could not find top level; workobject level list is empty: anum='+authorobject.universalid+' wn='+str(wk.worknumber)+' tit='+wk.title)
+					if authorobject.universalid[0] == 'g':
+						print('\tin a cold sweat i am attempting to derive work structure from canon file')
+						labels = peekatcanon(workdbname)
+						toplvl = len(labels)
+						for i in range(0,toplvl):
+							wk.structure[i] = labels[i]
+						print('\tstructure set to',wk.structure)
+						
 				tups = line[1]
 				for lvl in range(0, len(tups)):
 					if lvl > toplvl:
