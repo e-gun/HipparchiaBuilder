@@ -913,27 +913,3 @@ def peekatcanon(workdbname):
 	
 	return structure
 
-
-# debug
-
-def streamout(txt,outfile):
-	f = open(outfile, 'w')
-	f.write(txt)
-	f.close()
-	return
-
-
-def linesout(txt,outfile):
-	f = open(outfile, 'w')
-	for item in txt:
-		f.write("%s\n" % item)
-	f.close()
-	return
-
-
-def canondebug(outfile):
-	print('cannon debug')
-	canonfile = tlg[:-3] + 'DOCCAN2.TXT'
-	txt = file_io.filereaders.highunicodefileload(canonfile)
-	txt = gkcanoncleaner(txt)
-	linesout(txt, outfile)
