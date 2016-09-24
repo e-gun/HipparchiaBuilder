@@ -29,70 +29,36 @@ class Author(object):
 
 	def addauthtabname(self, addauthtabname):
 		self.addauthtabname = addauthtabname
-		self.shortname = re.sub(r'(.*\d)(.*?)(\&(.{0,}))', r'\2', self.addauthtabname)
+		self.shortname = re.sub(r'(&.*?&).*?',r'\1',self.addauthtabname)
+		self.shortname = regex_substitutions.replacelatinbetacode(self.shortname+' █')
+		self.shortname = regex_substitutions.latinadiacriticals(self.shortname)
+		self.shortname = self.shortname[:-1]
 		if self.shortname[-1] == ' ':
 			self.shortname = self.shortname[:-1]
+		self.shortname = re.sub(r'<(/|)hmu_greek_in_a_latin_text>','', self.shortname)
+		self.shortname = re.sub(r'[&$\d]','',self.shortname)
+		
+		self.shortname = re.sub(r'[\d]', '', self.shortname)
+		self.shortname = re.sub(r'\x80(\w.*?)(\s|$)', r' (\1)\2', self.shortname)
+		self.shortname = re.sub(r'\x80.*?\)',r')',self.shortname)
+		
+		if re.sub(r'.*\x80(\w.*?)(\s|$)',r'\1',self.addauthtabname) != self.addauthtabname:
+			self.aka = re.sub(r'.*?\x80(\w.*?)(\\|\s|$)',r'\1 ',self.addauthtabname)
+			if self.aka[-1] == ' ':
+				self.aka = self.aka[:-1]
+			self.aka = self.aka.split('\x80')
+			self.aka = self.aka[0]
+		else:
+			self.aka = self.shortname
+			
 		try:
-			self.name = shortname
+			self.name = self.shortname
 		except:
 			self.name = addauthtabname
-		self.cleanname = re.sub(r'\d','',addauthtabname)
-		# hybrid greek-latin names
-		if re.search(r'.*?\$(.*?)\&.*?',self.cleanname) != False:
-			parts = self.cleanname.split(' ')
-			self.cleanname = ''
-			for part in parts:
-				part += ' '
-				if part[0]=='$':
-					part = betacode_to_unicode.replacegreekbetacode(part)
-				self.cleanname += part
-		self.cleanname = regex_substitutions.latinadiacriticals(self.cleanname)
-		self.cleanname = re.sub(r'[&$]','',self.cleanname)
-		self.cleanname = re.sub(r'(.{0,})\x80.{0,}', r'\1', self.cleanname)
-		if re.sub(r'.*\x80(.*?)', r'\1', self.addauthtabname) == self.addauthtabname:
-			self.aka = self.cleanname
-		else:
-			self.aka = re.sub(r'.*\x80(.*?)', r'\1', self.addauthtabname)
-		genredict = { 'Epic\.':'epic',
-		              'Alchem\.': 'alchemy',
-		              'Astrol\.': 'astrology',
-		              'Astron\.': 'astronomy',
-		              'Biogr\.': 'biography',
-		              'Bucol\.': 'bucolic',
-		              'Comic\.': 'comedy',
-		              'Doxog\.': 'doxography',
-		              'Doxogr\.': 'doxography',
-		              'Eleg\.': 'elegy',
-		              'Epig\.': 'epigram',
-		              'Epist\.': 'epistles',
-		              'Fab\.': 'fables',
-		              'Gramm\.': 'grammar',
-		              'Hist\.': 'history',
-		              'Iamb\.': 'iamb',
-		              'Lexicogr\.': 'lexicography',
-		              'Lyr\.': 'lyric',
-		              'Math\.': 'mathematics',
-		              'Mech\.': 'mechanics',
-		              'Med\.': 'medicine',
-		              'Mus\.': 'music',
-		              'Orat\.': 'oratory',
-		              'Paradox\.': 'paradoxography',
-		              'Phil\.': 'philosophy',
-		              'Poeta': 'poetry',
-		              'Rhet\.': 'rhetoric',
-		              'Scr\. Eccl\.': 'religion',
-		              'Scr\. Erot\.': 'novel',
-		              'Soph\.': 'sophistic',
-		              'Tact\.': 'tactics',
-		              'Theol\.': 'theology',
-		              'Trag\.': 'tragedy',
-		             }
-		self.genre = ''
-		for key in genredict:
-			if re.search(key,addauthtabname) is not None:
-				# be careful on the other end: 'poetry philosophy' needs to be two list items and not one
-				self.genre += genredict[key]+' '
-		self.genre = self.genre[:-1]
+		
+		# should get rid of cleanname some day
+		self.cleanname = self.shortname
+		
 
 
 class dbAuthor(object):
