@@ -497,10 +497,7 @@ def gkcanoncleaner(txt):
 	
 	#pounds = re.compile(r'\#(\d{1,4})')
 	#txt = re.sub(pounds, parsers.regex_substitutions.poundsubstitutes, txt)
-	#percents = re.compile(r'\%(\d{1,3})')
-	#txt = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, txt)
-	# txt = parsers.regex_substitutions.replaceaddnlchars(txt)
-	#txt = re.sub(r'`', r'', txt)
+	
 	
 	# pull out the subsections or an author
 	txt = re.sub(nm, r'<name>\1</name>\2', txt)
@@ -515,7 +512,14 @@ def gkcanoncleaner(txt):
 
 	# the inset works
 	txt = re.sub(wk, r'\n\t<work>\1w\2</work>\3', txt)
-	# streamout(txt, '/Users/erik/Technology/programming/py35_venv/HipparchiaData/intermediate_output/gkcanonon_out.txt')
+	# nuke crossreferences: key nnnn Xnn
+	txt = re.sub(r'key \d\d\d\d X\d\d.*?\n<authorentry>', r'\n<authorentry>', txt)
+	txt = re.sub(r'crf.*?\n<authorentry>', r'\n<authorentry>', txt)
+	# rejoin 'linebreaks'
+	txt = re.sub(r'█⑧⓪     ','',txt)
+	# kill 'italics'
+	txt = re.sub('\&(\d{0,2})', r'', txt)
+	# streamout(txt, outfile)
 	txt = re.sub(w, r'<workname>\1</workname>\2', txt)
 	# will miss one work because of an unlucky hexrun: <work>0058w001</work> █⑧⓪ wrk &1Poliorcetica& █ⓕⓔ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █ⓔⓕ █⑧⓪ █ⓑ⑨ █ⓑ⑨ █ⓑ⑨ █ⓑ⑧ █ⓕⓕ █ⓔⓕ █⑧① █ⓑ⓪ █ⓑ⓪ █ⓑ① █ⓕⓕ █ⓐ⑧ █ⓑⓐ █⑨① █⑧③ cla Tact. █⑧⓪
 	txt = re.sub(cl, r'<workgenre>\1</workgenre>\2', txt)
@@ -549,15 +553,19 @@ def gkcanoncleaner(txt):
 
 	# txt = re.sub(bd, r'\1', txt)
 	# txt = re.sub(gk, r'', txt)
-	#txt = re.sub('\&', r'', txt)
+	
 	# txt = re.sub(it, r'<italic>\1</italic>', txt)
 	# txt = re.sub(r'\s{2,}', r' ',txt)
 	# txt = re.sub(r'\s</', r'</', txt)
 	# txt = re.sub(r'\t', r'', txt)
+	
+	percents = re.compile(r'\%(\d{1,3})')
+	txt = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, txt)
+	txt = re.sub(r'`', r'', txt)
+	
 	txt = parsers.regex_substitutions.latinadiacriticals(txt)
 	txt = txt.split('\n')
 	# txt = txt[:-1]
-	# linesout(txt, '/Users/erik/Technology/programming/py35_venv/HipparchiaData/intermediate_output/gkcanonon_out.txt')
 	
 	return txt
 
@@ -604,8 +612,7 @@ def loadgkcanon(canonfile, cursor):
 	#txt = file_io.filereaders.dirtyhexloader(canonfile)
 	txt = file_io.filereaders.highunicodefileload(canonfile)
 	txt += '\n<authorentry>'
-	# regex patterns
-	
+
 	txt = gkcanoncleaner(txt)
 	
 	for line in txt:
@@ -666,6 +673,7 @@ def modifygkworksdb(newworkinfo, cursor):
 	
 	# pounds = re.compile(r'\#(\d{1,4})')
 	percents = re.compile(r'\%(\d{1,3})')
+	ands = re.compile(r'\&(\d{1,2})(.*?)(\&\d{0,1})')
 	
 	newworkinfo = re.sub(r'\s{2,}', r' ', newworkinfo)
 	
@@ -723,6 +731,7 @@ def modifygkworksdb(newworkinfo, cursor):
 		p = ''
 	
 	p = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, p)
+	p = re.sub(ands, parsers.regex_substitutions.andsubstitutes, p)
 	p = re.sub(r' $', '', p)
 	
 	try:
@@ -838,9 +847,7 @@ def latinloadcanon(canonfile, cursor):
 		cursor.execute(query, data)
 		
 	return
-# for k in dates:
-# 	d = convertdates(k)
-# 	print(k, ' --> ', d)
+
 
 def resetbininfo(relativepath, cursor, dbconnection):
 
@@ -877,6 +884,7 @@ def resetbininfo(relativepath, cursor, dbconnection):
 	
 	return
 
+
 def peekatcanon(workdbname):
 	"""
 	an emergency appeal to the canon for a work's structure
@@ -904,3 +912,28 @@ def peekatcanon(workdbname):
 	structure.reverse()
 	
 	return structure
+
+
+# debug
+
+def streamout(txt,outfile):
+	f = open(outfile, 'w')
+	f.write(txt)
+	f.close()
+	return
+
+
+def linesout(txt,outfile):
+	f = open(outfile, 'w')
+	for item in txt:
+		f.write("%s\n" % item)
+	f.close()
+	return
+
+
+def canondebug(outfile):
+	print('cannon debug')
+	canonfile = tlg[:-3] + 'DOCCAN2.TXT'
+	txt = file_io.filereaders.highunicodefileload(canonfile)
+	txt = gkcanoncleaner(txt)
+	linesout(txt, outfile)
