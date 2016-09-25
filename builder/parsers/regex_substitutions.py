@@ -263,33 +263,35 @@ def poundsubstitutes(match):
 		14: u'\u2e16',
 		15: u'\u003e',
 		16: u'\u03fe',
-		18: u'《',
+		18: r'《',
 		19: u'\u0300',
-		20: u'𐅵',
-		21: u'𐅵',
+		20: r'𐅵',
+		21: r'𐅵',
 		22: u'\u0375',
 		23: u'u\03d9',
-		25: u'?',
+		25: r'?',
 		73: u'\u205a',
 		74: u'\u205d',
 		100: u'\u10186',
-		101: u'\u1017b',
+		101: u'𐅻', #trouble with the four character unicode codes: uh oh
+		102: u'\u10182\u03c5', # upsilon supposed to be superscript too
 		103: u'\u039b\u0338',
 		104: u'\u10182\u03bf',  # the omicron is supposed to be superscript too
-		105: u'⌑', # idiosyncratic
+		105: r'⌑', # idiosyncratic
 		106: u'\u10184',
+		111: r'𐆈', # 𐆈- GREEK GRAMMA SIGN; Unicode: U+10188, UTF-8: F0 90 86 88
 		116: u'\u1017c',
 		117: u'\u10183',
 		130: u'\u1018a',
 		131: u'\u10177',
 		150: u'\u221e',
-		161: u'𐅵',
+		161: r'𐅵',
 		162: u'\u25a1',
 		165: u'\u00d7',
 		166: u'\u2a5a',
-		169: u'𐅵',
-		171: u'𐅵',
-		172: u'𐅵',
+		169: r'𐅵',
+		171: r'𐅵',
+		172: r'𐅵',
 		200: u'u\2643',
 		204: u'\u2640',
 		205: u'\u2650',
@@ -307,7 +309,7 @@ def poundsubstitutes(match):
 		217: u'\u2653',
 		218: u'\u2652',
 		219: u'\u2649',
-		220: u'\u260d',
+		220: u'♃',
 		223: u'\u2605',
 		303: u'›',
 		305: u'\u2e0e',
@@ -324,30 +326,32 @@ def poundsubstitutes(match):
 		465: u'\u2627',
 		476: u'\u0283',
 		501: r'πιθ',  # abbreviation for πιθανόν
-		502: u'🜚', # listed as idiosyncratic; but looks like 'alchemical symbol for gold': U+1F71A
+		502: r'🜚', # listed as idiosyncratic; but looks like 'alchemical symbol for gold': U+1F71A
 		504: u'\u2e0e',
 		507: u'\u2e14',
 		508: u'\u203b',
+		512: u'\u03fd',
+		516: u'\u0394\u0345',
 		# 522: u'\u', # markup <rotate> 0397
 		523: u'\u2e13',
 		524: u'u2297',
 		532: u'\u2e12',
 		534: u'\u0302',
-		535: u'⌑', # idiosyncratic
-		536: u'⌑', # idiosyncratic
-		537: u'⌑', # idiosyncratic
-		538: u'⌑', # idiosyncratic
+		535: r'⌑', # idiosyncratic
+		536: r'⌑', # idiosyncratic
+		537: r'⌑', # idiosyncratic
+		538: r'⌑', # idiosyncratic
 		556: u'\u2629',
 		563: u'\u1d242',
 		700: u'u\205e',
-		701: u'⌑', # idiosyncratic
-		702: u'⌑', # idiosyncratic
+		701: r'⌑', # idiosyncratic
+		702: r'⌑', # idiosyncratic
 		703: u'\u25cb\u25cb\u25cb',
 		704: u'\u2014\u0307',
-		705: u'⌑', # idiosyncratic
-		706: u'⌑', # idiosyncratic
-		707: u'⌑', # idiosyncratic
-		708: u'⌑', # idiosyncratic
+		705: r'⌑', # idiosyncratic
+		706: r'⌑', # idiosyncratic
+		707: r'⌑', # idiosyncratic
+		708: r'⌑', # idiosyncratic
 		751: u'\u0661',  # arabic-indic digits...
 		752: u'\u0662',
 		753: u'\u0663',
@@ -368,7 +372,15 @@ def poundsubstitutes(match):
 		1108: u'\u0058\u0036',
 		1109: u'\u003d',
 		1110: u'\u002d',
+		1111: u'\u00b0',
+		1112: r'⌑', # idiosyncratic
+		1113: r'⌑', # idiosyncratic
+		1114: u'\u1d201',
 		1115: u'\u007c',
+		1120: r'⌑',  # idiosyncratic
+		1122: r'⌑',  # idiosyncratic
+		1123: r'⌑',  # idiosyncratic
+		1125: r'⌑',  # idiosyncratic
 		1126: u'\u004f',
 		1135: u'\u002f\u002f',
 		1136: u'\u2112',

@@ -16,50 +16,89 @@ class Author(object):
 			self.universalid = 'lt' + number
 		self.shortname = ''
 		self.cleanname = ''
-		self.genres = ''
+		self.genre = ''
 		self.floruit = ''
 		self.location = ''
 		self.works = []
 		# sadly we need this to decode what work number is stored where
 		self.workdict = {}
 		self.name = ''
+		self.aka = ''
 
 	def addwork(self, work):
 		self.works.append(work)
-
-	def addauthtabname(self, addauthtabname):
-		self.addauthtabname = addauthtabname
-		self.shortname = re.sub(r'(&.*?&).*?',r'\1',self.addauthtabname)
-		self.shortname = regex_substitutions.replacelatinbetacode(self.shortname+' █')
-		self.shortname = regex_substitutions.latinadiacriticals(self.shortname)
-		self.shortname = self.shortname[:-1]
-		if self.shortname[-1] == ' ':
-			self.shortname = self.shortname[:-1]
-		self.shortname = re.sub(r'<(/|)hmu_greek_in_a_latin_text>','', self.shortname)
-		self.shortname = re.sub(r'[&$\d]','',self.shortname)
+	
+	def addauthtabname(self, name):
+		focus = re.compile('^(.*?)(&1.*?&)')
+		nick = re.compile(r'\x80(\w.*?)($)')
+		if '$' in name:
+			search = re.compile(r'(\$\d{0,2})(.*?)(&)')
+			name = re.sub(search, regex_substitutions.doublecheckgreekwithinlatin, name)
+			search = r'<hmu_greek_in_a_latin_text>.*?</hmu_greek_in_a_latin_text>'
+			name = re.sub(search, regex_substitutions.parsegreekinsidelatin, name)
+			name = re.sub(r'<(/|)hmu_greek_in_a_latin_text>', '', name)
+		name = re.sub(r'2', '', name)
+		name = regex_substitutions.latinadiacriticals(name)
+		segments = re.search(focus, name)
+		nn = re.search(nick, name)
 		
-		self.shortname = re.sub(r'[\d]', '', self.shortname)
-		self.shortname = re.sub(r'\x80(\w.*?)(\s|$)', r' (\1)\2', self.shortname)
-		self.shortname = re.sub(r'\x80.*?\)',r')',self.shortname)
-		
-		if re.sub(r'.*\x80(\w.*?)(\s|$)',r'\1',self.addauthtabname) != self.addauthtabname:
-			self.aka = re.sub(r'.*?\x80(\w.*?)(\\|\s|$)',r'\1 ',self.addauthtabname)
-			if self.aka[-1] == ' ':
-				self.aka = self.aka[:-1]
-			self.aka = self.aka.split('\x80')
-			self.aka = self.aka[0]
-		else:
-			self.aka = self.shortname
-			
 		try:
-			self.name = self.shortname
+			g = segments.group(1)
 		except:
-			self.name = addauthtabname
+			g = ''
 		
-		# should get rid of cleanname some day
-		self.cleanname = self.shortname
+		try:
+			gg = segments.group(2)
+		except:
+			gg = ''
 		
-
+		try:
+			short = nn.group(1)
+			# skip any additional nicknames: Cicero + Tully / Vergil + Virgil
+			short = short.split('\x80')
+			short = short[0]
+		except:
+			short = ''
+		
+		try:
+			core = re.sub(r'\s$', '', gg)
+		except:
+			core = name
+		
+		if g != '':
+			full = core + ', ' + g
+		else:
+			full = core
+		full = re.sub(r'[&1\[]', '', full)
+		
+		remainder = re.sub(re.escape(g + gg), '', name)
+		remainder = re.sub(r'[&1]', '', remainder)
+		
+		tail = re.sub(short, '', remainder)
+		
+		if 'g' in self.universalid:
+			if short != '' and len(tail) > 1:
+				self.cleanname = short + ' - ' + full + ' (' + tail + ')'
+			elif short != '':
+				self.cleanname = short + ' - ' + full
+			elif len(tail) > 1:
+				self.cleanname = full + ' (' + tail + ')'
+				self.shortname = full
+			else:
+				self.shortname = full
+				self.cleanname = full
+		else:
+			if short != '':
+				self.cleanname = short + ' - ' + full
+			elif len(tail) > 1:
+				full = full + tail
+				self.cleanname = re.sub(r'\s{2,}', r' ', full)
+				self.shortname = self.cleanname
+			else:
+				self.cleanname = full
+				self.shortname = full
+		self.aka = self.shortname
+		self.name = self.cleanname
 
 class dbAuthor(object):
 	"""
@@ -148,16 +187,4 @@ class Opus(object):
 
 	def __str__(self):
 		return self.title
-
-	def xmldump(self):
-		levlenum = 0
-		xml = '<core_work_info>\n'
-		xml += '\t<work_number value="' + str(self.worknumber) + '" />\n'
-		xml += '\t<work_name value="' + self.title + '" />\n'
-		xml +='\t<work_structure>\n'
-		for key, val in w.getstructure().items():
-			xml += '\t\t<level_'+str(key)+' value="'+val+'"/>\n'
-		xml += '\t</work_structure>\n'
-		xml += '</core_work_info>\n'
-		return xml
 

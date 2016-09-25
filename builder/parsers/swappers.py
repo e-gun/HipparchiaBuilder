@@ -6,7 +6,6 @@ def highunicodetohex(highunicode):
 	"""
 	outvals = u'0123456789abcdef'
 	invals = u'⓪①②③④⑤⑥⑦⑧⑨ⓐⓑⓒⓓⓔⓕ'
-	# outvals = u'𝍠𝍡𝍢𝍣𝍤𝍥𝍦𝍧𝍨𝍩𝍪𝍫𝍬𝍭𝍮𝍯'
 	hexsequence = highunicode.translate(str.maketrans(invals, outvals))
 	
 	return hexsequence
@@ -26,7 +25,6 @@ def hextohighunicode(twocharhexstring):
 	"""
 	invals = u'0123456789abcdef'
 	outvals = u'⓪①②③④⑤⑥⑦⑧⑨ⓐⓑⓒⓓⓔⓕ'
-	# outvals = u'𝍠𝍡𝍢𝍣𝍤𝍥𝍦𝍧𝍨𝍩𝍪𝍫𝍬𝍭𝍮𝍯'
 	transformed = twocharhexstring.translate(str.maketrans(invals, outvals))
 	
 	return transformed
