@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from builder.builder_classes import Author, Opus
-import re
+
 # from builder.parsers import *
+from builder.parsers.regex_substitutions import cleanworkname
+
 
 def loadauthor(idtfiledatastream, language):
 	"""
@@ -297,18 +299,3 @@ def findlabelsforlevels(filearray, offset):
 	newbytecountoffset += 1
 	levellabel = getpascalstr(filearray, offset + newbytecountoffset)
 	return depth, levellabel
-
-
-def cleanworkname(betacodeworkname):
-	
-	betacodetuples = (
-		(r'\[2(.*?)]2', r'⟪\1⟫'),
-		(r'%6','='),
-		(r'%3', '/'),
-		(r'%7', '+'),
-	)
-	
-	for i in range(0, len(betacodetuples)):
-		workname = re.sub(betacodetuples[i][0], betacodetuples[i][1], betacodeworkname)
-
-	return workname

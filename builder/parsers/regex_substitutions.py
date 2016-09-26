@@ -1178,3 +1178,21 @@ def converthextoascii(hextoasciimatch):
 	return a
 
 
+def cleanworkname(betacodeworkname):
+	"""
+	turn a betacode workname into a 'proper' workname
+	:param betacodeworkname:
+	:return:
+	"""
+	
+	if '*' in betacodeworkname and '$' not in betacodeworkname:
+		re.sub(r'\*',r'$*',betacodeworkname)
+	
+	workname = replacelatinbetacode(betacodeworkname)
+	
+	percents = re.compile(r'\%(\d{1,3})')
+	workname = re.sub(percents, percentsubstitutes, workname)
+	workname = re.sub(r'\[2(.*?)]2', r'⟪\1⟫',workname)
+	workname = re.sub(r'<.*?>','', workname)
+
+	return workname

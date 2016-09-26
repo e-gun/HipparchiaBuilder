@@ -517,8 +517,6 @@ def gkcanoncleaner(txt):
 	txt = re.sub(r'crf.*?\n<authorentry>', r'\n<authorentry>', txt)
 	# rejoin 'linebreaks'
 	txt = re.sub(r'█⑧⓪     ','',txt)
-	# kill 'italics'
-	txt = re.sub('\&(\d{0,2})', r'', txt)
 	# streamout(txt, outfile)
 	txt = re.sub(w, r'<workname>\1</workname>\2', txt)
 	# will miss one work because of an unlucky hexrun: <work>0058w001</work> █⑧⓪ wrk &1Poliorcetica& █ⓕⓔ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █ⓔⓕ █⑧⓪ █ⓑ⑨ █ⓑ⑨ █ⓑ⑨ █ⓑ⑧ █ⓕⓕ █ⓔⓕ █⑧① █ⓑ⓪ █ⓑ⓪ █ⓑ① █ⓕⓕ █ⓐ⑧ █ⓑⓐ █⑨① █⑧③ cla Tact. █⑧⓪
@@ -546,6 +544,9 @@ def gkcanoncleaner(txt):
 	txt = re.sub(lwn,r'\1</workname>',txt)
 	wnc = re.compile(r'<workname>(.*?)</workname>')
 	txt = re.sub(wnc,worknamecleaner,txt)
+	# kill 'italics'
+	# can't get rid of '&' before you do greek
+	txt = re.sub('\&(\d{0,2})', r'', txt)
 	
 	txt = re.sub(hx, '', txt)
 	txt = re.sub(r' █⓪', '', txt)
@@ -571,6 +572,11 @@ def gkcanoncleaner(txt):
 
 
 def worknamecleaner(matchgroup):
+	"""
+	tricky because greek is not turned off properly
+	:param matchgroup:
+	:return:
+	"""
 
 	try:
 		toclean = matchgroup.group(1)
@@ -761,8 +767,9 @@ def modifygkworksdb(newworkinfo, cursor):
 	cursor.execute(query, data)
 	result = cursor.fetchone()
 	r = result[0]
+	
 	if r != n and n != '':
-		# print(work.group(1),'db vs canon:\n\t',r,'\n\t',n)
+		# print(work.group(1), 'db vs canon:\n\t', r, '\n\t', n)
 		query = 'UPDATE works SET title=%s WHERE universalid=%s'
 		data = (n,'gr' + work.group(1))
 		cursor.execute(query, data)
