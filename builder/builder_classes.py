@@ -79,8 +79,10 @@ class Author(object):
 		if 'g' in self.universalid:
 			if short != '' and len(tail) > 1:
 				self.cleanname = short + ' - ' + full + ' (' + tail + ')'
+				self.shortname = short
 			elif short != '':
 				self.cleanname = short + ' - ' + full
+				self.shortname = short
 			elif len(tail) > 1:
 				self.cleanname = full + ' (' + tail + ')'
 				self.shortname = full
@@ -90,6 +92,7 @@ class Author(object):
 		else:
 			if short != '':
 				self.cleanname = short + ' - ' + full
+				self.shortname = short
 			elif len(tail) > 1:
 				full = full + tail
 				self.cleanname = re.sub(r'\s{2,}', r' ', full)
