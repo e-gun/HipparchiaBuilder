@@ -254,6 +254,7 @@ def poundsubstitutes(match):
 		4: u'\u03d9',
 		5: u'\u03e1',
 		6: u'\u2e0f',
+		7: r'⌑', # idiosyncratic
 		8: u'\u2e10',
 		9: u'\u0301',
 		10: u'\u03fd',
@@ -268,15 +269,17 @@ def poundsubstitutes(match):
 		20: r'𐅵',
 		21: r'𐅵',
 		22: u'\u0375',
-		23: u'u\03d9',
+		23: u'\u03d9',
+		24: r'𐅵',
 		25: r'?',
+		69: u'\u039c',
 		73: u'\u205a',
 		74: u'\u205d',
 		100: u'\u10186',
 		101: u'𐅻', #trouble with the four character unicode codes: uh oh
-		102: u'\u10182\u03c5', # upsilon supposed to be superscript too
+		102: u'\u10182<6\u03c56>', # upsilon supposed to be superscript too: add betacode for that <6...6>
 		103: u'\u039b\u0338',
-		104: u'\u10182\u03bf',  # the omicron is supposed to be superscript too
+		104: u'\u10182<6\u03bf6>',  # the omicron is supposed to be superscript too: add betacode for that <6...6>
 		105: r'⌑', # idiosyncratic
 		106: u'\u10184',
 		111: r'𐆈', # 𐆈- GREEK GRAMMA SIGN; Unicode: U+10188, UTF-8: F0 90 86 88
@@ -284,7 +287,12 @@ def poundsubstitutes(match):
 		117: u'\u10183',
 		130: u'\u1018a',
 		131: u'\u10177',
+		134: u'\u0393<6\u03b26>', # the beta is supposed to be superscript too: add betacode for that <6...6>
+		135: u'\u02d9',
+		136: u'\u03a3', # capital sigma: stater
+		137: u'\u0393<6\u03b26>', #the beta is supposed to be superscript: add betacode for that <6...6>
 		150: u'\u221e',
+		159: u'\u2237\u0344',
 		161: r'𐅵',
 		162: u'\u25a1',
 		165: u'\u00d7',
@@ -292,7 +300,9 @@ def poundsubstitutes(match):
 		169: r'𐅵',
 		171: r'𐅵',
 		172: r'𐅵',
-		200: u'u\2643',
+		200: u'\u2643',
+		202: u'\u264f',
+		203: u'\u264d',
 		204: u'\u2640',
 		205: u'\u2650',
 		206: u'\u2644',
@@ -325,13 +335,15 @@ def poundsubstitutes(match):
 		461: u'\u007c',
 		465: u'\u2627',
 		476: u'\u0283',
-		501: r'πιθ',  # abbreviation for πιθανόν
+		501: r'π<6ιθ6>',  # abbreviation for πιθανόν: added own betacode - <6...6>
 		502: r'🜚', # listed as idiosyncratic; but looks like 'alchemical symbol for gold': U+1F71A
 		504: u'\u2e0e',
+		505: u'\u205c',
 		507: u'\u2e14',
 		508: u'\u203b',
 		512: u'\u03fd',
 		516: u'\u0394\u0345',
+		520: u'\u2629',
 		# 522: u'\u', # markup <rotate> 0397
 		523: u'\u2e13',
 		524: u'u2297',
@@ -340,10 +352,14 @@ def poundsubstitutes(match):
 		535: r'⌑', # idiosyncratic
 		536: r'⌑', # idiosyncratic
 		537: r'⌑', # idiosyncratic
-		538: r'⌑', # idiosyncratic
+		552: r'⌑', # idiosyncratic
+		553: r'⌑',  # idiosyncratic
+		554: r'⌑',  # idiosyncratic
+		555: r'⌑',  # idiosyncratic
 		556: u'\u2629',
+		561: u'\u2191',
 		563: u'\u1d242',
-		700: u'u\205e',
+		700: u'\u205e',
 		701: r'⌑', # idiosyncratic
 		702: r'⌑', # idiosyncratic
 		703: u'\u25cb\u25cb\u25cb',
@@ -449,6 +465,7 @@ def percentsubstitutes(match):
 		49: u'\u23d1\u23d1\u23d1',
 		80: u'\u0076\u002E', # supposed to put the 'v' in italics too
 		91: u'\u0485',
+		92: u'\u0486',
 		93: u'\u1dc0',
 		94: u'\u0307',
 		95: u'\u1dc1',
@@ -536,9 +553,13 @@ def rightbracketsubstitutions(match):
 	
 	substitutions = {
 		# u'\u',
+		23: u'\u23ad',
+		22: u'\u23ac',
+		21: u'23aa',
 		17: u'\u230b\u230b',
 		14: u'\003a\u007c',
 		13: u'\u005d',  # supposed to be italic as well
+		12: u'\u2190',
 		11: u'u\208e',
 		9: u'\u2027',
 		8: '⌋',
@@ -646,6 +667,7 @@ def rtcurlybracketsubstitutes(match):
 		43: r'</span>', # hmu_servius_bracket
 		41: r'</span>', # hmu_stage_direction
 		40: r'</span>', # hmu_speaker
+		27: u'\u0359',
 		3: r'</span>', # hmu_reference_in_scholium
 		2: r'</span>', # hmu_marginal_text
 		1: r'</span>' # hmu_title
@@ -770,9 +792,11 @@ def dollarssubstitutes(match):
 	substitutions = {
 		70: [r'<span class="uncial">', r'</span>'],
 		40: [r'<span class="extralarge">', r'</span>'],
+		30: [r'<span class="extrasmall">', r'</span>'],
 		20: [r'<span class="largerthannormal">', r'</span>'],
 		15: [r'<span class="smallerthannormalsubscript">', r'</span>'],
 		14: [r'<span class="smallerthannormalsuperscript">', r'</span>'],
+		13: [r'<span class="smallerthannormalitalic">', r'</span>'],
 		11: [r'<span class="smallerthannormalbold">', r'</span>'],
 		10: [r'<span class="smallerthannormal">', r'</span>'],
 		9: [r'<span class="regular">', r'</span>'],
