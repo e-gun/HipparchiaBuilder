@@ -486,18 +486,16 @@ def gkcanoncleaner(txt):
 	it = re.compile(r'&3(.*?)&')
 	gk = re.compile(r'\$\d{0,1}')
 	
-	
 	# the initial substitutions
 	# txt = re.sub(gk,parsers.betacode_to_unicode.parsegreekinsidelatin,txt)
 	
 	txt = re.sub(ae, r'\n<authorentry>\1</authorentry>', txt)
-	#txt = re.sub(au, r'<authorentry><authornumber>\1</authornumber>\2</authorentry>\n<authorentry>', txt)
+	# txt = re.sub(au, r'<authorentry><authornumber>\1</authornumber>\2</authorentry>\n<authorentry>', txt)
 	# 1st pass gets half of them...
-	#txt = re.sub(au, r'<authorentry><authornumber>\1</authornumber>\2</authorentry>\n<authorentry>', txt)
+	# txt = re.sub(au, r'<authorentry><authornumber>\1</authornumber>\2</authorentry>\n<authorentry>', txt)
 	
-	#pounds = re.compile(r'\#(\d{1,4})')
-	#txt = re.sub(pounds, parsers.regex_substitutions.poundsubstitutes, txt)
-	
+	# pounds = re.compile(r'\#(\d{1,4})')
+	# txt = re.sub(pounds, parsers.regex_substitutions.poundsubstitutes, txt)
 	
 	# pull out the subsections or an author
 	txt = re.sub(nm, r'<name>\1</name>\2', txt)
@@ -509,15 +507,15 @@ def gkcanoncleaner(txt):
 	txt = re.sub(gn, r'<genre>\1</genre>\2', txt)
 	txt = re.sub(st, r'<short>\1</short>\2', txt)
 	txt = re.sub(cf, r'\1<crossref>\2</crossref>\3', txt)
-
+	
 	# the inset works
 	txt = re.sub(wk, r'\n\t<work>\1w\2</work>\3', txt)
 	# nuke crossreferences: key nnnn Xnn
 	txt = re.sub(r'key \d\d\d\d X\d\d.*?\n<authorentry>', r'\n<authorentry>', txt)
 	txt = re.sub(r'crf.*?\n<authorentry>', r'\n<authorentry>', txt)
 	# rejoin 'linebreaks'
-	txt = re.sub(r'█⑧⓪     ','',txt)
-	# streamout(txt, outfile)
+	txt = re.sub(r'█⑧⓪     ', '', txt)
+	
 	txt = re.sub(w, r'<workname>\1</workname>\2', txt)
 	# will miss one work because of an unlucky hexrun: <work>0058w001</work> █⑧⓪ wrk &1Poliorcetica& █ⓕⓔ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █⓪ █ⓔⓕ █⑧⓪ █ⓑ⑨ █ⓑ⑨ █ⓑ⑨ █ⓑ⑧ █ⓕⓕ █ⓔⓕ █⑧① █ⓑ⓪ █ⓑ⓪ █ⓑ① █ⓕⓕ █ⓐ⑧ █ⓑⓐ █⑨① █⑧③ cla Tact. █⑧⓪
 	txt = re.sub(cl, r'<workgenre>\1</workgenre>\2', txt)
@@ -525,11 +523,11 @@ def gkcanoncleaner(txt):
 	txt = re.sub(ct, r'<citationformat>\1</citationformat>\2', txt)
 	txt = re.sub(xm, r'<meansoftransmission>\1</meansoftransmission>\2', txt)
 	txt = re.sub(ty, r'<typeofwork>\1</typeofwork>\2', txt)
-
+	
 	# the publication info
 	txt = re.sub(pb, r'<publicationinfo>\1</publicationinfo>\n', txt)
 	txt = re.sub(pi, r'\1<press>\2</press><city>\3</city><year>\4</year>', txt)
-	txt = re.sub(vn, r'\1<volumename>\2</volumename>',txt)
+	txt = re.sub(vn, r'\1<volumename>\2</volumename>', txt)
 	txt = re.sub(ed, r'<editor>\1</editor>\2', txt)
 	txt = re.sub(edr, r'<editor>\1</editor>', txt)
 	txt = re.sub(sr, r'<series>\1</series>\2', txt)
@@ -541,9 +539,9 @@ def gkcanoncleaner(txt):
 	
 	# cleaning the worknames
 	lwn = re.compile(r'</workname>\s{2,}(.*?)\s█⑧⓪')
-	txt = re.sub(lwn,r'\1</workname>',txt)
+	txt = re.sub(lwn, r'\1</workname>', txt)
 	wnc = re.compile(r'<workname>(.*?)</workname>')
-	txt = re.sub(wnc,worknamecleaner,txt)
+	txt = re.sub(wnc, worknamecleaner, txt)
 	# kill 'italics'
 	# can't get rid of '&' before you do greek
 	txt = re.sub('\&(\d{0,2})', r'', txt)
@@ -551,7 +549,6 @@ def gkcanoncleaner(txt):
 	txt = re.sub(hx, '', txt)
 	txt = re.sub(r' █⓪', '', txt)
 	
-
 	# txt = re.sub(bd, r'\1', txt)
 	# txt = re.sub(gk, r'', txt)
 	
@@ -892,6 +889,21 @@ def resetbininfo(relativepath, cursor, dbconnection):
 	return
 
 
+def citationreformatter(matchgroups):
+	"""
+	avoid Volumépagéline if you let Volume%3page%3line run through the percentsubstitutes
+	:param match:
+	:return:
+	"""
+	core = re.sub(r'%3',r'|',matchgroups.group(2))
+	core = core.split('|')
+	core.remove('')
+	core = '|'.join(core)
+	
+	substitute = matchgroups.group(1)+core+matchgroups.group(3)
+	
+	return substitute
+
 def peekatcanon(workdbname):
 	"""
 	an emergency appeal to the canon for a work's structure
@@ -905,18 +917,26 @@ def peekatcanon(workdbname):
 	
 	citfinder = re.compile(r'.*<citationformat>(.*?)</citationformat>.*')
 	
-	# regex patterns
+	# regex patterns:
+	# careful - structure set to {0: 'Volumépagéline'} [gr0598]
 	txt = gkcanoncleaner(txt)
-	
 	structure = []
 	for line in txt:
 		if line[0:6] == '\t<work':
 			if re.search(workdbname[2:],line) is not None:
 				structure = re.sub(citfinder,r'\1',line)
-				# 'Book%3section%3line'
-				structure = structure.split('%3')
+				# 'Book%3section%3line' has been turned into book/section/line
+				# but volume%3 has become "volume + /" which then turns into "volumé"
+				structure = re.sub(r'é',r'e/',structure)
+				structure = structure.split('/')
 				
 	structure.reverse()
 	
 	return structure
 
+
+def streamout(txt,outfile):
+	f = open(outfile, 'w')
+	f.write(txt)
+	f.close()
+	return

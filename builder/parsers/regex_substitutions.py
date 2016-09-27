@@ -285,8 +285,11 @@ def poundsubstitutes(match):
 		111: r'𐆈', # 𐆈- GREEK GRAMMA SIGN; Unicode: U+10188, UTF-8: F0 90 86 88
 		116: u'\u1017c',
 		117: u'\u10183',
+		121: u'u\03be\u0338',
+		128: u'u\03fc',
 		130: u'\u1018a',
 		131: u'\u10177',
+		132: u'\u03b2\u0388',
 		134: u'\u0393<6\u03b26>', # the beta is supposed to be superscript too: add betacode for that <6...6>
 		135: u'\u02d9',
 		136: u'\u03a3', # capital sigma: stater
@@ -301,6 +304,7 @@ def poundsubstitutes(match):
 		171: r'𐅵',
 		172: r'𐅵',
 		200: u'\u2643',
+		201: u'\u25a1',
 		202: u'\u264f',
 		203: u'\u264d',
 		204: u'\u2640',
@@ -342,12 +346,17 @@ def poundsubstitutes(match):
 		507: u'\u2e14',
 		508: u'\u203b',
 		512: u'\u03fd',
+		515: r'𐆅',
 		516: u'\u0394\u0345',
+		517: r'𐆅',
 		520: u'\u2629',
 		# 522: u'\u', # markup <rotate> 0397
 		523: u'\u2e13',
-		524: u'u2297',
+		524: u'\u2297',
+		526: u'\u2190',
+		527: u'\u02c6',
 		532: u'\u2e12',
+		533: u'\u03da',
 		534: u'\u0302',
 		535: r'⌑', # idiosyncratic
 		536: r'⌑', # idiosyncratic
@@ -453,6 +462,7 @@ def percentsubstitutes(match):
 		34: u'\u1fc0',
 		35: u'\u1fce',
 		38: u'\u1fdf',
+		39: u'\u00a8',
 		40: u'\u23d1',
 		41: u'\u2013',
 		42: u'\u23d5',
@@ -480,7 +490,9 @@ def percentsubstitutes(match):
 		109: u'\u00b7',
 		110: u'\u25cb',
 		127: u'\u032f',
+		128: u'\u0302',
 		141: u'\u23d6',
+		144: u'\u23d1\u0036',
 		145: u'\u2013\u0301',
 		146: u'\u00b7',
 		147: u'\u030a',
@@ -555,7 +567,8 @@ def rightbracketsubstitutions(match):
 		# u'\u',
 		23: u'\u23ad',
 		22: u'\u23ac',
-		21: u'23aa',
+		21: u'\u23aa',
+		20: u'\u23ab',
 		17: u'\u230b\u230b',
 		14: u'\003a\u007c',
 		13: u'\u005d',  # supposed to be italic as well
