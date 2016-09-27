@@ -73,8 +73,8 @@ def loadauthor(idtfiledatastream, language):
 						# the length of that name is stored in the next byte
 						bytecount += 2
 						workname = getpascalstr(idtfiledatastream, bytecount)
-						workname = cleanworkname(workname)
 						bytecount = bytecount + len(workname)
+						workname = cleanworkname(workname)
 						# not going to use this block info
 						workstartblock = startblock
 						# skipped some code for CIV texts
