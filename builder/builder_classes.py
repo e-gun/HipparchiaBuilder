@@ -29,6 +29,7 @@ class Author(object):
 		self.works.append(work)
 	
 	def addauthtabname(self, name):
+		whiteout = re.compile(r'^\s*(.*?)\s*$')
 		focus = re.compile('^(.*?)(&1.*?&)')
 		nick = re.compile(r'\x80(\w.*?)($)')
 		if '$' in name:
@@ -69,12 +70,16 @@ class Author(object):
 			full = core + ', ' + g
 		else:
 			full = core
-		full = re.sub(r'[&1\[]', '', full)
+		full = re.sub(r'[&1]', '', full)
 		
 		remainder = re.sub(re.escape(g + gg), '', name)
 		remainder = re.sub(r'[&1]', '', remainder)
 		
 		tail = re.sub(short, '', remainder)
+		
+		short = re.sub(whiteout,r'\1',short)
+		tail = re.sub(whiteout,r'\1',tail)
+		full = re.sub(whiteout,r'\1',full)
 		
 		if 'g' in self.universalid:
 			if short != '' and len(tail) > 1:
@@ -95,7 +100,7 @@ class Author(object):
 				self.shortname = short
 			elif len(tail) > 1:
 				full = full + tail
-				self.cleanname = re.sub(r'\s{2,}', r' ', full)
+				self.cleanname = full
 				self.shortname = self.cleanname
 			else:
 				self.cleanname = full

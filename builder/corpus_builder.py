@@ -25,7 +25,7 @@ def buildcorpus(greekdatapath, latindatapath,  dbconnection, cursor):
 
 	al = list(alllatinauthors.keys())
 	al.sort()
-	# al = []
+	al = []
 	for a in al:
 		if int(a) < 9999:
 			result = addoneauthor({a: alllatinauthors[a]}, 'L', latindatapath,  dbconnection, cursor)
@@ -39,7 +39,7 @@ def buildcorpus(greekdatapath, latindatapath,  dbconnection, cursor):
 	ag.sort()
 	# ag = []
 	for a in ag:
-		if int(a) < 9999:
+		if int(a) < 7:
 			result = addoneauthor({a:allgreekauthors[a]}, 'G', greekdatapath,  dbconnection, cursor)
 			print(re.sub(r'[^\x00-\x7F]+', ' ', result))
 			dbconnection.commit()

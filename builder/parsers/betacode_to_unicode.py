@@ -1,14 +1,60 @@
 # -*- coding: utf-8 -*-
 import re
+from builder.parsers.betacodecapitals import capitalletters
+from builder.parsers.betacodelowercase import lowercaseletters
 
 def replacegreekbetacode(texttoclean):
+	"""
+	swap betacode for unicode values
+	:param texttoclean:
+	:return:
+	"""
+	
+	texttoclean = capitalletters(texttoclean)
+	texttoclean = lowercaseletters(texttoclean)
+	# combining dot
+	texttoclean = re.sub(r'\?', u'\u0323',texttoclean)
+	# exclmation point not properly documented
+	texttoclean = re.sub(r'\!', u'\u2219',texttoclean)
+
+	return texttoclean
+
+def oldreplacegreekbetacode(texttoclean):
+	"""
+	works, but is slower and harder to maintain
+	
+	full build times [incl the concordance routine which is slow and unaffected by this regex]
+	
+	this code:
+	0001 Apollonius Rhodius (Epic.) 29.15s
+	0002 Theognis (Eleg.) 9.17s
+	0003 Thucydides (Hist.) 105.08s
+	0004 Diogenes Laertius (Biogr.) 105.34s
+	0005 Theocritus (Bucol.) 19.56s
+	0006 Euripides (Trag.) 200.2s
+	
+	new code: [capitalletters(), etc.]
+	
+	0001 Apollonius Rhodius (Epic.) 10.07s
+	0002 Theognis (Eleg.) 2.89s
+	0003 Thucydides (Hist.) 24.7s
+	0004 Diogenes Laertius (Biogr.) 22.51s
+	0005 Theocritus (Bucol.) 6.93s
+	0006 Euripides (Trag.) 61.21s
+	
+	"""
 	textualmarkuptuples = []
 	# so inefficient...: would faster be better, though?
 	# but you are only supposed to do this once per author ever...
 	# once did this as a dict, but you can't enforce order that way
 	betacodetuples = (
 		# capitals with breathings
-		# did not implement subscripts (yet)
+		(r'[*]\)\\|A', u'\u1f8a'),
+		(r'[*]\(\\|A', u'\u1f8b'),
+		(r'[*]\)\/|A', u'\u1f8c'),
+		(r'[*]\(\/|A', u'\u1f8d'),
+		(r'[*]\)\=|A', u'\u1f8e'),
+		(r'[*]\(\=|A', u'\u1f8f'),
 		(r'[*]\(\=A', u'\u1f0f'),
 		(r'[*]\)\=A', u'\u1f0e'),
 		(r'[*]\(\/A', u'\u1f0d'),
@@ -41,6 +87,12 @@ def replacegreekbetacode(texttoclean):
 		(r'[*]\(\/U', u'\u1f5d'),
 		(r'[*]\(\\U', u'\u1f5b'),
 		(r'[*]\(U', u'\u1f59'),
+		(r'[*]\)\\W|', u'\u1faa'),
+		(r'[*]\(\\W|', u'\u1fab'),
+		(r'[*]\)\/W|', u'\u1fac'),
+		(r'[*]\(\/W|', u'\u1fad'),
+		(r'[*]\)\=W|', u'\u1fae'),
+		(r'[*]\(\=W|', u'\u1faf'),
 		(r'[*]\(\=W', u'\u1f6f'),
 		(r'[*]\)\=W', u'\u1f6e'),
 		(r'[*]\(\/W', u'\u1f6d'),
@@ -285,7 +337,6 @@ def replacegreekbetacode(texttoclean):
 	# for tup in textualmarkuptuples:
 	#   print(tup[0]+" "+tup[1])
 	return texttoclean
-
 
 # interconversion functions
 
