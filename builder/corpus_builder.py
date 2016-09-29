@@ -33,7 +33,8 @@ def buildcorpus(greekdatapath, latindatapath,  dbconnection, cursor):
 			dbconnection.commit()
 			time.sleep(.1)
 	
-	# parse_binfiles.latinloadcanon(latindatapath + '9999.TXT', cursor)
+	if len(al) > 0:
+		parse_binfiles.latinloadcanon(latindatapath + '9999.TXT', cursor)
 
 	ag = list(allgreekauthors.keys())
 	ag.sort()
@@ -45,7 +46,8 @@ def buildcorpus(greekdatapath, latindatapath,  dbconnection, cursor):
 			dbconnection.commit()
 			time.sleep(.1)
 
-	parse_binfiles.resetbininfo(greekdatapath, cursor, dbconnection)
+	if len(ag) > 0:
+		parse_binfiles.resetbininfo(greekdatapath, cursor, dbconnection)
 
 	return True
 
