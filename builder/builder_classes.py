@@ -70,6 +70,7 @@ class Author(object):
 			full = core + ', ' + g
 		else:
 			full = core
+			
 		full = re.sub(r'[&1]', '', full)
 		
 		remainder = re.sub(re.escape(g + gg), '', name)
@@ -99,7 +100,7 @@ class Author(object):
 				self.cleanname = short + ' - ' + full
 				self.shortname = short
 			elif len(tail) > 1:
-				full = full + tail
+				full = full + ' ' + tail
 				self.cleanname = full
 				self.shortname = self.cleanname
 			else:

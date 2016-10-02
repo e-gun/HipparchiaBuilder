@@ -821,7 +821,7 @@ def latinloadcanon(canonfile, cursor):
 	txt = re.sub(r'</volumename>.*?ed\.\s(.*?),\s(\d\d\d\d)(</publicationinfo>)',r'</volumename><editor>\1</editor><year>\2</year>\3',txt)
 	txt = re.sub('</italic> <italic>', ' ', txt)
 	txt = txt.split('\n')
-	linesout(txt, '/Users/erik/Technology/programming/py35_venv/HipparchiaData/intermediate_output/ltcanonon_out.txt')
+	# linesout(txt, outfile)
 	#  <author>L. Annaeus Seneca iunior</author>. <work>Apocolocyntosis</work> <edition><volumename>Seneca: Apocolocyntosis</volumename>, ed. P. T. Eden, 1984</edition>. <authornumber>1017</authornumber><worknumber>011</worknumber><end>
 	
 	canoninfo = {}
