@@ -427,7 +427,7 @@ def dbloadlist(labellist, column, cursor, dbconnection):
 					cursor.execute(query, data)
 			except:
 				pass
-
+	dbconnection.commit()
 	return
 
 # epithets is a lot like genres, but not the same
@@ -611,7 +611,7 @@ def worknamecleaner(matchgroup):
 	return cleanedname
 
 
-def loadgkcanon(canonfile, cursor):
+def loadgkcanon(canonfile, cursor, dbconnection):
 	#txt = file_io.filereaders.dirtyhexloader(canonfile)
 	txt = file_io.filereaders.highunicodefileload(canonfile)
 	txt += '\n<authorentry>'
@@ -625,6 +625,7 @@ def loadgkcanon(canonfile, cursor):
 		elif line[0:6] == '\t<work':
 			modifygkworksdb(line, cursor)
 	
+	dbconnection.commit()
 	return
 
 
@@ -884,7 +885,7 @@ def resetbininfo(relativepath, cursor, dbconnection):
 	dbloadlist(numdates, 'floruit', cursor, dbconnection)
 
 	# canoninfo: do this last so that you can reset shortname
-	loadgkcanon(canonfile, cursor)
+	loadgkcanon(canonfile, cursor, dbconnection)
 	
 	return
 
