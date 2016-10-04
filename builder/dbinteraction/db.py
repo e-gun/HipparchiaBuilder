@@ -330,7 +330,7 @@ def setconnection(config):
 	dbconnection = psycopg2.connect(user=config['db']['DBUSER'], host=config['db']['DBHOST'],
 	                                port=config['db']['DBPORT'], database=config['db']['DBNAME'],
 	                                password=config['db']['DBPASS'])
-	dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+	# dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 	
 	return dbconnection
 

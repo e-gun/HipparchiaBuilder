@@ -74,9 +74,9 @@ def conctablemaker(concdbname, dbconnection, cursor):
 
 	cursor.execute(query)
 
-	query = 'CREATE INDEX ' + concdbname + '_word_idx '
+	query = 'CREATE INDEX ' + concdbname + '_stripped_word_idx '
 	query += 'ON public.' + concdbname
-	query += ' USING btree (word);'
+	query += ' USING btree (stripped_word);'
 
 	cursor.execute(query)
 

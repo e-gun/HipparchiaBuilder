@@ -273,11 +273,14 @@ def poundsubstitutes(match):
 		23: u'\u03d9',
 		24: r'𐅵',
 		25: r'?',
+		30: r'<hmu_idiosyncratic_char value="30">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
+		31: r'<hmu_idiosyncratic_char value="31">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		69: u'\u039c',
 		73: u'\u205a',
 		74: u'\u205d',
 		82: u'\u02ca',
 		83: u'\u02cb',
+		85: u'\u02bd',
 		86: u'\u02bc',
 		87: u'\u0394\u0345',
 		100: u'\u10186',
@@ -290,14 +293,19 @@ def poundsubstitutes(match):
 		107: r'<hmu_idiosyncratic_char value="107">⌑</hmu_idiosyncratic_char>', # idiosyncratic
 		108: r'<hmu_idiosyncratic_char value="108">⌑</hmu_idiosyncratic_char>', # idiosyncratic
 		109: u'𐆂<6\u03bf6>', # the omicron is supposed to be superscript too: add betacode for that <6...6>
+		110: u'<11α>11<10\u0375>10', # need to do the combining accent second, right?
 		111: r'𐆈', # 𐆈- GREEK GRAMMA SIGN; Unicode: U+10188, UTF-8: F0 90 86 88
-		116: u'\u1017c',
-		117: u'\u10183',
+		116: u'\u2053',
+		117: r'𐆃',  # 𐆃GREEK LITRA SIGN; Unicode: U+10183, UTF-8: F0 90 86 83
 		118: u'\u03bb\u0338',
+		119: r'𐅽',
 		121: u'u\03be\u0338',
+		122: r'𐅽',
+		123: r'𐅼',
 		125: u'𐆂<6\u03c56>', # the upsilon is supposed to be superscript too: add betacode for that <6...6>
-		129: u'\u039b\u0325',
+		127: u'\u039b\u0325',
 		128: u'u\03b',
+		129: u'\u039b\u0325',
 		130: u'\u1018a',
 		131: u'\u10177',
 		132: u'\u03b2\u0388',
@@ -308,8 +316,12 @@ def poundsubstitutes(match):
 		150: u'\u221e',
 		151: u'\u2014',
 		152: u'\u205a\u2014',
+		153: u'\u2026\u0305',
+		154: u'\u2c80',
+		155: u'\u2014\u0323',
+		156: u'\u2310',
 		157: r'<hmu_idiosyncratic_char value="157">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
-		
+		158: u'\u2237\u0336',
 		159: u'\u2237\u0344',
 		160: u'\u007e\u0323',
 		161: r'𐅵',
@@ -344,12 +356,20 @@ def poundsubstitutes(match):
 		221: u'\u263d',
 		222: u'\u260c',
 		223: u'\u2605',
+		240: r'𐅷', # 𐅷 GREEK TWO THIRDS SIGN; Unicode: U+10177, UTF-8: F0 90 85 B7
+		241: u'\u260b',
+		242: u'\u2651',
+		243: r'<hmu_idiosyncratic_char value="243">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
+		244: u'\u264c',
+		246: r'<hmu_idiosyncratic_char value="246">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
+		247: r'<hmu_idiosyncratic_char value="247">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		303: u'›',
 		305: u'\u2e0e',
 		310: u'\u2e0e',
 		313: u'\u2e0e',
 		314: r'<hmu_idiosyncratic_char value="314">⌑</hmu_idiosyncratic_char>', # idiosyncratic
 		315: u'\u2e0e',
+		322: u'\u2627',
 		452: u'\u2310',
 		453: u'\u2e11',
 		454: u'\u2e10',
@@ -373,6 +393,7 @@ def poundsubstitutes(match):
 		515: r'𐆅',
 		516: u'\u0394\u0345',
 		517: r'𐆅',
+		518: r'𐅹',
 		519: u'\u2191',
 		520: u'\u2629',
 		# 522: u'\u', # markup <rotate> 0397
@@ -391,19 +412,45 @@ def poundsubstitutes(match):
 		541: r'<hmu_idiosyncratic_char value="541">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		542: u'\u03a1\u0336',
 		543: r'<hmu_idiosyncratic_char value="543">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
+		544: u'\u2058',
 		545: r'<hmu_idiosyncratic_char value="545">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		546: r'<hmu_idiosyncratic_char value="546">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		547: r'<hmu_idiosyncratic_char value="547">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		552: r'<hmu_idiosyncratic_char value="552">⌑</hmu_idiosyncratic_char>', # idiosyncratic
 		550: u'\u003a\u003a\u2e2e',
+		551: u'\u25cc',
 		553: r'<hmu_idiosyncratic_char value="553">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		554: r'<hmu_idiosyncratic_char value="554">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		555: r'<hmu_idiosyncratic_char value="555">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		556: u'\u2629',
 		561: u'\u2191',
+		562: u'\u0305',
 		563: u'\u1d242',
+		# GREEK INSTRUMENTAL NOTATIONS
+		566: r'𝈱', # 32
+		#567: r'',
+		#568: r'',
+		569: r'𝈶',  # 40
+		570: u'\u03f9',
 		572: r'𝈩', # 𝈩GREEK INSTRUMENTAL NOTATION SYMBOL-19; Unicode: U+1D229, UTF-8: F0 9D 88 A9
+		574: u'\u0393',
+		577: u'\u03a6',
+		578: u'\u03a1',
+		579: u'\u039c',
+		580: u'\u0399',
+		581: u'\u0398',
+		# 582: u'',
+		583: u'\u039d',
+		584: u'\u2127',
+		585: u'\u0396',
+		586: r'𝈸', # 43
+		587: u'\0395',
+		588: u'𝈈', # Vocal #9' Instrum #44
 		589: r'𝈿', # 𝈿GREEK INSTRUMENTAL NOTATION SYMBOL-52; Unicode: U+1D23F, UTF-8: F0 9D 88 BF
+		593: u'039b',
+		598: u'0394',
+		600: r'𝈨', # Instrum #18
+		603: u'\u03a0',
 		604: r'𝈦', # 𝈦GREEK INSTRUMENTAL NOTATION SYMBOL-14; Unicode: U+1D226, UTF-8: F0 9D 88 A6
 		615: r'𝈰', # 𝈰GREEK INSTRUMENTAL NOTATION SYMBOL-30; Unicode: U+1D230, UTF-8: F0 9D 88 B0
 		618: r'𝈴', # 𝈴GREEK INSTRUMENTAL NOTATION SYMBOL-38; Unicode: U+1D234, UTF-8: F0 9D 88 B4
@@ -419,6 +466,8 @@ def poundsubstitutes(match):
 		682: r'<hmu_idiosyncratic_char value="682">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		688: u'\u03bc\u030a',
 		689: r'𐅵',
+		690: u'\u27d8',
+		691: u'\u27c0',
 		692: u'\u27c1',
 		700: u'\u205e',
 		701: r'<hmu_idiosyncratic_char value="701">⌑</hmu_idiosyncratic_char>', # idiosyncratic
@@ -443,15 +492,19 @@ def poundsubstitutes(match):
 		760: u'\u0660',
 		801: r'𐅁',
 		802: r'𐅀',
+		805: u'\u03a4',
 		821: u'\u03a3',
 		853: u'\u0399',
 		862: u'\u0394',
 		863: r'𐅄',
 		865: r'𐅅',
 		866: u'\u03a7',
+		867: r'𐅆',
 		1000: r'𐅼',
 		1001: r'𐅽',
-		1003: r'𐅾',
+		1002: r'𐅾',
+		1003: r'𐅿',
+		1004: r'𐆀',
 		1100: u'\u2183',
 		1101: r'IS',
 		1102: r'H',
@@ -468,22 +521,38 @@ def poundsubstitutes(match):
 		1113: r'<hmu_idiosyncratic_char value="1113">⌑</hmu_idiosyncratic_char>', # idiosyncratic
 		1114: u'\u1d201',
 		1115: u'\u007c',
+		1116: u'\u01a7',
+		1117: u'\u005a',
 		1118: r'<hmu_idiosyncratic_char value="1118">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		1119: u'\u0110',
 		1120: r'<hmu_idiosyncratic_char value="1120">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		1121: u'\u005a',
 		1122: r'<hmu_idiosyncratic_char value="1122">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		1123: r'<hmu_idiosyncratic_char value="1123">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
+		1124: u'\u211e',
 		1125: r'<hmu_idiosyncratic_char value="1125">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		1126: u'\u004f',
+		1127: u'\u0076\u0338',
+		1128: u'\u0049\u0336\u0049\u0336\u0053\u0336',
+		1129: u'\u005a\u0336',
+		1131: u'\u005c\u005c',
+		1132: u'\u005c\u0336',
+		1133: u'\u005c\u0336\u005c\u0336',
+		1134: r'<hmu_idiosyncratic_char value="1134">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		1135: u'\u002f\u002f',
 		1136: u'\u2112',
 		1314: u'\u006e\u030a',
 		1316: u'\u0292',
+		1317: u'\u02d9\002f\u002f\u002e',
 		1320: u'\u0375\u0311',
+		1321: r'🜚', # listed as idiosyncratic; but looks like 'alchemical symbol for gold': U+1F71A
+		1322: u'\u2644',
+		1323: u'\u03b6\u0337\u03c2\u0300',
+		1324: u'\u03b8\u03c2\u0302',
 		1326: r'<hmu_idiosyncratic_char value="1326">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		1338: r'𐅾',
 		1341: r'<hmu_idiosyncratic_char value="1341">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
+		1500: u'\u03b3\u030a',
 		1501: r'<hmu_idiosyncratic_char value="1501">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
 		1502: u'\u03a7\u0374',
 		1503: r'<hmu_idiosyncratic_char value="1503">⌑</hmu_idiosyncratic_char>',  # idiosyncratic
@@ -542,6 +611,7 @@ def percentsubstitutes(match):
 		33: u'\u0060', # look out for future problems: `
 		34: u'\u1fc0',
 		35: u'\u1fce',
+		36: u'\u1fde',
 		38: u'\u1fdf',
 		39: u'\u00a8',
 		40: u'\u23d1',
@@ -585,8 +655,9 @@ def percentsubstitutes(match):
 		148: u'\u030c',
 		149: u'\u0328',
 		150: u'\u007c',
+		157: u'\u2e38',
 		159: u'\u00d7',
-		# 157: flipped dagger
+		160: u'\u002d',
 		162: u'\u0338'
 	}
 	
@@ -865,7 +936,7 @@ def rtanglebracketsubstitutes(match):
 		17: u'u\0333',
 		20: r'</span>', # hmu_expanded_text
 		21: r'</span>', # hmu_expanded_text
-		30 : '</span>', # Combining Overline and Dependent Vertical Bars
+		30: r'</span>', # Combining Overline and Dependent Vertical Bars
 		31: r'</span>', # strikethrough
 		32: r'</span>', # hmu_overline_and_underline
 		70: r'</span>', # hmu_inset_diagram

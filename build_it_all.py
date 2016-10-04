@@ -1,34 +1,30 @@
 # -*- coding: utf-8 -*-
 #!../bin/python
-import psycopg2
 import configparser
-import time
 from builder import dbinteraction
-from builder import file_io
-from builder import parsers
 from builder import corpus_builder
 from builder.dbinteraction.build_lexica import *
 
-config = configparser.ConfigParser()
-config.read('config.ini')
 
 buildauthors = True
 buildlex = False
 buildgram = False
 
-
-start = time.time()
-
+config = configparser.ConfigParser()
+config.read('config.ini')
 dbconnection = dbinteraction.db.setconnection(config)
-
 # dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 cursor = dbconnection.cursor()
 
 tlg = config['io']['tlg']
 phi = config['io']['phi']
 
+start = time.time()
+
 if buildauthors == True:
-	corpus_builder.buildcorpus(tlg, phi, dbconnection, cursor)
+	# remember to set a reasonable number of workers: a virtual box with one core and .5G of RAM does not want 6 workers
+	corpus_builder.parallelbuildcorpus(tlg, phi, dbconnection, cursor)
+	# corpus_builder.serialbuildcorpus(tlg, phi, dbconnection, cursor)
 
 if buildlex == True:
 	formatlewisandshort(dbconnection, cursor, '../')
@@ -44,6 +40,8 @@ stop = time.time()
 took = round((stop-start)/60, 2)
 print('\nBuild took',str(took),'minutes')
 
-# greek and latin authors
-# Build took 235.02 minutes
+
+# 4 Workers:
+# Build took 78.26 minutes
+
 

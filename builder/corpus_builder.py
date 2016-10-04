@@ -2,16 +2,70 @@
 # assuming py35 or higher
 import re
 import time
-import pickle
-
+from multiprocessing import Pool
+import configparser
 import builder.dbinteraction.dbprepsubstitutions
 from builder.file_io import filereaders
 from builder.parsers import idtfiles, regex_substitutions, betacode_to_unicode, parse_binfiles
 from builder.dbinteraction import db
 from builder.dbinteraction import concordance
+from builder import dbinteraction
 
 
-def buildcorpus(greekdatapath, latindatapath,  dbconnection, cursor):
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+
+def parallelbuildcorpus(greekdatapath, latindatapath, dbconnection, cursor):
+	"""
+	the whole enchilada
+	you a few shifts in the comments and conditionals will let you build portions instead
+	:return:
+	"""
+	allgreekauthors = filereaders.findauthors(greekdatapath)
+	allgreekauthors = checkextant(allgreekauthors, greekdatapath)
+	alllatinauthors = filereaders.findauthors(latindatapath)
+	alllatinauthors = checkextant(alllatinauthors, latindatapath)
+	
+	al = list(alllatinauthors.keys())
+	al.sort()
+	thework = []
+	# al = []
+	for a in al:
+		if int(a) < 9999:
+			thework.append(({a: alllatinauthors[a]}, 'L', latindatapath))
+	pool = Pool(processes=int(config['io']['workers']))
+	pool.map(parallelworker, thework)
+	
+	if len(al) > 0:
+		parse_binfiles.latinloadcanon(latindatapath + '9999.TXT', cursor)
+	
+	ag = list(allgreekauthors.keys())
+	ag.sort()
+	# ag = []
+	thework = []
+	for a in ag:
+		if int(a) < 9999:
+			thework.append(({a: allgreekauthors[a]}, 'G', greekdatapath))
+	pool = Pool(processes=int(config['io']['workers']))
+	pool.map(parallelworker, thework)
+	
+	if len(ag) > 0:
+		parse_binfiles.resetbininfo(greekdatapath, cursor, dbconnection)
+	
+	return True
+
+
+def parallelworker(thework):
+	dbc = dbinteraction.db.setconnection(config)
+	cur = dbc.cursor()
+	result = addoneauthor(thework[0], thework[1], thework[2], dbc, cur)
+	print(re.sub(r'[^\x00-\x7F]+', ' ', result))
+	dbc.commit()
+	time.sleep(.1)
+
+
+def serialbuildcorpus(greekdatapath, latindatapath,  dbconnection, cursor):
 	"""
 	the whole enchilada
 	you a few shifts in the comments and conditionals will let you build portions instead
