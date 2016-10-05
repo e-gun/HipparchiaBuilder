@@ -46,13 +46,21 @@ def lowercaseletters(betacode):
 	
 	# lowercase + accent + subscript
 	lga = re.compile(r'([AHW])\\\|')
-	laa = re.compile(r'([AHW])\\\|')
+	laa = re.compile(r'([AHW])\/\|')
 	lca = re.compile(r'([AHW])\=\|')
 	
 	unicode = re.sub(lga, lowercasegravesub, unicode)
 	unicode = re.sub(laa, lowercaseacutedsub, unicode)
 	unicode = re.sub(lca, lowercasesircumflexsub, unicode)
 	
+	# lowercase + accent + diaresis
+	lgd = re.compile(r'([IU])\\\+')
+	lad = re.compile(r'([IU])\/\+')
+	lcd = re.compile(r'([U])\=\+')
+	
+	unicode = re.sub(lgd, lowercasegravediaresis, unicode)
+	unicode = re.sub(lad, lowercaseacutediaresis, unicode)
+	unicode = re.sub(lcd, lowercasesircumflexdiaresis, unicode)
 	
 	# lowercase + breathing
 	ls = re.compile(r'([AEIOUHWR])\)')
@@ -69,6 +77,11 @@ def lowercaseletters(betacode):
 	unicode = re.sub(lg, lowercasegrave, unicode)
 	unicode = re.sub(la, lowercaseacute, unicode)
 	unicode = re.sub(lc, lowercascircumflex, unicode)
+	
+	# lowercase + diaresis
+	ld = re.compile(r'([IU])\+')
+	
+	unicode = re.sub(ld, lowercasediaresis, unicode)
 	
 	# lowercase + subscript
 	lad = re.compile(r'([AHW])\|')
@@ -364,6 +377,60 @@ def lowercasesircumflexsub(match):
 	return substitute
 
 
+# lowercase + accent + diaresis
+def lowercasegravediaresis(match):
+	val = match.group(1)
+	
+	substitutions = {
+		'A': u'',
+		'E': u'',
+		'I': u'ῒ',
+		'O': u'',
+		'U': u'ῢ',
+		'H': u'',
+		'W': u'',
+	}
+	
+	substitute = substitutions[val]
+	
+	return substitute
+
+
+def lowercaseacutediaresis(match):
+	val = match.group(1)
+	
+	substitutions = {
+		'A': u'',
+		'E': u'',
+		'I': u'ΐ',
+		'O': u'',
+		'U': u'',
+		'H': u'ΰ',
+		'W': u'',
+	}
+	
+	substitute = substitutions[val]
+	
+	return substitute
+
+
+def lowercasesircumflexdiaresis(match):
+	val = match.group(1)
+	
+	substitutions = {
+		'A': u'',
+		'E': u'',
+		'I': u'',
+		'O': u'',
+		'U': u'ῧ',
+		'H': u'',
+		'W': u'',
+	}
+	
+	substitute = substitutions[val]
+	
+	return substitute
+
 # lowercase + breathing
 def lowercasesmooth(match):
 	val = match.group(1)
@@ -457,6 +524,24 @@ def lowercascircumflex(match):
 	
 	return substitute
 
+
+# lowercase + diaresis
+def lowercasediaresis(match):
+	val = match.group(1)
+	
+	substitutions = {
+		'A': u'',
+		'E': u'',
+		'I': u'ϊ',
+		'O': u'',
+		'U': u'ϋ',
+		'H': u'',
+		'W': u'',
+	}
+	
+	substitute = substitutions[val]
+	
+	return substitute
 
 # lowercase + subscript
 def lowercasesubscript(match):
