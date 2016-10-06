@@ -1,4 +1,5 @@
 import re
+from multiprocessing import Value
 from builder.parsers import idtfiles, betacode_to_unicode, regex_substitutions
 
 class Author(object):
@@ -109,6 +110,7 @@ class Author(object):
 		self.aka = self.shortname
 		self.name = self.cleanname
 
+
 class dbAuthor(object):
 	"""
 	Created out of the DB info, not the IDT or the AUTHTAB
@@ -197,3 +199,15 @@ class Opus(object):
 	def __str__(self):
 		return self.title
 
+
+class MPCounter(object):
+	def __init__(self):
+		self.val = Value('i', 0)
+	
+	def increment(self, n=1):
+		with self.val.get_lock():
+			self.val.value += n
+	
+	@property
+	def value(self):
+		return self.val.value

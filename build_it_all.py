@@ -6,8 +6,8 @@ from builder import corpus_builder
 from builder.dbinteraction.build_lexica import *
 
 
-buildauthors = True
-buildlex = False
+buildauthors = False
+buildlex = True
 buildgram = False
 
 config = configparser.ConfigParser()
@@ -27,7 +27,7 @@ if buildauthors == True:
 	# corpus_builder.serialbuildcorpus(tlg, phi, dbconnection, cursor)
 
 if buildlex == True:
-	formatlewisandshort(dbconnection, cursor, '../')
+	# formatlewisandshort(dbconnection, cursor, '../')
 	formatliddellandscott(dbconnection, cursor, '../')
 
 if buildgram == True:
@@ -41,7 +41,7 @@ took = round((stop-start)/60, 2)
 print('\nBuild took',str(took),'minutes')
 
 
-# 4 Workers:
+# 4 Workers on G&L authors:
 # Build took 78.26 minutes
 
 
