@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 # assuming py35 or higher
+import configparser
 import re
 import time
 from multiprocessing import Pool
-import configparser
+
 import builder.dbinteraction.dbprepsubstitutions
+from builder.dbinteraction import concordance
+from builder.dbinteraction import db
 from builder.file_io import filereaders
 from builder.parsers import idtfiles, regex_substitutions, betacode_to_unicode, parse_binfiles
-from builder.dbinteraction import db
-from builder.dbinteraction import concordance
-from builder import dbinteraction
-
+from builder.dbinteraction.db import setconnection
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -57,13 +57,13 @@ def parallelbuildcorpus(greekdatapath, latindatapath, dbconnection, cursor):
 
 
 def parallelworker(thework):
-	dbc = dbinteraction.db.setconnection(config)
+	dbc = setconnection(config)
 	cur = dbc.cursor()
 	result = addoneauthor(thework[0], thework[1], thework[2], dbc, cur)
 	print(re.sub(r'[^\x00-\x7F]+', ' ', result))
 	dbc.commit()
-	time.sleep(.1)
 
+	return
 
 def serialbuildcorpus(greekdatapath, latindatapath,  dbconnection, cursor):
 	"""

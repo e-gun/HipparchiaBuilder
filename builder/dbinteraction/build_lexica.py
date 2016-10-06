@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-from multiprocessing import Process, Manager
-import configparser
-import time
 import re
-from builder.parsers.lexica import betaconvertandsave, greekwithvowellengths, gr1betaconverter, gr2betaconverter, \
-	latinvowellengths
-from builder.parsers.betacode_to_unicode import stripaccents, replacegreekbetacode
-from builder.dbinteraction.db import setconnection
+from builder.parsers.lexica import gr1betaconverter
+
+import configparser
+from multiprocessing import Process, Manager
+
 from builder.builder_classes import MPCounter
+from builder.dbinteraction.mplexicalworkers import mplatindictionaryinsert, mpgreekdictionaryinsert, mplemmatainsert, mpanalysisinsert
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -29,70 +28,10 @@ def formatlewisandshort(dbconnection, cursor, topdir):
 		commitcount = MPCounter()
 		
 		workers = int(config['io']['workers'])
-		jobs = [Process(target=parallellatindictionaryinsert, args=(dictdb, entries, commitcount)) for i in range(workers)]
+		jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, commitcount)) for i in range(workers)]
 		for j in jobs: j.start()
 		for j in jobs: j.join()
 		
-	return
-
-
-def parallellatindictionaryinsert(dictdb, entries, commitcount):
-	"""
-	work on an indivudual entry
-	:param entry:
-	:return:
-	"""
-	dbc = setconnection(config)
-	curs = dbc.cursor()
-	
-	bodyfinder = re.compile(r'(<entryFree(.*?)>)(.*?)(</entryFree>)')
-	greekfinder = re.compile(r'(<foreign lang="greek">)(.*?)(</foreign>)')
-	
-	while len(entries) > 0:
-		try: entry = entries.pop()
-		except: entry = ''
-	
-		if entry[0:10] != "<entryFree":
-			# print(entry[0:25])
-			pass
-		else:
-			segments = re.search(bodyfinder, entry)
-			try:
-				body = segments.group(3)
-			except:
-				print('died at', entry)
-				body = ''
-			info = segments.group(2)
-			parsedinfo = re.search('id="(.*?)"\stype="(.*?)"\skey="(.*?)" opt="(.*?)"', info)
-			id = parsedinfo.group(1)
-			type = parsedinfo.group(2)
-			key = parsedinfo.group(3)
-			opt = parsedinfo.group(4)
-			
-			# handle words like abactus which have key... n... opt... where n is the variant number
-			# this pattern interrupts the std parsedinfo flow
-			metricalentry = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
-			entry = re.sub('(_|\^)', '', metricalentry)
-			metricalentry = latinvowellengths(metricalentry)
-			
-			key = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
-			key = latinvowellengths(key)
-			
-			# do some quickie greek replacements
-			body = re.sub(greekfinder, gr2betaconverter, body)
-			
-			query = 'INSERT INTO ' + dictdb + ' (entry_name, metrical_entry, id_number, entry_type, entry_key, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s, %s)'
-			data = (entry, metricalentry, id, type, key, opt, body)
-			curs.execute(query, data)
-			commitcount.increment()
-			if commitcount.value % 5000 == 0:
-				dbc.commit()
-				print('at',id, entry)
-	
-	dbc.commit()
-	curs.close()
-	del dbc
-	
 	return
 
 
@@ -114,77 +53,11 @@ def formatliddellandscott(dbconnection, cursor, topdir):
 		commitcount = MPCounter()
 		
 		workers = int(config['io']['workers'])
-		jobs = [Process(target=parallelgreekdictionaryinsert, args=(dictdb, entries, commitcount)) for i in
+		jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, commitcount)) for i in
 		        range(workers)]
 		for j in jobs: j.start()
 		for j in jobs: j.join()
 		
-		id = 0
-		
-	return
-
-
-def parallelgreekdictionaryinsert(dictdb, entries, commitcount):
-	dbc = setconnection(config)
-	curs = dbc.cursor()
-	
-	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
-	greekfinder = re.compile('(<*?lang="greek"*?>)(.*?)(</.*?>)')
-	groptfinder = re.compile('(<*?lang="greek"\sopt="n">)(.*?)(</.*?>)')
-	orthographyfinder = re.compile('(<orth.*?>)(.*?)(</orth>)')
-	
-	id = 0
-	while len(entries) > 0:
-		try: entry = entries.pop()
-		except: entry = ''
-		
-		if entry[0:10] != "<entryFree":
-			# print(entry[0:25])
-			pass
-		else:
-			segments = re.search(bodyfinder, entry)
-			try:
-				body = segments.group(3)
-			except:
-				body = ''
-				print('died at', id, entry)
-			info = segments.group(2)
-			parsedinfo = re.search('id="(.*?)"\skey=(".*?")\stype="(.*?)"\sopt="(.*?)"', info)
-			id = parsedinfo.group(1)
-			try:
-				key = parsedinfo.group(2)
-			except:
-				key = ''
-				print('did not find key at', id, entry)
-			type = parsedinfo.group(3)
-			opt = parsedinfo.group(4)
-			
-			entry = re.sub(r'"(.*?)"', gr1betaconverter, key.upper())
-			entry = re.sub(r'(\d{1,})', r' (\1)', entry)
-			metrical = re.sub(r'(")(.*?)(")', greekwithvowellengths, key.upper())
-			metrical = re.sub(r'(\d{1,})', r'', metrical)
-			metrical = re.sub(r'"', r'', metrical)
-			
-			body = re.sub(greekfinder, gr2betaconverter, body)
-			
-			orth = re.search(orthographyfinder, body)
-			orth = greekwithvowellengths(orth)
-			orth = replacegreekbetacode(orth)
-			body = re.sub(orthographyfinder, r'\1' + orth + r'\3', body)
-			stripped = stripaccents(entry)
-			
-			query = 'INSERT INTO ' + dictdb + ' (entry_name, metrical_entry, unaccented_entry, id_number, entry_type, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s, %s)'
-			data = (entry, metrical, stripped, id, type, opt, body)
-			curs.execute(query, data)
-			commitcount.increment()
-			if commitcount.value % 5000 == 0:
-				dbc.commit()
-				print('at', id, entry)
-				
-	dbc.commit()
-	curs.close()
-	del dbc
-	
 	return
 
 
@@ -216,39 +89,23 @@ def grammarloader(lemmalanguage, lemmabasedir, dbconnection, cursor):
 	else:
 		latin = False
 	
-	query = 'TRUNCATE ' + grammardb
-	cursor.execute(query)
+	print('loading',grammardb)
+	resetlemmadb(grammardb, dbconnection, cursor)
 	
 	f = open(lemmafile, encoding='utf-8', mode='r')
-	l = f.readlines()
+	entries = f.readlines()
 	f.close()
 	
-	# this next one for greeklemmata
-	keywordfinder = re.compile(r'(.*?\t)(\d{1,})(.*?)$')
-	greekfinder = re.compile(r'(\t.*?)(\s.*?)(?=(\t|$))')
+	manager = Manager()
+	entries = manager.list(entries)
+	commitcount = MPCounter()
 	
-	count = 0
-	for entry in l:
-		count += 1
-		segments = re.search(keywordfinder, entry)
-		dictionaryform = segments.group(1)
-		if latin is True:
-			dictionaryform = re.sub(r'\t', '', dictionaryform)
-		else:
-			dictionaryform = re.sub(r'(.*?)\t', gr1betaconverter, dictionaryform.upper())
-		otherforms = segments.group(3)
-		if latin is not True:
-			otherforms = re.sub(greekfinder, betaconvertandsave, otherforms)
-		xref = int(segments.group(2))
-		# be careful: the corresponding xref is a str inside a text field
-		
-		query = 'INSERT INTO ' + grammardb + ' (dictionary_entry, xref_number, derivative_forms) VALUES (%s, %s, %s)'
-		data = (dictionaryform, xref, otherforms)
-		cursor.execute(query, data)
-		if count % 5000 == 0:
-			print(count, dictionaryform)
-			dbconnection.commit()
-	dbconnection.commit()
+	workers = int(config['io']['workers'])
+	jobs = [Process(target=mplemmatainsert, args=(grammardb, entries, latin, commitcount)) for i in
+	        range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+	
 	return
 
 
@@ -266,54 +123,33 @@ def analysisloader(analysisfile, grammardb, l, dbconnection, cursor):
 	else:
 		latin = False
 	
-	trunc = True
-	if trunc is True:
-		query = 'TRUNCATE ' + grammardb
-		cursor.execute(query)
+	print('loading', grammardb)
+	resetanalysisdb(grammardb, dbconnection, cursor)
 	
 	f = open(analysisfile, encoding='utf-8', mode='r')
-	l = f.readlines()
+	forms = f.readlines()
 	f.close()
 	
-	# this next one for analyses
-	keywordfinder = re.compile(r'(.*?\t)(.*?)$')
-	greekfinder = re.compile(r'(\{(\d{1,})\s\d\s(.*?\t)(.*?)\t(.*?)\})')
+	# rather than manage a list of 100s of MB in size let's get chunky
+	# this also allows us to send updates outside of the commit() moment
+	# http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks#1751478
 	
-	count = 0
-	for entry in l:
-		count += 1
-		segments = re.search(keywordfinder, entry)
-		dictionaryform = segments.group(1)
-		
-		if latin is True:
-			dictionaryform = re.sub(r'\t', '', dictionaryform)
-			dictionaryform = latinvowellengths(dictionaryform)
-		else:
-			dictionaryform = re.sub(r'(.*?)\t', gr1betaconverter, dictionaryform.upper())
-		otherforms = segments.group(2)
-		entries = re.findall(greekfinder, otherforms)
-		# 'πελαθόμην
-		# [('{41945513 9 e)pelaqo/mhn,e)pilanqa/nomai\tcause to forget\taor ind mid 1st sg}', 'e)pelaqo/mhn,e)pilanqa/nomai', '\tcause to forget', '\taor ind mid 1st sg'), ('{41945513 9 e)pela_qo/mhn,e)pilanqa/nomai\tcause to forget\timperf ind mp 1st sg (doric)}', 'e)pela_qo/mhn,e)pilanqa/nomai', '\tcause to forget', '\timperf ind mp 1st sg (doric)')]
-		possibilities = ''
-		number = 0
-		for found in entries:
-			number += 1
-			if latin is True:
-				wd = re.sub(r'\t', '', found[2])
-				wd = latinvowellengths(wd)
-			else:
-				wd = re.sub(r'(.*?)\t', gr1betaconverter, found[2].upper())
-			possibilities += '<possibility_' + str(number) + '>' + wd + '<xref_value>' + found[
-				1] + '</xref_value><transl>' + found[3] + '</transl>' + '<analysis>' + found[
-				                 4] + '</analysis></possibility_' + str(number) + '>\n'
-		# ' '.join(possibilities)
-		query = 'INSERT INTO ' + grammardb + ' (observed_form, possible_dictionary_forms) VALUES (%s, %s)'
-		data = (dictionaryform, possibilities)
-		cursor.execute(query, data)
-		if count % 5000 == 0:
-			print(count, dictionaryform)
-			dbconnection.commit()
-	dbconnection.commit()
+	chunksize = 50000
+	formbundles = [forms[i:i + chunksize] for i in range(0, len(forms), chunksize)]
+	bundlecount = 0
+	
+	for bundle in formbundles:
+		bundlecount += 1
+		manager = Manager()
+		items = manager.list(bundle)
+		commitcount = MPCounter()
+
+		workers = int(config['io']['workers'])
+		jobs = [Process(target=mpanalysisinsert, args=(grammardb, items, latin, commitcount)) for i in
+		        range(workers)]
+		for j in jobs: j.start()
+		for j in jobs: j.join()
+		print('\t',str(bundlecount*chunksize),'forms inserted')
 	return
 
 
@@ -413,3 +249,52 @@ def resetgreekdictdb(dictdb, dbconnection, cursor):
 	dbconnection.commit()
 	
 	return
+
+
+def resetlemmadb(grammardb, dbconnection, cursor):
+	"""
+	drop if exists and build the framework
+	:param dbconnection:
+	:param cursor:
+	:return:
+	"""
+	
+	q = 'DROP TABLE IF EXISTS public.' + grammardb + '; DROP INDEX IF EXISTS '+grammardb+'_idx;'
+	cursor.execute(q)
+	
+	q = 'CREATE TABLE public.' + grammardb + ' ( dictionary_entry character varying(64), xref_number integer, derivative_forms text ) WITH ( OIDS=FALSE );'
+	cursor.execute(q)
+	
+	q = 'GRANT SELECT ON TABLE public.' + grammardb + ' TO hippa_rd;'
+	cursor.execute(q)
+	
+	q = 'CREATE INDEX '+grammardb+'_idx ON public.' + grammardb + ' USING btree (dictionary_entry COLLATE pg_catalog."default");'
+	cursor.execute(q)
+	dbconnection.commit()
+	
+	return
+
+
+def resetanalysisdb(grammardb, dbconnection, cursor):
+	"""
+	drop if exists and build the framework
+	:param dbconnection:
+	:param cursor:
+	:return:
+	"""
+	
+	q = 'DROP TABLE IF EXISTS public.' + grammardb + '; DROP INDEX IF EXISTS ' + grammardb + '_idx;'
+	cursor.execute(q)
+	
+	q = 'CREATE TABLE public.' + grammardb + ' ( observed_form character varying(64), possible_dictionary_forms text ) WITH ( OIDS=FALSE );'
+	cursor.execute(q)
+	
+	q = 'GRANT SELECT ON TABLE public.' + grammardb + ' TO hippa_rd;'
+	cursor.execute(q)
+	
+	q = 'CREATE INDEX ' + grammardb + '_idx ON public.' + grammardb + ' USING btree (observed_form COLLATE pg_catalog."default");'
+	cursor.execute(q)
+	dbconnection.commit()
+	
+	return
+

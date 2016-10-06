@@ -1,6 +1,6 @@
 import re
 from multiprocessing import Value
-from builder.parsers import idtfiles, betacode_to_unicode, regex_substitutions
+from builder.parsers import regex_substitutions
 
 class Author(object):
 	"""

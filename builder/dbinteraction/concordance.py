@@ -32,6 +32,7 @@ def findwordsinaline(line):
 	
 	return wordlist
 
+
 def cleanwords(word):
 	"""
 	remove gunk that should not be in a concordance
