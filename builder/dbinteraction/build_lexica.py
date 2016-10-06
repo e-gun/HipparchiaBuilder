@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from builder.parsers import lexica
+from builder.parsers.betacode_to_unicode import stripaccents
 import time
 import re
 
@@ -22,7 +23,8 @@ def formatlewisandshort(dbconnection, cursor, topdir):
 
 		for entry in d:
 			if entry[0:10] != "<entryFree":
-				print(entry[0:25])
+				# print(entry[0:25])
+				pass
 			else:
 				segments = re.search(bodyfinder,entry)
 				try:
@@ -110,7 +112,7 @@ def formatliddellandscott(dbconnection, cursor, topdir):
 				body = re.sub(r' λανγ="γρεεκ"','', body)
 				body = re.sub(r'<γεν ','<gen ',body)
 				body = re.sub(r'<ιτψπε ','<itype ',body)
-				stripped = lexica.stripaccents(entry)
+				stripped = stripaccents(entry)
 
 				query = 'INSERT INTO ' + dictdb + ' (entry_name, unaccented_entry, id_number, entry_type, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s)'
 				data = (entry, stripped, id, type, opt, body)
