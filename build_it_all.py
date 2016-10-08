@@ -7,8 +7,8 @@ from builder.dbinteraction.build_lexica import *
 
 
 buildauthors = False
-buildlex = False
-buildgram = True
+buildlex = True
+buildgram = False
 
 config = configparser.ConfigParser()
 config.read('config.ini')

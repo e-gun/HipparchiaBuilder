@@ -86,8 +86,9 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	
 	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	greekfinder = re.compile('(<*?lang="greek"*?>)(.*?)(</.*?>)')
-	groptfinder = re.compile('(<*?lang="greek"\sopt="n">)(.*?)(</.*?>)')
 	orthographyfinder = re.compile('(<orth.*?>)(.*?)(</orth>)')
+	genfinder = re.compile('(<gen lang="gr.*?>)(.*?)(</gen>)')
+	purge = re.compile('<.*?λανγ="γρεεκ".*?>')
 	
 	id = 0
 	while len(entries) > 0:
@@ -122,11 +123,13 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			metrical = re.sub(r'"', r'', metrical)
 			
 			body = re.sub(greekfinder, gr2betaconverter, body)
+			body = re.sub(genfinder, gr2betaconverter, body)
 			
 			orth = re.search(orthographyfinder, body)
 			orth = greekwithvowellengths(orth)
 			orth = replacegreekbetacode(orth)
 			body = re.sub(orthographyfinder, r'\1' + orth + r'\3', body)
+			body = re.sub(purge,'',body)
 			stripped = stripaccents(entry)
 			
 			query = 'INSERT INTO ' + dictdb + ' (entry_name, metrical_entry, unaccented_entry, id_number, entry_type, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s, %s)'
