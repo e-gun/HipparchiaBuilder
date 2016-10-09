@@ -141,6 +141,8 @@ def analysisloader(analysisfile, grammardb, l, dbconnection, cursor):
 	for bundle in formbundles:
 		bundlecount += 1
 		manager = Manager()
+		# need this because all searches are l.c. and so you can't "Διόϲ" via what will be a search for "διόϲ"
+		bundle[:] = [x.lower() for x in bundle]
 		items = manager.list(bundle)
 		commitcount = MPCounter()
 

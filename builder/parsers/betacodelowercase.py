@@ -53,6 +53,13 @@ def lowercaseletters(betacode):
 	unicode = re.sub(laa, lowercaseacutedsub, unicode)
 	unicode = re.sub(lca, lowercasesircumflexsub, unicode)
 	
+	# lowercase + breathing + subscript
+	lss = re.compile(r'([AHW])\)\|')
+	lrs = re.compile(r'([AHW])\(\|')
+	
+	unicode = re.sub(lss, lowercasesmoothsub, unicode)
+	unicode = re.sub(lrs, lowercasearoughsub, unicode)
+	
 	# lowercase + accent + diaresis
 	lgd = re.compile(r'([IU])\\\+')
 	lad = re.compile(r'([IU])\/\+')
@@ -328,10 +335,6 @@ def lowercasegravesub(match):
 	
 	substitutions = {
 		'A': u'ᾲ',
-		'E': u'',
-		'I': u'',
-		'O': u'',
-		'U': u'',
 		'H': u'ῂ',
 		'W': u'ῲ',
 	}
@@ -346,10 +349,6 @@ def lowercaseacutedsub(match):
 	
 	substitutions = {
 		'A': u'ᾴ',
-		'E': u'',
-		'I': u'',
-		'O': u'',
-		'U': u'',
 		'H': u'ῄ',
 		'W': u'ῴ',
 	}
@@ -364,12 +363,37 @@ def lowercasesircumflexsub(match):
 	
 	substitutions = {
 		'A': u'ᾷ',
-		'E': u'',
-		'I': u'',
-		'O': u'',
-		'U': u'',
 		'H': u'ῇ',
 		'W': u'ῷ',
+	}
+	
+	substitute = substitutions[val]
+	
+	return substitute
+
+# lowercase + breathing + subscript
+
+def lowercasesmoothsub(match):
+	val = match.group(1)
+	
+	substitutions = {
+		'A': u'ᾀ',
+		'H': u'ᾐ',
+		'W': u'ᾠ',
+	}
+	
+	substitute = substitutions[val]
+	
+	return substitute
+
+
+def lowercaseroughsub(match):
+	val = match.group(1)
+	
+	substitutions = {
+		'A': u'ᾁ',
+		'H': u'ᾑ',
+		'W': u'ᾡ',
 	}
 	
 	substitute = substitutions[val]
