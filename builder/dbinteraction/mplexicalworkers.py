@@ -101,7 +101,6 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			entry = ''
 		
 		if entry[0:10] != "<entryFree":
-			# print(entry[0:25])
 			pass
 		else:
 			segments = re.search(bodyfinder, entry)

@@ -12,6 +12,7 @@ buildgram = False
 
 config = configparser.ConfigParser()
 config.read('config.ini')
+
 dbconnection = setconnection(config)
 # dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 cursor = dbconnection.cursor()
