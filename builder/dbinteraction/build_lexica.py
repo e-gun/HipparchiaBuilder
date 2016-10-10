@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import re
-from builder.parsers.lexica import gr1betaconverter
 
 import configparser
 from multiprocessing import Process, Manager
