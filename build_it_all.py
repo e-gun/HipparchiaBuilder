@@ -30,7 +30,7 @@ if buildauthors == True:
 if buildlex == True:
 	print('building lexical dbs')
 	formatliddellandscott(dbconnection, cursor, '../')
-	formatlewisandshort(dbconnection, cursor, '../')
+	# formatlewisandshort(dbconnection, cursor, '../')
 
 if buildgram == True:
 	print('building grammar dbs')

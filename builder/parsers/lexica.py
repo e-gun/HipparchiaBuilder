@@ -33,7 +33,7 @@ def gr3betaconverter(texttoclean):
 	return unigreek
 
 
-def greekwithvowellengths(match):
+def greekwithvowellengths(ttc):
 	"""
 	the non-documented long-and-short codes
 	this can/will confuse lexical lookups from greek passages
@@ -42,7 +42,7 @@ def greekwithvowellengths(match):
 	:return:
 	"""
 
-	ttc = match.group(2)
+	# ttc = match.group(2)
 
 	if re.search(r'[a-z]',ttc) is not None:
 		# this will keep things that have already been turned into greek from turning into upper case greek

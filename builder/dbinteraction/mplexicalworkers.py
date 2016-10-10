@@ -84,6 +84,111 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	dbc = setconnection(config)
 	curs = dbc.cursor()
 	
+	# places where you can find lang="greek"
+	# <foreign>; <orth>; <pron>; <quote>; <gen>; <itype>
+	# but there can be a nested tag: you can't convert its contents
+	# ntl, it looks like there are only 5 places where this matters in the whole dictionary
+	
+	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
+	greekfinder = re.compile('(<(foreign|orth|pron|quote|gen|itype|ref).*?lang="greek".*?>)(.*?)(</(foreign|orth|pron|quote|gen|itype|ref)>)')
+	
+	
+	id = 0
+	while len(entries) > 0:
+		try:
+			entry = entries.pop()
+		except:
+			entry = ''
+		
+		if entry[0:10] != "<entryFree":
+			# print(entry[0:25])
+			pass
+		else:
+			segments = re.search(bodyfinder, entry)
+			try:
+				body = segments.group(3)
+			except:
+				body = ''
+				print('died at', id, entry)
+			info = segments.group(2)
+			parsedinfo = re.search('id="(.*?)"\skey=(".*?")\stype="(.*?)"\sopt="(.*?)"', info)
+			id = parsedinfo.group(1)
+			try:
+				key = parsedinfo.group(2)
+			except:
+				key = ''
+				print('did not find key at', id, entry)
+			type = parsedinfo.group(3)
+			opt = parsedinfo.group(4)
+			
+			entry = re.sub(r'"(.*?)"', gr1betaconverter, key.upper())
+			entry = re.sub(r'(\d{1,})', r' (\1)', entry)
+			metrical = re.sub(r'(")(.*?)(")', lambda x: greekwithvowellengths(x.group(2)), key.upper())
+			metrical = re.sub(r'(\d{1,})', r'', metrical)
+			metrical = re.sub(r'"', r'', metrical)
+			
+			body = re.sub(greekfinder, lsjgreekswapper, body)
+			
+			stripped = stripaccents(entry)
+			
+			query = 'INSERT INTO ' + dictdb + ' (entry_name, metrical_entry, unaccented_entry, id_number, entry_type, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s, %s)'
+			data = (entry, metrical, stripped, id, type, opt, body)
+			curs.execute(query, data)
+			commitcount.increment()
+			if commitcount.value % 5000 == 0:
+				dbc.commit()
+				print('at', id, entry)
+	
+	dbc.commit()
+	curs.close()
+	del dbc
+	
+	return
+
+
+def lsjgreekswapper(match):
+	"""
+	greekfinder in mpgreekdictionaryinsert() will find 5 things:
+		match1 + match 3 + match 4 reassembles the markup block
+		match 3 is likely greek, but you ought to make sure that there are not more tags inside of it
+		ntl, there are a very small number of affected edge cases (5): <num>'A</num>;  <hi rend="underline">SKLA</hi>; ...
+	:param match:
+	:return:
+	"""
+	
+	# markup = re.compile(r'(<.*?>)(.*?)(</.*?>)')
+	
+	target = match.group(3)
+	
+	# if re.search(markup,target) is not None:
+	# 	toswap = re.search(markup,target).group(2)
+	# 	substitute = re.sub(markup, gr2betaconverter, toswap.upper())
+	# 	substitute = re.search(markup,target).group(1) + substitute + re.search(markup,target).group(3)
+	# 	print('xs',substitute)
+	# else:
+	# 	substitute = replacegreekbetacode(target.upper())
+	
+	substitute = greekwithvowellengths(target.upper())
+	substitute = match.group(1) + substitute + match.group(4)
+
+	return substitute
+
+def oldmpgreekdictionaryinsert(dictdb, entries, commitcount):
+	"""
+	work on dictdb entries
+	assignable to an mp worker
+	insert into db at end
+	:param entry:
+	:return:
+	"""
+	
+	dbc = setconnection(config)
+	curs = dbc.cursor()
+	
+	# places where you can find lang="greek"
+	# <foreign>; <orth>; <pron>; <quote>; <gen>; <itype>
+	# but there can be a nested tag: you can't convert its contents
+	
 	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	greekfinder = re.compile('(<*?lang="greek"*?>)(.*?)(</.*?>)')
 	orthographyfinder = re.compile('(<orth.*?>)(.*?)(</orth>)')

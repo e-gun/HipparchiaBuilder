@@ -58,7 +58,7 @@ def lowercaseletters(betacode):
 	lrs = re.compile(r'([AHW])\(\|')
 	
 	unicode = re.sub(lss, lowercasesmoothsub, unicode)
-	unicode = re.sub(lrs, lowercasearoughsub, unicode)
+	unicode = re.sub(lrs, lowercaseroughsub, unicode)
 	
 	# lowercase + accent + diaresis
 	lgd = re.compile(r'([IU])\\\+')
