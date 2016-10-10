@@ -90,7 +90,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	# ntl, it looks like there are only 5 places where this matters in the whole dictionary
 	
 	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
-	greekfinder = re.compile('(<(foreign|orth|pron|quote|gen|itype|ref).*?lang="greek".*?>)(.*?)(</(foreign|orth|pron|quote|gen|itype|ref)>)')
+	greekfinder = re.compile('(<(foreign|orth|pron|quote|gen|itype|etym|ref).*?lang="greek".*?>)(.*?)(</(foreign|orth|pron|quote|gen|itype|etym|ref)>)')
 	
 	
 	id = 0
