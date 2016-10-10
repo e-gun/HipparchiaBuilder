@@ -2,9 +2,8 @@ import re
 import configparser
 
 from builder.dbinteraction.db import setconnection
-from builder.parsers.betacode_to_unicode import replacegreekbetacode, stripaccents
-from builder.parsers.lexica import latinvowellengths, gr2betaconverter, gr1betaconverter, greekwithvowellengths, \
-	betaconvertandsave
+from builder.parsers.betacode_to_unicode import stripaccents
+from builder.parsers.lexica import latinvowellengths, greekwithvowellengths, betaconvertandsave, greekwithoutvowellengths
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -55,7 +54,7 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			key = latinvowellengths(key)
 			
 			# do some quickie greek replacements
-			body = re.sub(greekfinder, gr2betaconverter, body)
+			body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
 			
 			query = 'INSERT INTO ' + dictdb + ' (entry_name, metrical_entry, id_number, entry_type, entry_key, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s, %s)'
 			data = (entry, metricalentry, id, type, key, opt, body)
@@ -121,7 +120,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			type = parsedinfo.group(3)
 			opt = parsedinfo.group(4)
 			
-			entry = re.sub(r'"(.*?)"', gr1betaconverter, key.upper())
+			entry = re.sub(r'"(.*?)"', lambda x: greekwithoutvowellengths(x.group(1)), key.upper())
 			entry = re.sub(r'(\d{1,})', r' (\1)', entry)
 			metrical = re.sub(r'(")(.*?)(")', lambda x: greekwithvowellengths(x.group(2)), key.upper())
 			metrical = re.sub(r'(\d{1,})', r'', metrical)
@@ -138,6 +137,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
 				print('at', id, entry)
+			# print('entry',entry)
 	
 	dbc.commit()
 	curs.close()
@@ -170,86 +170,8 @@ def lsjgreekswapper(match):
 	
 	substitute = greekwithvowellengths(target.upper())
 	substitute = match.group(1) + substitute + match.group(4)
-
+	
 	return substitute
-
-def oldmpgreekdictionaryinsert(dictdb, entries, commitcount):
-	"""
-	work on dictdb entries
-	assignable to an mp worker
-	insert into db at end
-	:param entry:
-	:return:
-	"""
-	
-	dbc = setconnection(config)
-	curs = dbc.cursor()
-	
-	# places where you can find lang="greek"
-	# <foreign>; <orth>; <pron>; <quote>; <gen>; <itype>
-	# but there can be a nested tag: you can't convert its contents
-	
-	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
-	greekfinder = re.compile('(<*?lang="greek"*?>)(.*?)(</.*?>)')
-	orthographyfinder = re.compile('(<orth.*?>)(.*?)(</orth>)')
-	genfinder = re.compile('(<gen lang="gr.*?>)(.*?)(</gen>)')
-	purge = re.compile('<.*?λανγ="γρεεκ".*?>')
-	
-	id = 0
-	while len(entries) > 0:
-		try: entry = entries.pop()
-		except: entry = ''
-		
-		if entry[0:10] != "<entryFree":
-			# print(entry[0:25])
-			pass
-		else:
-			segments = re.search(bodyfinder, entry)
-			try:
-				body = segments.group(3)
-			except:
-				body = ''
-				print('died at', id, entry)
-			info = segments.group(2)
-			parsedinfo = re.search('id="(.*?)"\skey=(".*?")\stype="(.*?)"\sopt="(.*?)"', info)
-			id = parsedinfo.group(1)
-			try:
-				key = parsedinfo.group(2)
-			except:
-				key = ''
-				print('did not find key at', id, entry)
-			type = parsedinfo.group(3)
-			opt = parsedinfo.group(4)
-			
-			entry = re.sub(r'"(.*?)"', gr1betaconverter, key.upper())
-			entry = re.sub(r'(\d{1,})', r' (\1)', entry)
-			metrical = re.sub(r'(")(.*?)(")', greekwithvowellengths, key.upper())
-			metrical = re.sub(r'(\d{1,})', r'', metrical)
-			metrical = re.sub(r'"', r'', metrical)
-			
-			body = re.sub(greekfinder, gr2betaconverter, body)
-			body = re.sub(genfinder, gr2betaconverter, body)
-			
-			orth = re.search(orthographyfinder, body)
-			orth = greekwithvowellengths(orth)
-			orth = replacegreekbetacode(orth)
-			body = re.sub(orthographyfinder, r'\1' + orth + r'\3', body)
-			body = re.sub(purge,'',body)
-			stripped = stripaccents(entry)
-			
-			query = 'INSERT INTO ' + dictdb + ' (entry_name, metrical_entry, unaccented_entry, id_number, entry_type, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s, %s)'
-			data = (entry, metrical, stripped, id, type, opt, body)
-			curs.execute(query, data)
-			commitcount.increment()
-			if commitcount.value % 5000 == 0:
-				dbc.commit()
-				print('at', id, entry)
-				
-	dbc.commit()
-	curs.close()
-	del dbc
-	
-	return
 
 
 def mplemmatainsert(grammardb, entries, islatin, commitcount):
@@ -275,7 +197,7 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 			if islatin is True:
 				dictionaryform = re.sub(r'\t', '', dictionaryform)
 			else:
-				dictionaryform = re.sub(r'(.*?)\t', gr1betaconverter, dictionaryform.upper())
+				dictionaryform = re.sub(r'(.*?)\t', lambda x: greekwithoutvowellengths(x.group(1)), dictionaryform.upper())
 			otherforms = segments.group(3)
 			if islatin is not True:
 				otherforms = re.sub(greekfinder, betaconvertandsave, otherforms)
@@ -323,7 +245,7 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 				dictionaryform = re.sub(r'\t', '', dictionaryform)
 				dictionaryform = latinvowellengths(dictionaryform)
 			else:
-				dictionaryform = re.sub(r'(.*?)\t', gr1betaconverter, dictionaryform.upper())
+				dictionaryform = re.sub(r'(.*?)\t', lambda x: greekwithoutvowellengths(x.group(1)), dictionaryform.upper())
 			otherforms = segments.group(2)
 			entries = re.findall(greekfinder, otherforms)
 			# 'πελαθόμην
@@ -336,7 +258,7 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 					wd = re.sub(r'\t', '', found[2])
 					wd = latinvowellengths(wd)
 				else:
-					wd = re.sub(r'(.*?)\t', gr1betaconverter, found[2].upper())
+					wd = re.sub(r'(.*?)\t', lambda x: greekwithoutvowellengths(x.group(1)), found[2].upper())
 				possibilities += '<possibility_' + str(number) + '>' + wd + '<xref_value>' + found[1] + \
 				                 '</xref_value><transl>' + found[3] + '</transl>' + '<analysis>' + found[4] + \
 				                 '</analysis></possibility_' + str(number) + '>\n'
