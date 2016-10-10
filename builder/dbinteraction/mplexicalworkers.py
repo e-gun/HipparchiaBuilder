@@ -1,9 +1,10 @@
-import re
 import configparser
+import re
 
 from builder.dbinteraction.db import setconnection
 from builder.parsers.betacode_to_unicode import stripaccents
-from builder.parsers.lexica import latinvowellengths, greekwithvowellengths, betaconvertandsave, greekwithoutvowellengths
+from builder.parsers.lexica import latinvowellengths, greekwithvowellengths, betaconvertandsave, greekwithoutvowellengths, \
+	lsjgreekswapper
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -144,34 +145,6 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	del dbc
 	
 	return
-
-
-def lsjgreekswapper(match):
-	"""
-	greekfinder in mpgreekdictionaryinsert() will find 5 things:
-		match1 + match 3 + match 4 reassembles the markup block
-		match 3 is likely greek, but you ought to make sure that there are not more tags inside of it
-		ntl, there are a very small number of affected edge cases (5): <num>'A</num>;  <hi rend="underline">SKLA</hi>; ...
-	:param match:
-	:return:
-	"""
-	
-	# markup = re.compile(r'(<.*?>)(.*?)(</.*?>)')
-	
-	target = match.group(3)
-	
-	# if re.search(markup,target) is not None:
-	# 	toswap = re.search(markup,target).group(2)
-	# 	substitute = re.sub(markup, gr2betaconverter, toswap.upper())
-	# 	substitute = re.search(markup,target).group(1) + substitute + re.search(markup,target).group(3)
-	# 	print('xs',substitute)
-	# else:
-	# 	substitute = replacegreekbetacode(target.upper())
-	
-	substitute = greekwithvowellengths(target.upper())
-	substitute = match.group(1) + substitute + match.group(4)
-	
-	return substitute
 
 
 def mplemmatainsert(grammardb, entries, islatin, commitcount):
