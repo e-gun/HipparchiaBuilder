@@ -127,7 +127,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			metrical = re.sub(r'"', r'', metrical)
 			
 			body = re.sub(greekfinder, lsjgreekswapper, body)
-			body = re.sub(purge, r'/1', body)
+			body = re.sub(purge, r'\1', body)
 			
 			stripped = stripaccents(entry)
 			
