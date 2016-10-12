@@ -91,7 +91,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	
 	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	greekfinder = re.compile('(<(foreign|orth|pron|quote|gen|itype|etym|ref).*?lang="greek".*?>)(.*?)(</(foreign|orth|pron|quote|gen|itype|etym|ref)>)')
-	purge = re.compile(r'<γεν λανγ="γρεεκ" οπτ="ν">')
+	purge = re.compile(r'<γεν λανγ="γρεεκ" οπτ="ν">(.*?)</gen>')
 	
 	id = 0
 	while len(entries) > 0:
@@ -127,7 +127,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			metrical = re.sub(r'"', r'', metrical)
 			
 			body = re.sub(greekfinder, lsjgreekswapper, body)
-			body = re.sub(purge, '', body)
+			body = re.sub(purge, r'/1', body)
 			
 			stripped = stripaccents(entry)
 			
