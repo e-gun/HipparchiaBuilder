@@ -582,7 +582,7 @@ def poundsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_pound_sign value="'+match.group(1)+'" />▦'
-		print('\t',substitute)
+		# print('\t',substitute)
 	
 	return substitute
 
@@ -682,7 +682,7 @@ def percentsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_percent_sign value="' + match.group(1) + '" />▩'
-		print('\t',substitute)
+		# print('\t',substitute)
 	
 	return substitute
 
