@@ -87,11 +87,14 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	# places where you can find lang="greek"
 	# <foreign>; <orth>; <pron>; <quote>; <gen>; <itype>
 	# but there can be a nested tag: you can't convert its contents
-	# ntl, it looks like there are only 5 places where this matters in the whole dictionary
+	# not clear how much one needs to care: but a search inside a match group could be implemented.
 	
 	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	greekfinder = re.compile('(<(foreign|orth|pron|quote|gen|itype|etym|ref).*?lang="greek".*?>)(.*?)(</(foreign|orth|pron|quote|gen|itype|etym|ref)>)')
-	purge = re.compile(r'<γεν λανγ="γρεεκ" οπτ="ν">(.*?)</gen>')
+	# these arise from nested tags: a more elegant solution would be nice; some other day
+	restorea = re.compile(r'<γεν λανγ="γρεεκ" οπτ="ν">(.*?)(</gen>)')
+	restoreb = re.compile(r'<προν εχτεντ="φυλλ" λανγ="γρεεκ" οπτ="ν"(.*?)(</pron>)')
+	restorec = re.compile(r'<ιτψπε λανγ="γρεεκ" οπτ="ν">(.*?)(</itype>)')
 	
 	id = 0
 	while len(entries) > 0:
@@ -127,7 +130,9 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			metrical = re.sub(r'"', r'', metrical)
 			
 			body = re.sub(greekfinder, lsjgreekswapper, body)
-			body = re.sub(purge, r'\1', body)
+			body = re.sub(restorea, r'<gen lang="greek" opt="n">\1\2', body)
+			body = re.sub(restoreb, r'<pron extent="full">\1\2', body)
+			body = re.sub(restorec, r'<itype lang="greek" opt="n">\1\2', body)
 			
 			stripped = stripaccents(entry)
 			

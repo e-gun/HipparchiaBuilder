@@ -6,9 +6,9 @@ from builder import corpus_builder
 from builder.dbinteraction.build_lexica import *
 
 
-buildauthors = False
+buildauthors = True
 buildlex = True
-buildgram = False
+buildgram = True
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -26,12 +26,12 @@ if buildauthors == True:
 	print('building author and work dbs')
 	# remember to set a reasonable number of workers: a virtual box with one core and .5G of RAM does not want 6 workers
 	corpus_builder.parallelbuildcorpus(tlg, phi, dbconnection, cursor)
-	# corpus_builder.serialbuildcorpus(tlg, phi, dbconnection, cursor)
+	corpus_builder.serialbuildcorpus(tlg, phi, dbconnection, cursor)
 
 if buildlex == True:
 	print('building lexical dbs')
 	formatliddellandscott(dbconnection, cursor, '../')
-	# formatlewisandshort(dbconnection, cursor, '../')
+	formatlewisandshort(dbconnection, cursor, '../')
 
 if buildgram == True:
 	print('building grammar dbs')
