@@ -26,7 +26,7 @@ if buildauthors == True:
 	print('building author and work dbs')
 	# remember to set a reasonable number of workers: a virtual box with one core and .5G of RAM does not want 6 workers
 	corpus_builder.parallelbuildcorpus(tlg, phi, dbconnection, cursor)
-	corpus_builder.serialbuildcorpus(tlg, phi, dbconnection, cursor)
+	# corpus_builder.serialbuildcorpus(tlg, phi, dbconnection, cursor)
 
 if buildlex == True:
 	print('building lexical dbs')
