@@ -210,9 +210,9 @@ def initialworkparsing(authorobject, language, datapath):
 	txt = regex_substitutions.replacequotationmarks(txt)
 	txt = regex_substitutions.replaceaddnlchars(txt)
 	# now you are about to get a bunch of brackets added to the data via hmu_markup
-	# next is obsolete
-	# txt = regex_substitutions.replacemarkup(txt)
 	if language == 'G':
+		# where else/how else to handle colons?
+		txt = re.sub(r':','·',txt)
 		txt = regex_substitutions.findromanwithingreek(txt)
 		txt = regex_substitutions.replacegreekmarkup(txt)
 		txt = regex_substitutions.replacelatinmarkup(txt)
