@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 # assuming py35 or higher
 import json
-import re
 from builder.parsers.parse_binfiles import peekatcanon
 
 import psycopg2
 
 from builder.builder_classes import dbOpus
-from builder.dbinteraction.dbprepsubstitutions import quarterspacer
 
 
 def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
@@ -205,25 +203,6 @@ def tablemaker(workdbname, cursor):
 	# print('failed to create',workdbname)
 
 	return
-
-
-def labelmaker(workuid, cursor):
-	"""
-	SQL setup
-	:param workuid:
-	:param cursor:
-	:return:
-	"""
-	query = 'SELECT levellabels_05,levellabels_04,levellabels_03,levellabels_02,levellabels_01,levellabels_00 from works where universalid = %s'
-	# query = 'SELECT levellabels_00,levellabels_01,levellabels_02,levellabels_03,levellabels_04,levellabels_05 from works where universalid = %s'
-	data = (workuid,)
-	try:
-		cursor.execute(query, data)
-	except:
-		print('somehow failed to find work info for', workuid)
-
-	results = cursor.fetchone()
-	return results
 
 
 def dbauthoradder(authorobject, cursor):

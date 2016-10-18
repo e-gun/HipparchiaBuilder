@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 import string
 
@@ -129,6 +130,8 @@ def dbstrippedliner(dbunreadyversion):
 		clean = re.sub(unspan, '', clean)
 		clean = re.sub(straypunct, '', clean)
 		clean = re.sub(combininglowerdot, '', clean)
+		clean = clean.lower()
+		
 		line.append(clean)
 		dbreadyversion.append(line)
 

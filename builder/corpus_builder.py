@@ -42,7 +42,7 @@ def parallelbuildcorpus(greekdatapath, latindatapath, dbconnection, cursor):
 	
 	ag = list(allgreekauthors.keys())
 	ag.sort()
-	# ag = []
+	#ag = []
 	thework = []
 	for a in ag:
 		if int(a) < 9999:

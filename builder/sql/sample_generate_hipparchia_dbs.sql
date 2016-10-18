@@ -69,6 +69,8 @@ CREATE TABLE public.works
   transmission character varying(32),
   worktype character varying(32),
   wordcount integer,
+  firstline integer,
+  lastline integer,
   authentic boolean
 )
 WITH (

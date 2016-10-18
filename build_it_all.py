@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 #!../bin/python
 import time
+import configparser
 from builder.dbinteraction.db import setconnection
 from builder import corpus_builder
-from builder.dbinteraction.build_lexica import *
-
+from builder.dbinteraction.build_lexica import formatliddellandscott, formatlewisandshort, grammarloader, analysisloader
+from builder.dbinteraction.postbuildstatistics import insertfirstsandlasts, findwordcounts
 
 buildauthors = True
 buildlex = True
 buildgram = True
+buildstats = True
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -26,7 +28,6 @@ if buildauthors == True:
 	print('building author and work dbs')
 	# remember to set a reasonable number of workers: a virtual box with one core and .5G of RAM does not want 6 workers
 	corpus_builder.parallelbuildcorpus(tlg, phi, dbconnection, cursor)
-	# corpus_builder.serialbuildcorpus(tlg, phi, dbconnection, cursor)
 
 if buildlex == True:
 	print('building lexical dbs')
@@ -39,6 +40,11 @@ if buildgram == True:
 	analysisloader('../HipparchiaData/lexica/greek-analyses.txt', 'greek_morphology', 'g', dbconnection, cursor)
 	grammarloader('ll', '../HipparchiaData/lexica/', dbconnection, cursor)
 	analysisloader('../HipparchiaData/lexica/latin-analyses.txt', 'latin_morphology', 'l', dbconnection, cursor)
+
+if buildstats == True:
+	print('compiling statistics')
+	insertfirstsandlasts(cursor, dbconnection)
+	findwordcounts(cursor, dbconnection)
 
 stop = time.time()
 took = round((stop-start)/60, 2)
