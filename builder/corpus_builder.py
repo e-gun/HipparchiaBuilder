@@ -65,46 +65,6 @@ def parallelworker(thework):
 
 	return
 
-def serialbuildcorpus(greekdatapath, latindatapath,  dbconnection, cursor):
-	"""
-	the whole enchilada
-	you a few shifts in the comments and conditionals will let you build portions instead
-	:return:
-	"""
-	allgreekauthors = filereaders.findauthors(greekdatapath)
-	allgreekauthors = checkextant(allgreekauthors,greekdatapath)
-	alllatinauthors = filereaders.findauthors(latindatapath)
-	alllatinauthors = checkextant(alllatinauthors,latindatapath)
-
-
-	al = list(alllatinauthors.keys())
-	al.sort()
-	# al = []
-	for a in al:
-		if int(a) < 9999:
-			result = addoneauthor({a: alllatinauthors[a]}, 'L', latindatapath,  dbconnection, cursor)
-			print(re.sub(r'[^\x00-\x7F]+',' ', result))
-			dbconnection.commit()
-			time.sleep(.1)
-	
-	if len(al) > 0:
-		parse_binfiles.latinloadcanon(latindatapath + '9999.TXT', cursor)
-
-	ag = list(allgreekauthors.keys())
-	ag.sort()
-	# ag = []
-	for a in ag:
-		if int(a) < 9999:
-			result = addoneauthor({a:allgreekauthors[a]}, 'G', greekdatapath,  dbconnection, cursor)
-			print(re.sub(r'[^\x00-\x7F]+', ' ', result))
-			dbconnection.commit()
-			time.sleep(.1)
-
-	if len(ag) > 0:
-		parse_binfiles.resetbininfo(greekdatapath, cursor, dbconnection)
-
-	return True
-
 
 def checkextant(authorlist,datapath):
 	"""
