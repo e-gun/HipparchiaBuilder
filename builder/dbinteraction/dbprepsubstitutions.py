@@ -65,6 +65,18 @@ def halflinecleanup(dbunreadyversion):
 
 
 def dbpdeincrement(dbunreadyversion):
+	"""
+	a formattind stripper:
+	
+	sample in:
+		['1', [('0', '4'), ('1', '3'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_increment_level_0_by_1 /><hmu_standalone_tabbedtext />ταύτηϲ γὰρ κεῖνοι δάμονέϲ εἰϲι μάχηϲ ']
+		
+	sample out:
+		['1', [('0', '4'), ('1', '3'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_standalone_tabbedtext />ταύτηϲ γὰρ κεῖνοι δάμονέϲ εἰϲι μάχηϲ ']
+	
+	:param dbunreadyversion:
+	:return:
+	"""
 	# a formatting stripper
 	# example:
 	# ['1', [('0', '6'), ('1', '2'), ('2', '30'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_increment_level_0_by_1 />instructis quam latissime potuit porrecta equitum pe']
@@ -99,6 +111,20 @@ def dbpdeincrement(dbunreadyversion):
 
 
 def dbstrippedliner(dbunreadyversion):
+	"""
+	generate the easy to search stripped column
+	
+	sample in:
+		['1', [('0', '19'), ('1', '23'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], 'ν]ῦ̣ν εἷλεϲ αἰχμῆι κα̣[ὶ μέγ’ ἐ]ξήῥὠ κ̣[λ]έοϲ. ']
+	
+	sample out:
+		['1', [('0', '19'), ('1', '23'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], 'ν]ῦ̣ν εἷλεϲ αἰχμῆι κα̣[ὶ μέγ’ ἐ]ξήῥὠ κ̣[λ]έοϲ. ', 'νυν ειλεϲ αιχμηι και μεγ εξηρω κλεοϲ ']
+
+	:param dbunreadyversion:
+	:return:
+	"""
+	
+	
 	# generate the easy-to-search column
 	# example:
 	# ['1', [('0', '5'), ('1', '1'), ('2', '4'), ('3', 'Milt'), ('4', '1')], 'hostem esse Atheniensibus, quod eorum auxilio Iones Sardis expugnas-']
@@ -110,10 +136,10 @@ def dbstrippedliner(dbunreadyversion):
 	unspan = re.compile(r'</span>')
 	combininglowerdot = re.compile(u'\u0323')
 	# this will help with some and hurt with others? need to double-check
-	squarebrackets = re.compile(r'\[.*?\]')
+	# squarebrackets = re.compile(r'\[.*?\]')
 	straydigits = re.compile(r'\d')
 	# sadly can't nuke :punct: because we need hyphens
-	straypunct = re.compile('[\<\>\{\}⟪⟫\.\?\!;:,’·]')
+	straypunct = re.compile('[\<\>\{\}⟪⟫\.\?\!;:,’·\[\]]')
 	dbreadyversion = []
 	workingcolumn = 2
 
@@ -125,7 +151,7 @@ def dbstrippedliner(dbunreadyversion):
 		clean = re.sub(markup, '', line[workingcolumn])
 		clean = re.sub(unmarkup, '', clean)
 		clean = re.sub(straydigits, '', clean)
-		clean = re.sub(squarebrackets, '', clean)
+		# clean = re.sub(squarebrackets, '', clean)
 		clean = re.sub(span, '', clean)
 		clean = re.sub(unspan, '', clean)
 		clean = re.sub(straypunct, '', clean)
@@ -146,22 +172,35 @@ def dbstrippedliner(dbunreadyversion):
 	# just decapitalize the greek and not the latin?
 	# latin searches should be made case insensitive, though
 	# kill all non-word chars other than periods and semicolons?
-
 	for line in dbunreadyversion:
 		line[workingcolumn] = stripaccents(line[workingcolumn])
 		dbreadyversion.append(line)
-
+			
 	return dbreadyversion
 
 
 def dbfindhypens(dbunreadyversion):
+	"""
+	
+	sample in:
+		['1', [('0', '2'), ('1', '2'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '[ἐπὶ τούτοιϲ] οἱ τούτων ἀξιοῦϲιν ἡμᾶϲ καὶ τῶν ὁμολογου-', 'επι τουτοιϲ οι τουτων αξιουϲιν ημαϲ και των ομολογου-']
+		
+	sample out:
+		['1', [('0', '2'), ('1', '2'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '[ἐπὶ τούτοιϲ] οἱ τούτων ἀξιοῦϲιν ἡμᾶϲ καὶ τῶν ὁμολογου-', 'επι τουτοιϲ οι τουτων αξιουϲιν ημαϲ και των ομολογου-', 'ὁμολογουμένων ομολογουμενων']
+		
+	:param dbunreadyversion:
+	:return:
+	"""
 	dbreadyversion = []
 	workingcolumn = 2
+	strippedcolumn = 3
 	previous = dbunreadyversion[0]
 	punct = re.compile('[%s]' % re.escape(string.punctuation+'“”·'))
 	markup = re.compile(r'<(|/).*?>')
 
+	index = 0
 	for line in dbunreadyversion[1:]:
+		index += 1
 		try:
 			# a problem if the line is empty: nothing to split
 			# a good opportunity to skip adding a line to dbreadyversion
@@ -175,11 +214,15 @@ def dbfindhypens(dbunreadyversion):
 				thisstart = s[0]
 				hyphenated = prevend[:-1] + thisstart
 				# hyphenated = re.sub(markup,'',hyphenated)
-				#if re.search(punct,hyphenated[-1]) != None:
+				# if re.search(punct,hyphenated[-1]) != None:
 				#	hyphenated = hyphenated[:-1]
 				hyphenated = re.sub(punct, '', hyphenated)
 				stripped = stripaccents(hyphenated)
-				previous.append(hyphenated+' '+stripped)
+				if len(stripped) > 0:
+					newlines = consolidatecontiguouslines(previous, line, stripped)
+					previous = newlines['p']
+					line = newlines['l']
+				previous.append(hyphenated)
 			elif prevend[-2:-1] == '- ':
 				# kill markup the sneaky way
 				e = prevend.split('>')
@@ -191,9 +234,11 @@ def dbfindhypens(dbunreadyversion):
 				# hyphenated = re.sub(markup, '', hyphenated)
 				# if re.search(punct,hyphenated[-1]) != None:
 				#	hyphenated = hyphenated[:-1]
-				hyphenated = re.sub(punct, '', hyphenated)
-				stripped = stripaccents(hyphenated)
-				previous.append(hyphenated+' '+stripped)
+				if len(stripped) > 0:
+					newlines = consolidatecontiguouslines(previous, line, stripped)
+					previous = newlines['p']
+					line = newlines['l']
+				previous.append(hyphenated)
 			else:
 				previous.append('')
 			dbreadyversion.append(previous)
@@ -205,7 +250,7 @@ def dbfindhypens(dbunreadyversion):
 	
 	if dbunreadyversion[-1][workingcolumn] != '' and dbunreadyversion[-1][workingcolumn] != ' ':
 		dbreadyversion.append(dbunreadyversion[-1])
-
+	
 	return dbreadyversion
 
 
@@ -262,3 +307,34 @@ def quarterspacer(matchgroup):
 
 	return substitution
 
+
+def consolidatecontiguouslines(previousline, thisline, strippedhypenatedword):
+	"""
+	heler function for the stripped line column: if a previousline ends with a hypenated word:
+		put the whole word at line end
+		drop the half-word from the start of thisline
+	:param previousline:
+	:param thisline:
+	:return:
+	"""
+	
+	strippedcolumn = 3
+	
+	p = previousline[strippedcolumn].split(' ')
+	t = thisline[strippedcolumn].split(' ')
+	
+	p = p[:-1] + [strippedhypenatedword]
+	t = t[1:]
+	
+	p = ' '.join(p)
+	t = ' '.join(t)
+	
+	pl = previousline[0:strippedcolumn] + [p]
+	tl = thisline[0:strippedcolumn] + [t]
+	
+	newlines = {}
+	newlines['p'] = pl
+	newlines['l'] = tl
+
+	return newlines
+	

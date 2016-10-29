@@ -25,6 +25,9 @@ CREATE DATABASE "hipparchiaDB"
        CONNECTION LIMIT = -1;
 
 
+CREATE EXTENSION pg_trgm;
+
+
 -- Table: public.authors
 
 -- DROP TABLE public.authors;
