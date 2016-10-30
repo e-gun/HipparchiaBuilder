@@ -127,8 +127,12 @@ def buildtrigramindices(cursor):
 	cursor.execute(query)
 	results = cursor.fetchall()
 	
+	resultarray = []
+	for r in results:
+		resultarray.append(r[0])
+	
 	pool = Pool(processes=int(config['io']['workers']))
-	pool.map(mpindexbuilder, results)
+	pool.map(mpindexbuilder, resultarray)
 	
 	return
 
