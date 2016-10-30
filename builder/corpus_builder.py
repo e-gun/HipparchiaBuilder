@@ -117,7 +117,7 @@ def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor)
 	txt = initialworkparsing(authorobject, language, datapath)
 	txt = secondaryworkparsing(authorobject, txt)
 	databaseloading(txt, authorobject,  dbconnection, cursor)
-	concordance.buildconcordances(authorobject.universalid, dbconnection, cursor)
+	# concordance.buildconcordances(authorobject.universalid, dbconnection, cursor)
 
 	return
 

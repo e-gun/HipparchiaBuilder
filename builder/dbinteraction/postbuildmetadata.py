@@ -163,7 +163,7 @@ def buildoneindex(universalid):
 	dbc = setconnection(config)
 	curs = dbc.cursor()
 	
-	for column in [('_mu','marked_up_line'), ('_st','stripped_line')]:
+	for column in [('_mu','accented_line'), ('_st','stripped_line')]:
 		query = 'DROP INDEX IF EXISTS '+universalid+column[0]+'_trgm_idx'
 		try:
 			curs.execute(query)
@@ -182,6 +182,5 @@ def buildoneindex(universalid):
 	dbc.commit()
 	curs.close()
 	del dbc
-	
 	
 	return

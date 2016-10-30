@@ -22,15 +22,21 @@ def dbprepper(dbunreadyversion):
 
 
 def halflinecleanup(dbunreadyversion):
-	# this painful next kludge is a function of half-lines that do multiple sets and level shifts in rapid succession and leave the actual text on 'line 1' unless you do something drastic:
-	# ['6', [('0', '1099'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_increment_level_0_by_1 /><hmu_blank_quarter_spaces quantity="63" /> ἠρινά τε βοϲκόμεθα παρθένια ']
-	# ['6', [('0', '1100'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1100-11 />']
-	# ['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '2'), ('4', '1'), ('5', '1')], '<hmu_increment_level_3_by_1 />']
-	# ['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_3_to_1 /><hmu_blank_quarter_spaces quantity="63" /> λευκότροφα μύρτα Χαρίτων τε κηπεύματα. ']
-	# ['6', [('0', '1100'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1100-11 />']
-	# ['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '2'), ('4', '1'), ('5', '1')], '<hmu_increment_level_3_by_1 />']
-	# ['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_3_to_1 /><hmu_blank_line />']
-	# ['6', [('0', '1102'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1102 /><hmu_blank_quarter_spaces quantity="38" /> Τοῖϲ κριταῖϲ εἰπεῖν τι βουλόμεϲθα τῆϲ νίκηϲ πέρι, ']
+	"""
+	this painful next kludge is a function of half-lines that do multiple sets and level shifts in rapid succession and leave the actual text on 'line 1' unless you do something drastic:
+		['6', [('0', '1099'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_increment_level_0_by_1 /><hmu_blank_quarter_spaces quantity="63" /> ἠρινά τε βοϲκόμεθα παρθένια ']
+		['6', [('0', '1100'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1100-11 />']
+		['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '2'), ('4', '1'), ('5', '1')], '<hmu_increment_level_3_by_1 />']
+		['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_3_to_1 /><hmu_blank_quarter_spaces quantity="63" /> λευκότροφα μύρτα Χαρίτων τε κηπεύματα. ']
+		['6', [('0', '1100'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1100-11 />']
+		['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '2'), ('4', '1'), ('5', '1')], '<hmu_increment_level_3_by_1 />']
+		['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_3_to_1 /><hmu_blank_line />']
+		['6', [('0', '1102'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1102 /><hmu_blank_quarter_spaces quantity="38" /> Τοῖϲ κριταῖϲ εἰπεῖν τι βουλόμεϲθα τῆϲ νίκηϲ πέρι, ']
+	
+	:param dbunreadyversion:
+	:return:
+	"""
+	#
 
 	lvlzerodasher = re.compile(r'<hmu_set_level_0_to_(\d{1,})-(\d{1,})\s/>')
 	adder = re.compile(r'<hmu_increment_level_(\d)_by_1\s/>')
@@ -50,7 +56,6 @@ def halflinecleanup(dbunreadyversion):
 			set = 9999
 		if re.search(lvlzerodasher, line[workingcolumn]) is not None:
 			memory = line
-			# print('mem',line)
 		elif (memory is not None):
 			if add != len(line[workingcolumn]) and set != len(line[workingcolumn]):
 				# print('xformed',line)
@@ -77,9 +82,6 @@ def dbpdeincrement(dbunreadyversion):
 	:param dbunreadyversion:
 	:return:
 	"""
-	# a formatting stripper
-	# example:
-	# ['1', [('0', '6'), ('1', '2'), ('2', '30'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_increment_level_0_by_1 />instructis quam latissime potuit porrecta equitum pe']
 
 	workingcolumn = 2
 
@@ -115,10 +117,10 @@ def dbstrippedliner(dbunreadyversion):
 	generate the easy to search stripped column
 	
 	sample in:
-		['1', [('0', '19'), ('1', '23'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], 'ν]ῦ̣ν εἷλεϲ αἰχμῆι κα̣[ὶ μέγ’ ἐ]ξήῥὠ κ̣[λ]έοϲ. ']
+		['1', [('0', '2'), ('1', '5'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_standalone_tabbedtext />ἔντοϲ ἀμώμητον, κάλλιπον οὐκ ἐθέλων· ']
 	
 	sample out:
-		['1', [('0', '19'), ('1', '23'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], 'ν]ῦ̣ν εἷλεϲ αἰχμῆι κα̣[ὶ μέγ’ ἐ]ξήῥὠ κ̣[λ]έοϲ. ', 'νυν ειλεϲ αιχμηι και μεγ εξηρω κλεοϲ ']
+		['1', [('0', '2'), ('1', '5'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_standalone_tabbedtext />ἔντοϲ ἀμώμητον, κάλλιπον οὐκ ἐθέλων· ', 'ἔντοϲ ἀμώμητον κάλλιπον οὐκ ἐθέλων ', 'εντοϲ αμωμητον καλλιπον ουκ εθελων ']
 
 	:param dbunreadyversion:
 	:return:
@@ -145,7 +147,7 @@ def dbstrippedliner(dbunreadyversion):
 
 	# tempting to strip delenda here, but that presupposes you caught all the number-brackets before
 	# '[delenda]' vs '[2 formatted_text...'
-
+	
 	for line in dbunreadyversion:
 		# in two parts because it is possible that the markup jumps lines
 		clean = re.sub(markup, '', line[workingcolumn])
@@ -159,27 +161,78 @@ def dbstrippedliner(dbunreadyversion):
 		clean = clean.lower()
 		
 		line.append(clean)
+		# this is the clean line with accents
 		dbreadyversion.append(line)
 
 	dbunreadyversion = dbreadyversion
 	dbreadyversion = []
 	workingcolumn = 3
-
 	# capitalization can be made to still matter; does that matter?
 	# you won't get the first word of the iliad right unless you search for capital Mu
 	# it seems like you will seldom wish you had caps and that remembering to handle them as a casual user is not so hot
-	# nevertheless, the inset citations all have caps; so they will look stupid
-	# just decapitalize the greek and not the latin?
-	# latin searches should be made case insensitive, though
-	# kill all non-word chars other than periods and semicolons?
+
 	for line in dbunreadyversion:
-		line[workingcolumn] = stripaccents(line[workingcolumn])
+		unaccented = stripaccents(line[workingcolumn])
+		line = line + [unaccented]
 		dbreadyversion.append(line)
-			
+		
 	return dbreadyversion
 
 
 def dbfindhypens(dbunreadyversion):
+	"""
+
+	sample in:
+		['2', [('0', '6'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], 'ἀγῶϲι πρόνοιαν· ὃϲ καὶ τότε περαιούμενοϲ ναυϲὶν ἐϲ Ἰτα-', 'ἀγῶϲι πρόνοιαν ὃϲ καὶ τότε περαιούμενοϲ ναυϲὶν ἐϲ ἰτα-', 'αγωϲι προνοιαν οϲ και τοτε περαιουμενοϲ ναυϲιν εϲ ιτα-']
+	sample out:
+		['2', [('0', '6'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], 'ἀγῶϲι πρόνοιαν· ὃϲ καὶ τότε περαιούμενοϲ ναυϲὶν ἐϲ Ἰτα-', 'ἀγῶϲι πρόνοιαν ὃϲ καὶ τότε περαιούμενοϲ ναυϲὶν ἐϲ ἰταλίαν', 'αγωϲι προνοιαν οϲ και τοτε περαιουμενοϲ ναυϲιν εϲ ἰταλίαν']
+	:param dbunreadyversion:
+	:return:
+	"""
+	dbreadyversion = []
+	workingcolumn = 3
+	previous = dbunreadyversion[0]
+	punct = re.compile('[%s]' % re.escape(string.punctuation + '“”·'))
+	
+	for line in dbunreadyversion[1:]:
+		try:
+			# a problem if the line is empty: nothing to split
+			# a good opportunity to skip adding a line to dbreadyversion
+			prevend = previous[workingcolumn].rsplit(None, 1)[1]
+			if prevend[-1] == '-':
+				thisstart = line[workingcolumn].split(None, 1)[0]
+				hyphenated = prevend[:-1] + thisstart
+				hyphenated = re.sub(punct, '', hyphenated)
+				if len(hyphenated) > 0:
+					newlines = consolidatecontiguouslines(previous, line, hyphenated)
+					previous = newlines['p']
+					line = newlines['l']
+				previous.append(hyphenated)
+			elif prevend[-2:-1] == '- ':
+				thisstart = line[workingcolumn].split(None, 1)[0]
+				hyphenated = prevend[:-2] + thisstart
+				hyphenated = re.sub(punct, '', hyphenated)
+				if len(hyphenated) > 0:
+					newlines = consolidatecontiguouslines(previous, line, hyphenated)
+					previous = newlines['p']
+					line = newlines['l']
+				previous.append(hyphenated)
+			else:
+				previous.append('')
+			dbreadyversion.append(previous)
+			previous = line
+		except:
+			previous.append('')
+			dbreadyversion.append(previous)
+			previous = line
+	
+	if dbunreadyversion[-1][workingcolumn] != '' and dbunreadyversion[-1][workingcolumn] != ' ':
+		dbreadyversion.append(dbunreadyversion[-1])
+	
+	return dbreadyversion
+
+
+def olddbfindhypens(dbunreadyversion):
 	"""
 	
 	sample in:
@@ -193,7 +246,6 @@ def dbfindhypens(dbunreadyversion):
 	"""
 	dbreadyversion = []
 	workingcolumn = 2
-	strippedcolumn = 3
 	previous = dbunreadyversion[0]
 	punct = re.compile('[%s]' % re.escape(string.punctuation+'“”·'))
 	markup = re.compile(r'<(|/).*?>')
@@ -308,7 +360,7 @@ def quarterspacer(matchgroup):
 	return substitution
 
 
-def consolidatecontiguouslines(previousline, thisline, strippedhypenatedword):
+def consolidatecontiguouslines(previousline, thisline, hypenatedword):
 	"""
 	heler function for the stripped line column: if a previousline ends with a hypenated word:
 		put the whole word at line end
@@ -318,19 +370,36 @@ def consolidatecontiguouslines(previousline, thisline, strippedhypenatedword):
 	:return:
 	"""
 	
-	strippedcolumn = 3
+	accentedcolumn = 3
+	strippedcolumn = 4
 	
-	p = previousline[strippedcolumn].split(' ')
-	t = thisline[strippedcolumn].split(' ')
+	column = accentedcolumn
+	p = previousline[column].split(' ')
+	t = thisline[column].split(' ')
 	
-	p = p[:-1] + [strippedhypenatedword]
+	p = p[:-1] + [hypenatedword]
 	t = t[1:]
 	
 	p = ' '.join(p)
 	t = ' '.join(t)
 	
-	pl = previousline[0:strippedcolumn] + [p]
-	tl = thisline[0:strippedcolumn] + [t]
+	pl = previousline[0:column] + [p]
+	tl = thisline[0:column] + [t]
+	
+	
+	column = strippedcolumn
+	p = previousline[column].split(' ')
+	t = thisline[column].split(' ')
+	
+	p = p[:-1] + [hypenatedword]
+	t = t[1:]
+	
+	p = ' '.join(p)
+	t = ' '.join(t)
+	
+	pl = pl + [p]
+	tl = tl + [t]
+	
 	
 	newlines = {}
 	newlines['p'] = pl

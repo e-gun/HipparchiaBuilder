@@ -26,7 +26,6 @@ start = time.time()
 
 if buildauthors == 'y':
 	print('building author and work dbs')
-	# remember to set a reasonable number of workers: a virtual box with one core and .5G of RAM does not want 6 workers
 	corpus_builder.parallelbuildcorpus(tlg, phi, dbconnection, cursor)
 
 if buildlex == 'y':
@@ -43,8 +42,8 @@ if buildgram == 'y':
 
 if buildstats == 'y':
 	print('compiling statistics')
-	#insertfirstsandlasts(cursor, dbconnection)
-	#findwordcounts(cursor, dbconnection)
+	insertfirstsandlasts(cursor, dbconnection)
+	findwordcounts(cursor, dbconnection)
 	buildtrigramindices(cursor)
 
 stop = time.time()

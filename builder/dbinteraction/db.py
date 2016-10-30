@@ -5,7 +5,7 @@ from builder.parsers.parse_binfiles import peekatcanon
 
 import psycopg2
 
-from builder.builder_classes import dbOpus
+from builder.builder_classes import dbOpus, dbAuthor
 
 
 def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
@@ -63,7 +63,6 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 				wn = str(wn)
 
 			workdbname = authorobject.universalid+'w'+wn
-			# workdbname = 'gr9999w999'
 
 			try:
 				wk = authorobject.works[authorobject.workdict[wn]]
@@ -88,25 +87,15 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 						tups[lvl] = (lvl, -1)
 
 				# tempting to not add the -1's, but they are used to check top levels later
-				query = 'INSERT INTO ' + workdbname + ' (index, level_00_value, level_01_value, level_02_value, level_03_value, level_04_value, level_05_value, marked_up_line, stripped_line, hyphenated_words, annotations)' \
-				                                      ' VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-				data = (index, tups[0][1], tups[1][1], tups[2][1], tups[3][1], tups[4][1], tups[5][1], line[2], line[3], line[4], line[5])
+				query = 'INSERT INTO ' + workdbname + ' (index, level_00_value, level_01_value, level_02_value, level_03_value, level_04_value, level_05_value, marked_up_line, accented_line, stripped_line, hyphenated_words, annotations)' \
+				                                      ' VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+				data = (index, tups[0][1], tups[1][1], tups[2][1], tups[3][1], tups[4][1], tups[5][1], line[2], line[3], line[4], line[5], line[6])
 				try:
 					cursor.execute(query, data)
+					
 				except psycopg2.DatabaseError as e:
-					# db overheats?
-					# unfortunately pausing does seem to help: note that retried queries sometimes work
-					#
-					# second effort failed: b"INSERT INTO lt0474w006 (index, level_00_value, level_01_value, level_02_value, level_03_value, level_04_value, level_05_value, marked_up_line, stripped_line, hyphenated_words, annotations) VALUES (16814, '5', '50',  -1,  -1,  -1,  -1, 'ac repugnabit, non occides; quod si repugnat, \xe2\x80\x98<hmu_small_latin_capitals>endoplo-', 'ac repugnabit, non occides; quod si repugnat, \xe2\x80\x98endoplo-', '\xe2\x80\x98<hmu_small_latin_capitals>endoplo</hmu_small_latin_capitals>7rato&,\xe2\x80\x99 \xe2\x80\x98<hmu_small_latin_capitals>endoplo</hmu_small_latin_capitals>7rato&,\xe2\x80\x99', '')"
-					# note that there is an \x80 in there...
 					print('insert into ',workdbname,'failed at',index,'while attempting',data)
 					print('Error %s' % e)
-					print('Policy is to assume bad hyphen parsing and to build that line without the relevant hyphen data. This word will now be very hard to find.\n')
-					data = ( index, tups[0][1], tups[1][1], tups[2][1], tups[3][1], tups[4][1], tups[5][1], line[2], line[3], '', line[5])
-					try:
-						cursor.execute(query, data)
-					except:
-						print('That failed too..')
 
 			except:
 				if index < 2:
@@ -183,6 +172,7 @@ def tablemaker(workdbname, cursor):
 	query += 'level_01_value character varying(64),'
 	query += 'level_00_value character varying(64),'
 	query += 'marked_up_line text,'
+	query += 'accented_line text,'
 	query += 'stripped_line text,'
 	query += 'hyphenated_words character varying(128),'
 	query += 'annotations character varying(256) ) WITH ( OIDS=FALSE );'
