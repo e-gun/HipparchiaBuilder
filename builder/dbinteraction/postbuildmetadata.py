@@ -163,20 +163,21 @@ def buildoneindex(universalid):
 	dbc = setconnection(config)
 	curs = dbc.cursor()
 	
-	query = 'DROP INDEX IF EXISTS public.gr0017w001_trgm_idx'
-	try:
-		curs.execute(query)
-		dbc.commit()
-	except:
-		print('failed to drop index for',universalid)
-		pass
-	
-	query = 'CREATE INDEX '+universalid+'_trgm_idx ON '+universalid+' USING GIN (stripped_line gin_trgm_ops)'
-	try:
-		curs.execute(query)
-		dbc.commit()
-	except:
-		print('failed to create index for',universalid)
+	for column in [('_mu','marked_up_line'), ('_st','stripped_line')]:
+		query = 'DROP INDEX IF EXISTS '+universalid+column[0]+'_trgm_idx'
+		try:
+			curs.execute(query)
+			dbc.commit()
+		except:
+			print('failed to drop index for',universalid)
+			pass
+		
+		query = 'CREATE INDEX '+universalid+column[0]+'_trgm_idx ON '+universalid+' USING GIN ('+column[1]+' gin_trgm_ops)'
+		try:
+			curs.execute(query)
+			dbc.commit()
+		except:
+			print('failed to create index for',universalid,'\n\t',query)
 	
 	dbc.commit()
 	curs.close()
