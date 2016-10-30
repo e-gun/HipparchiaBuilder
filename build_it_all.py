@@ -54,4 +54,6 @@ print('\nBuild took',str(took),'minutes')
 # 4 Workers on G&L authors:
 # Build took 78.26 minutes
 
+# no concordances:
+# Build took 40.32 minutes
 

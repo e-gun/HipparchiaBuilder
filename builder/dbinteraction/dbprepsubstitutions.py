@@ -140,8 +140,8 @@ def dbstrippedliner(dbunreadyversion):
 	# this will help with some and hurt with others? need to double-check
 	# squarebrackets = re.compile(r'\[.*?\]')
 	straydigits = re.compile(r'\d')
-	# sadly can't nuke :punct: because we need hyphens
-	straypunct = re.compile('[\<\>\{\}⟪⟫\.\?\!;:,’·\[\]]')
+	# sadly can't nuke :punct: as a class because we need hyphens
+	straypunct = re.compile('[\<\>\{\}⟪⟫\.\?\!;:,’“”·\[\]]')
 	dbreadyversion = []
 	workingcolumn = 2
 
@@ -192,26 +192,45 @@ def dbfindhypens(dbunreadyversion):
 	dbreadyversion = []
 	workingcolumn = 3
 	previous = dbunreadyversion[0]
-	punct = re.compile('[%s]' % re.escape(string.punctuation + '“”·'))
 	
 	for line in dbunreadyversion[1:]:
 		try:
 			# a problem if the line is empty: nothing to split
 			# a good opportunity to skip adding a line to dbreadyversion
 			prevend = previous[workingcolumn].rsplit(None, 1)[1]
-			if prevend[-1] == '-':
+			
+			# hm: '-█ⓕⓔ' lines are not read as ending with '-' by the time they get here. even the following does not work [!]
+			#   if re.search(r'-',prevend) is not None:
+			# the following lines of isaeus refuse to match any conditional you throw at them; but if you cut and paste the text '-' == 'True'
+			#   "ἔφη τήν τε ἡλικίαν ὑφορᾶϲθαι τὴν ἑαυτοῦ καὶ τὴν ἀπαι-"
+			#   █⑧⓪ E)/FH TH/N TE H(LIKI/AN U(FORA=SQAI TH\N E(AUTOU= KAI\ TH\N A)PAI-█ⓕⓔ
+			#   "Εἶτα αὐτὸϲ μὲν εἰ ἦν ἄπαιϲ, ἐποιήϲατ’ ἄν· τὸν δὲ Με-"
+			#   █⑧⓪ *EI)=TA AU)TO\S ME\N EI) H)=N A)/PAIS, E)POIH/SAT' A)/N: TO\N DE\ *ME-█ⓕⓔ
+			#
+			# >>> x = 'ἀπαι-'
+			# >>> if '-' in x: print('yes')
+			# ...
+			# yes
+			# >>>
+			#  the fix is to remove the trailing space in regexsubs. but then that kill your ability to get the last line of a work into the db
+			#   replace = '<hmu_end_of_cd_block_re-initialize_key_variables />'
+			#
+			# TODO: fix this without breaking something else...
+			
+			if re.search('-$', prevend) is not None:
+			# if prevend[-1] == '-':
 				thisstart = line[workingcolumn].split(None, 1)[0]
 				hyphenated = prevend[:-1] + thisstart
-				hyphenated = re.sub(punct, '', hyphenated)
 				if len(hyphenated) > 0:
 					newlines = consolidatecontiguouslines(previous, line, hyphenated)
 					previous = newlines['p']
 					line = newlines['l']
 				previous.append(hyphenated)
-			elif prevend[-2:-1] == '- ':
+				
+			elif re.search('-\s$', prevend) is not None:
+			# elif prevend[-2:-1] == '- ':
 				thisstart = line[workingcolumn].split(None, 1)[0]
 				hyphenated = prevend[:-2] + thisstart
-				hyphenated = re.sub(punct, '', hyphenated)
 				if len(hyphenated) > 0:
 					newlines = consolidatecontiguouslines(previous, line, hyphenated)
 					previous = newlines['p']
@@ -391,7 +410,7 @@ def consolidatecontiguouslines(previousline, thisline, hypenatedword):
 	p = previousline[column].split(' ')
 	t = thisline[column].split(' ')
 	
-	p = p[:-1] + [hypenatedword]
+	p = p[:-1] + [stripaccents(hypenatedword)]
 	t = t[1:]
 	
 	p = ' '.join(p)
