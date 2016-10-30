@@ -45,7 +45,7 @@ if buildstats == 'y':
 	print('compiling statistics')
 	insertfirstsandlasts(cursor, dbconnection)
 	findwordcounts(cursor, dbconnection)
-	buildtrigramindices(cursor, dbconnection)
+	buildtrigramindices(cursor)
 
 stop = time.time()
 took = round((stop-start)/60, 2)
