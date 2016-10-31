@@ -1281,12 +1281,9 @@ def addcdlabels(texttoclean, authornumber):
 
 	# cd blocks end 0xf3 + 0x0
 	# the newline lets you reset levels right?
-	# you'll want that trailing space later: totallemmatization() strips last char from lines; a problem with the very last line of a file
+	
 	search = r'(█ⓕⓔ\s(█⓪\s){1,})'
-	replace = '\n<hmu_end_of_cd_block_re-initialize_key_variables /> '
-	# the next two break things
-	# replace = '<hmu_end_of_cd_block_re-initialize_key_variables /> '
-	# replace = '\n<hmu_end_of_cd_block_re-initialize_key_variables />'
+	replace = '\n<hmu_end_of_cd_block_re-initialize_key_variables />'
 	texttoclean = re.sub(search, replace, texttoclean)
 
 	authornumber = hextohighunicode(authornumber)

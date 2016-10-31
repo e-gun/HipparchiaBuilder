@@ -11,6 +11,32 @@ def dbprepper(dbunreadyversion):
 	:param dbunreadyversion:
 	:return:
 	"""
+	
+	# findhyphens() vs addcdlabels()
+	
+	# '-█ⓕⓔ' lines are not read as ending with '-' by the time they get to findhyphens().
+	#
+	# it's an ugly issue
+	
+	# the following lines of isaeus refuse to match any conditional to test for a hypen you throw at them and so will not enter into the 'if...' clause; but if you cut and paste the text '-' == 'True'
+	
+	#   "ἔφη τήν τε ἡλικίαν ὑφορᾶϲθαι τὴν ἑαυτοῦ καὶ τὴν ἀπαι-"
+	#   █⑧⓪ E)/FH TH/N TE H(LIKI/AN U(FORA=SQAI TH\N E(AUTOU= KAI\ TH\N A)PAI-█ⓕⓔ
+	#   "Εἶτα αὐτὸϲ μὲν εἰ ἦν ἄπαιϲ, ἐποιήϲατ’ ἄν· τὸν δὲ Με-"
+	#   █⑧⓪ *EI)=TA AU)TO\S ME\N EI) H)=N A)/PAIS, E)POIH/SAT' A)/N: TO\N DE\ *ME-█ⓕⓔ
+	#
+	# >>> x = 'ἀπαι-'
+	# >>> if '-' in x: print('yes')
+	# ...
+	# yes
+	# >>>
+	
+	#  the fix is to remove the trailing space in regexsubs addcdlabels(). but then that kills your ability to get the last line of a work into the db
+	#   replace = '\n<hmu_end_of_cd_block_re-initialize_key_variables />' vs replace = '\n<hmu_end_of_cd_block_re-initialize_key_variables /> '
+	
+	# so the simple solution to a complex problem is to slap a single whitespace at the end of the file
+	dbunreadyversion[-1][2] = dbunreadyversion[-1][2] + ' '
+	
 	dbunreadyversion = halflinecleanup(dbunreadyversion)
 	dbunreadyversion = dbpdeincrement(dbunreadyversion)
 	dbunreadyversion = dbstrippedliner(dbunreadyversion)
@@ -198,27 +224,8 @@ def dbfindhypens(dbunreadyversion):
 			# a problem if the line is empty: nothing to split
 			# a good opportunity to skip adding a line to dbreadyversion
 			prevend = previous[workingcolumn].rsplit(None, 1)[1]
-			
-			# hm: '-█ⓕⓔ' lines are not read as ending with '-' by the time they get here. even the following does not work [!]
-			#   if re.search(r'-',prevend) is not None:
-			# the following lines of isaeus refuse to match any conditional you throw at them; but if you cut and paste the text '-' == 'True'
-			#   "ἔφη τήν τε ἡλικίαν ὑφορᾶϲθαι τὴν ἑαυτοῦ καὶ τὴν ἀπαι-"
-			#   █⑧⓪ E)/FH TH/N TE H(LIKI/AN U(FORA=SQAI TH\N E(AUTOU= KAI\ TH\N A)PAI-█ⓕⓔ
-			#   "Εἶτα αὐτὸϲ μὲν εἰ ἦν ἄπαιϲ, ἐποιήϲατ’ ἄν· τὸν δὲ Με-"
-			#   █⑧⓪ *EI)=TA AU)TO\S ME\N EI) H)=N A)/PAIS, E)POIH/SAT' A)/N: TO\N DE\ *ME-█ⓕⓔ
-			#
-			# >>> x = 'ἀπαι-'
-			# >>> if '-' in x: print('yes')
-			# ...
-			# yes
-			# >>>
-			#  the fix is to remove the trailing space in regexsubs. but then that kill your ability to get the last line of a work into the db
-			#   replace = '<hmu_end_of_cd_block_re-initialize_key_variables />'
-			#
-			# TODO: fix this without breaking something else...
-			
-			if re.search('-$', prevend) is not None:
-			# if prevend[-1] == '-':
+
+			if prevend[-1] == '-':
 				thisstart = line[workingcolumn].split(None, 1)[0]
 				hyphenated = prevend[:-1] + thisstart
 				if len(hyphenated) > 0:
@@ -227,8 +234,7 @@ def dbfindhypens(dbunreadyversion):
 					line = newlines['l']
 				previous.append(hyphenated)
 				
-			elif re.search('-\s$', prevend) is not None:
-			# elif prevend[-2:-1] == '- ':
+			elif prevend[-2:-1] == '- ':
 				thisstart = line[workingcolumn].split(None, 1)[0]
 				hyphenated = prevend[:-2] + thisstart
 				if len(hyphenated) > 0:
