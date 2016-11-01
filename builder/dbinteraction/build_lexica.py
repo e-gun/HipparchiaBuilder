@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+	HipparchiaBuilder: generate a database of Greek and Latin texts
+	Copyright: E Gunderson 2016
+	License: GPL 3 (see LICENSE in the top level directory of the distribution)
+"""
 
 import configparser
 from multiprocessing import Process, Manager

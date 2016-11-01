@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 #!../bin/python
+"""
+	HipparchiaBuilder: generate a database of Greek and Latin texts
+	Copyright: E Gunderson 2016
+	License: GPL 3 (see LICENSE in the top level directory of the distribution)
+"""
+
 import time
 import configparser
 from builder.dbinteraction.db import setconnection

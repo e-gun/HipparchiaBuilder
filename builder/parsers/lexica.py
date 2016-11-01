@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+	HipparchiaBuilder: generate a database of Greek and Latin texts
+	Copyright: E Gunderson 2016
+	License: GPL 3 (see LICENSE in the top level directory of the distribution)
+"""
+
 from builder.parsers.betacode_to_unicode import *
 
 #
