@@ -3,7 +3,7 @@
 -- DROP ROLE hippa_wr;
 
 CREATE ROLE hippa_wr LOGIN
-  ENCRYPTED PASSWORD 'yourpasshere'
+  ENCRYPTED PASSWORD 'thisisnotreallythepaswdyouwillenteritsoon'
   NOSUPERUSER INHERIT CREATEDB NOCREATEROLE NOREPLICATION;
 
 -- Role: hippa_rd
@@ -11,22 +11,18 @@ CREATE ROLE hippa_wr LOGIN
 -- DROP ROLE hippa_rd;
 
 CREATE ROLE hippa_rd LOGIN
-  ENCRYPTED PASSWORD 'yourotherpasshere'
+  ENCRYPTED PASSWORD 'notreallythepaswdyouwillenteritsoon'
   NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
 
 -- Database: "hipparchiaDB"
 
-DROP DATABASE "hipparchiaDB";
+-- DROP DATABASE "hipparchiaDB";
 
-CREATE DATABASE "hipparchiaDB"
-  WITH OWNER = hippa_wr
-       ENCODING = 'UTF8'
-       TABLESPACE = pg_default
-       CONNECTION LIMIT = -1;
+-- CREATE DATABASE "hipparchiaDB" WITH OWNER = hippa_wr ENCODING = 'UTF8' TABLESPACE = pg_default CONNECTION LIMIT = -1;
 
+ALTER DATABASE "hipparchiaDB" OWNER TO hippa_wr;
 
 CREATE EXTENSION pg_trgm;
-
 
 -- Table: public.authors
 
