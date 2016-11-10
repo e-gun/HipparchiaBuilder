@@ -216,31 +216,22 @@ def dbfindhypens(dbunreadyversion):
 		['2', [('0', '6'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], 'ἀγῶϲι πρόνοιαν· ὃϲ καὶ τότε περαιούμενοϲ ναυϲὶν ἐϲ Ἰτα-', 'ἀγῶϲι πρόνοιαν ὃϲ καὶ τότε περαιούμενοϲ ναυϲὶν ἐϲ ἰτα-', 'αγωϲι προνοιαν οϲ και τοτε περαιουμενοϲ ναυϲιν εϲ ιτα-']
 	sample out:
 		['2', [('0', '6'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], 'ἀγῶϲι πρόνοιαν· ὃϲ καὶ τότε περαιούμενοϲ ναυϲὶν ἐϲ Ἰτα-', 'ἀγῶϲι πρόνοιαν ὃϲ καὶ τότε περαιούμενοϲ ναυϲὶν ἐϲ ἰταλίαν', 'αγωϲι προνοιαν οϲ και τοτε περαιουμενοϲ ναυϲιν εϲ ἰταλίαν']
+		
 	:param dbunreadyversion:
 	:return:
 	"""
 	dbreadyversion = []
 	workingcolumn = 3
 	previous = dbunreadyversion[0]
-	
+
 	for line in dbunreadyversion[1:]:
 		try:
 			# a problem if the line is empty: nothing to split
 			# a good opportunity to skip adding a line to dbreadyversion
 			prevend = previous[workingcolumn].rsplit(None, 1)[1]
-
 			if prevend[-1] == '-':
 				thisstart = line[workingcolumn].split(None, 1)[0]
 				hyphenated = prevend[:-1] + thisstart
-				if len(hyphenated) > 0:
-					newlines = consolidatecontiguouslines(previous, line, hyphenated)
-					previous = newlines['p']
-					line = newlines['l']
-				previous.append(hyphenated)
-				
-			elif prevend[-2:-1] == '- ':
-				thisstart = line[workingcolumn].split(None, 1)[0]
-				hyphenated = prevend[:-2] + thisstart
 				if len(hyphenated) > 0:
 					newlines = consolidatecontiguouslines(previous, line, hyphenated)
 					previous = newlines['p']
@@ -317,7 +308,7 @@ def quarterspacer(matchgroup):
 
 def consolidatecontiguouslines(previousline, thisline, hypenatedword):
 	"""
-	heler function for the stripped line column: if a previousline ends with a hypenated word:
+	helper function for the stripped line column: if a previousline ends with a hypenated word:
 		put the whole word at line end
 		drop the half-word from the start of thisline
 	:param previousline:
@@ -329,7 +320,8 @@ def consolidatecontiguouslines(previousline, thisline, hypenatedword):
 	strippedcolumn = 4
 	
 	column = accentedcolumn
-	p = previousline[column].split(' ')
+	pc = re.sub(r'\s$', '', previousline[column])
+	p = pc.split(' ')
 	t = thisline[column].split(' ')
 	
 	p = p[:-1] + [hypenatedword]
@@ -343,7 +335,8 @@ def consolidatecontiguouslines(previousline, thisline, hypenatedword):
 	
 	
 	column = strippedcolumn
-	p = previousline[column].split(' ')
+	pc = re.sub(r'\s$', '', previousline[column])
+	p = pc.split(' ')
 	t = thisline[column].split(' ')
 	
 	p = p[:-1] + [stripaccents(hypenatedword)]
