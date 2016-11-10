@@ -6,6 +6,8 @@
 """
 
 import re
+import time
+from collections import deque
 from builder.parsers.betacode_to_unicode import stripaccents
 
 
@@ -47,7 +49,9 @@ def dbprepper(dbunreadyversion):
 	dbunreadyversion = dbfindhypens(dbunreadyversion)
 	dbunreadyversion = dbfindcitations(dbunreadyversion)
 	dbunreadyversion = hmutonbsp(dbunreadyversion)
+	dbunreadyversion = notrailingwhitespace(dbunreadyversion)
 	dbreadyversion = dbunreadyversion
+	
 	return dbreadyversion
 
 
@@ -172,6 +176,7 @@ def dbstrippedliner(dbunreadyversion):
 	straydigits = re.compile(r'\d')
 	# sadly can't nuke :punct: as a class because we need hyphens
 	straypunct = re.compile('[\<\>\{\}⟪⟫\.\?\!;:,’“”·\[\]]')
+	
 	dbreadyversion = []
 	workingcolumn = 2
 
@@ -306,6 +311,22 @@ def quarterspacer(matchgroup):
 	return substitution
 
 
+def notrailingwhitespace(dbunreadyversion):
+	"""
+	get rid of whitespace at ends of columns
+	otherwise HipparchiaServer is constantly doing this
+	:param dbunreadyversion:
+	:return:
+	"""
+	dbreadyversion = []
+	
+	for line in dbunreadyversion:
+		for column in [2,3,4]:
+			line[column] = re.sub(r'\s$','',line[column])
+		dbreadyversion.append(line)
+	
+	return dbreadyversion
+
 def consolidatecontiguouslines(previousline, thisline, hypenatedword):
 	"""
 	helper function for the stripped line column: if a previousline ends with a hypenated word:
@@ -332,8 +353,7 @@ def consolidatecontiguouslines(previousline, thisline, hypenatedword):
 	
 	pl = previousline[0:column] + [p]
 	tl = thisline[0:column] + [t]
-	
-	
+		
 	column = strippedcolumn
 	pc = re.sub(r'\s$', '', previousline[column])
 	p = pc.split(' ')

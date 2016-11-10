@@ -11,7 +11,6 @@ import time
 from multiprocessing import Pool
 
 import builder.dbinteraction.dbprepsubstitutions
-from builder.dbinteraction import concordance
 from builder.dbinteraction import db
 from builder.file_io import filereaders
 from builder.parsers import idtfiles, regex_substitutions, betacode_to_unicode, parse_binfiles
