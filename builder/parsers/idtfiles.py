@@ -21,9 +21,6 @@ def loadauthor(idtfiledatastream, language):
 	"""
 
 	bytecount = -1
-	# firstbyte = 0
-	# level = None
-	# leveldict = []
 	leveldict = {}
 
 	for byte in range(0, len(idtfiledatastream) - 1):
@@ -87,6 +84,7 @@ def loadauthor(idtfiledatastream, language):
 						bytecount += 1
 						# a small number of works seem to wind up one byte short of the '17'
 						# some even fall two bytes short...
+						# this is no longer true? had been an issue with the pre-mature parsing of words
 						# print(workname, '\n\tbcc',idtfiledatastream[bytecount], idtfiledatastream[bytecount+1], idtfiledatastream[bytecount+2])
 						if idtfiledatastream[bytecount] != 17 and idtfiledatastream[bytecount+1] == 17:
 							bytecount += 1
@@ -108,7 +106,8 @@ def loadauthor(idtfiledatastream, language):
 					else:
 						print("Work number apparently was not followed by work: ", bytecount, " = ",
 						      idtfiledatastream[bytecount])
-					# skipped some documentary papyrii code
+					# skipped some documentary papyrii code: looks like the kludge is 'set level label 5 to level label 0'
+					# print('0->5:',worknumber,bytecount)
 				elif level == 2:
 					# coded but inactive in the perl
 					print("I made it to level 2: sub-works. Will need some more coding.")
@@ -172,7 +171,7 @@ def idthexparser(filearray, offset, code):
 	hexrunner is smarter? but how much value is there in merging the code?
 
 	parse a non-ascii bookmark that sets or increments one of the counters that keep track of what line, chapter, book, etc. we are currently at
-	the perl function rutruns all sorts of random things at various junctures if various conditions are met: a fairly unclean function
+	the perl function retruns all sorts of random things at various junctures if various conditions are met: a fairly unclean function
 	things you might return to worry about:
 		a new bytecount position
 	   the newLeftvalue
