@@ -1333,6 +1333,7 @@ def totallemmatization(parsedtextfile, authorobject):
 			work = int(gotwork.group(1))
 			for l in range(0, 6):
 				levelmapper[l] = 1
+				
 		gotsetting = re.search(setter, line)
 		if gotsetting != None:
 			level = int(gotsetting.group(1))
@@ -1350,6 +1351,11 @@ def totallemmatization(parsedtextfile, authorobject):
 				# the original data does sets that number in 5 and/or 6 (but does not necessarily agree between 5 & 6!)
 				# not quite sure what is being set at one, but it is not the document number...
 				pass
+			elif authorobject.universalid[0:2] in ['in', 'dp'] and level == 3:
+				# you can set 3, but don't reset 0
+				# '3' is where things like 'a', 'b', 'c' are marked: pieces of reassembled inscriptions, I think.
+				levelmapper[3] = setting
+				levelmapper[1] = str(levelmapper[1]) + levelmapper[3]
 			else:
 				levelmapper[level] = setting
 				if level > 0:
