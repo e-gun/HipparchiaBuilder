@@ -1324,17 +1324,9 @@ def totallemmatization(parsedtextfile, authorobject):
 	setter = re.compile(r'<hmu_set_level_(\d)_to_([A-Za-z0-9]{1,})')
 	adder = re.compile(r'<hmu_increment_level_(\d)_by_1\s')
 	wnv = re.compile(r'<hmu_cd_assert_work_number value="(\d{1,3})')
-	docu = re.compile(r'<hmu_assert_document_number_(\d{1,3})')
+	doca = re.compile(r'<hmu_assert_document_number_(\d{1,3})')
 
 	for line in parsedtextfile:
-		if authorobject.universalid[0:2] in ['in','dp']:
-			# the structure of these works is always the same: 0: line; 1: document number
-			# the document numbers do not increment by adding 1 to level 1 but by asserting a number at level 6
-			# in fact, the original data tires to claim that there are no lines, lust documents (i.e., level 0 = 'document')
-			# it's a bit of a mess
-			gotdoc = re.search(docu, line)
-			if gotdoc != None:
-				levelmapper[1] = gotdoc.group(1)
 
 		gotwork = re.search(wnv, line)
 		if gotwork != None:
@@ -1344,38 +1336,77 @@ def totallemmatization(parsedtextfile, authorobject):
 		gotsetting = re.search(setter, line)
 		if gotsetting != None:
 			level = int(gotsetting.group(1))
+			# level5 info seems less reliable than watching the notes at level6...
+			# if authorobject.universalid[0:2] in ['in', 'dp'] and level == 5:
+			# 	level = 1
 			# sometimes something like 't' is returned
 			if type(gotsetting.group(2)) is int:
 				setting = str(gotsetting.group(2))
 			else:
 				setting = gotsetting.group(2)
-			levelmapper[level] = setting
-			if level > 0:
-				for l in range(0, level):
-					levelmapper[l] = 1
+			
+			if authorobject.universalid[0:2] in ['in', 'dp'] and level == 1:
+				# don't let level 1 be set because this is where hipparchia stores the document number
+				# the original data does sets that number in 5 and/or 6 (but does not necessarily agree between 5 & 6!)
+				# not quite sure what is being set at one, but it is not the document number...
+				pass
+			else:
+				levelmapper[level] = setting
+				if level > 0:
+					for l in range(0, level):
+						levelmapper[l] = 1
 
 		gotincrement = re.search(adder, line)
 		# if you don't reset the lower counters, then you will get something like 'line 10' when you first initialize a new section
 
 		if gotincrement != None:
 			level = int(gotincrement.group(1))
-			setting = 1
-			# awkward avoidance of type problems
-			try:
-				# are we adding integers?
-				levelmapper[level] = str(int(setting) + int(levelmapper[level]))
-			except ValueError:
-				# ok, we are incrementing a letter; hope it's not z+1
-				# can handle multicharacter strings, but how often is it not "a --> b"?
-				lastchar = levelmapper[level][-1]
-				newlastchar = chr(ord(lastchar) + setting)
-				levelmapper[level] = levelmapper[level][:-1] + newlastchar
-			# if you increment lvl 1, you need to reset lvl 0
-			# this is a bit scary because sometimes you get an 0x81 and sometimes you don't
-			if level > 0:
-				for l in range(0, level):
-					levelmapper[l] = 1
 
+			if authorobject.universalid[0:2] in ['in', 'dp'] and level == 1:
+				# don't let level 1 be incremented because this is where hipparchia stores the document number
+				# the original data does sets that number in 5 and/or 6 (but does not necessarily agree between 5 & 6!)
+				# not quite sure what is being set at one, but it is not the document number...
+				pass
+			else:
+				setting = 1
+				# awkward avoidance of type problems
+				try:
+					# are we adding integers?
+					levelmapper[level] = str(int(setting) + int(levelmapper[level]))
+				except ValueError:
+					# ok, we are incrementing a letter; hope it's not z+1
+					# can handle multicharacter strings, but how often is it not "a --> b"?
+					lastchar = levelmapper[level][-1]
+					newlastchar = chr(ord(lastchar) + setting)
+					levelmapper[level] = levelmapper[level][:-1] + newlastchar
+				# if you increment lvl 1, you need to reset lvl 0
+				# this is a bit scary because sometimes you get an 0x81 and sometimes you don't
+				if level > 0:
+					for l in range(0, level):
+						levelmapper[l] = 1
+
+		# special treatment for inscriptions and documentary papyri
+		# needs to come last since it rewrites earlier work
+		if authorobject.universalid[0:2] in ['in', 'dp']:
+			# the structure of these works is always the same: 0: line; 1: document_number
+			# the document numbers do not increment by adding 1 to level 1 but by asserting a number at level 6
+			# level 5 also sees some action: but note how that leaves you with blank levels lower than 5.
+			# in fact, the original data tires to claim that there are no lines, just documents (i.e., level 0 = 'document')
+			# it's a bit of a mess
+			gotdoc = re.search(doca, line)
+			if gotdoc != None:
+				levelmapper[1] = gotdoc.group(1)
+			
+			if levelmapper[3] is not 1:
+				try:
+					# if you already have 10a, don't generate 10aa, 10aaa, 10aaaa, ...
+					tail = levelmapper[1][-1]
+				except:
+					levelmapper[1] = str(levelmapper[1]) + levelmapper[3]
+			# gotdoc = re.search(docb, line)
+			# if gotdoc != None:
+			# 	levelmapper[1] = gotdoc.group(1)
+						
 		# db version: list of tuples + the line
 		tups = [('0',str(levelmapper[0])),('1',str(levelmapper[1])),('2',str(levelmapper[2])),('3',str(levelmapper[3])),('4',str(levelmapper[4])), ('5',str(levelmapper[4]))]
 		dbready.append([str(work), tups, line])

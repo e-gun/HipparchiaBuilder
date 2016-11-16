@@ -47,7 +47,7 @@ def dbprepper(dbunreadyversion):
 	dbunreadyversion = dbpdeincrement(dbunreadyversion)
 	dbunreadyversion = dbstrippedliner(dbunreadyversion)
 	dbunreadyversion = dbfindhypens(dbunreadyversion)
-	dbunreadyversion = dbfindcitations(dbunreadyversion)
+	dbunreadyversion = dbfindannotations(dbunreadyversion)
 	dbunreadyversion = hmutonbsp(dbunreadyversion)
 	dbunreadyversion = notrailingwhitespace(dbunreadyversion)
 	dbreadyversion = dbunreadyversion
@@ -251,17 +251,18 @@ def dbfindhypens(dbunreadyversion):
 	return dbreadyversion
 
 
-def dbfindcitations(dbunreadyversion):
+def dbfindannotations(dbunreadyversion):
 	workingcolumn = 2
 	dbreadyversion = []
-	search = re.compile(r'<hmu_annotations value="(.*?)" />')
+	search = re.compile(r'<hmu(_|_metadata_)annotations value="(.*?)" />')
 	for line in dbunreadyversion:
 		citation = re.findall(search, line[workingcolumn])
 		line[workingcolumn] = re.sub(search,'',line[workingcolumn])
 		try:
 			# i wonder about multiple citations...
-			citations = ','.join(citation)
-			line.append(citations)
+			# at the moment they will get nuked
+			# citations = ','.join(citation)
+			line.append(citation[0][1])
 		except:
 			line.append('')
 		dbreadyversion.append(line)

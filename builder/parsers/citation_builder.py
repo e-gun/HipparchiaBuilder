@@ -8,6 +8,7 @@
 import re
 
 from builder.parsers.swappers import highunicodetohex
+from builder.parsers import regex_substitutions
 
 def citationbuilder(hexsequence):
 	fullcitation = testcitationbuilder(hexsequence)
@@ -84,7 +85,7 @@ def testcitationbuilder(hexsequence):
 			else:
 				fullcitation += '<hmu_unhandled_right_byte_value_' + str(action) + ' />'
 		elif textlevel == 6:
-			# if you watch the actions <15 work you will see that this is a crazy counter
+			# if you watch the actions <15 work you will see that this is a counter
 			# here's how to do that
 			#   citation, hexsequence = nyb15(hexsequence)
 			#	fullcitation += '<hmu_supplementary_level_info_'+str(action)+' value="' + citation + '" />'
@@ -127,6 +128,18 @@ def testcitationbuilder(hexsequence):
 					fullcitation += '<hmu_assert_document_number_' + citation[1:] + ' />'
 				else:
 					print('action6',str(action),'not followed by a "z" but by',citation)
+			elif action == 1200:
+				citation, hexsequence = level06action12(hexsequence)
+				if citation[0] == 'z':
+					fullcitation += '<hmu_assert_document_number_' + citation[1:] + ' />'
+				else:
+					print('action6',str(action),'not followed by a "z" but by',citation)
+			elif action == 1400:
+				citation, hexsequence = level06action14(hexsequence)
+				if citation[0] == 'z':
+					fullcitation += '<hmu_assert_document_number_' + citation[1:] + ' />'
+				else:
+					print('action6',str(action),'not followed by a "z" but by',citation)
 			elif action == 15:
 				metadata, hexsequence = documentmetatata(hexsequence)
 				# metadata = re.sub(r'\&\d{0,1}', '', metadata)
@@ -138,7 +151,7 @@ def testcitationbuilder(hexsequence):
 				citation, hexsequence = nyb15(hexsequence)
 				fullcitation += '<hmu_supplementary_level_info_'+str(action)+' value="' + citation + '" />'
 				print('citation builder got confused by (level) (action) (hex):', textlevel, action, hexsequence)
-				quickdecode(hexsequence)
+				# quickdecode(hexsequence)
 	
 	return fullcitation
 
@@ -358,6 +371,7 @@ def nyb13(hexsequence):
 			citation += chr(int(popped, 16) & int('7f', 16))
 	return citation, hexsequence
 
+
 def nyb14(hexsequence):
 	# 14 -> append a char to the counter number
 	# this will not work properly right now: merely replacing, not appending; need to find a test case
@@ -412,6 +426,30 @@ def level06action11(hexsequence):
 	return citation, hexsequence
 
 
+def level06action12(hexsequence):
+	"""
+	passthrough to another function
+	:param hexsequence:
+	:return:
+	"""
+	citation, hexsequence = level06action08(hexsequence)
+	print('a12', citation, hexsequence)
+	
+	return citation, hexsequence
+
+
+def level06action14(hexsequence):
+	"""
+	passthrough to another function
+	:param hexsequence:
+	:return:
+	"""
+	citation, hexsequence = level06action08(hexsequence)
+	print('a14', citation, hexsequence)
+	
+	return citation, hexsequence
+	
+	
 def level06action15(hexsequence):
 	# this does not correspond to what Diogenes said you should do, but it does yield results...
 	# not popping this one...
@@ -475,7 +513,8 @@ def documentmetatata(hexsequence):
 		else:
 			m, hexsequence = nyb15(hexsequence)
 			if m != '':
-				metadata['annotations'] += m + '.'
+				m = regex_substitutions.replaceaddnlchars(m)
+				metadata['annotations'] += m
 		for key in metadata.keys():
 			# should actually only be one key, but we don't know which one it is in advance
 			message += '<hmu_metadata_' + key + ' value="' + metadata[key] + '" />'
