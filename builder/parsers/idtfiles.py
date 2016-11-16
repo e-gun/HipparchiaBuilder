@@ -11,7 +11,7 @@ from builder.builder_classes import Author, Opus
 from builder.parsers.regex_substitutions import cleanworkname
 
 
-def loadauthor(idtfiledatastream, language):
+def loadauthor(idtfiledatastream, language, uidprefix):
 	"""
 	read and IDT file's contents and extract author and work info for it
 	this is done via a byte-by-byte walk
@@ -61,7 +61,7 @@ def loadauthor(idtfiledatastream, language):
 						worklist = []
 						bytecount = bytecount + 2
 						authorname = getpascalstr(idtfiledatastream, bytecount)
-						authorobject = Author(authornumber, language)
+						authorobject = Author(authornumber, language, uidprefix)
 						authorobject.idxname = authorname
 						bytecount = bytecount + len(authorname)
 					else:
@@ -139,6 +139,11 @@ def loadauthor(idtfiledatastream, language):
 		elif (idtfiledatastream[bytecount] == 11) or (idtfiledatastream[bytecount] == 13):
 			# ignored exceptions
 			bytecount += 2
+
+	# a kudge to force the inscriptions and payri to conform to our model
+	if authorobject.universalid[0:1] in ['in', 'dp']:
+		for w in authorobject.works:
+			w.structure = {0: 'line', 1: 'document'}
 
 	return authorobject
 

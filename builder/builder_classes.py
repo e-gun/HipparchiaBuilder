@@ -15,13 +15,10 @@ class Author(object):
 	Initialized straight out of a DB read
 	"""
 
-	def __init__(self, number,language):
+	def __init__(self, number,language, uidprefix):
 		self.number = number
 		self.language = language
-		if language == 'G':
-			self.universalid = 'gr'+number
-		elif language == 'L':
-			self.universalid = 'lt' + number
+		self.universalid = uidprefix+number
 		self.shortname = ''
 		self.cleanname = ''
 		self.genre = ''

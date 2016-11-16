@@ -37,7 +37,7 @@ def parallelbuildcorpus(greekdatapath, latindatapath, dbconnection, cursor):
 	# al = []
 	for a in al:
 		if int(a) < 9999:
-			thework.append(({a: alllatinauthors[a]}, 'L', latindatapath))
+			thework.append(({a: alllatinauthors[a]}, 'L', 'lt', latindatapath))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	
@@ -50,7 +50,7 @@ def parallelbuildcorpus(greekdatapath, latindatapath, dbconnection, cursor):
 	thework = []
 	for a in ag:
 		if int(a) < 9999:
-			thework.append(({a: allgreekauthors[a]}, 'G', greekdatapath))
+			thework.append(({a: allgreekauthors[a]}, 'G', 'gr', greekdatapath))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	
@@ -63,7 +63,7 @@ def parallelbuildcorpus(greekdatapath, latindatapath, dbconnection, cursor):
 def parallelworker(thework):
 	dbc = setconnection(config)
 	cur = dbc.cursor()
-	result = addoneauthor(thework[0], thework[1], thework[2], dbc, cur)
+	result = addoneauthor(thework[0], thework[1], thework[2], thework[3], dbc, cur)
 	print(re.sub(r'[^\x00-\x7F]+', ' ', result))
 	dbc.commit()
 
@@ -86,7 +86,7 @@ def checkextant(authorlist,datapath):
 	return pruneddict
 
 
-def addoneauthor(authordict, language, datapath,  dbconnection, cursor):
+def addoneauthor(authordict, language, datapath, uidprefix, dbconnection, cursor):
 	"""
 	I need an authtab pair within a one-item dict: {'0022':'Marcus Porcius &1Cato&\x80Cato'}
 	Then I will go to work and run the full suite
@@ -99,7 +99,7 @@ def addoneauthor(authordict, language, datapath,  dbconnection, cursor):
 	"""
 	starttime = time.time()
 	(num,name), = authordict.items()
-	author = buildauthor(num,language,datapath)
+	author = buildauthor(num, language,datapath, uidprefix)
 	author.addauthtabname(name)
 	author.language = language
 	thecollectedworksof(author, language, datapath,  dbconnection, cursor)
@@ -126,7 +126,7 @@ def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor)
 	return
 
 
-def buildauthor(authortabnumber, language, datapath):
+def buildauthor(authortabnumber, language, datapath, uidprefix):
 	"""
 	construct an author object
 
@@ -148,7 +148,7 @@ def buildauthor(authortabnumber, language, datapath):
 	:return: a populated author object
 	"""
 	authoridt = filereaders.loadidt(datapath+authortabnumber+'.IDT')
-	authorobj = idtfiles.loadauthor(authoridt,language)
+	authorobj = idtfiles.loadauthor(authoridt, language, uidprefix)
 
 	return authorobj
 
