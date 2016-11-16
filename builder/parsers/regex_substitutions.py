@@ -285,10 +285,23 @@ def poundsubstitutes(match):
 		23: u'\u03d9',
 		24: r'𐅵',
 		25: r'?',
+		27: r'𐄂', # 'check mark'; non tlg; and so - AEGEAN CHECK MARK; Unicode: U+10102, UTF-8: F0 90 84 82
 		29: u'\u00b7',
 		30: r'<hmu_idiosyncratic_char value="30">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		31: r'<hmu_idiosyncratic_char value="31">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		51: u'\u00b7',
+		52: u'\u205a',
 		56: r'∣', # 'dividers of other forms'; not a helpful description: trying u2223 for now
+		59: u'\u03fd',
+		60: u'\u0399',
+		61: r'𐅂',
+		62: r'𐅃',
+		63: u'\u0394',
+		64: r'𐅄',
+		65: u'\u0397',
+		66: r'𐅅',
+		67: u'\u03a7',
+		68: r'𐅆',
 		69: u'\u039c',
 		73: u'\u205a',
 		74: u'\u205d',
@@ -397,6 +410,7 @@ def poundsubstitutes(match):
 		314: r'<hmu_idiosyncratic_char value="314">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		315: u'\u2e0e',
 		316: r'<hmu_idiosyncratic_char value="316">◦</hmu_idiosyncratic_char>',  # deprecated: no further info
+		321: u'\u2629',
 		322: u'\u2627',
 		323: r'﹥', # 'greater-than sign -> line filler' says the instructions; small version instead of the markup version
 		451: u'\u0283',
@@ -540,14 +554,18 @@ def poundsubstitutes(match):
 		760: u'\u0660',
 		801: r'𐅁',
 		802: r'𐅀',
+		803: u'\u03a7',
 		805: u'\u03a4',
 		821: u'\u03a3',
+		840: u'\u007c\u007c',
+		841: u'\u007c\u007c\u007c',
 		853: u'\u0399',
 		862: u'\u0394',
 		863: r'𐅄',
 		865: r'𐅅',
 		866: u'\u03a7',
 		867: r'𐅆',
+		932: u'\u2733',
 		1000: r'𐅼',
 		1001: r'𐅽',
 		1002: r'𐅾',
@@ -760,6 +778,7 @@ def leftbracketsubstitutions(match):
 
 	substitutions = {
 		# u'\u',
+		51: '<span class="erasedepiographicaltext">',
 		23: u'u\23a9',
 		22: u'u\23a8',
 		21: u'u\23aa',
@@ -803,6 +822,7 @@ def rightbracketsubstitutions(match):
 	
 	substitutions = {
 		# u'\u',
+		51: r'</span>', # erasedepiographicaltext
 		32: u'\u32a0',
 		30: u'\u329e',
 		23: u'\u23ad',
@@ -985,6 +1005,13 @@ def ltanglebracketsubstitutes(match):
 		31: r'<span class="strikethrough">',
 		32: r'<span class="overunder">',  # hmu_overline_and_underline
 		34: r'⁄',  # fractions (which have balanced sets of markup...)
+		60: r'<hmu_preferred_epigraphical_text_used>',
+		61: r'<hmu_epigraphical_text_inserted_after_erasure>',
+		62: r'<span class="lineover">',
+		66: r'<hmu_epigraphical_project_escape_66>',
+		67: r'<hmu_epigraphical_project_escape_67>',
+		68: r'<hmu_epigraphical_project_escape_68>',
+		69: r'<hmu_epigraphical_project_escape_69>',
 		70: r'<span class="diagram">',  # hmu_inset_diagram
 		71: r'<span class="diagramsection">',  # hmu_inset_diagram
 		72: r'<span class="diagramrelation">',  # hmu_logical_relationship_in_diagram
@@ -1036,6 +1063,13 @@ def rtanglebracketsubstitutes(match):
 		31: r'</span>',  # strikethrough
 		32: r'</span>',  # hmu_overline_and_underline
 		34: '',  # fractions
+		60: r'</hmu_preferred_epigraphical_text_used>',
+		61: r'</hmu_epigraphical_text_inserted_after_erasure>',
+		62: r'</span>', # epigraphical line over letters
+		66: r'</hmu_epigraphical_project_escape_66>',
+		67: r'</hmu_epigraphical_project_escape_67>',
+		68: r'</hmu_epigraphical_project_escape_68>',
+		69: r'</hmu_epigraphical_project_escape_69>',
 		70: r'</span>',  # hmu_inset_diagram
 		71: r'</span>',  # hmu_discrete_section_of_diagram
 		72: r'</span>',  # hmu_logical_relationship_in_diagram
