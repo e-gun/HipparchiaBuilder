@@ -125,21 +125,15 @@ def dbpdeincrement(dbunreadyversion):
 	adder = re.compile(r'<hmu_increment_level_(\d)_by_1\s/>')
 	blocker = re.compile(r'<hmu_cd_assert_(.*?)>')
 	eob = re.compile(r'<hmu_end_of_cd_block_re-initialize_key_variables />')
+	docu = re.compile(r'<hmu_assert_document_number_(.*?)>')
 	# empty = r'(?<!*)\s{0,1}(?=!*)'
 		
 	dbreadyversion = []
 
 	for line in dbunreadyversion:
-		line[workingcolumn] = re.sub(setter, '', line[workingcolumn])
-		line[workingcolumn] = re.sub(adder, '', line[workingcolumn])
-		line[workingcolumn] = re.sub(blocker, '', line[workingcolumn])
-		line[workingcolumn] = re.sub(eob, '', line[workingcolumn])
-		# do this late because it won't be empty before prior scrubbing
-		# what are the chances that an empty line contained useful level codes?
-		# if re.search(empty, line[workingcolumn]):
-		#	pass
-		# else:
-		#	dbreadyversion.append(line)
+		for expression in [setter, adder, blocker, eob, docu]:
+			line[workingcolumn] = re.sub(expression, '', line[workingcolumn])
+
 		if line[workingcolumn] != '':
 			dbreadyversion.append(line)
 

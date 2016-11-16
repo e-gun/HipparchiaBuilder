@@ -1319,14 +1319,23 @@ def totallemmatization(parsedtextfile, authorobject):
 	lemmatized = []
 	dbready = []
 
-
 	work = 1
 
 	setter = re.compile(r'<hmu_set_level_(\d)_to_([A-Za-z0-9]{1,})')
 	adder = re.compile(r'<hmu_increment_level_(\d)_by_1\s')
 	wnv = re.compile(r'<hmu_cd_assert_work_number value="(\d{1,3})')
+	docu = re.compile(r'<hmu_assert_document_number_(\d{1,3})')
 
 	for line in parsedtextfile:
+		if authorobject.universalid[0:2] in ['in','dp']:
+			# the structure of these works is always the same: 0: line; 1: document number
+			# the document numbers do not increment by adding 1 to level 1 but by asserting a number at level 6
+			# in fact, the original data tires to claim that there are no lines, lust documents (i.e., level 0 = 'document')
+			# it's a bit of a mess
+			gotdoc = re.search(docu, line)
+			if gotdoc != None:
+				levelmapper[1] = gotdoc.group(1)
+
 		gotwork = re.search(wnv, line)
 		if gotwork != None:
 			work = int(gotwork.group(1))

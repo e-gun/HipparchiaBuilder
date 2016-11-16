@@ -112,19 +112,19 @@ def testcitationbuilder(hexsequence):
 			elif 0 < action < 8:
 				citation, hexsequence = nyb15(hexsequence)
 				if citation == 'z':
-					fullcitation += '<hmu_assert_document_number_'+str(action)+ '" />'
+					fullcitation += '<hmu_assert_document_number_'+str(action)+ ' />'
 				else:
 					print('action6',str(action),'not followed by a "z" but by',citation)
 			elif action == 8:
 				citation, hexsequence = level06action08(hexsequence)
 				if citation[0] == 'z':
-					fullcitation += '<hmu_assert_document_number_' + citation[1:] + '" />'
+					fullcitation += '<hmu_assert_document_number_' + citation[1:] + ' />'
 				else:
 					print('action6',str(action),'not followed by a "z" but by',citation)
 			elif action == 11:
 				citation, hexsequence = level06action11(hexsequence)
 				if citation[0] == 'z':
-					fullcitation += '<hmu_assert_document_number_' + citation[1:] + '" />'
+					fullcitation += '<hmu_assert_document_number_' + citation[1:] + ' />'
 				else:
 					print('action6',str(action),'not followed by a "z" but by',citation)
 			elif action == 15:
@@ -138,6 +138,7 @@ def testcitationbuilder(hexsequence):
 				citation, hexsequence = nyb15(hexsequence)
 				fullcitation += '<hmu_supplementary_level_info_'+str(action)+' value="' + citation + '" />'
 				print('citation builder got confused by (level) (action) (hex):', textlevel, action, hexsequence)
+				quickdecode(hexsequence)
 	
 	return fullcitation
 
