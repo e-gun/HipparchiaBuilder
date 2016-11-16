@@ -84,6 +84,19 @@ def testcitationbuilder(hexsequence):
 			else:
 				fullcitation += '<hmu_unhandled_right_byte_value_' + str(action) + ' />'
 		elif textlevel == 6:
+			# if you watch the actions <15 work you will see that this is a crazy counter
+			# here's how to do that
+			#   citation, hexsequence = nyb15(hexsequence)
+			#	fullcitation += '<hmu_supplementary_level_info_'+str(action)+' value="' + citation + '" />'
+			#
+			# the main thing to appreciate is that the first document of a new work will come out as:
+			#   <hmu_supplementary_level_info_1 value="z" />
+			# the next document is 2z
+			# then we count 3-7z.
+			# then z8zx08, 8zx09 (i.e., 8z\t), ...
+			# after 8 you jump to 11
+			# at 11 this is how you count: z\x01\x00, z\x01\x01, z\x01\x02...
+			
 			if action == 0:
 				print('action: 60')
 				# quickdecode(hexsequence)
@@ -97,34 +110,23 @@ def testcitationbuilder(hexsequence):
 				else:
 					hexsequence.append(next)
 			elif 0 < action < 8:
-				# this is a crazy counter
-				# the main thing to know is that the first document of a new work is:
-				#   <hmu_supplementary_level_info_1 value="z" />
-				# the next document is 2z
-				# then we count 3-7z.
-				# then 8z, 8zx08, 8zx09 (i.e., 8z\t), ...
-				# 8 can count to 127?
-				# then you go 9z...
-				
 				citation, hexsequence = nyb15(hexsequence)
-				
-				fullcitation += '<hmu_supplementary_level_info_'+str(action)+' value="' + citation + '" />'
-			elif 7 < action < 15:
-				# stuff that was confusing the parser: tempting to just toss it
-				# diogenes callis it 'redundant info (?)' and 'a-z levels'
-				# typically looks like a two-byte counter of some sort: '0xfa 0xaf', '0xfa 0xb0', '0xfa 0xb1',...
-				# but in debugging Cicero's letters you can get the followsing sequence of actions:
-				# [a] <hmu_increment_level_2_by_1 />
-				# [b] <hmu_set_level_1_to_sa />
-				# [c] 'level 6, action 8' and then material that will decode to 'zolin Tusculanoodex. Oct. aut in. Nov. 5' if you let it...
-				# this is 'level z=25' + two annotations
-				
-				# just skip
-				# hexsequence = ''
-				
-				# or...
-				citation, hexsequence = nyb15(hexsequence)
-				fullcitation += '<hmu_supplementary_level_info_'+str(action)+' value="' + citation + '" />'
+				if citation == 'z':
+					fullcitation += '<hmu_assert_document_number_'+str(action)+ '" />'
+				else:
+					print('action6',str(action),'not followed by a "z" but by',citation)
+			elif action == 8:
+				citation, hexsequence = level06action08(hexsequence)
+				if citation[0] == 'z':
+					fullcitation += '<hmu_assert_document_number_' + citation[1:] + '" />'
+				else:
+					print('action6',str(action),'not followed by a "z" but by',citation)
+			elif action == 11:
+				citation, hexsequence = level06action11(hexsequence)
+				if citation[0] == 'z':
+					fullcitation += '<hmu_assert_document_number_' + citation[1:] + '" />'
+				else:
+					print('action6',str(action),'not followed by a "z" but by',citation)
 			elif action == 15:
 				metadata, hexsequence = documentmetatata(hexsequence)
 				# metadata = re.sub(r'\&\d{0,1}', '', metadata)
@@ -132,7 +134,9 @@ def testcitationbuilder(hexsequence):
 			else:
 				# level06popper(10, hexsequence)
 				# drop everything until you see 'ff' again
-				hexsequence = level06kludger(hexsequence)
+				# hexsequence = level06kludger(hexsequence)
+				citation, hexsequence = nyb15(hexsequence)
+				fullcitation += '<hmu_supplementary_level_info_'+str(action)+' value="' + citation + '" />'
 				print('citation builder got confused by (level) (action) (hex):', textlevel, action, hexsequence)
 	
 	return fullcitation
@@ -392,6 +396,20 @@ def level06action08(hexsequence):
 	citation += str(int(hexsequence.pop(), 16) & int('7f', 16))
 	
 	return citation, hexsequence
+
+
+def level06action11(hexsequence):
+	# z + next two bytes are a 14 bit number
+	if len(hexsequence) > 2:
+		firstbyte = chr(int(hexsequence.pop(), 16) & int('7f', 16))
+		secondbyte = int(hexsequence.pop(),16) & int('7f', 16)
+		thridbyte = int(hexsequence.pop(),16) & int('7f', 16)
+		citation = firstbyte + str((secondbyte << 7) + thridbyte)
+	else:
+		citation = '[failed_level06action11]'
+		hexsequence = []
+	return citation, hexsequence
+
 
 def level06action15(hexsequence):
 	# this does not correspond to what Diogenes said you should do, but it does yield results...
