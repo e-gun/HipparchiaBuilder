@@ -145,13 +145,8 @@ def tablenamer(authorobject, thework, indexedat):
 	except:
 		lg = authorobject.language
 	# how many bilingual authors are there again?
-	if lg == 'G':
-		pr = 'gr'
-	elif lg == 'L':
-		pr = 'lt'
-	else:
-		pr = ''
-		print('oh, I do not speak', lg, 'and I will be unable to access a DB')
+
+	pr = authorobject.universalid[0:2]
 
 	workdbname = pr + nm + 'w' + nn
 
