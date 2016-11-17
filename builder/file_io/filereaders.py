@@ -32,13 +32,14 @@ def findauthors(pathtoauthtab):
 	:return: availableauthors (dict with key as author number)
 	"""
 	# need to drop the LAT or GRK prefix
-	pathtoauthtab = pathtoauthtab[:-3]
+	
 	f = open(pathtoauthtab + 'AUTHTAB.DIR', 'rb')
 	o = f.read()
 	o = "".join(map(chr, o))
 	f.close()
 
-	authorparser = re.compile('(\w\w\w\d)\s+([\x01-\x7f]*[a-zA-Z][^\x83\xff]*)')
+	# authorparser = re.compile('(\w\w\w\d)\s+([\x01-\x7f]*[a-zA-Z][^\x83\xff]*)')
+	authorparser = re.compile('([A-Z]{1,3}\w\w\w\d)\s+([\x01-\x7f]*[a-zA-Z][^\x83\xff]*)')
 	availableauthors = dict(authorparser.findall(o))
 
 	return availableauthors

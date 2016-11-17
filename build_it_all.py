@@ -16,7 +16,10 @@ from builder.dbinteraction.postbuildmetadata import insertfirstsandlasts, findwo
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-buildauthors = config['build']['buildauthors']
+buildgreekauthors = config['build']['buildgreekauthors']
+buildlatinauthors = config['build']['buildlatinauthors']
+buildinscriptions = config['build']['buildinscriptions']
+buildpapyri = config['build']['buildpapyri']
 buildlex = config['build']['buildlex']
 buildgram = config['build']['buildgram']
 buildstats = config['build']['buildstats']
@@ -27,12 +30,26 @@ cursor = dbconnection.cursor()
 
 tlg = config['io']['tlg']
 phi = config['io']['phi']
+ins = config['io']['ins']
+ddp = config['io']['phi']
 
 start = time.time()
 
-if buildauthors == 'y':
-	print('building author and work dbs')
-	corpus_builder.parallelbuildcorpus(tlg, phi, dbconnection, cursor)
+if buildlatinauthors == 'y':
+	print('building roman and work dbs')
+	corpus_builder.parallelbuildlatincorpus(phi, cursor)
+
+if buildgreekauthors == 'y':
+	print('building greek and work dbs')
+	corpus_builder.parallelbuildgreekcorpus(tlg, dbconnection, cursor)
+
+if buildinscriptions == 'y':
+	print('building inscriptions dbs')
+	corpus_builder.parallelbuildinscriptionscorpus(ins)
+
+if buildinscriptions == 'y':
+	print('building inscriptions dbs')
+	corpus_builder.parallelbuildpapyrusscorpus(ddp)
 
 if buildlex == 'y':
 	print('building lexical dbs')
@@ -58,8 +75,5 @@ print('\nBuild took',str(took),'minutes')
 
 
 # 4 Workers on G&L authors:
-# Build took 78.26 minutes
-
-# no concordances:
 # Build took 40.32 minutes
 

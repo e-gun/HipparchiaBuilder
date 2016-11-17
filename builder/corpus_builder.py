@@ -20,14 +20,13 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def parallelbuildcorpus(greekdatapath, latindatapath, dbconnection, cursor):
+def parallelbuildlatincorpus(latindatapath, cursor):
 	"""
 	the whole enchilada
 	you a few shifts in the comments and conditionals will let you build portions instead
 	:return:
 	"""
-	allgreekauthors = filereaders.findauthors(greekdatapath)
-	allgreekauthors = checkextant(allgreekauthors, greekdatapath)
+
 	alllatinauthors = filereaders.findauthors(latindatapath)
 	alllatinauthors = checkextant(alllatinauthors, latindatapath)
 	
@@ -44,9 +43,21 @@ def parallelbuildcorpus(greekdatapath, latindatapath, dbconnection, cursor):
 	if len(al) > 0:
 		parse_binfiles.latinloadcanon(latindatapath + '9999.TXT', cursor)
 	
+	return True
+
+
+def parallelbuildgreekcorpus(greekdatapath, dbconnection, cursor):
+	"""
+	the whole enchilada
+	you a few shifts in the comments and conditionals will let you build portions instead
+	:return:
+	"""
+	allgreekauthors = filereaders.findauthors(greekdatapath)
+	allgreekauthors = checkextant(allgreekauthors, greekdatapath)
+	
 	ag = list(allgreekauthors.keys())
 	ag.sort()
-	#ag = []
+	# ag = []
 	thework = []
 	for a in ag:
 		if int(a) < 9999:
@@ -56,6 +67,56 @@ def parallelbuildcorpus(greekdatapath, latindatapath, dbconnection, cursor):
 	
 	if len(ag) > 0:
 		parse_binfiles.resetbininfo(greekdatapath, cursor, dbconnection)
+	
+	return True
+
+
+def parallelbuildinscriptionscorpus(insdatapath):
+	"""
+	the whole enchilada
+	you a few shifts in the comments and conditionals will let you build portions instead
+	:return:
+	"""
+	
+	allinscriptions = filereaders.findauthors(insdatapath)
+	allinscriptions = checkextant(allinscriptions, insdatapath)
+	
+	ai = list(allinscriptions.keys())
+	# prune other dbs
+	ai = [x for x in ai if 'INS' in ai]
+	ai.sort()
+	thework = []
+	# ai = []
+	for a in ai:
+		if int(a) < 9999:
+			thework.append(({a: allinscriptions[a]}, 'G', 'in', insdatapath))
+	pool = Pool(processes=int(config['io']['workers']))
+	pool.map(parallelworker, thework)
+	
+	return True
+
+
+def parallelbuildpapyrusscorpus(papdatapath):
+	"""
+	the whole enchilada
+	you a few shifts in the comments and conditionals will let you build portions instead
+	:return:
+	"""
+	
+	allinscriptions = filereaders.findauthors(papdatapath)
+	allinscriptions = checkextant(allinscriptions, papdatapath)
+	
+	ap = list(allinscriptions.keys())
+	# prune other dbs
+	ap = [x for x in ap if 'DDP' in ap]
+	ap.sort()
+	thework = []
+	# ap = []
+	for a in ap:
+		if int(a) < 9999:
+			thework.append(({a: allinscriptions[a]}, 'G', 'in', papdatapath))
+	pool = Pool(processes=int(config['io']['workers']))
+	pool.map(parallelworker, thework)
 	
 	return True
 
