@@ -287,6 +287,7 @@ def poundsubstitutes(match):
 		25: r'?',
 		26: u'\u2e0f',
 		27: r'𐄂', # 'check mark'; non tlg; and so - AEGEAN CHECK MARK; Unicode: U+10102, UTF-8: F0 90 84 82
+		28: r'<hmu_mark_deleting_entry />␥',
 		29: u'\u00b7',
 		30: r'<hmu_idiosyncratic_char value="30">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		31: r'<hmu_idiosyncratic_char value="31">◦</hmu_idiosyncratic_char>',  # idiosyncratic
@@ -306,16 +307,22 @@ def poundsubstitutes(match):
 		67: u'\u03a7',
 		68: r'𐅆',
 		69: u'\u039c',
+		70: u'\u002e',
+		71: u'\u00b7',
+		72: u'\u02d9',
 		73: u'\u205a',
 		74: u'\u205d',
+		75: u'\u002e',
 		80: u'\u0308',
 		81: r'＇', #fullwidth apostrophe instead of the dangerous simple apostrophe
 		82: u'\u02ca',
 		83: u'\u02cb',
+		84: u'\u1fc0',
 		85: u'\u02bd',
 		86: u'\u02bc',
 		87: u'\u0394\u0345',
 		90: u'\u2014',
+		99: r'<hmu_undocumented_poundsign value="99">⊚</hmu_undocumented_poundsign>',
 		100: r'𐆆',
 		101: u'𐅻',  #trouble with the four character unicode codes: uh oh
 		102: u'𐆂<6\u03c56>',  # upsilon supposed to be superscript too: add betacode for that <6...6>
@@ -414,9 +421,25 @@ def poundsubstitutes(match):
 		314: r'<hmu_idiosyncratic_char value="314">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		315: u'\u2e0e',
 		316: r'<hmu_idiosyncratic_char value="316">◦</hmu_idiosyncratic_char>',  # deprecated: no further info
+		317: r'<hmu_document_cancelled_with_slashes />⑊⑊⑊⑊⑊',
+		318: r'<hmu_line_filled_with_cross-strokes />⧷⧷⧷⧷⧷',
+		319: u'\u25cf',
+		320: u'\u2629',
 		321: u'\u2629',
 		322: u'\u2627',
 		323: r'﹥', # 'greater-than sign -> line filler' says the instructions; small version instead of the markup version
+		324: r'<hmu_filler_stroke_to_margin />',
+		325: r'<hmu_large_single_X>✕</hmu_large_single_X>',
+		326: r'<hmu_pattern_of_Xs>✕✕✕✕</hmu_pattern_of_Xs>',
+		327: r'<hmu_tachygraphic_marks />',
+		329: r'<hmu_monogram />',
+		330: r'<hmu_drawing />',
+		331: r'<hmu_wavy_line_as_divider />〜〜〜〜〜',
+		332: r'<hmu_impression_of_stamp_on_papyrus />⦻',
+		333: r'<hmu_text_enclosed_in_box_or_circle />',
+		334: r'<hmu_text_enclosed_in_brackets />',
+		336: r'<hum_redundant_s-type_sign />',
+		337: r'<hmu_seal_attached_to_papyrus>❊</hmu_seal_attached_to_papyrus>',
 		451: u'\u0283',
 		452: u'\u2310',
 		453: u'\u2e11',
@@ -547,6 +570,7 @@ def poundsubstitutes(match):
 		709: u'\u223b',
 		710: u'\u039a\u0336',
 		711: u'\u03fb',
+		741: r'<hmu_idiosyncratic_char value="741">◦</hmu_idiosyncratic_char>',
 		751: u'\u0661',  # arabic-indic digits...
 		752: u'\u0662',
 		753: u'\u0663',
@@ -829,6 +853,9 @@ def leftbracketsubstitutions(match):
 		51: '<span class="erasedepiographicaltext">',
 		49: r'<hmu_papyrological_project_lt_bracket_49 />', # 49-35
 		35: r'<hmu_papyrological_project_lt_bracket_35 />',
+		34: r'<hmu_parenthesis_deletion_marker>⸨',
+		33: r'<hmu_parenthesis_ancient_punctuation>｟',
+		32: u'\u239d',
 		23: u'u\23a9',
 		22: u'u\23a8',
 		21: u'u\23aa',
@@ -875,6 +902,8 @@ def rightbracketsubstitutions(match):
 		51: r'</span>', # erasedepiographicaltext
 		49: r'<hmu_papyrological_project_rt_bracket_49 />',  # 49-35
 		35: r'<hmu_papyrological_project_rt_bracket_35 />',
+		34: r'⸩</hmu_parenthesis_deletion_marker>',
+		33: r'｠</hmu_parenthesis_ancient_punctuation>',
 		32: u'\u32a0',
 		31: u'\u239f',
 		30: u'\u329e',
@@ -924,6 +953,7 @@ def atsignsubstitutions(match):
 		74: r'</span>',
 		70: r'<span class="quotedtext">',
 		71: r'</span>',
+		51: r'<hmu_standalone_writing_inverse_to_main_text />',
 		50: r'<hmu_standalone_writing_perpendicular_to_main_text />',
 		30: r'<hmu_standalone_start_of_stanza />',
 		20: r'<hmu_standalone_start_of_columnar_text />',
@@ -986,6 +1016,7 @@ def ltcurlybracketsubstitutes(match):
 		9: r'<hmu_alternative_reading>',
 		8: r'<hmu_numerical_equivalent>',
 		7: r'<hmu_reading_discarded_in_another_source>',
+		6: r'<hmu_discarded_form>',
 		5: r'<hmu_form_altered_by_scribe>',
 		4: r'<hmu_unconventional_form_written_by_scribe>',
 		3: r'<span class="scholium">',
@@ -1024,6 +1055,7 @@ def rtcurlybracketsubstitutes(match):
 		9: r'</hmu_alternative_reading>',
 		8: r'</hmu_numerical_equivalent>',
 		7: r'</hmu_reading_discarded_in_another_source>',
+		6: r'</hmu_discarded_form>',
 		5: r'</hmu_form_altered_by_scribe>',
 		4: r'</hmu_unconventional_form_written_by_scribe>',
 		3: r'</span>',  # hmu_reference_in_scholium
@@ -1174,6 +1206,10 @@ def dollarssubstitutes(match):
 	
 	substitutions = {
 		70: [r'<span class="uncial">', r'</span>'],
+		53: [r'<span class="hebrew">', r'</span>'],
+		52: [r'<span class="arabic">', r'</span>'],
+		51: [r'<span class="demotic">', r'</span>'],
+		50: [r'<span class="coptic">', r'</span>'],
 		40: [r'<span class="extralarge">', r'</span>'],
 		30: [r'<span class="extrasmall">', r'</span>'],
 		20: [r'<span class="largerthannormal">', r'</span>'],
@@ -1215,10 +1251,7 @@ def andsubstitutes(match):
 	core = match.group(2)
 	
 	substitutions = {
-		53: [r'<span class="hebrew">', r'</span>'],
-		52: [r'<span class="arabic">', r'</span>'],
-		51: [r'<span class="demotic">',r'</span>'],
-		50: [r'<span class="coptic">',r'</span>'],
+		20: [r'<span class="largerthannormal">',r'</span>'],
 		14: [r'<span class="smallerthannormalsuperscript">',r'</span>'],
 		13: [r'<span class="smallerthannormalitalic">', r'</span>'],
 		10: [r'<span class="smallerthannormal">', r'</span>'],
@@ -1478,6 +1511,8 @@ def totallemmatization(parsedtextfile, authorobject):
 			# level 5 also sees some action: but note how that leaves you with blank levels lower than 5.
 			# in fact, the original data tires to claim that there are no lines, just documents (i.e., level 0 = 'document')
 			# it's a bit of a mess
+			#   level 5 is way off on some inscriptions from level 6
+			#   level 1 is storing 'face' information
 			gotdoc = re.search(doca, line)
 			if gotdoc != None:
 				levelmapper[1] = gotdoc.group(1)

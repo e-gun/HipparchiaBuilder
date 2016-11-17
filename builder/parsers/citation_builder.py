@@ -505,7 +505,7 @@ def documentmetatata(hexsequence):
 		elif chr(int(popped, 16) & int('7f', 16)) == 'l':
 			metadata['provenance'], hexsequence = nyb15(hexsequence)
 		elif chr(int(popped, 16) & int('7f', 16)) == 'd':
-			metadata['rusdate'], hexsequence = nyb15(hexsequence)
+			metadata['date'], hexsequence = nyb15(hexsequence)
 		elif chr(int(popped, 16) & int('7f', 16)) == 't':
 			metadata['unkownmetadata'], hexsequence = nyb15(hexsequence)
 		elif chr(int(popped, 16) & int('7f', 16)) == 'r':
@@ -513,11 +513,10 @@ def documentmetatata(hexsequence):
 		else:
 			m, hexsequence = nyb15(hexsequence)
 			if m != '':
-				m = regex_substitutions.replaceaddnlchars(m)
 				metadata['annotations'] += m
 		for key in metadata.keys():
 			# should actually only be one key, but we don't know which one it is in advance
-			message += '<hmu_metadata_' + key + ' value="' + metadata[key] + '" />'
+			message += '<hmu_metadata_' + key + ' value="' + regex_substitutions.replaceaddnlchars(metadata[key]) + '" />'
 	except:
 		# passed an empty hexsequence?
 		pass

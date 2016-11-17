@@ -111,7 +111,7 @@ def parallelbuildpapyrusscorpus(papdatapath):
 	dataprefix = 'DDP'
 	allpapyri = filereaders.findauthors(papdatapath)
 	allpapyri = checkextant(allpapyri, papdatapath)
-	
+
 	ap = list(allpapyri.keys())
 	# prune other dbs
 	ap = [x for x in ap if dataprefix in x]
@@ -166,13 +166,13 @@ def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnec
 	"""
 
 	starttime = time.time()
-	(num,name), = authordict.items()
-	author = buildauthor(num, language, datapath, uidprefix, dataprefix)
+	(number,name), = authordict.items()
+	author = buildauthor(number, language, datapath, uidprefix, dataprefix)
 	author.addauthtabname(name)
 	author.language = language
 	thecollectedworksof(author, language, datapath,  dbconnection, cursor)
 	buildtime =  round(time.time() - starttime,2)
-	success = num+' '+author.cleanname+' '+str(buildtime)+'s'
+	success = number+' '+author.cleanname+' '+str(buildtime)+'s'
 	
 	return success
 
@@ -197,6 +197,13 @@ def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor)
 def buildauthor(authortabnumber, language, datapath, uidprefix, dataprefix):
 	"""
 	construct an author object
+
+	example input values
+		INS0110
+		G
+		../HipparchiaData/phi7/
+		in
+		INS
 
 	here is where you will stand after running this:
 

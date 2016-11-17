@@ -30,7 +30,7 @@ cursor = dbconnection.cursor()
 tlg = config['io']['tlg']
 phi = config['io']['phi']
 ins = config['io']['ins']
-ddp = config['io']['phi']
+ddp = config['io']['ddp']
 
 start = time.time()
 
@@ -61,7 +61,7 @@ if buildinscriptions == 'y':
 	buildtrigramindices(workcategoryprefix, cursor)
 	findwordcounts(cursor, dbconnection)
 
-if buildinscriptions == 'y':
+if buildpapyri == 'y':
 	workcategoryprefix = 'dp'
 	print('building papyrus dbs')
 	corpus_builder.parallelbuildpapyrusscorpus(ddp)
