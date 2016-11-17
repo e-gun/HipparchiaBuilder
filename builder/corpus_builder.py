@@ -26,7 +26,7 @@ def parallelbuildlatincorpus(latindatapath, cursor):
 	you a few shifts in the comments and conditionals will let you build portions instead
 	:return:
 	"""
-
+	dataprefix = 'LAT'
 	alllatinauthors = filereaders.findauthors(latindatapath)
 	alllatinauthors = checkextant(alllatinauthors, latindatapath)
 	
@@ -35,8 +35,8 @@ def parallelbuildlatincorpus(latindatapath, cursor):
 	thework = []
 	# al = []
 	for a in al:
-		if int(a) < 9999:
-			thework.append(({a: alllatinauthors[a]}, 'L', 'lt', latindatapath))
+		if int(a[3:]) < 9999:
+			thework.append(({a: alllatinauthors[a]}, 'L', 'lt', latindatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	
@@ -52,6 +52,7 @@ def parallelbuildgreekcorpus(greekdatapath, dbconnection, cursor):
 	you a few shifts in the comments and conditionals will let you build portions instead
 	:return:
 	"""
+	dataprefix = 'TLG'
 	allgreekauthors = filereaders.findauthors(greekdatapath)
 	allgreekauthors = checkextant(allgreekauthors, greekdatapath)
 	
@@ -60,8 +61,8 @@ def parallelbuildgreekcorpus(greekdatapath, dbconnection, cursor):
 	# ag = []
 	thework = []
 	for a in ag:
-		if int(a) < 9999:
-			thework.append(({a: allgreekauthors[a]}, 'G', 'gr', greekdatapath))
+		if int(a[3:]) < 9999:
+			thework.append(({a: allgreekauthors[a]}, 'G', 'gr', greekdatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	
@@ -77,19 +78,25 @@ def parallelbuildinscriptionscorpus(insdatapath):
 	you a few shifts in the comments and conditionals will let you build portions instead
 	:return:
 	"""
-	
+	dataprefix = 'INS'
 	allinscriptions = filereaders.findauthors(insdatapath)
 	allinscriptions = checkextant(allinscriptions, insdatapath)
 	
 	ai = list(allinscriptions.keys())
 	# prune other dbs
-	ai = [x for x in ai if 'INS' in ai]
+	ai = [x for x in ai if dataprefix in x]
 	ai.sort()
+	print(ai)
 	thework = []
 	# ai = []
 	for a in ai:
-		if int(a) < 9999:
-			thework.append(({a: allinscriptions[a]}, 'G', 'in', insdatapath))
+		if int(a[3:]) < 8000:
+			# the bibliographies are
+			#   INS8000 Delphi Bibliography [inscriptions] 31.56s
+			#   INS9900 Bibliography [Epigr., general] [inscriptions] 1.86s
+			#   INS9930 Bibliography [Epigr., Caria] [inscriptions] 21.97s
+			#   INS9920 Bibliography [Epigr., Ionia] [inscriptions] 23.66s
+			thework.append(({a: allinscriptions[a]}, 'G', 'in', insdatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	
@@ -102,19 +109,19 @@ def parallelbuildpapyrusscorpus(papdatapath):
 	you a few shifts in the comments and conditionals will let you build portions instead
 	:return:
 	"""
+	dataprefix = 'DDP'
+	allpapyri = filereaders.findauthors(papdatapath)
+	allpapyri = checkextant(allpapyri, papdatapath)
 	
-	allinscriptions = filereaders.findauthors(papdatapath)
-	allinscriptions = checkextant(allinscriptions, papdatapath)
-	
-	ap = list(allinscriptions.keys())
+	ap = list(allpapyri.keys())
 	# prune other dbs
-	ap = [x for x in ap if 'DDP' in ap]
+	ap = [x for x in ap if dataprefix in x]
 	ap.sort()
 	thework = []
 	# ap = []
 	for a in ap:
-		if int(a) < 9999:
-			thework.append(({a: allinscriptions[a]}, 'G', 'in', papdatapath))
+		if int(a[3:]) < 9999:
+			thework.append(({a: allpapyri[a]}, 'G', 'dp', papdatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	
@@ -124,7 +131,7 @@ def parallelbuildpapyrusscorpus(papdatapath):
 def parallelworker(thework):
 	dbc = setconnection(config)
 	cur = dbc.cursor()
-	result = addoneauthor(thework[0], thework[1], thework[2], thework[3], dbc, cur)
+	result = addoneauthor(thework[0], thework[1], thework[2], thework[3], thework[4], dbc, cur)
 	print(re.sub(r'[^\x00-\x7F]+', ' ', result))
 	dbc.commit()
 
@@ -147,7 +154,7 @@ def checkextant(authorlist,datapath):
 	return pruneddict
 
 
-def addoneauthor(authordict, language, datapath, uidprefix, dbconnection, cursor):
+def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection, cursor):
 	"""
 	I need an authtab pair within a one-item dict: {'0022':'Marcus Porcius &1Cato&\x80Cato'}
 	Then I will go to work and run the full suite
@@ -158,9 +165,10 @@ def addoneauthor(authordict, language, datapath, uidprefix, dbconnection, cursor
 	:param cursor:
 	:return:
 	"""
+
 	starttime = time.time()
 	(num,name), = authordict.items()
-	author = buildauthor(num, language,datapath, uidprefix)
+	author = buildauthor(num, language, datapath, uidprefix, dataprefix)
 	author.addauthtabname(name)
 	author.language = language
 	thecollectedworksof(author, language, datapath,  dbconnection, cursor)
@@ -187,7 +195,7 @@ def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor)
 	return
 
 
-def buildauthor(authortabnumber, language, datapath, uidprefix):
+def buildauthor(authortabnumber, language, datapath, uidprefix, dataprefix):
 	"""
 	construct an author object
 
@@ -208,8 +216,9 @@ def buildauthor(authortabnumber, language, datapath, uidprefix):
 	:param language: 'greek' or 'latin'
 	:return: a populated author object
 	"""
+
 	authoridt = filereaders.loadidt(datapath+authortabnumber+'.IDT')
-	authorobj = idtfiles.loadauthor(authoridt, language, uidprefix)
+	authorobj = idtfiles.loadauthor(authoridt, language, uidprefix, dataprefix)
 
 	return authorobj
 
@@ -230,7 +239,7 @@ def initialworkparsing(authorobject, language, datapath):
 	:return: a parsed stream
 	"""
 
-	txt = filereaders.highunicodefileload(datapath + authorobject.number + '.TXT')
+	txt = filereaders.highunicodefileload(datapath + authorobject.dataprefix+authorobject.number + '.TXT')
 	txt = regex_substitutions.earlybirdsubstitutions(txt)
 	txt = regex_substitutions.replacequotationmarks(txt)
 	txt = regex_substitutions.replaceaddnlchars(txt)

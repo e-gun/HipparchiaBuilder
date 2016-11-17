@@ -11,7 +11,7 @@ from builder.builder_classes import Author, Opus
 from builder.parsers.regex_substitutions import cleanworkname
 
 
-def loadauthor(idtfiledatastream, language, uidprefix):
+def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 	"""
 	read and IDT file's contents and extract author and work info for it
 	this is done via a byte-by-byte walk
@@ -61,7 +61,7 @@ def loadauthor(idtfiledatastream, language, uidprefix):
 						worklist = []
 						bytecount = bytecount + 2
 						authorname = getpascalstr(idtfiledatastream, bytecount)
-						authorobject = Author(authornumber, language, uidprefix)
+						authorobject = Author(authornumber, language, uidprefix, dataprefix)
 						authorobject.idxname = authorname
 						bytecount = bytecount + len(authorname)
 					else:

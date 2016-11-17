@@ -150,7 +150,7 @@ def testcitationbuilder(hexsequence):
 				# hexsequence = level06kludger(hexsequence)
 				citation, hexsequence = nyb15(hexsequence)
 				fullcitation += '<hmu_supplementary_level_info_'+str(action)+' value="' + citation + '" />'
-				print('citation builder got confused by (level) (action) (hex):', textlevel, action, hexsequence)
+				# print('citation builder got confused by (level) (action) (hex):', textlevel, action, hexsequence)
 				# quickdecode(hexsequence)
 	
 	return fullcitation

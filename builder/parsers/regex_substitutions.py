@@ -291,6 +291,7 @@ def poundsubstitutes(match):
 		31: r'<hmu_idiosyncratic_char value="31">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		51: u'\u00b7',
 		52: u'\u205a',
+		53: u'\u205d',
 		56: r'∣', # 'dividers of other forms'; not a helpful description: trying u2223 for now
 		59: u'\u03fd',
 		60: u'\u0399',
@@ -312,6 +313,7 @@ def poundsubstitutes(match):
 		85: u'\u02bd',
 		86: u'\u02bc',
 		87: u'\u0394\u0345',
+		90: u'\u2014',
 		100: r'𐆆',
 		101: u'𐅻',  #trouble with the four character unicode codes: uh oh
 		102: u'𐆂<6\u03c56>',  # upsilon supposed to be superscript too: add betacode for that <6...6>
@@ -552,10 +554,19 @@ def poundsubstitutes(match):
 		758: u'\u0668',
 		759: u'\u0669',
 		760: u'\u0660',
+		800: u'\u2733',
 		801: r'𐅁',
 		802: r'𐅀',
 		803: u'\u03a7',
 		805: u'\u03a4',
+		811: u'\u03a4',
+		812: r'𐅈',
+		813: r'𐅉',
+		814: r'𐅊',
+		815: r'𐅋',
+		816: r'𐅌',
+		817: r'𐅍',
+		818: r'𐅎',
 		821: u'\u03a3',
 		840: u'\u007c\u007c',
 		841: u'\u007c\u007c\u007c',
@@ -565,6 +576,10 @@ def poundsubstitutes(match):
 		865: r'𐅅',
 		866: u'\u03a7',
 		867: r'𐅆',
+		922: r'𝈨',
+		923: r'<hmu_idiosyncratic_char value="923">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		924: r'<hmu_idiosyncratic_char value="924">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		925: r'𝈗',
 		932: u'\u2733',
 		1000: r'𐅼',
 		1001: r'𐅽',
@@ -608,6 +623,7 @@ def poundsubstitutes(match):
 		1134: r'<hmu_idiosyncratic_char value="1134">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1135: u'\u002f\u002f',
 		1136: u'\u2112',
+		1221: u'\u0131',
 		1314: u'\u006e\u030a',
 		1316: u'\u0292',
 		1317: u'\u02d9\002f\u002f\u002e',
@@ -719,6 +735,7 @@ def percentsubstitutes(match):
 		72: r'<hmu_papryological_fraction>((1/100))</hmu_papryological_fraction>',
 		73: r'<hmu_papryological_fraction>((1/100))</hmu_papryological_fraction>',
 		80: u'\u0076\u002E',  # supposed to put the 'v' in italics too
+		81: r'<span class="italic">vac.</span>',
 		91: u'\u0485',
 		92: u'\u0486',
 		93: u'\u1dc0',
@@ -730,6 +747,7 @@ def percentsubstitutes(match):
 		99: u'\u2248',
 		100: u'\u003b',
 		101: u'\u0023',  # had best do pounds before percents since this is '#'
+		102: r'’', # single quotation mark
 		103: u'\u005c',  # backslash: careful
 		106: u'\u224c',
 		107: u'\u007e',
@@ -918,7 +936,9 @@ def ltcurlybracketsubstitutes(match):
 		32: r'<hmu_unhandled_bracket_inscriptional_project_non-text_characters_32 />',
 		30: r'<hmu_unhandled_bracket_inscriptional_project_non-text_characters_30 />',
 		27: u'\u0359',
+		26: r'<hmu_recitfied_form>',
 		10: u'\u0332',
+		9: r'<hmu_alternative_reading>',
 		8: r'<hmu_numerical_equivalent>',
 		7: r'<hmu_reading_discarded_in_another_source>',
 		5: r'<hmu_form_altered_by_scribe>',
@@ -952,7 +972,9 @@ def rtcurlybracketsubstitutes(match):
 		41: r'</span>',  # hmu_stage_direction
 		40: r'</span>',  # hmu_speaker
 		27: u'\u0359',
+		26: r'</hmu_recitfied_form>',
 		10: u'\u0332',
+		9: r'</hmu_alternative_reading>',
 		8: r'</hmu_numerical_equivalent>',
 		7: r'</hmu_reading_discarded_in_another_source>',
 		5: r'</hmu_form_altered_by_scribe>',
@@ -1009,6 +1031,7 @@ def ltanglebracketsubstitutes(match):
 		61: r'<hmu_epigraphical_text_inserted_after_erasure>',
 		62: r'<span class="lineover">',
 		63: r'<hmu_epigraphical_text_after_correction>',
+		64: r'<span class="letterbox">',
 		65: r'<hmu_epigraphical_letters_enclosed_in_wreath>',
 		66: r'<hmu_epigraphical_project_escape_66>',
 		67: r'<hmu_epigraphical_project_escape_67>',
@@ -1069,6 +1092,7 @@ def rtanglebracketsubstitutes(match):
 		61: r'</hmu_epigraphical_text_inserted_after_erasure>',
 		62: r'</span>', # epigraphical line over letters
 		63: r'</hmu_epigraphical_text_after_correction>',
+		64: r'</span>', # letters in a box
 		65: r'</hmu_epigraphical_letters_enclosed_in_wreath>',
 		66: r'</hmu_epigraphical_project_escape_66>',
 		67: r'</hmu_epigraphical_project_escape_67>',

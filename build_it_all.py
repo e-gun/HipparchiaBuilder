@@ -22,7 +22,6 @@ buildinscriptions = config['build']['buildinscriptions']
 buildpapyri = config['build']['buildpapyri']
 buildlex = config['build']['buildlex']
 buildgram = config['build']['buildgram']
-buildstats = config['build']['buildstats']
 
 dbconnection = setconnection(config)
 # dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
@@ -36,20 +35,40 @@ ddp = config['io']['phi']
 start = time.time()
 
 if buildlatinauthors == 'y':
-	print('building roman and work dbs')
+	workcategoryprefix = 'lt'
+	print('building latin dbs')
 	corpus_builder.parallelbuildlatincorpus(phi, cursor)
+	print('compiling metadata for latin dbs')
+	insertfirstsandlasts(workcategoryprefix, cursor, dbconnection)
+	buildtrigramindices(workcategoryprefix, cursor)
+	findwordcounts(cursor, dbconnection)
 
 if buildgreekauthors == 'y':
-	print('building greek and work dbs')
+	workcategoryprefix = 'gk'
+	print('building greek dbs')
 	corpus_builder.parallelbuildgreekcorpus(tlg, dbconnection, cursor)
+	print('compiling metadata for greek dbs')
+	insertfirstsandlasts(workcategoryprefix, cursor, dbconnection)
+	buildtrigramindices(workcategoryprefix, cursor)
+	findwordcounts(cursor, dbconnection)
 
 if buildinscriptions == 'y':
-	print('building inscriptions dbs')
+	workcategoryprefix = 'in'
+	print('building inscription dbs')
 	corpus_builder.parallelbuildinscriptionscorpus(ins)
+	print('compiling metadata for inscription dbs')
+	insertfirstsandlasts(workcategoryprefix, cursor, dbconnection)
+	buildtrigramindices(workcategoryprefix, cursor)
+	findwordcounts(cursor, dbconnection)
 
 if buildinscriptions == 'y':
-	print('building inscriptions dbs')
+	workcategoryprefix = 'dp'
+	print('building papyrus dbs')
 	corpus_builder.parallelbuildpapyrusscorpus(ddp)
+	print('compiling metadata for papyrus dbs')
+	insertfirstsandlasts(workcategoryprefix, cursor, dbconnection)
+	buildtrigramindices(workcategoryprefix, cursor)
+	findwordcounts(cursor, dbconnection)
 
 if buildlex == 'y':
 	print('building lexical dbs')
@@ -62,12 +81,6 @@ if buildgram == 'y':
 	analysisloader('../HipparchiaData/lexica/greek-analyses.txt', 'greek_morphology', 'g', dbconnection, cursor)
 	grammarloader('ll', '../HipparchiaData/lexica/', dbconnection, cursor)
 	analysisloader('../HipparchiaData/lexica/latin-analyses.txt', 'latin_morphology', 'l', dbconnection, cursor)
-
-if buildstats == 'y':
-	print('compiling statistics')
-	insertfirstsandlasts(cursor, dbconnection)
-	findwordcounts(cursor, dbconnection)
-	buildtrigramindices(cursor)
 
 stop = time.time()
 took = round((stop-start)/60, 2)

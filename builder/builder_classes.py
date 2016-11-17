@@ -15,7 +15,7 @@ class Author(object):
 	Initialized straight out of a DB read
 	"""
 
-	def __init__(self, number,language, uidprefix):
+	def __init__(self, number,language, uidprefix, dataprefix):
 		self.number = number
 		self.language = language
 		self.universalid = uidprefix+number
@@ -29,6 +29,7 @@ class Author(object):
 		self.workdict = {}
 		self.name = ''
 		self.aka = ''
+		self.dataprefix = dataprefix
 
 	def addwork(self, work):
 		self.works.append(work)

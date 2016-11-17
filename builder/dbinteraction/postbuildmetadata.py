@@ -13,7 +13,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def insertfirstsandlasts(cursor, dbconnection):
+def insertfirstsandlasts(workcategoryprefix, cursor, dbconnection):
 	"""
 	public.works needs to know
 		firstline integer,
@@ -23,8 +23,9 @@ def insertfirstsandlasts(cursor, dbconnection):
 	"""
 	
 	print('inserting work db metatata: first/last lines')
-	query = 'SELECT universalid FROM works ORDER BY universalid ASC'
-	cursor.execute(query)
+	query = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid ASC'
+	data = (workcategoryprefix+'%',)
+	cursor.execute(query, data)
 	results = cursor.fetchall()
 	
 	for r in results:
@@ -118,7 +119,7 @@ def oneworkwordcounts(universalid, cursor, dbconnection):
 	return
 
 
-def buildtrigramindices(cursor):
+def buildtrigramindices(workcategoryprefix, cursor):
 	"""
 	build indices for the works based on trigrams keyed to the stripped line
 	
@@ -129,8 +130,9 @@ def buildtrigramindices(cursor):
 	
 	print('building indices for work dbs')
 	
-	query = 'SELECT universalid FROM works ORDER BY universalid ASC'
-	cursor.execute(query)
+	query = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid ASC'
+	data = (workcategoryprefix+'%',)
+	cursor.execute(query,data)
 	results = cursor.fetchall()
 	
 	resultarray = []
