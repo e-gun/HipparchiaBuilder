@@ -86,7 +86,6 @@ def parallelbuildinscriptionscorpus(insdatapath):
 	# prune other dbs
 	ai = [x for x in ai if dataprefix in x]
 	ai.sort()
-	print(ai)
 	thework = []
 	# ai = []
 	for a in ai:

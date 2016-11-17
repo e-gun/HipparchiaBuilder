@@ -285,6 +285,7 @@ def poundsubstitutes(match):
 		23: u'\u03d9',
 		24: r'𐅵',
 		25: r'?',
+		26: u'\u2e0f',
 		27: r'𐄂', # 'check mark'; non tlg; and so - AEGEAN CHECK MARK; Unicode: U+10102, UTF-8: F0 90 84 82
 		29: u'\u00b7',
 		30: r'<hmu_idiosyncratic_char value="30">◦</hmu_idiosyncratic_char>',  # idiosyncratic
@@ -292,6 +293,7 @@ def poundsubstitutes(match):
 		51: u'\u00b7',
 		52: u'\u205a',
 		53: u'\u205d',
+		55: u'\u2059',
 		56: r'∣', # 'dividers of other forms'; not a helpful description: trying u2223 for now
 		59: u'\u03fd',
 		60: u'\u0399',
@@ -429,6 +431,7 @@ def poundsubstitutes(match):
 		467: u'\u2192',
 		468: u'\u2e0e',
 		476: u'\u0283',
+		500: r'<hmu_undocumented_poundsign value="500">⊚</hmu_undocumented_poundsign>',
 		501: r'π<6ιθ6>',  # abbreviation for πιθανόν: added own betacode - <6...6>
 		502: r'🜚',  # listed as idiosyncratic; but looks like 'alchemical symbol for gold': U+1F71A
 		504: u'\u2e0e',
@@ -558,7 +561,10 @@ def poundsubstitutes(match):
 		801: r'𐅁',
 		802: r'𐅀',
 		803: u'\u03a7',
+		804: r'／', # fulwidth solidus instead
 		805: u'\u03a4',
+		807: r'𐅦',
+		808: r'𐅈',
 		811: u'\u03a4',
 		812: r'𐅈',
 		813: r'𐅉',
@@ -568,24 +574,46 @@ def poundsubstitutes(match):
 		817: r'𐅍',
 		818: r'𐅎',
 		821: u'\u03a3',
+		830: r'𐅇',
+		831: r'𐅇',
+		832: r'𐅖',
+		833: u'\u039c',
+		834: r'𐅗',
+		835: u'\u03a7',
+		836: u'\u03a3',
 		840: u'\u007c\u007c',
 		841: u'\u007c\u007c\u007c',
+		847: r'𐅞',
 		853: u'\u0399',
 		862: u'\u0394',
 		863: r'𐅄',
 		865: r'𐅅',
 		866: u'\u03a7',
 		867: r'𐅆',
+		870: r'<hmu_undocumented_poundsign value="870">⊚</hmu_undocumented_poundsign>',
+		899: r'<hmu_unknown_numeral>',
+		900: r'<hmu_undocumented_poundsign value="900">⊚</hmu_undocumented_poundsign>',
+		901: r'<hmu_undocumented_poundsign value="901">⊚</hmu_undocumented_poundsign>',
+		921: r'<hmu_undocumented_poundsign value="921">⊚</hmu_undocumented_poundsign>',
 		922: r'𝈨',
 		923: r'<hmu_idiosyncratic_char value="923">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		924: r'<hmu_idiosyncratic_char value="924">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		925: r'𝈗',
 		932: u'\u2733',
+		937: r'<hmu_miscellaneous_illustrations>',
+		949: r'<hmu_undocumented_poundsign value="949">⊚</hmu_undocumented_poundsign>',
+		973: r'<hmu_undocumented_poundsign value="973">⊚</hmu_undocumented_poundsign>',
 		1000: r'𐅼',
 		1001: r'𐅽',
 		1002: r'𐅾',
 		1003: r'𐅿',
 		1004: r'𐆀',
+		1059: r'<hmu_undocumented_poundsign value="1059">⊚</hmu_undocumented_poundsign>',
+		1068: r'<hmu_undocumented_poundsign value="1068">⊚</hmu_undocumented_poundsign>',
+		1069: r'<hmu_undocumented_poundsign value="1069">⊚</hmu_undocumented_poundsign>',
+		1070: r'<hmu_undocumented_poundsign value="1070">⊚</hmu_undocumented_poundsign>',
+		1071: r'<hmu_undocumented_poundsign value="1071">⊚</hmu_undocumented_poundsign>',
+		1072: r'<hmu_undocumented_poundsign value="1072">⊚</hmu_undocumented_poundsign>',
 		1100: u'\u2183',
 		1101: r'IS',
 		1102: r'H',
@@ -624,6 +652,7 @@ def poundsubstitutes(match):
 		1135: u'\u002f\u002f',
 		1136: u'\u2112',
 		1221: u'\u0131',
+		1222: u'\u0130',
 		1314: u'\u006e\u030a',
 		1316: u'\u0292',
 		1317: u'\u02d9\002f\u002f\u002e',
@@ -757,6 +786,7 @@ def percentsubstitutes(match):
 		127: u'\u032f',
 		128: u'\u0302',
 		129: u'\u2020',
+		130: u'\u0307',
 		133: u'\u1fcd',
 		134: u'\u1fcf',
 		140: r'𐄒',
@@ -797,6 +827,8 @@ def leftbracketsubstitutions(match):
 	substitutions = {
 		# u'\u',
 		51: '<span class="erasedepiographicaltext">',
+		49: r'<hmu_papyrological_project_lt_bracket_49 />', # 49-35
+		35: r'<hmu_papyrological_project_lt_bracket_35 />',
 		23: u'u\23a9',
 		22: u'u\23a8',
 		21: u'u\23aa',
@@ -841,7 +873,10 @@ def rightbracketsubstitutions(match):
 	substitutions = {
 		# u'\u',
 		51: r'</span>', # erasedepiographicaltext
+		49: r'<hmu_papyrological_project_rt_bracket_49 />',  # 49-35
+		35: r'<hmu_papyrological_project_rt_bracket_35 />',
 		32: u'\u32a0',
+		31: u'\u239f',
 		30: u'\u329e',
 		23: u'\u23ad',
 		22: u'\u23ac',
@@ -933,8 +968,18 @@ def ltcurlybracketsubstitutes(match):
 		43: r'<span class="serviusformatting">',
 		41: r'<span class="stagedirection">',
 		40: r'<span class="speaker">',
-		32: r'<hmu_unhandled_bracket_inscriptional_project_non-text_characters_32 />',
-		30: r'<hmu_unhandled_bracket_inscriptional_project_non-text_characters_30 />',
+		39: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_39 />',
+		38: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_38 />',
+		37: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_37 />',
+		36: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_36 />',
+		35: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_35 />',
+		34: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_34 />',
+		33: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_33 />',
+		32: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_32 />',
+		31: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_31 />',
+		30: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_30 />',
+		29: r'<hmu_emendation_by_editor_of_text_not_obviously_incorrect>',
+		28: r'<hmu_date_or_numeric_equivalent_of_date>',
 		27: u'\u0359',
 		26: r'<hmu_recitfied_form>',
 		10: u'\u0332',
@@ -971,6 +1016,8 @@ def rtcurlybracketsubstitutes(match):
 		43: r'</span>',  # hmu_servius_bracket
 		41: r'</span>',  # hmu_stage_direction
 		40: r'</span>',  # hmu_speaker
+		29: r'</hmu_emendation_by_editor_of_text_not_obviously_incorrect>',
+		28: r'</hmu_date_or_numeric_equivalent_of_date>',
 		27: u'\u0359',
 		26: r'</hmu_recitfied_form>',
 		10: u'\u0332',
@@ -1168,6 +1215,10 @@ def andsubstitutes(match):
 	core = match.group(2)
 	
 	substitutions = {
+		53: [r'<span class="hebrew">', r'</span>'],
+		52: [r'<span class="arabic">', r'</span>'],
+		51: [r'<span class="demotic">',r'</span>'],
+		50: [r'<span class="coptic">',r'</span>'],
 		14: [r'<span class="smallerthannormalsuperscript">',r'</span>'],
 		13: [r'<span class="smallerthannormalitalic">', r'</span>'],
 		10: [r'<span class="smallerthannormal">', r'</span>'],
@@ -1581,5 +1632,8 @@ def cleanworkname(betacodeworkname):
 	workname = re.sub(percents, percentsubstitutes, workname)
 	workname = re.sub(r'\[2(.*?)]2', r'⟪\1⟫',workname)
 	workname = re.sub(r'<.*?>','', workname)
+	workname = re.sub(r'&\d{1,}(`|)', '', workname) # e.g.: IG I&4`2&
+	workname = re.sub(r'&', '', workname)
+	workname = re.sub(r'`', '', workname)
 
 	return workname

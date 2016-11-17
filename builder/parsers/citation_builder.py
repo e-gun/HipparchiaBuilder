@@ -503,13 +503,13 @@ def documentmetatata(hexsequence):
 		elif int(popped, 16) & int('7f', 16) == 3:
 			metadata['authabbrev'], hexsequence = nyb15(hexsequence)
 		elif chr(int(popped, 16) & int('7f', 16)) == 'l':
-			metadata['papyrusprovenance'], hexsequence = nyb15(hexsequence)
+			metadata['provenance'], hexsequence = nyb15(hexsequence)
 		elif chr(int(popped, 16) & int('7f', 16)) == 'd':
-			metadata['papyrusdate'], hexsequence = nyb15(hexsequence)
+			metadata['rusdate'], hexsequence = nyb15(hexsequence)
 		elif chr(int(popped, 16) & int('7f', 16)) == 't':
-			metadata['unkownpapyrusmetadata'], hexsequence = nyb15(hexsequence)
+			metadata['unkownmetadata'], hexsequence = nyb15(hexsequence)
 		elif chr(int(popped, 16) & int('7f', 16)) == 'r':
-			metadata['papyruspreprints'], hexsequence = nyb15(hexsequence)
+			metadata['reprints'], hexsequence = nyb15(hexsequence)
 		else:
 			m, hexsequence = nyb15(hexsequence)
 			if m != '':

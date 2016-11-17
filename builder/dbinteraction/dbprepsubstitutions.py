@@ -256,14 +256,20 @@ def dbfindannotations(dbunreadyversion):
 	dbreadyversion = []
 	search = re.compile(r'<hmu(_|_metadata_)annotations value="(.*?)" />')
 	for line in dbunreadyversion:
-		citation = re.findall(search, line[workingcolumn])
+		notes = re.findall(search, line[workingcolumn])
+		notes = [n[1] for n in notes]
+		notes = [n for n in notes if n]
+		notes = list(set(notes))
+
 		line[workingcolumn] = re.sub(search,'',line[workingcolumn])
-		try:
-			# i wonder about multiple citations...
-			# at the moment they will get nuked
-			# citations = ','.join(citation)
-			line.append(citation[0][1])
-		except:
+			
+		if len(notes) > 0:
+			notetext = ''
+			for n in notes:
+				notetext += n+'; '
+			notetext = notetext[:-2]
+			line.append(notetext)
+		else:
 			line.append('')
 		dbreadyversion.append(line)
 
