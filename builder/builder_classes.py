@@ -86,7 +86,7 @@ class Author(object):
 		short = re.sub(whiteout,r'\1',short)
 		tail = re.sub(whiteout,r'\1',tail)
 		full = re.sub(whiteout,r'\1',full)
-		
+			
 		if 'g' in self.universalid:
 			if short != '' and len(tail) > 1:
 				self.cleanname = short + ' - ' + full + ' (' + tail + ')'
@@ -111,6 +111,17 @@ class Author(object):
 			else:
 				self.cleanname = full
 				self.shortname = full
+		
+		if 'in' in self.universalid:
+			self.cleanname = full +' [inscriptions]'
+			self.shortname = self.cleanname
+		if 'dp' in self.universalid:
+			self.cleanname = full + ' [papyri]'
+			self.shortname = self.cleanname
+			
+		self.cleanname = re.sub(r'(^\s|\s$)','',self.cleanname)
+		self.shortname = re.sub(r'(^\s|\s$)','',self.shortname)
+		
 		self.aka = self.shortname
 		self.name = self.cleanname
 

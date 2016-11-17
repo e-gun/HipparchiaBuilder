@@ -144,6 +144,7 @@ def loadauthor(idtfiledatastream, language, uidprefix):
 	if authorobject.universalid[0:2] in ['in', 'dp']:
 		for w in authorobject.works:
 			w.structure = {0: 'line', 1: 'document'}
+		
 
 	return authorobject
 

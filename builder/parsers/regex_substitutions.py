@@ -1008,6 +1008,8 @@ def ltanglebracketsubstitutes(match):
 		60: r'<hmu_preferred_epigraphical_text_used>',
 		61: r'<hmu_epigraphical_text_inserted_after_erasure>',
 		62: r'<span class="lineover">',
+		63: r'<hmu_epigraphical_text_after_correction>',
+		65: r'<hmu_epigraphical_letters_enclosed_in_wreath>',
 		66: r'<hmu_epigraphical_project_escape_66>',
 		67: r'<hmu_epigraphical_project_escape_67>',
 		68: r'<hmu_epigraphical_project_escape_68>',
@@ -1066,6 +1068,8 @@ def rtanglebracketsubstitutes(match):
 		60: r'</hmu_preferred_epigraphical_text_used>',
 		61: r'</hmu_epigraphical_text_inserted_after_erasure>',
 		62: r'</span>', # epigraphical line over letters
+		63: r'</hmu_epigraphical_text_after_correction>',
+		65: r'</hmu_epigraphical_letters_enclosed_in_wreath>',
 		66: r'</hmu_epigraphical_project_escape_66>',
 		67: r'</hmu_epigraphical_project_escape_67>',
 		68: r'</hmu_epigraphical_project_escape_68>',
