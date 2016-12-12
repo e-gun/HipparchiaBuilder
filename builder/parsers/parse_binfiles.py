@@ -872,7 +872,7 @@ def resetbininfo(relativepath, cursor, dbconnection):
 		'canon': 'DOCCAN2.TXT'
 	}
 
-	relativepath = relativepath[:-3]
+	# relativepath = relativepath[:-3]
 	genres = buildlabellist(relativepath + bininfo['genre_clx'])
 	epithets = buildlabellist(relativepath + bininfo['epithet'])
 	locations = buildlabellist(relativepath + bininfo['location'])

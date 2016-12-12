@@ -448,26 +448,20 @@ def level06action14(hexsequence):
 	print('a14', citation, hexsequence)
 	
 	return citation, hexsequence
-	
-	
+
+
 def level06action15(hexsequence):
-	# this does not correspond to what Diogenes said you should do, but it does yield results...
-	# not popping this one...
 	hexsequence.reverse()
 	citation = ''
-	stopper = 0
-	try:
-		while hexsequence[stopper] != 'ff ':
-			stopper += 1
-			citation += chr(int(hexsequence[stopper], 16) & int('7f', 16))
-		citation = citation[:-1]
-		hexsequence = hexsequence[stopper+1:]
-	except:
-		# passed an empty hexsequence?
-		pass
-	citation = re.sub(r'\&\d{0,1}', '', citation)
+	while len(hexsequence) > 1:
+		item = hexsequence.pop()
+		if item != 'ff':
+			citation += chr(int(item, 16) & int('7f', 16))
+		else:
+			break
+	
+	citation = regex_substitutions.replaceaddnlchars(citation)
 	hexsequence.reverse()
-	return citation, hexsequence
 
 
 def level06popper(popcount, hexsequence):

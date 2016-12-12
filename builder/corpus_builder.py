@@ -31,17 +31,19 @@ def parallelbuildlatincorpus(latindatapath, cursor):
 	alllatinauthors = checkextant(alllatinauthors, latindatapath)
 	
 	al = list(alllatinauthors.keys())
+	al = [x for x in al if x[0:3] == dataprefix]
+	al = [x for x in al if int(x[3:]) < 9999]
 	al.sort()
 	thework = []
 	# al = []
+	
 	for a in al:
-		if int(a[3:]) < 9999:
-			thework.append(({a: alllatinauthors[a]}, 'L', 'lt', latindatapath, dataprefix))
+		thework.append(({a: alllatinauthors[a]}, 'L', 'lt', latindatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	
 	if len(al) > 0:
-		parse_binfiles.latinloadcanon(latindatapath + '9999.TXT', cursor)
+		parse_binfiles.latinloadcanon(latindatapath + dataprefix + '9999.TXT', cursor)
 	
 	return True
 
@@ -57,12 +59,14 @@ def parallelbuildgreekcorpus(greekdatapath, dbconnection, cursor):
 	allgreekauthors = checkextant(allgreekauthors, greekdatapath)
 	
 	ag = list(allgreekauthors.keys())
+	ag = [x for x in ag if x[0:3] == dataprefix]
+	ag = [x for x in ag if int(x[3:]) < 9999]
 	ag.sort()
-	# ag = []
 	thework = []
+	# ag = []
+	
 	for a in ag:
-		if int(a[3:]) < 9999:
-			thework.append(({a: allgreekauthors[a]}, 'G', 'gr', greekdatapath, dataprefix))
+		thework.append(({a: allgreekauthors[a]}, 'G', 'gr', greekdatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	

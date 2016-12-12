@@ -44,7 +44,7 @@ if buildlatinauthors == 'y':
 	findwordcounts(cursor, dbconnection)
 
 if buildgreekauthors == 'y':
-	workcategoryprefix = 'gk'
+	workcategoryprefix = 'gr'
 	print('building greek dbs')
 	corpus_builder.parallelbuildgreekcorpus(tlg, dbconnection, cursor)
 	print('compiling metadata for greek dbs')
