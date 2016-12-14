@@ -128,18 +128,14 @@ def testcitationbuilder(hexsequence):
 					fullcitation += '<hmu_assert_document_number_' + citation[1:] + ' />'
 				else:
 					print('action6',str(action),'not followed by a "z" but by',citation)
-			elif action == 1200:
+			elif action == 12:
 				citation, hexsequence = level06action12(hexsequence)
-				if citation[0] == 'z':
-					fullcitation += '<hmu_assert_document_number_' + citation[1:] + ' />'
-				else:
-					print('action6',str(action),'not followed by a "z" but by',citation)
-			elif action == 1400:
+				print('a12',citation)
+				fullcitation += '<hmu_lvl6_action12 value="' + citation + '" />'
+			elif action == 14:
 				citation, hexsequence = level06action14(hexsequence)
-				if citation[0] == 'z':
-					fullcitation += '<hmu_assert_document_number_' + citation[1:] + ' />'
-				else:
-					print('action6',str(action),'not followed by a "z" but by',citation)
+				print('a14',citation)
+				fullcitation += '<hmu_lvl6_action14 value="' + citation + '" />'
 			elif action == 15:
 				metadata, hexsequence = documentmetatata(hexsequence)
 				# metadata = re.sub(r'\&\d{0,1}', '', metadata)
@@ -406,10 +402,14 @@ def nyb15(hexsequence):
 def level06action08(hexsequence):
 	# a single ascii char to assign an a-z level [?]
 	# then a value [?]
-	popped = hexsequence.pop()
-	citation = chr(int(popped, 16) & int('7f', 16))
-	citation += str(int(hexsequence.pop(), 16) & int('7f', 16))
-	
+	if len(hexsequence) == 2:
+		popped = hexsequence.pop()
+		citation = chr(int(popped, 16) & int('7f', 16))
+		citation += str(int(hexsequence.pop(), 16) & int('7f', 16))
+	else:
+		print('l6a8 did not receive 2 bytes. instead saw:',hexsequence)
+		citation = ' '
+
 	return citation, hexsequence
 
 
@@ -432,9 +432,18 @@ def level06action12(hexsequence):
 	:param hexsequence:
 	:return:
 	"""
-	citation, hexsequence = level06action08(hexsequence)
-	print('a12', citation, hexsequence)
-	
+
+	# looks like you are seeing a run of 3 or 4:
+	# ['e1 ', '82 ', 'fa ', 'eb ', 'ff ', 'e5 ', 'ef ', 'f0 ', 'b1 ', '81 ', 'e4 ']
+
+
+	print('12', hexsequence)
+	citation, hexsequence = nyb12(hexsequence)
+	popped = hexsequence.pop()
+	citation += chr(int(popped, 16) & int('7f', 16))
+	# citation, hexsequence = nyb15(hexsequence)
+	print('a12', citation)
+
 	return citation, hexsequence
 
 
@@ -444,7 +453,11 @@ def level06action14(hexsequence):
 	:param hexsequence:
 	:return:
 	"""
-	citation, hexsequence = level06action08(hexsequence)
+
+	# two?
+	# 'fa ', 'e1 ', 'ff '
+	# citation, hexsequence = nyb14(hexsequence)
+	citation, hexsequence = nyb11(hexsequence)
 	print('a14', citation, hexsequence)
 	
 	return citation, hexsequence
@@ -488,6 +501,7 @@ def documentmetatata(hexsequence):
 	metadata['annotations'] = ''
 	try:
 		popped = hexsequence.pop()
+		# print(chr(int(popped, 16) & int('7f', 16)))
 		if int(popped, 16) & int('7f', 16) == 0:
 			metadata['newauthor'], hexsequence = nyb15(hexsequence)
 		elif int(popped, 16) & int('7f', 16) == 1:
@@ -496,25 +510,40 @@ def documentmetatata(hexsequence):
 			metadata['workabbrev'], hexsequence = nyb15(hexsequence)
 		elif int(popped, 16) & int('7f', 16) == 3:
 			metadata['authabbrev'], hexsequence = nyb15(hexsequence)
+		elif chr(int(popped, 16) & int('7f', 16)) == 'a':
+			# popped = 'e1'
+			metadata['region'], hexsequence = nyb15(hexsequence)
+		elif chr(int(popped, 16) & int('7f', 16)) == 'b':
+			# popped = 'e2'
+			metadata['city'], hexsequence = nyb15(hexsequence)
+		elif chr(int(popped, 16) & int('7f', 16)) == 'c':
+			# popped = 'e3'
+			metadata['textdirection'], hexsequence = nyb15(hexsequence)
+		elif chr(int(popped, 16) & int('7f', 16)) == 'd':
+			# popped = 'e4'
+			metadata['date'], hexsequence = nyb15(hexsequence)
+		elif chr(int(popped, 16) & int('7f', 16)) == 'e':
+			# popped = 'e5'
+			metadata['publicationinfo'], hexsequence = nyb15(hexsequence)
 		elif chr(int(popped, 16) & int('7f', 16)) == 'l':
 			metadata['provenance'], hexsequence = nyb15(hexsequence)
-		elif chr(int(popped, 16) & int('7f', 16)) == 'd':
-			metadata['date'], hexsequence = nyb15(hexsequence)
 		elif chr(int(popped, 16) & int('7f', 16)) == 't':
 			metadata['unkownmetadata'], hexsequence = nyb15(hexsequence)
 		elif chr(int(popped, 16) & int('7f', 16)) == 'r':
 			metadata['reprints'], hexsequence = nyb15(hexsequence)
 		else:
+			# we were reading a string
 			m, hexsequence = nyb15(hexsequence)
-			if m != '':
+			if len(m) > 0:
 				metadata['annotations'] += m
 		for key in metadata.keys():
 			# should actually only be one key, but we don't know which one it is in advance
-			message += '<hmu_metadata_' + key + ' value="' + regex_substitutions.replaceaddnlchars(metadata[key]) + '" />'
+			if len(metadata[key]) > 0:
+				message += '<hmu_metadata_' + key + ' value="' + regex_substitutions.replaceaddnlchars(metadata[key]) + '" />'
 	except:
 		# passed an empty hexsequence?
 		pass
-	
+
 	return message, hexsequence
 
 # testing

@@ -89,17 +89,17 @@ def parallelbuildinscriptionscorpus(insdatapath):
 	ai = list(allinscriptions.keys())
 	# prune other dbs
 	ai = [x for x in ai if dataprefix in x]
+	ai = [x for x in ai if int(x[3:]) < 8000]
+	# the bibliographies are
+	#   INS8000 Delphi Bibliography [inscriptions] 31.56s
+	#   INS9900 Bibliography [Epigr., general] [inscriptions] 1.86s
+	#   INS9930 Bibliography [Epigr., Caria] [inscriptions] 21.97s
+	#   INS9920 Bibliography [Epigr., Ionia] [inscriptions] 23.66s
 	ai.sort()
 	thework = []
 	# ai = []
 	for a in ai:
-		if int(a[3:]) < 8000:
-			# the bibliographies are
-			#   INS8000 Delphi Bibliography [inscriptions] 31.56s
-			#   INS9900 Bibliography [Epigr., general] [inscriptions] 1.86s
-			#   INS9930 Bibliography [Epigr., Caria] [inscriptions] 21.97s
-			#   INS9920 Bibliography [Epigr., Ionia] [inscriptions] 23.66s
-			thework.append(({a: allinscriptions[a]}, 'G', 'in', insdatapath, dataprefix))
+		thework.append(({a: allinscriptions[a]}, 'G', 'in', insdatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	
