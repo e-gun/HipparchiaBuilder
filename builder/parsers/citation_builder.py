@@ -130,10 +130,8 @@ def testcitationbuilder(hexsequence):
 					citation, hexsequence = level06action12(hexsequence)
 					fullcitation += '<hmu_metadata_date value="' + citation + '" />'
 			elif action == 13:
-					print('a13x', hexsequence)
 					citation, hexsequence = level06action13(hexsequence)
-					print('a13c', citation)
-					fullcitation += '<hmu_lvl6_action13 value="' + citation + '" />'
+					fullcitation += '<hmu_metadata_date value="' + citation + '" />'
 			elif action == 14:
 					print('a14x', hexsequence)
 					citation, hexsequence = level06action14(hexsequence)
@@ -365,10 +363,13 @@ def nyb13(hexsequence):
 		citation = str((firstbyte << 7) + secondbyte)
 	else:
 		citation += '[unk_nyb_13b]'
-	for h in hexsequence:
-		popped = hexsequence.pop()
-		if int(popped, 16) != int('ff', 16):
-			citation += chr(int(popped, 16) & int('7f', 16))
+
+	if len(hexsequence) > 0:
+		string, hexsequence = nyb15(hexsequence)
+		citation += string
+	else:
+		citation += '[unk_nyb_13b]'
+
 	return citation, hexsequence
 
 
@@ -391,7 +392,6 @@ def nyb15(hexsequence):
 	while hexsequence and stop == False:
 		popped = hexsequence.pop()
 		if int(popped, 16) != int('ff', 16):
-			# is our problem not stopping when we see 'ff'?
 			citation += chr(int(popped, 16) & int('7f', 16))
 		else:
 			stop = True
@@ -476,11 +476,24 @@ def level06action13(hexsequence):
 
 	# discard the 'e4' which is the marker that we are assigning a date
 	hexsequence.pop()
-	firsthalf, hexsequence = nyb13(hexsequence)
+	citation = ''
+	firsthalf = ''
+	if len(hexsequence) > 0:
+		firstbyte = int(hexsequence.pop(),16) & int('7f', 16)
+	else:
+		citation = '[unk_nyb_13a]'
+	if len(hexsequence) > 0:
+		secondbyte = int(hexsequence.pop(),16) & int('7f', 16)
+		firsthalf = str((firstbyte << 7) + secondbyte)
+	try:
+		popped = hexsequence.pop()
+		firsthalf += chr(int(popped, 16) & int('7f', 16))
+	except:
+		citation = '[empty_l6a13_sequence]'
+
 	secondhalf, hexsequence = nyb15(hexsequence)
 	citation = firsthalf + secondhalf
 	citation = regex_substitutions.replaceaddnlchars(citation)
-	print('a13', citation, hexsequence)
 
 	return citation, hexsequence
 
