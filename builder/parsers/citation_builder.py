@@ -21,6 +21,16 @@ def testcitationbuilder(hexsequence):
 	NOTE: expects a call from re.sub and so you need a match.group()
 	parse the sequence of bytes for instructions on how to build a citatation
 	"0xab 0x82 0xff 0x9f 0xe1 0xff" ==> <set_level_2_to_383>\n<set_level_1_to_a>\n
+
+	this is very fiddly since each instruction requires different actions upon the data
+	that follows; furthermore 'level6' is its own world of metadata rather than being a
+	simple hierarchy like level00==>verse# and level01==>poem# and level02==>book#
+
+	everything happens byte-by-byte: that means that if you botch one set of instructions
+	you will be left with the wrong bytesequence going forward and the next 'instruction'
+	is likely to be a piece of the previous set of information; this makes debugging rough
+	since garbage at location B can result from troubles at location A.
+
 	:param hexsequence:
 	:return: fullcitation
 	"""
@@ -36,6 +46,7 @@ def testcitationbuilder(hexsequence):
 	fullcitation = ''
 	while (len(hexsequence) > 0):
 		# left is the first digit and the level marker: 0x8N, 0x9N, 0xAN
+		# 8 --> level00; 9 --> level01; A--> level02; ...
 		# right is the "action to take"
 		try:
 			instructions = hexsequence.pop()
@@ -85,19 +96,6 @@ def testcitationbuilder(hexsequence):
 			else:
 				fullcitation += '<hmu_unhandled_right_byte_value_' + str(action) + ' />'
 		elif textlevel == 6:
-			# if you watch the actions <15 work you will see that this is a counter
-			# here's how to do that
-			#   citation, hexsequence = nyb15(hexsequence)
-			#	fullcitation += '<hmu_supplementary_level_info_'+str(action)+' value="' + citation + '" />'
-			#
-			# the main thing to appreciate is that the first document of a new work will come out as:
-			#   <hmu_supplementary_level_info_1 value="z" />
-			# the next document is 2z
-			# then we count 3-7z.
-			# then z8zx08, 8zx09 (i.e., 8z\t), ...
-			# after 8 you jump to 11
-			# at 11 this is how you count: z\x01\x00, z\x01\x01, z\x01\x02...
-			
 			if action == 0:
 				print('action: 60')
 				# quickdecode(hexsequence)
@@ -129,18 +127,24 @@ def testcitationbuilder(hexsequence):
 				else:
 					print('action6',str(action),'not followed by a "z" but by',citation)
 			elif action == 12:
-				citation, hexsequence = level06action12(hexsequence)
-				print('a12',citation)
-				fullcitation += '<hmu_lvl6_action12 value="' + citation + '" />'
+					citation, hexsequence = level06action12(hexsequence)
+					fullcitation += '<hmu_metadata_date value="' + citation + '" />'
+			elif action == 13:
+					print('a13x', hexsequence)
+					citation, hexsequence = level06action13(hexsequence)
+					print('a13c', citation)
+					fullcitation += '<hmu_lvl6_action13 value="' + citation + '" />'
 			elif action == 14:
-				citation, hexsequence = level06action14(hexsequence)
-				print('a14',citation)
-				fullcitation += '<hmu_lvl6_action14 value="' + citation + '" />'
+					print('a14x', hexsequence)
+					citation, hexsequence = level06action14(hexsequence)
+					print('a14c', citation)
+					fullcitation += '<hmu_lvl6_action14 value="' + citation + '" />'
 			elif action == 15:
 				metadata, hexsequence = documentmetatata(hexsequence)
 				# metadata = re.sub(r'\&\d{0,1}', '', metadata)
 				fullcitation += metadata
 			else:
+				print('supp',action)
 				# level06popper(10, hexsequence)
 				# drop everything until you see 'ff' again
 				# hexsequence = level06kludger(hexsequence)
@@ -428,24 +432,57 @@ def level06action11(hexsequence):
 
 def level06action12(hexsequence):
 	"""
-	passthrough to another function
+	assign a date to a document
+
+	this works, but is the following the only situation that gets us to this function?
+
+	'ec' sends you here: e = level 6; c = action12
+	then you always see 'e4' + 3 hex items + 'ef' (level6action15)
+	note that this happens after we have see e1, e2, e3 ['a', 'b', 'c']
+	it looks like we are doing a date as a digit instead of as a string
+
+	example:
+		pop from 'e4' to 'ef'
+		['e1 ', '82 ', 'fa ', 'eb ', 'ff ', 'e5 ', 'ef ', 'f0 ', 'b1 ', '81 ', 'e4 ']
+
 	:param hexsequence:
 	:return:
 	"""
 
-	# looks like you are seeing a run of 3 or 4:
-	# ['e1 ', '82 ', 'fa ', 'eb ', 'ff ', 'e5 ', 'ef ', 'f0 ', 'b1 ', '81 ', 'e4 ']
-
-
-	print('12', hexsequence)
+	# discard the 'e4' which is the marker that we are assigning a date
+	hexsequence.pop()
 	citation, hexsequence = nyb12(hexsequence)
-	popped = hexsequence.pop()
-	citation += chr(int(popped, 16) & int('7f', 16))
-	# citation, hexsequence = nyb15(hexsequence)
-	print('a12', citation)
-
 	return citation, hexsequence
 
+
+def level06action13(hexsequence):
+	"""
+	assign a date to a document
+
+	this works, but is the following the only situation that gets us to this function?
+
+	'ed' sends you here: e = level 6; d = action13
+	then you always see 'e4' + some number of hex items + 'ff'
+	note that this happens after we have see e1, e2, e3 ['a', 'b', 'c']
+	it looks like we are doing a date, but why not via action15?
+
+	example:
+		pop from 'e4' to 'ff'
+		['ff ', 'f0 ', 'b7 ', 'b1 ', 'b2 ', 'ad ', 'c1 ', '81 ', 'e4 ']
+
+	:param hexsequence:
+	:return:
+	"""
+
+	# discard the 'e4' which is the marker that we are assigning a date
+	hexsequence.pop()
+	firsthalf, hexsequence = nyb13(hexsequence)
+	secondhalf, hexsequence = nyb15(hexsequence)
+	citation = firsthalf + secondhalf
+	citation = regex_substitutions.replaceaddnlchars(citation)
+	print('a13', citation, hexsequence)
+
+	return citation, hexsequence
 
 def level06action14(hexsequence):
 	"""
