@@ -296,6 +296,7 @@ def poundsubstitutes(match):
 		53: u'\u205d',
 		55: u'\u2059',
 		56: r'∣', # 'dividers of other forms'; not a helpful description: trying u2223 for now
+		57: r'<hmu_undocumented_poundsign value="57">⊚</hmu_undocumented_poundsign>',
 		59: u'\u03fd',
 		60: u'\u0399',
 		61: r'𐅂',
@@ -775,6 +776,7 @@ def percentsubstitutes(match):
 		54: r'<hmu_papryological_fraction>((1/32))</hmu_papryological_fraction>',
 		55: r'<hmu_papryological_fraction>((1/64))</hmu_papryological_fraction>',
 		56: r'<hmu_papryological_fraction>((1/128))</hmu_papryological_fraction>',
+		57: r'<hmu_undocumented_percentsign value="57">⊚</hmu_undocumented_percentsign>',
 		59: r'<hmu_papryological_fraction>((3/4))</hmu_papryological_fraction>',
 		60: r'<hmu_papryological_fraction>((1/3))</hmu_papryological_fraction>',
 		61: r'<hmu_papryological_fraction>((1/6))</hmu_papryological_fraction>',
@@ -787,6 +789,7 @@ def percentsubstitutes(match):
 		71: r'<hmu_papryological_fraction>((1/100))</hmu_papryological_fraction>',
 		72: r'<hmu_papryological_fraction>((1/100))</hmu_papryological_fraction>',
 		73: r'<hmu_papryological_fraction>((1/100))</hmu_papryological_fraction>',
+		79: r'<hmu_undocumented_percentsign value="79">⊚</hmu_undocumented_percentsign>',
 		80: u'\u0076\u002E',  # supposed to put the 'v' in italics too
 		81: r'<span class="italic">vac.</span>',
 		91: u'\u0485',
@@ -856,6 +859,8 @@ def leftbracketsubstitutions(match):
 		34: r'<hmu_parenthesis_deletion_marker>⸨',
 		33: r'<hmu_parenthesis_ancient_punctuation>｟',
 		32: u'\u239d',
+		31: u'\u239c',
+		30: u'\239b',
 		23: u'u\23a9',
 		22: u'u\23a8',
 		21: u'u\23aa',
@@ -866,6 +871,7 @@ def leftbracketsubstitutions(match):
 		12: u'\u2192',
 		13: u'\u005b',  # supposed to be italic as well
 		11: u'u\208d',
+		10: r'<span class="largerthannormal">[</span>',
 		9: u'\u2027',
 		8: '⌊',
 		7: '⌈',
@@ -917,6 +923,7 @@ def rightbracketsubstitutions(match):
 		13: u'\u005d',  # supposed to be italic as well
 		12: u'\u2190',
 		11: u'u\208e',
+		10: r'<span class="largerthannormal">]</span>',
 		9: u'\u2027',
 		8: '⌋',
 		7: '⌉',
