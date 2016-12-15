@@ -11,7 +11,83 @@ from builder.parsers.swappers import highunicodetohex
 from builder.parsers import regex_substitutions
 
 def citationbuilder(hexsequence):
-	fullcitation = testcitationbuilder(hexsequence)
+	fullcitation = refactiredcitationbuilder(hexsequence)
+
+	return fullcitation
+
+
+def refactiredcitationbuilder(hexsequence):
+	"""
+	NOTE: expects a call from re.sub and so you need a match.group()
+	parse the sequence of bytes for instructions on how to build a citatation
+	"0xab 0x82 0xff 0x9f 0xe1 0xff" ==> <set_level_2_to_383>\n<set_level_1_to_a>\n
+
+	this is very fiddly since each instruction requires different actions upon the data
+	that follows; furthermore 'level6' is its own world of metadata rather than being a
+	simple hierarchy like level00==>verse# and level01==>poem# and level02==>book#
+
+	everything happens byte-by-byte: that means that if you botch one set of instructions
+	you will be left with the wrong bytesequence going forward and the next 'instruction'
+	is likely to be a piece of the previous set of information; this makes debugging rough
+	since garbage at location B can result from troubles at location A.
+
+	:param hexsequence:
+	:return: fullcitation
+	"""
+
+	hexsequence = hexsequence.group(0)
+	hexsequence = highunicodetohex(hexsequence)
+	hexsequence = re.split(r'█', hexsequence)
+	hexsequence.reverse()
+	hexsequence.pop()
+	fullcitation = ''
+	while (len(hexsequence) > 0):
+		# left is the first digit and the level marker: 0x8N, 0x9N, 0xAN
+		# 8 --> level00; 9 --> level01; A--> level02; ...
+		# right is the "action to take"
+		try:
+			instructions = hexsequence.pop()
+			textlevel, action = nybbler(instructions)
+		except:
+			textlevel = 6
+			action = -1
+
+		# print('textlevel, action', textlevel, action)
+		if textlevel < 6:
+			# you will get 'level 7' with an 'ff' which really means 'stop parsing'
+			if action == 0:
+				fullcitation += '\n<hmu_increment_level_' + str(textlevel) + '_by_1 />'
+			elif (action > 0) and (action < 8):
+				fullcitation += '<hmu_set_level_' + str(textlevel) + '_to_' + str(action) + ' />'
+			elif action == 8:
+				citation, hexsequence = nyb08(hexsequence)
+				fullcitation += '<hmu_set_level_' + str(textlevel) + '_to_' + citation + ' />'
+			elif action == 9:
+				citation, hexsequence = nyb09(hexsequence)
+				fullcitation += '<hmu_set_level_' + str(textlevel) + '_to_' + citation + ' />'
+			elif action == 10:
+				citation, hexsequence = nyb10(hexsequence)
+				fullcitation += '<hmu_set_level_' + str(textlevel) + '_to_' + citation + ' />'
+			elif action == 11:
+				citation, hexsequence = nyb11(hexsequence)
+				fullcitation += '<hmu_set_level_' + str(textlevel) + '_to_' + citation + ' />'
+			elif action == 12:
+				citation, hexsequence = nyb12(hexsequence)
+				fullcitation += '<hmu_set_level_' + str(textlevel) + '_to_' + citation + ' />'
+			elif action == 13:
+				citation, hexsequence = nyb13(hexsequence)
+				fullcitation += '<hmu_set_level_' + str(textlevel) + '_to_' + citation + ' />'
+			elif action == 14:
+				citation, hexsequence = nyb14(hexsequence)
+				fullcitation += '<hmu_set_level_' + str(textlevel) + '_to_' + citation + ' />'
+			elif action == 15:
+				citation, hexsequence = nyb15(hexsequence)
+				fullcitation += '<hmu_set_level_' + str(textlevel) + '_to_' + citation + ' />'
+			else:
+				# impossible to reach this
+				fullcitation += '<hmu_unhandled_right_byte_value_' + str(action) + ' />'
+		elif textlevel == 6:
+			fullcitation, hexsequence = levelsixparsing(action, fullcitation, hexsequence)
 
 	return fullcitation
 
@@ -296,8 +372,6 @@ def nyb08(hexsequence):
 
 def nyb09(hexsequence):
 	#   9 -> read a number and then a character
-	# trouble popping off an empty stack with this one
-	# kludge is just to soldier on...
 	if len(hexsequence) > 0:
 		citation = str(int(hexsequence.pop(), 16) & int('7f', 16))
 	else:
@@ -306,6 +380,7 @@ def nyb09(hexsequence):
 		popped = hexsequence.pop()
 		if int(popped, 16) != int('ff', 16):
 			citation += chr(int(popped, 16) & int('7f', 16))
+
 	return citation, hexsequence
 
 
@@ -409,6 +484,64 @@ def nyb15(hexsequence):
 #
 
 
+def levelsixparsing(action, fullcitation, hexsequence):
+	metadata = {}
+	metadatacategories = {
+		0: 'newauthor',
+		1: 'newwork',
+		2: 'workabbrev',
+		3: 'authabbrev',
+		97: 'region', # 'a'
+		98: 'city', # 'b'
+		99: 'textdirection', # 'c'
+		100: 'date', # 'd'
+		101: 'publicationinfo', # 'e
+		108: 'provenance', # 'l'
+		114: 'reprints', # 'r'
+		116: 'unknownmetadata116', # 't'
+		122: 'documentnumber' # 'z'
+		}
+
+	try:
+		category = int(hexsequence.pop(), 16) & int('7f', 16)
+	except:
+		category = ''
+	if action == 0:
+		if category == 1:
+			fullcitation += '\n<hmu_increment_work_number_by_1 />'
+		citation = ''
+	elif 0 < action < 8:
+		citation, hexsequence = nyb15(hexsequence)
+	elif action == 8:
+		citation, hexsequence = nyb08(hexsequence)
+	elif action == 9:
+		citation, hexsequence = nyb09(hexsequence)
+	elif action == 10:
+		citation, hexsequence = nyb10(hexsequence)
+	elif action == 11:
+		citation, hexsequence = nyb11(hexsequence)
+	elif action == 12:
+		citation, hexsequence = nyb12(hexsequence)
+	elif action == 13:
+		citation, hexsequence = nyb13(hexsequence)
+	elif action == 14:
+		citation, hexsequence = nyb14(hexsequence)
+	elif action == 15:
+		citation, hexsequence = nyb15(hexsequence)
+	else:
+		citation = ''
+
+	metadata[metadatacategories[category]] = citation
+
+	for key in metadata.keys():
+		# should actually only be one key, but we don't know which one it is in advance
+		if len(metadata[key]) > 0:
+			print('<hmu_metadata_' + key + ' value="' + regex_substitutions.replaceaddnlchars(metadata[key]) + '" />')
+			fullcitation += '<hmu_metadata_' + key + ' value="' + regex_substitutions.replaceaddnlchars(metadata[key]) + '" />'
+
+	return fullcitation, hexsequence
+
+
 def level06action08(hexsequence):
 	# a single ascii char to assign an a-z level [?]
 	# then a value [?]
@@ -418,6 +551,7 @@ def level06action08(hexsequence):
 		citation += str(int(hexsequence.pop(), 16) & int('7f', 16))
 	else:
 		print('l6a8 did not receive 2 bytes. instead saw:',hexsequence)
+		quickdecode(hexsequence)
 		citation = ' '
 
 	return citation, hexsequence
@@ -447,6 +581,7 @@ def level06action09(hexsequence):
 	test = hexsequence.pop()
 	if test != 'e4 ':
 		print('level06action09 did not pop e4. instead found', test)
+		quickdecode(hexsequence)
 	if len(hexsequence) > 1:
 		citation = str(int(hexsequence.pop(), 16) & int('7f', 16))
 		citation += chr(int(hexsequence.pop(), 16) & int('7f', 16))
@@ -480,6 +615,7 @@ def level06action10(hexsequence):
 	test = hexsequence.pop()
 	if test != 'e4 ':
 		print('level06action10 did not pop e4. instead found', test)
+		quickdecode(hexsequence)
 	citation, hexsequence = nyb10(hexsequence)
 	citation = regex_substitutions.replaceaddnlchars(citation)
 	citation = re.sub(r'`','', citation)
@@ -523,6 +659,7 @@ def level06action12(hexsequence):
 	test = hexsequence.pop()
 	if test != 'e4 ':
 		print('level06action12 did not pop e4. instead found', test)
+		quickdecode(hexsequence)
 	citation, hexsequence = nyb12(hexsequence)
 
 	return citation, hexsequence
@@ -554,7 +691,7 @@ def level06action13(hexsequence):
 	test = hexsequence.pop()
 	if test != 'e4 ':
 		print('level06action13 did not pop e4. instead found', test)
-
+		quickdecode(hexsequence)
 	citation = ''
 	firsthalf = ''
 	if len(hexsequence) > 0:
