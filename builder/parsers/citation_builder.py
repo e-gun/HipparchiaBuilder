@@ -120,6 +120,12 @@ def testcitationbuilder(hexsequence):
 					fullcitation += '<hmu_assert_document_number_' + citation[1:] + ' />'
 				else:
 					print('action6',str(action),'not followed by a "z" but by',citation)
+			elif action == 9:
+					citation, hexsequence = level06action09(hexsequence)
+					fullcitation += '<hmu_metadata_date value="' + citation + '" />'
+			elif action == 10:
+					citation, hexsequence = level06action10(hexsequence)
+					fullcitation += '<hmu_metadata_date value="' + citation + '" />'
 			elif action == 11:
 				citation, hexsequence = level06action11(hexsequence)
 				if citation[0] == 'z':
@@ -142,7 +148,7 @@ def testcitationbuilder(hexsequence):
 				# metadata = re.sub(r'\&\d{0,1}', '', metadata)
 				fullcitation += metadata
 			else:
-				print('supp',action)
+				print('supp',action, hexsequence)
 				# level06popper(10, hexsequence)
 				# drop everything until you see 'ff' again
 				# hexsequence = level06kludger(hexsequence)
@@ -417,6 +423,70 @@ def level06action08(hexsequence):
 	return citation, hexsequence
 
 
+def level06action09(hexsequence):
+	"""
+	assign a date to a document
+
+	this works, but is the following the only situation that gets us to this function?
+
+	'e9' sends you here: e = level 6; 9 = action09
+	then you see 'e4' + 4-6 hex items + 'ff'
+	note that this happens after we have see e1, e2, e3 ['a', 'b', 'c']
+	it looks like we are doing a date as a digit instead of as a string
+
+	example:
+		pop from 'e4' to 'ff'
+		['ff ', 'f0 ', 'b0 ', 'b4 ', 'ad ', 'a6 ', 'e4 ']
+		['ff ', 'bf ', 'e1 ', 'b7 ', 'b4 ', 'ad ', 'bf ', 'e4 ']
+
+	:param hexsequence:
+	:return:
+	"""
+
+	# discard the 'e4' which is the marker that we are assigning a date
+	test = hexsequence.pop()
+	if test != 'e4 ':
+		print('level06action09 did not pop e4. instead found', test)
+	if len(hexsequence) > 1:
+		citation = str(int(hexsequence.pop(), 16) & int('7f', 16))
+		citation += chr(int(hexsequence.pop(), 16) & int('7f', 16))
+	else:
+		citation = '[failed to assign date via level06action09]'
+
+	return citation, hexsequence
+
+
+def level06action10(hexsequence):
+	"""
+	assign a date to a document
+
+	this works, but is the following the only situation that gets us to this function?
+
+	'ea' sends you here: e = level 6; a = action10
+	then you see 'e4' + 4-6 hex items + 'ff'
+	note that this happens after we have see e1, e2, e3 ['a', 'b', 'c']
+	it looks like we are doing a date as a digit instead of as a string
+
+	example:
+		pop from 'e4' to 'ff'
+		['ff ', 'f0 ', 'b0 ', 'b4 ', 'ad ', 'a6 ', 'e4 ']
+		['ff ', 'bf ', 'e1 ', 'b7 ', 'b4 ', 'ad ', 'bf ', 'e4 ']
+
+	:param hexsequence:
+	:return:
+	"""
+
+	# discard the 'e4' which is the marker that we are assigning a date
+	test = hexsequence.pop()
+	if test != 'e4 ':
+		print('level06action10 did not pop e4. instead found', test)
+	citation, hexsequence = nyb10(hexsequence)
+	citation = regex_substitutions.replaceaddnlchars(citation)
+	citation = re.sub(r'`','', citation)
+
+	return citation, hexsequence
+
+
 def level06action11(hexsequence):
 	# z + next two bytes are a 14 bit number
 	if len(hexsequence) > 2:
@@ -437,7 +507,7 @@ def level06action12(hexsequence):
 	this works, but is the following the only situation that gets us to this function?
 
 	'ec' sends you here: e = level 6; c = action12
-	then you always see 'e4' + 3 hex items + 'ef' (level6action15)
+	then you always see 'e4' + 3 hex items + 'ef'
 	note that this happens after we have see e1, e2, e3 ['a', 'b', 'c']
 	it looks like we are doing a date as a digit instead of as a string
 
@@ -450,8 +520,11 @@ def level06action12(hexsequence):
 	"""
 
 	# discard the 'e4' which is the marker that we are assigning a date
-	hexsequence.pop()
+	test = hexsequence.pop()
+	if test != 'e4 ':
+		print('level06action12 did not pop e4. instead found', test)
 	citation, hexsequence = nyb12(hexsequence)
+
 	return citation, hexsequence
 
 
@@ -464,7 +537,10 @@ def level06action13(hexsequence):
 	'ed' sends you here: e = level 6; d = action13
 	then you always see 'e4' + some number of hex items + 'ff'
 	note that this happens after we have see e1, e2, e3 ['a', 'b', 'c']
-	it looks like we are doing a date, but why not via action15?
+
+	disturbingly the first three hex vals decode via the logic of nyb13; then the rest is just a string (nyb15)
+
+	it would be so easy to have encoded this as simple string...
 
 	example:
 		pop from 'e4' to 'ff'
@@ -475,7 +551,10 @@ def level06action13(hexsequence):
 	"""
 
 	# discard the 'e4' which is the marker that we are assigning a date
-	hexsequence.pop()
+	test = hexsequence.pop()
+	if test != 'e4 ':
+		print('level06action13 did not pop e4. instead found', test)
+
 	citation = ''
 	firsthalf = ''
 	if len(hexsequence) > 0:
@@ -497,6 +576,7 @@ def level06action13(hexsequence):
 
 	return citation, hexsequence
 
+
 def level06action14(hexsequence):
 	"""
 	passthrough to another function
@@ -513,26 +593,13 @@ def level06action14(hexsequence):
 	return citation, hexsequence
 
 
-def level06action15(hexsequence):
-	hexsequence.reverse()
-	citation = ''
-	while len(hexsequence) > 1:
-		item = hexsequence.pop()
-		if item != 'ff':
-			citation += chr(int(item, 16) & int('7f', 16))
-		else:
-			break
-	
-	citation = regex_substitutions.replaceaddnlchars(citation)
-	hexsequence.reverse()
-
-
 def level06popper(popcount, hexsequence):
 	if len(hexsequence)< popcount:
 		hexsequence = []
 	else:
 		popcount = popcount * -1
 		hexsequence = hexsequence[:popcount]
+
 	return hexsequence
 
 
@@ -541,6 +608,7 @@ def level06kludger(hexsequence):
 	while len(hexsequence)>0:
 		if hexsequence.pop() != 'ff ':
 			pass
+
 	return hexsequence
 
 
