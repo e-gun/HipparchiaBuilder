@@ -599,6 +599,7 @@ def poundsubstitutes(match):
 		817: r'𐅍',
 		818: r'𐅎',
 		821: u'\u03a3',
+		823: r'𐅐',
 		830: r'𐅇',
 		831: r'𐅇',
 		832: r'𐅖',
@@ -624,15 +625,24 @@ def poundsubstitutes(match):
 		923: r'<hmu_idiosyncratic_char value="923">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		924: r'<hmu_idiosyncratic_char value="924">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		925: r'𝈗',
+		926: r'𝈫',
+		927: r'W',
+		930: r'<hmu_idiosyncratic_char value="930">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		932: u'\u2733',
+		933: r'<hmu_idiosyncratic_char value="933">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		934: r'<hmu_idiosyncratic_char value="934">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		937: r'<hmu_miscellaneous_illustrations>',
+		940: r'<hmu_idiosyncratic_char value="940">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		943: r'<hmu_undocumented_poundsign value="943">⊚</hmu_undocumented_poundsign>',
 		949: r'<hmu_undocumented_poundsign value="949">⊚</hmu_undocumented_poundsign>',
+		961: r'<hmu_line_on_stone_stops_but_edition_continues_line />',
 		973: r'<hmu_undocumented_poundsign value="973">⊚</hmu_undocumented_poundsign>',
 		1000: r'𐅼',
 		1001: r'𐅽',
 		1002: r'𐅾',
 		1003: r'𐅿',
 		1004: r'𐆀',
+		1053: r'<hmu_undocumented_poundsign value="1053">⊚</hmu_undocumented_poundsign>',
 		1059: r'<hmu_undocumented_poundsign value="1059">⊚</hmu_undocumented_poundsign>',
 		1068: r'<hmu_undocumented_poundsign value="1068">⊚</hmu_undocumented_poundsign>',
 		1069: r'<hmu_undocumented_poundsign value="1069">⊚</hmu_undocumented_poundsign>',
@@ -1443,7 +1453,7 @@ def totallemmatization(parsedtextfile, authorobject):
 	setter = re.compile(r'<hmu_set_level_(\d)_to_([A-Za-z0-9]{1,})')
 	adder = re.compile(r'<hmu_increment_level_(\d)_by_1\s')
 	wnv = re.compile(r'<hmu_cd_assert_work_number value="(\d{1,3})')
-	doca = re.compile(r'<hmu_assert_document_number_(\d{1,3})')
+	doca = re.compile(r'<hmu_metadata_documentnumber value="(\d{1,3})')
 
 	for line in parsedtextfile:
 
@@ -1519,7 +1529,7 @@ def totallemmatization(parsedtextfile, authorobject):
 			# in fact, the original data tires to claim that there are no lines, just documents (i.e., level 0 = 'document')
 			# it's a bit of a mess
 			#   level 5 is way off on some inscriptions from level 6
-			#   level 1 is storing 'face' information
+			#   level 1 is storing 'face' information in inscriptions
 			gotdoc = re.search(doca, line)
 			if gotdoc != None:
 				levelmapper[1] = gotdoc.group(1)

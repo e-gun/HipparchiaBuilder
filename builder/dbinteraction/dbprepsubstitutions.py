@@ -328,6 +328,7 @@ def notrailingwhitespace(dbunreadyversion):
 	
 	return dbreadyversion
 
+
 def consolidatecontiguouslines(previousline, thisline, hypenatedword):
 	"""
 	helper function for the stripped line column: if a previousline ends with a hypenated word:

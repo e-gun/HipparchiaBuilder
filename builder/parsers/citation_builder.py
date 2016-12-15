@@ -36,6 +36,7 @@ def citationbuilder(hexsequence):
 	hexsequence.reverse()
 	hexsequence.pop()
 	fullcitation = ''
+
 	while (len(hexsequence) > 0):
 		# left is the first digit and the level marker: 0x8N, 0x9N, 0xAN
 		# 8 --> level00; 9 --> level01; A--> level02; ...
@@ -209,6 +210,7 @@ def nyb14(hexsequence):
 		citation += chr(int(hexsequence.pop(), 16) & int('7f', 16))
 	else:
 		citation += '[unk_nyb_14]'
+
 	return citation, hexsequence
 
 
@@ -222,6 +224,7 @@ def nyb15(hexsequence):
 			citation += chr(int(popped, 16) & int('7f', 16))
 		else:
 			stop = True
+
 	return citation, hexsequence
 
 
