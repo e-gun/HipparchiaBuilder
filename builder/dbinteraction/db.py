@@ -226,40 +226,52 @@ def dbauthoradder(authorobject, cursor):
 	return
 
 
-def dbauthormakersubroutine(uid, cursor):
+
+def dbauthorloadersubroutine(uid, cursor):
 	# only call this AFTER you have built all of the work objects so that they can be placed into it
-	# the original Author objects only exist at the end of HD reads
-	# rebuild them from the DB instead: note that this object is simpler than the earlier version, but the stuff you need should all be there...
 
 	query = 'SELECT * from authors where universalid = %s'
 	data = (uid,)
-
 	cursor.execute(query, data)
-	results = cursor.fetchone()
-	# (universalid, language, idxname, akaname, shortname, cleanname, genres, birth, death, floruit, location)
+	try:
+		results = cursor.fetchone()
+	except:
+		# browser forward was producing random errors:
+		# 'failed to find the requested author: SELECT * from authors where universalid = %s ('gr1194',)'
+		# but this is the author being browsed and another click will browse him further
+		# a timing issue: the solution seems to be 'hipparchia.run(threaded=False, host="0.0.0.0")'
+		print('failed to find the requested author:', query, data)
+	# note that there is no graceful way out of this: you have to have an authorobject in the end
+
+	# (universalid, language, idxname, akaname, shortname, cleanname, genres, floruit, location)
 	# supposed to fit the dbAuthor class exactly
 	author = dbAuthor(results[0], results[1], results[2], results[3], results[4], results[5], results[6], results[7],
-	                  results[8], results[9], results[10])
+					  results[8])
 
 	return author
 
 
-def dbauthorandworkmaker(authoruid, cursor):
+def dbauthorandworkloader(authoruid, cursor):
 	# note that this will return an AUTHOR filled with WORKS
 	# the original Opus objects only exist at the end of HD reads
 	# rebuild them from the DB instead: note that this object is simpler than the earlier version, but the stuff you need should all be there...
 
-	author = dbauthormakersubroutine(authoruid, cursor)
+	author = dbauthorloadersubroutine(authoruid, cursor)
 
-	query = 'SELECT * from works where universalid LIKE %s'
+	query = 'SELECT universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02, levellabels_03, ' \
+			' levellabels_04, levellabels_05, workgenre, transmission, worktype, wordcount, firstline, lastline, authentic FROM works WHERE universalid LIKE %s'
 	data = (authoruid + '%',)
 	cursor.execute(query, data)
-	results = cursor.fetchall()
-	# (universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02, levellabels_03, levellabels_04, levellabels_05)
+	try:
+		results = cursor.fetchall()
+	except:
+		# see the notes on the exception to dbauthormakersubroutine: you can get here and then die for the same reason
+		print('failed to find the requested work:', query, data)
+		results = []
 
 	for match in results:
 		work = dbOpus(match[0], match[1], match[2], match[3], match[4], match[5], match[6], match[7], match[8],
-		              match[9])
+					  match[9], match[10], match[11], match[12], match[13], match[14], match[15], match[16])
 		author.addwork(work)
 
 	return author
