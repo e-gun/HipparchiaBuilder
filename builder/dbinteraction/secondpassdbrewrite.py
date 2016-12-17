@@ -8,7 +8,7 @@
 import re
 import configparser
 from multiprocessing import Pool
-from builder.dbinteraction.db import setconnection, dbauthorloadersubroutine, dbauthorandworkloader, dbauthoradder
+from builder.dbinteraction.db import setconnection, dbauthorloadersubroutine, dbauthorandworkloader, dbauthoradder, tablemaker
 from builder.builder_classes import dbAuthor, dbOpus, dbWorkLine
 
 """
@@ -100,7 +100,7 @@ def builddbremappers(oldprefix, newprefix, cursor):
 			hx = str(hx[2:])
 			if len(hx) == 1:
 				hx = '0' + hx
-			wkmapper[r[0]] = [key+hx]
+			wkmapper[r[0]] = key+hx
 
 	return aumapper, wkmapper
 
@@ -136,7 +136,7 @@ def compilenewauthors(aumapper, wkmapper, cursor):
 	return newauthors
 
 
-def compilenewworks(newauthors, wkmapper):
+def compilenewworks(newauthors, wkmapper, cursor):
 	"""
 	a bulk operation that goes newauthor by newauthor so as to build a collection of works for it
 	find all of the individual documents within an old work and turn each document into its own new work
@@ -146,11 +146,15 @@ def compilenewworks(newauthors, wkmapper):
 	:return:
 	"""
 
+	remapper = {}
+	for key in wkmapper:
+		remapper[wkmapper[key]] = key
+
 	for a in newauthors:
-		db = wkmapper[a.universalid]
-		q = 'SELECT DISTINCT level_01_value FROM %s'
-		d = (db,)
-		cursor.execute(q, d)
+		print(remapper[a.universalid])
+		db = remapper[a.universalid]
+		q = 'SELECT DISTINCT level_01_value FROM '+db
+		cursor.execute(q)
 		results = cursor.fetchall()
 
 		for document in results:
@@ -160,17 +164,41 @@ def compilenewworks(newauthors, wkmapper):
 			elif len(docname) == 2:
 				docname = '0' + docname
 
-			q = 'SELECT * FROM %s WHERE level_01_value LIKE %s ORDER BY index'
-			d = (db,document[0])
+			q = 'SELECT * FROM '+db+' WHERE level_01_value LIKE %s ORDER BY index'
+			d = (document[0],)
 			cursor.execute(q, d)
 			results = cursor.fetchall()
 
-			buidlnewworddb(docname, results)
+			# buidlnewindividualworkdb(a.universalid +'w' + docname, results, cursor)
 
 	return
 
 
-def buidlnewworddb(docname, results):
+def updateauthorsdb(newauthors, wkmapper, cursor):
+	"""
+
+	:param newauthors:
+	:param wkmapper:
+	:param cursor:
+	:return:
+	"""
+
+	pass
+
+
+def updateworksdb(newauthors, wkmapper, cursor):
+	"""
+
+	:param newauthors:
+	:param wkmapper:
+	:param cursor:
+	:return:
+	"""
+
+	pass
+
+
+def buidlnewindividualworkdb(db, results, cursor):
 	"""
 
 	send me all of the matching lines from one db and i will build a new workdb with only these lines
@@ -179,5 +207,13 @@ def buidlnewworddb(docname, results):
 	:param results:
 	:return:
 	"""
+
+	tablemaker(db, cursor)
+
+	for r in results:
+		q = 'INSERT INTO ' + db + ' (index, level_00_value, level_01_value, level_02_value, level_03_value, level_04_value, level_05_value, marked_up_line, accented_line, stripped_line, hyphenated_words, annotations)' \
+											  ' VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+		d = r
+		cursor.execute(q, d)
 
 	pass
