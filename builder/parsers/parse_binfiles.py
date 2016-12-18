@@ -865,7 +865,7 @@ def resetbininfo(relativepath, cursor, dbconnection):
 	bininfo = {
 		'genre': 'LIST3CLA.BIN',
 		'genre_clx': 'LIST3CLX.BIN',
-		'floruit': 'LIST3DAT.BIN',
+		'recorded_date': 'LIST3DAT.BIN',
 		'epithet': 'LIST3EPI.BIN',
 		'gender': 'LIST3FEM.BIN',
 		'location': 'LIST3GEO.BIN',
@@ -876,19 +876,21 @@ def resetbininfo(relativepath, cursor, dbconnection):
 	genres = buildlabellist(relativepath + bininfo['genre_clx'])
 	epithets = buildlabellist(relativepath + bininfo['epithet'])
 	locations = buildlabellist(relativepath + bininfo['location'])
-	dates = buildlabellist(relativepath + bininfo['floruit'])
+	dates = buildlabellist(relativepath + bininfo['recorded_date'])
 	numdates = convertdatelist(dates)
 	canonfile = relativepath + bininfo['canon']
 
 	wipegreekauthorcolumn('genres', cursor, dbconnection)
 	# wipegreekauthorcolumn('epithet', cursor, dbconnection)
 	wipegreekauthorcolumn('location', cursor, dbconnection)
-	wipegreekauthorcolumn('floruit', cursor, dbconnection)
+	wipegreekauthorcolumn('recorded_date', cursor, dbconnection)
+	wipegreekauthorcolumn('converted_date', cursor, dbconnection)
 
 	# dbloadlist(genres, 'genres', cursor, dbconnection)
 	dbloadlist(epithets, 'genres', cursor, dbconnection)
 	dbloadlist(locations, 'location', cursor, dbconnection)
-	dbloadlist(numdates, 'floruit', cursor, dbconnection)
+	dbloadlist(dates, 'recorded_date', cursor, dbconnection)
+	dbloadlist(numdates, 'converted_date', cursor, dbconnection)
 
 	# canoninfo: do this last so that you can reset shortname
 	loadgkcanon(canonfile, cursor, dbconnection)
@@ -910,6 +912,7 @@ def citationreformatter(matchgroups):
 	substitute = matchgroups.group(1)+core+matchgroups.group(3)
 	
 	return substitute
+
 
 def peekatcanon(workdbname):
 	"""

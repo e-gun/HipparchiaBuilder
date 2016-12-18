@@ -9,7 +9,7 @@ CREATE TABLE public.authors
   shortname character varying(128),
   cleanname character varying(128),
   genres character varying(256),
-  floruit character varying(64),
+  converted_date character varying(64),
   location character varying(64)
 )
 WITH (

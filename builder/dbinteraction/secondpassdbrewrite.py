@@ -128,9 +128,10 @@ def compilenewauthors(aumapper, wkmapper, cursor):
 			newshortname = re.sub(r'\s{1,}$', '', author.shortname + suffix)
 			newcleanname = re.sub(r'\s{1,}$', '', author.cleanname + suffix)
 			newgenres = author.genres
-			newfloruit = author.floruit
+			newrecdate = author.recorded_date
+			newconvdate = author.converted_date
 			newlocation = author.location
-			newauthor = dbAuthor(newuniversalid, newlanguage, newidxname, newakaname, newshortname, newcleanname, newgenres, newfloruit, newlocation)
+			newauthor = dbAuthor(newuniversalid, newlanguage, newidxname, newakaname, newshortname, newcleanname, newgenres, newrecdate, newconvdate, newlocation)
 			newauthors.append(newauthor)
 
 	return newauthors
@@ -169,7 +170,7 @@ def compilenewworks(newauthors, wkmapper, cursor):
 			cursor.execute(q, d)
 			results = cursor.fetchall()
 
-			# buidlnewindividualworkdb(a.universalid +'w' + docname, results, cursor)
+			buidlnewindividualworkdb(a.universalid +'w' + docname, results, cursor)
 
 	return
 
@@ -216,4 +217,40 @@ def buidlnewindividualworkdb(db, results, cursor):
 		d = r
 		cursor.execute(q, d)
 
-	pass
+	return
+
+
+def readdocumentmetadata(db, cursor):
+	"""
+	marked_up_line where level_00_value == 1 ought to contain metadata about the document
+	example: "<hmu_metadata_provenance value="Oxy" /><hmu_metadata_date value="AD 224" /><hmu_metadata_documentnumber value="10" />[ <hmu_roman_in_a_greek_text>c ̣]</hmu_roman_in_a_greek_text>∙τ̣ε̣[∙4]ε[∙8]"
+
+	:param db:
+	:param cursor:
+	:return:
+	"""
+
+	prov = re.compile(r'<hmu_metadata_provenance value="(.*?)" />')
+	date = re.compile(r'<hmu_metadata_date value="(.*?)" />')
+	region = re.compile(r'<hmu_metadata_region value="(.*?)" />')
+	city = re.compile(r'<hmu_metadata_city value="(.*?)" />')
+	textdirection = re.compile(r'<hmu_metadata_texdirection value="(.*?)" />')
+	publicationinfo = re.compile(r'<hmu_metadata_publicationinfo value="(.*?)" />')
+	additionalpubinfo = re.compile(r'<hmu_metadata_additionalpubinfo value="(.*?)" />')
+	provenance = re.compile(r'<hmu_metadata_provenance value="(.*?)" />')
+	reprints = re.compile(r'<hmu_metadata_reprints value="(.*?)" />')
+	doc = re.compile(r'<hmu_metadata_documentnumber value="(.*?)" />')
+
+	q = 'SELECT marked_up_line FROM '+db+' ORDER BY index LIMIT 1'
+	cursor.execute(q)
+	r = cursor.fetchone()
+	r = r[0]
+
+	# things that will get witten to the authordb
+
+
+	# things that will get written to the workdb
+
+
+	return
+
