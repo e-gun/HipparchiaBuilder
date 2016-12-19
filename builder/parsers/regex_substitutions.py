@@ -376,6 +376,8 @@ def poundsubstitutes(match):
 		163: u'\u00b6',
 		165: u'\u00d7',
 		166: u'\u2a5a',
+		167: u'\u039c\u039c', # supposed to stack this too
+		168: u'\u039c\u039c\u039c', # supposed to stack this too
 		169: r'𐅵',
 		171: r'𐅵',
 		172: r'𐅵',
@@ -479,6 +481,7 @@ def poundsubstitutes(match):
 		526: u'\u2190',
 		527: u'\u02c6',
 		528: u'\u03bb\u032d',
+		529: u'\u204b',
 		530: r'<hmu_idiosyncratic_char value="530">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		531: u'\u035c',
 		532: u'\u2e12',
@@ -509,7 +512,9 @@ def poundsubstitutes(match):
 		559: r'<hmu_idiosyncratic_char value="559">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		561: u'\u2191',
 		562: u'\u0305',
-		563: r'𝉂',
+		563: r'⏗',
+		564: r'⏘',
+		565: r'⏙',
 		# GREEK INSTRUMENTAL NOTATIONS
 		566: r'𝈱',  # 32
 		567: r'𝈓',
@@ -517,7 +522,10 @@ def poundsubstitutes(match):
 		569: r'𝈶',  # 40
 		570: u'\u03f9',
 		572: r'𝈩',  # 𝈩GREEK INSTRUMENTAL NOTATION SYMBOL-19; Unicode: U+1D229, UTF-8: F0 9D 88 A9
+		573: r'𝈒',
 		574: u'\u0393',
+		575: r'𝈕',
+		576: r'𝈖',
 		577: u'\u03a6',
 		578: u'\u03a1',
 		579: u'\u039c',
@@ -532,6 +540,7 @@ def poundsubstitutes(match):
 		588: u'𝈈',  # Vocal #9' Instrum #44
 		589: r'𝈿',  # 𝈿GREEK INSTRUMENTAL NOTATION SYMBOL-52; Unicode: U+1D23F, UTF-8: F0 9D 88 BF
 		590: r'𝈿',
+		591: r'𝈛',
 		592: r'𝉀',
 		593: u'039b',
 		598: u'0394',
@@ -815,6 +824,7 @@ def percentsubstitutes(match):
 		101: u'\u0023',  # had best do pounds before percents since this is '#'
 		102: r'’', # single quotation mark
 		103: u'\u005c',  # backslash: careful
+		105: u'\u007c\u007c\u007c',
 		106: u'\u224c',
 		107: u'\u007e',
 		108: u'\u00b1',
