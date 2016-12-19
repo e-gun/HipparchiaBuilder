@@ -608,7 +608,13 @@ def poundsubstitutes(match):
 		817: r'𐅍',
 		818: r'𐅎',
 		821: u'\u03a3',
+		822: r'𐅟',
 		823: r'𐅐',
+		824: r'𐅑',
+		825: r'𐅒',
+		826: r'𐅓',
+		827: r'𐅔',
+		829: r'𐅕',
 		830: r'𐅇',
 		831: r'𐅇',
 		832: r'𐅖',
@@ -1437,6 +1443,79 @@ def doublecheckromanwithingreek(match):
 
 
 def totallemmatization(parsedtextfile, authorobject):
+	"""
+	will use decoded hex commands to build a citation value for every line in the text file
+	can produce a formatted line+citation, but really priming us for the move to the db
+
+	note the potential gotcha: some authors have a first work that is not 001 but instead 002+
+
+	:param parsedtextfile:
+	:return: tuples that levelmap+the line
+	"""
+	levelmapper = {
+		# be careful about re returning '1' and not 1
+		0: 1,
+		1: 1,
+		2: 1,
+		3: 1,
+		4: 1,
+		5: 1
+	}
+	lemmatized = []
+	dbready = []
+
+
+	work = 1
+
+	setter = re.compile(r'<hmu_set_level_(\d)_to_(.*?)\s/>')
+	adder = re.compile(r'<hmu_increment_level_(\d)_by_1\s')
+	wnv = re.compile(r'<hmu_cd_assert_work_number value="(\d{1,3})')
+
+	for line in parsedtextfile:
+		gotwork = re.search(wnv, line)
+		if gotwork != None:
+			work = int(gotwork.group(1))
+			for l in range(0, 6):
+				levelmapper[l] = 1
+		gotsetting = re.search(setter, line)
+		if gotsetting != None:
+			level = int(gotsetting.group(1))
+			setting = gotsetting.group(2)
+			levelmapper[level] = setting
+			if level > 0:
+				for l in range(0, level):
+					levelmapper[l] = 1
+
+		gotincrement = re.search(adder, line)
+		# if you don't reset the lower counters, then you will get something like 'line 10' when you first initialize a new section
+
+		if gotincrement != None:
+			level = int(gotincrement.group(1))
+			setting = 1
+			# awkward avoidance of type problems
+			try:
+				# are we adding integers?
+				levelmapper[level] = str(int(setting) + int(levelmapper[level]))
+			except ValueError:
+				# ok, we are incrementing a letter; hope it's not z+1
+				# can handle multicharacter strings, but how often is it not "a --> b"?
+				lastchar = levelmapper[level][-1]
+				newlastchar = chr(ord(lastchar) + setting)
+				levelmapper[level] = levelmapper[level][:-1] + newlastchar
+			# if you increment lvl 1, you need to reset lvl 0
+			# this is a bit scary because sometimes you get an 0x81 and sometimes you don't
+			if level > 0:
+				for l in range(0, level):
+					levelmapper[l] = 1
+
+		# db version: list of tuples + the line
+		tups = [('0',str(levelmapper[0])),('1',str(levelmapper[1])),('2',str(levelmapper[2])),('3',str(levelmapper[3])),('4',str(levelmapper[4])), ('5',str(levelmapper[5]))]
+		dbready.append([str(work), tups, line])
+
+	return dbready
+
+
+def modifiedtotallemmatization(parsedtextfile, authorobject):
 	"""
 	will use decoded hex commands to build a citation value for every line in the text file
 	can produce a formatted line+citation, but really priming us for the move to the db

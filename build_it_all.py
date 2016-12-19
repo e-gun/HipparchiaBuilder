@@ -12,6 +12,7 @@ from builder.dbinteraction.db import setconnection
 from builder import corpus_builder
 from builder.dbinteraction.build_lexica import formatliddellandscott, formatlewisandshort, grammarloader, analysisloader
 from builder.dbinteraction.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
+from builder.dbinteraction.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -53,10 +54,14 @@ if buildgreekauthors == 'y':
 	findwordcounts(cursor, dbconnection)
 
 if buildinscriptions == 'y':
-	workcategoryprefix = 'in'
+	workcategoryprefix = 'ZZ'
 	print('building inscription dbs')
-	corpus_builder.parallelbuildinscriptionscorpus(ins)
+	corpus_builder.parallelbuildinscriptionscorpus(ins, workcategoryprefix)
+	aumapper, wkmapper = builddbremappers('ZZ', 'in', cursor)
+	newauthors = compilenewauthors(aumapper, wkmapper, cursor)
+	compilenewworks(newauthors, wkmapper, cursor)
 	print('compiling metadata for inscription dbs')
+	workcategoryprefix = 'in'
 	insertfirstsandlasts(workcategoryprefix, cursor, dbconnection)
 	buildtrigramindices(workcategoryprefix, cursor)
 	findwordcounts(cursor, dbconnection)

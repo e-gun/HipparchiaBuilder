@@ -76,7 +76,7 @@ def parallelbuildgreekcorpus(greekdatapath, dbconnection, cursor):
 	return True
 
 
-def parallelbuildinscriptionscorpus(insdatapath):
+def parallelbuildinscriptionscorpus(insdatapath, temporaryprefix):
 	"""
 	the whole enchilada
 	you a few shifts in the comments and conditionals will let you build portions instead
@@ -90,6 +90,7 @@ def parallelbuildinscriptionscorpus(insdatapath):
 	# prune other dbs
 	ai = [x for x in ai if dataprefix in x]
 	ai = [x for x in ai if int(x[3:]) < 8000]
+	ai = [x for x in ai if int(x[3:]) == 15]
 	# the bibliographies are
 	#   INS8000 Delphi Bibliography [inscriptions] 31.56s
 	#   INS9900 Bibliography [Epigr., general] [inscriptions] 1.86s
@@ -99,7 +100,7 @@ def parallelbuildinscriptionscorpus(insdatapath):
 	thework = []
 	# ai = []
 	for a in ai:
-		thework.append(({a: allinscriptions[a]}, 'G', 'in', insdatapath, dataprefix))
+		thework.append(({a: allinscriptions[a]}, 'G', temporaryprefix, insdatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	

@@ -301,6 +301,7 @@ def workmaker(authorobject, worknumber, indexedat, cursor):
 	        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 	data = (uid, wk.title, wk.language, '', ll[0], ll[1], ll[2], ll[3], ll[4], ll[5])
 	try:
+		print('inserting into works:',uid)
 		cursor.execute(query, data)
 	except:
 		print('failed to insert', uid, wk.title)
