@@ -56,6 +56,10 @@ first you need to build the new hybrid authors from authors+works
 but you can't fill out 'floruit' yet: you need line 1 of the newwork db
 but the new work dbs need to be exctracted from the old work db
 
+level05 = document number (sorta: not always the same as what is asserted at level06)
+lelel01 = race 9recto, verso, etc; usually null)
+level00 = line
+
 """
 
 config = configparser.ConfigParser()
@@ -69,6 +73,7 @@ def builddbremappers(oldprefix, newprefix, cursor):
 
 	q = 'SELECT universalid FROM authors WHERE universalid LIKE %s ORDER BY universalid ASC'
 	d = (oldprefix+'%',)
+	print('q,d',q,d)
 	cursor.execute(q,d)
 	results = cursor.fetchall()
 
@@ -90,6 +95,7 @@ def builddbremappers(oldprefix, newprefix, cursor):
 	for key in aumapper.keys():
 		q = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid ASC'
 		d = (aumapper[key]+'%',)
+		print('q,d', q, d)
 		cursor.execute(q, d)
 		results = cursor.fetchall()
 
@@ -102,6 +108,7 @@ def builddbremappers(oldprefix, newprefix, cursor):
 				hx = '0' + hx
 			wkmapper[r[0]] = key+hx
 
+	print('maps',aumapper, wkmapper)
 	return aumapper, wkmapper
 
 
@@ -152,14 +159,15 @@ def compilenewworks(newauthors, wkmapper, cursor):
 		remapper[wkmapper[key]] = key
 
 	for a in newauthors:
-		print(remapper[a.universalid])
 		db = remapper[a.universalid]
-		q = 'SELECT DISTINCT level_01_value FROM '+db
+		q = 'SELECT DISTINCT level_05_value FROM '+db
+		print(q)
 		cursor.execute(q)
 		results = cursor.fetchall()
 
 		for document in results:
 			docname = document[0]
+			print(document)
 			if len(docname) == 1:
 				docname = '00'+docname
 			elif len(docname) == 2:
@@ -170,33 +178,11 @@ def compilenewworks(newauthors, wkmapper, cursor):
 			cursor.execute(q, d)
 			results = cursor.fetchall()
 
-			buidlnewindividualworkdb(a.universalid +'w' + docname, results, cursor)
+			newdb = a.universalid +'w' + docname
+			buidlnewindividualworkdb(newdb, results, cursor)
+			setmetadata(newdb, cursor)
 
 	return
-
-
-def updateauthorsdb(newauthors, wkmapper, cursor):
-	"""
-
-	:param newauthors:
-	:param wkmapper:
-	:param cursor:
-	:return:
-	"""
-
-	pass
-
-
-def updateworksdb(newauthors, wkmapper, cursor):
-	"""
-
-	:param newauthors:
-	:param wkmapper:
-	:param cursor:
-	:return:
-	"""
-
-	pass
 
 
 def buidlnewindividualworkdb(db, results, cursor):
