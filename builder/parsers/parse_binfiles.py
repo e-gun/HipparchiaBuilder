@@ -876,9 +876,13 @@ def resetbininfo(relativepath, cursor, dbconnection):
 	genres = buildlabellist(relativepath + bininfo['genre_clx'])
 	epithets = buildlabellist(relativepath + bininfo['epithet'])
 	locations = buildlabellist(relativepath + bininfo['location'])
+	canonfile = relativepath + bininfo['canon']
 	dates = buildlabellist(relativepath + bininfo['recorded_date'])
 	numdates = convertdatelist(dates)
-	canonfile = relativepath + bininfo['canon']
+
+	cleandates = []
+	for d in dates:
+		cleandates.append(re.sub(r'`','',d))
 
 	wipegreekauthorcolumn('genres', cursor, dbconnection)
 	# wipegreekauthorcolumn('epithet', cursor, dbconnection)
@@ -889,7 +893,7 @@ def resetbininfo(relativepath, cursor, dbconnection):
 	# dbloadlist(genres, 'genres', cursor, dbconnection)
 	dbloadlist(epithets, 'genres', cursor, dbconnection)
 	dbloadlist(locations, 'location', cursor, dbconnection)
-	dbloadlist(dates, 'recorded_date', cursor, dbconnection)
+	dbloadlist(cleandates, 'recorded_date', cursor, dbconnection)
 	dbloadlist(numdates, 'converted_date', cursor, dbconnection)
 
 	# canoninfo: do this last so that you can reset shortname
