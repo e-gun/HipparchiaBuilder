@@ -220,7 +220,7 @@ def buidlnewindividualworkdb(db, results, cursor):
 	return
 
 
-def readdocumentmetadata(db, cursor):
+def setmetadata(db, cursor):
 	"""
 	marked_up_line where level_00_value == 1 ought to contain metadata about the document
 	example: "<hmu_metadata_provenance value="Oxy" /><hmu_metadata_date value="AD 224" /><hmu_metadata_documentnumber value="10" />[ <hmu_roman_in_a_greek_text>c ̣]</hmu_roman_in_a_greek_text>∙τ̣ε̣[∙4]ε[∙8]"
@@ -237,20 +237,97 @@ def readdocumentmetadata(db, cursor):
 	textdirection = re.compile(r'<hmu_metadata_texdirection value="(.*?)" />')
 	publicationinfo = re.compile(r'<hmu_metadata_publicationinfo value="(.*?)" />')
 	additionalpubinfo = re.compile(r'<hmu_metadata_additionalpubinfo value="(.*?)" />')
-	provenance = re.compile(r'<hmu_metadata_provenance value="(.*?)" />')
+	stillfurtherpubinfo = re.compile(r'<hmu_metadata_stillfurtherpubinfo value="(.*?)" />')
 	reprints = re.compile(r'<hmu_metadata_reprints value="(.*?)" />')
 	doc = re.compile(r'<hmu_metadata_documentnumber value="(.*?)" />')
 
-	q = 'SELECT marked_up_line FROM '+db+' ORDER BY index LIMIT 1'
+	q = 'SELECT index, marked_up_line, annotations FROM '+db+' ORDER BY index LIMIT 1'
 	cursor.execute(q)
 	r = cursor.fetchone()
-	r = r[0]
+	idx = r[0]
+	ln = r[1]
+	an = r[2]
 
-	# things that will get witten to the authordb
+	pi = []
+	for info in [publicationinfo, additionalpubinfo, stillfurtherpubinfo, reprints]:
+		p = re.search(info,ln)
+		if p is not None:
+			pi.append(p.group(1))
+	pi = '; '.join(pi)
 
+	dt = re.search(date,ln)
+	try:
+		dt = dt.group(1)
+	except:
+		dt = '[unknown]'
 
-	# things that will get written to the workdb
+	cd = convertdate(dt)
 
+	pr = re.search(prov, ln)
+	try:
+		pr = pr.group(1)
+	except:
+		pr = '[unknown]'
+
+	rg = re.search(regoin, ln)
+	try:
+		rg = rg.group(1)
+	except:
+		rg = '[unknown]'
+
+	ct = re.search(city, ln)
+	try:
+		ct = ct.group(1)
+	except:
+		ct = '[unknown]'
+
+	if rg != '[unknown]' and ct != '[unknown]':
+		ct = ct + ' ('+rg+')'
+
+	if pr != '[unknown]' and ct != '[unknown]':
+		pr = pr + '; ' + ct
+	elif pr == '[unknown]' and ct != '[unknown]':
+		pr = ct
+
+	q = 'UPDATE works SET publication_info=%s, provenance=%s, recorded_date=%s, converted_date=%s WHERE universalid=%s'
+	d = (pi, pr, dt, cd, db)
+	cursor.execute(q,d)
+
+	# things we put in annotations
+
+	td = re.search(textdirection, ln)
+	try:
+		td = 'textdirection: '+td.group(1)
+	except:
+		td = ''
+
+	dn = re.search(doc, ln)
+	try:
+		dn = 'documentnumber: '+dn.group(1)
+	except:
+		dn = ''
+
+	if td != '' or dn != '':
+		newnotes = []
+		for n in [an, td, dn]:
+			if n != '':
+				newnotes.append(n)
+		notes = '; '.join(newnotes)
+
+		q = 'UPDATE '+db+' SET annotations=%s WHERE index=%s'
+		d = (notes, idx)
+		cursor.execute(q, d)
 
 	return
 
+
+def convertdate(date):
+	"""
+	take a string date and try to assign a number to it: IV AD --> 450, etc.
+
+	:param date:
+	:return:
+	"""
+
+
+	pass
