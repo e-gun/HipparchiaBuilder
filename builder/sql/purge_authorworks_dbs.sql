@@ -1,3 +1,5 @@
+-- Table: public.authors
+
 DROP TABLE public.authors;
 
 CREATE TABLE public.authors
@@ -8,39 +10,53 @@ CREATE TABLE public.authors
   akaname character varying(128),
   shortname character varying(128),
   cleanname character varying(128),
-  genres character varying(256),
-  converted_date character varying(64),
-  location character varying(64)
+  genres character varying(512),
+  recorded_date character varying(64),
+  converted_date character varying(8),
+  location character varying(128)
 )
 WITH (
   OIDS=FALSE
 );
 ALTER TABLE public.authors
   OWNER TO hippa_wr;
+GRANT ALL ON TABLE public.authors TO hippa_wr;
 GRANT SELECT ON TABLE public.authors TO hippa_rd;
+
+-- Table: public.works
 
 DROP TABLE public.works;
 
 CREATE TABLE public.works
 (
   universalid character(10),
-  title character varying(256),
+  title character varying(512),
   language character varying(10),
-  publication_info character varying(1024),
+  publication_info text,
   levellabels_00 character varying(64),
   levellabels_01 character varying(64),
   levellabels_02 character varying(64),
   levellabels_03 character varying(64),
   levellabels_04 character varying(64),
-  levellabels_05 character varying(64)
+  levellabels_05 character varying(64),
+  workgenre character varying(32),
+  transmission character varying(32),
+  worktype character varying(32),
+  provenance character varying(64),
+  recorded_date character varying(64),
+  converted_date character varying(8),
+  wordcount integer,
+  firstline integer,
+  lastline integer,
+  authentic boolean
 )
 WITH (
   OIDS=FALSE
 );
 ALTER TABLE public.works
   OWNER TO hippa_wr;
+GRANT ALL ON TABLE public.works TO hippa_wr;
 GRANT SELECT ON TABLE public.works TO hippa_rd;
-
 -- see: http://stackoverflow.com/questions/4202135/how-to-drop-multiple-tables-in-postgresql-using-a-wildcard
 
 

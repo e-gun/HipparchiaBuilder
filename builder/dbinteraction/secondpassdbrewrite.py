@@ -254,6 +254,8 @@ def setmetadata(db, cursor):
 		if p is not None:
 			pi.append(p.group(1))
 	pi = '; '.join(pi)
+	if pi != '':
+		pi = '<volumename>'+pi+'<volumename>'
 
 	dt = re.search(date,ln)
 	try:
@@ -269,7 +271,7 @@ def setmetadata(db, cursor):
 	except:
 		pr = '[unknown]'
 
-	rg = re.search(regoin, ln)
+	rg = re.search(region, ln)
 	try:
 		rg = rg.group(1)
 	except:
@@ -329,5 +331,7 @@ def convertdate(date):
 	:return:
 	"""
 
+	numericaldate = 9999
 
-	pass
+
+	return numericaldate
