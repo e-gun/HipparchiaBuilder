@@ -69,6 +69,28 @@ dbconnection = setconnection(config)
 cursor = dbconnection.cursor()
 
 
+def resetauthorsandworksdbs(prefix):
+	"""
+	clean out any old info before insterting new info
+
+	:param prefix:
+	:return:
+	"""
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	q = 'DELETE FROM authors WHERE universalid LIKE %s'
+	d = (prefix + '%',)
+	cursor.execute(q, d)
+
+	q = 'DELETE FROM works WHERE universalid LIKE %s'
+	d = (prefix + '%',)
+	cursor.execute(q, d)
+
+	dbc.commit()
+	return
+
+
 def builddbremappers(oldprefix, newprefix):
 
 	dbc = setconnection(config)
@@ -76,7 +98,6 @@ def builddbremappers(oldprefix, newprefix):
 
 	q = 'SELECT universalid FROM authors WHERE universalid LIKE %s ORDER BY universalid ASC'
 	d = (oldprefix+'%',)
-	print('q,d',q,d)
 	cursor.execute(q,d)
 	results = cursor.fetchall()
 
@@ -98,7 +119,6 @@ def builddbremappers(oldprefix, newprefix):
 	for key in aumapper.keys():
 		q = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid ASC'
 		d = (aumapper[key]+'%',)
-		print('q,d', q, d)
 		cursor.execute(q, d)
 		results = cursor.fetchall()
 
@@ -240,7 +260,6 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 	q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname) ' \
 			' VALUES (%s, %s, %s, %s, %s, %s)'
 	d = (newentryname, 'G', idx, aka, short, clean)
-	print('q,d',q,d)
 	cursor.execute(q, d)
 
 	return
@@ -262,9 +281,28 @@ def buidlnewindividualworkdb(db, results):
 	tablemaker(db, cursor)
 
 	for r in results:
+		r = list(r)
+		# you need to have '-1' in the unused levels otherwise HipparchiaServer will have trouble building citations
+		# level05 has been converted to the dbname, so we can discard it
+		# level01 is sometimes used: 'recto', 'verso'
+		# this is a problem since irregularly shaped works irritate HipparchiaServer
+		# level04 will yield things like: 'face C, right'
+		# this material will get merged with level01; but what sort of complications will arise?
+
+		r[1] = '-1' # level05
+		if r[5] == '1': # level 01
+			r[5] = 'recto'
+
+		for level in [2,3,4]: # levels 04, 03, 02
+			if r[level] != '1':
+				if level != 4:
+					print('found unusual level data:', db,r[0],level,r[level])
+				r[5] = r[level] + ' ' + r[5]
+			r[level] = '-1'
+
 		q = 'INSERT INTO ' + db + ' (index, level_05_value, level_04_value, level_03_value, level_02_value, level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words, annotations)' \
 											  ' VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-		d = r
+		d = tuple(r)
 		cursor.execute(q, d)
 
 	dbc.commit()
@@ -367,8 +405,12 @@ def setmetadata(db, cursor):
 	elif pr == '[unknown]' and ct != '[unknown]':
 		pr = ct
 
-	q = 'UPDATE works SET publication_info=%s, provenance=%s, recorded_date=%s, converted_date=%s WHERE universalid=%s'
-	d = (pi, pr, dt, cd, db)
+	# labels need to be '' and not None because of the way findtoplevelofwork() is coded in HipparchiaServer
+	# note that 'face' has been represented by a whitespace: ' '
+
+	q = 'UPDATE works SET publication_info=%s, provenance=%s, recorded_date=%s, converted_date=%s, levellabels_00=%s, ' \
+			'levellabels_01=%s, levellabels_02=%s, levellabels_03=%s, levellabels_04=%s, levellabels_05=%s WHERE universalid=%s'
+	d = (pi, pr, dt, cd, 'line', ' ', '', '', '', '', db)
 	cursor.execute(q,d)
 
 	# things we put in annotations

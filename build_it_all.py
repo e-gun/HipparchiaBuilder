@@ -12,7 +12,7 @@ from builder.dbinteraction.db import setconnection
 from builder import corpus_builder
 from builder.dbinteraction.build_lexica import formatliddellandscott, formatlewisandshort, grammarloader, analysisloader
 from builder.dbinteraction.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
-from builder.dbinteraction.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs
+from builder.dbinteraction.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs, resetauthorsandworksdbs
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -57,6 +57,7 @@ if buildinscriptions == 'y':
 	tmpprefix = 'ZZ'
 	permprefix = 'in'
 	print('building inscription dbs')
+	resetauthorsandworksdbs(permprefix)
 	corpus_builder.parallelbuildinscriptionscorpus(ins, tmpprefix)
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 	newauthors = compilenewauthors(aumapper, wkmapper)
@@ -71,6 +72,7 @@ if buildpapyri == 'y':
 	tmpprefix = 'ZZ'
 	permprefix = 'dp'
 	print('building papyrus dbs')
+	resetauthorsandworksdbs(permprefix)
 	corpus_builder.parallelbuildpapyrusscorpus(ins, tmpprefix)
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 	newauthors = compilenewauthors(aumapper, wkmapper)
