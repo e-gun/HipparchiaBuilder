@@ -57,9 +57,9 @@ if buildinscriptions == 'y':
 	workcategoryprefix = 'ZZ'
 	print('building inscription dbs')
 	corpus_builder.parallelbuildinscriptionscorpus(ins, workcategoryprefix)
-	aumapper, wkmapper = builddbremappers('ZZ', 'in', cursor)
-	newauthors = compilenewauthors(aumapper, wkmapper, cursor)
-	compilenewworks(newauthors, wkmapper, cursor)
+	aumapper, wkmapper = builddbremappers('ZZ', 'in')
+	newauthors = compilenewauthors(aumapper, wkmapper)
+	compilenewworks(newauthors, wkmapper)
 	print('compiling metadata for inscription dbs')
 	workcategoryprefix = 'in'
 	insertfirstsandlasts(workcategoryprefix, cursor, dbconnection)

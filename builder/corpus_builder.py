@@ -90,7 +90,7 @@ def parallelbuildinscriptionscorpus(insdatapath, temporaryprefix):
 	# prune other dbs
 	ai = [x for x in ai if dataprefix in x]
 	ai = [x for x in ai if int(x[3:]) < 8000]
-	ai = [x for x in ai if int(x[3:]) == 15]
+
 	# the bibliographies are
 	#   INS8000 Delphi Bibliography [inscriptions] 31.56s
 	#   INS9900 Bibliography [Epigr., general] [inscriptions] 1.86s

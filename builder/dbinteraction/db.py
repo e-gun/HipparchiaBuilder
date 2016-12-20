@@ -86,10 +86,17 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 						print('\tstructure set to',wk.structure)
 						
 				tups = line[1]
-				for lvl in range(0, len(tups)):
-					if lvl > toplvl:
-						# do we want '-1' instead?
-						tups[lvl] = (lvl, -1)
+
+				if authorobject.universalid[0:2] in ['ZZ', 'in', 'dp']:
+					# level 5 contains useful information for the inscriptions: don't nuke it
+					# level00 = line; level01 = face; [gap in levels]; level05 = documentID
+					# all of this gets taken care of in secondpassdbrewrite.py
+					pass
+				else:
+					for lvl in range(0, len(tups)):
+						if lvl > toplvl:
+							# do we want '-1' instead?
+							tups[lvl] = (lvl, -1)
 
 				# tempting to not add the -1's, but they are used to check top levels later
 				query = 'INSERT INTO ' + workdbname + ' (index, level_00_value, level_01_value, level_02_value, level_03_value, level_04_value, level_05_value, marked_up_line, accented_line, stripped_line, hyphenated_words, annotations)' \
@@ -301,7 +308,6 @@ def workmaker(authorobject, worknumber, indexedat, cursor):
 	        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 	data = (uid, wk.title, wk.language, '', ll[0], ll[1], ll[2], ll[3], ll[4], ll[5])
 	try:
-		print('inserting into works:',uid)
 		cursor.execute(query, data)
 	except:
 		print('failed to insert', uid, wk.title)

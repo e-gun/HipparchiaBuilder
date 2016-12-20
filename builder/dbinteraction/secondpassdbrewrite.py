@@ -69,7 +69,10 @@ dbconnection = setconnection(config)
 cursor = dbconnection.cursor()
 
 
-def builddbremappers(oldprefix, newprefix, cursor):
+def builddbremappers(oldprefix, newprefix):
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
 
 	q = 'SELECT universalid FROM authors WHERE universalid LIKE %s ORDER BY universalid ASC'
 	d = (oldprefix+'%',)
@@ -108,11 +111,12 @@ def builddbremappers(oldprefix, newprefix, cursor):
 				hx = '0' + hx
 			wkmapper[r[0]] = key+hx
 
-	print('maps',aumapper, wkmapper)
+	dbc.commit()
+
 	return aumapper, wkmapper
 
 
-def compilenewauthors(aumapper, wkmapper, cursor):
+def compilenewauthors(aumapper, wkmapper):
 	"""
 	build new author objects by merging the old author and work info
 
@@ -121,6 +125,9 @@ def compilenewauthors(aumapper, wkmapper, cursor):
 	:param cursor:
 	:return: newauthors
 	"""
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
 
 	newauthors = []
 
@@ -141,10 +148,12 @@ def compilenewauthors(aumapper, wkmapper, cursor):
 			newauthor = dbAuthor(newuniversalid, newlanguage, newidxname, newakaname, newshortname, newcleanname, newgenres, newrecdate, newconvdate, newlocation)
 			newauthors.append(newauthor)
 
+	dbc.commit()
+
 	return newauthors
 
 
-def compilenewworks(newauthors, wkmapper, cursor):
+def compilenewworks(newauthors, wkmapper):
 	"""
 	a bulk operation that goes newauthor by newauthor so as to build a collection of works for it
 	find all of the individual documents within an old work and turn each document into its own new work
@@ -154,38 +163,51 @@ def compilenewworks(newauthors, wkmapper, cursor):
 	:return:
 	"""
 
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
 	remapper = {}
 	for key in wkmapper:
 		remapper[wkmapper[key]] = key
 
+	# remapper: {'in0009': 'ZZ0080w009', 'in0014': 'ZZ0080w020', 'in0002': 'ZZ0080w002', ... }
+
 	for a in newauthors:
 		db = remapper[a.universalid]
-		q = 'SELECT DISTINCT level_05_value FROM '+db
-		print(q)
+		print(a.universalid, a.idxname)
+		q = 'SELECT DISTINCT level_05_value FROM '+db+' ORDER BY level_05_value'
 		cursor.execute(q)
 		results = cursor.fetchall()
 
+		dbnumber = 0
 		for document in results:
+			# can't use docname as the dbname because you will find items like 257a or, worse, 1960:4,173)
 			docname = document[0]
-			print(document)
-			if len(docname) == 1:
-				docname = '00'+docname
-			elif len(docname) == 2:
-				docname = '0' + docname
 
-			q = 'SELECT * FROM '+db+' WHERE level_01_value LIKE %s ORDER BY index'
+			dbnumber += 1
+			# unfortunately you can have more than 1000 documents: see SEG 1–41 [N. Shore Black Sea]
+			dbstring = hex(dbnumber)
+			dbstring = dbstring[2:]
+			if len(dbstring) == 1:
+				dbstring = '00'+dbstring
+			elif len(dbstring) == 2:
+				dbstring = '0' + dbstring
+
+			q = 'SELECT * FROM '+db+' WHERE level_05_value LIKE %s ORDER BY index'
 			d = (document[0],)
 			cursor.execute(q, d)
 			results = cursor.fetchall()
 
-			newdb = a.universalid +'w' + docname
-			buidlnewindividualworkdb(newdb, results, cursor)
+			newdb = a.universalid +'w' + dbstring
+			buidlnewindividualworkdb(newdb, results)
+			updateworksdb(newdb, db, docname, cursor)
 			setmetadata(newdb, cursor)
+			dbc.commit()
 
 	return
 
 
-def buidlnewindividualworkdb(db, results, cursor):
+def buidlnewindividualworkdb(db, results):
 	"""
 
 	send me all of the matching lines from one db and i will build a new workdb with only these lines
@@ -195,13 +217,41 @@ def buidlnewindividualworkdb(db, results, cursor):
 	:return:
 	"""
 
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
 	tablemaker(db, cursor)
 
 	for r in results:
-		q = 'INSERT INTO ' + db + ' (index, level_00_value, level_01_value, level_02_value, level_03_value, level_04_value, level_05_value, marked_up_line, accented_line, stripped_line, hyphenated_words, annotations)' \
+		q = 'INSERT INTO ' + db + ' (index, level_05_value, level_04_value, level_03_value, level_02_value, level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words, annotations)' \
 											  ' VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 		d = r
 		cursor.execute(q, d)
+
+	dbc.commit()
+
+	return
+
+def updateworksdb(newdb, olddb, docname, cursor):
+	"""
+	the title of "ZZ0080w001" will be "IosPE I(2) [Scythia]"
+	the title of "in0001wNNN" should be the same with a document ID suffix: " - 181", etc.
+	:param newdb:
+	:param docname:
+	:param cursor:
+	:return:
+	"""
+
+	q = 'SELECT title FROM works WHERE universalid = %s'
+	d = (olddb,)
+	cursor.execute(q, d)
+	r = cursor.fetchone()
+
+	newtitle = r[0] + ' - ' + docname
+
+	q = 'INSERT INTO works (universalid, title) VALUES (%s, %s)'
+	d = (newdb, newtitle)
+	cursor.execute(q, d)
 
 	return
 
