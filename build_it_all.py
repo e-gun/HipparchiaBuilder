@@ -12,7 +12,7 @@ from builder.dbinteraction.db import setconnection
 from builder import corpus_builder
 from builder.dbinteraction.build_lexica import formatliddellandscott, formatlewisandshort, grammarloader, analysisloader
 from builder.dbinteraction.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
-from builder.dbinteraction.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks
+from builder.dbinteraction.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -54,25 +54,31 @@ if buildgreekauthors == 'y':
 	findwordcounts(cursor, dbconnection)
 
 if buildinscriptions == 'y':
-	workcategoryprefix = 'ZZ'
+	tmpprefix = 'ZZ'
+	permprefix = 'in'
 	print('building inscription dbs')
-	corpus_builder.parallelbuildinscriptionscorpus(ins, workcategoryprefix)
-	aumapper, wkmapper = builddbremappers('ZZ', 'in')
+	corpus_builder.parallelbuildinscriptionscorpus(ins, tmpprefix)
+	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 	newauthors = compilenewauthors(aumapper, wkmapper)
 	compilenewworks(newauthors, wkmapper)
+	deletetemporarydbs(tmpprefix)
 	print('compiling metadata for inscription dbs')
-	workcategoryprefix = 'in'
-	insertfirstsandlasts(workcategoryprefix, cursor, dbconnection)
-	buildtrigramindices(workcategoryprefix, cursor)
+	insertfirstsandlasts(permprefix, cursor, dbconnection)
+	buildtrigramindices(permprefix, cursor)
 	findwordcounts(cursor, dbconnection)
 
 if buildpapyri == 'y':
-	workcategoryprefix = 'dp'
+	tmpprefix = 'ZZ'
+	permprefix = 'dp'
 	print('building papyrus dbs')
-	corpus_builder.parallelbuildpapyrusscorpus(ddp)
+	corpus_builder.parallelbuildpapyrusscorpus(ins, tmpprefix)
+	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
+	newauthors = compilenewauthors(aumapper, wkmapper)
+	compilenewworks(newauthors, wkmapper)
+	deletetemporarydbs(tmpprefix)
 	print('compiling metadata for papyrus dbs')
-	insertfirstsandlasts(workcategoryprefix, cursor, dbconnection)
-	buildtrigramindices(workcategoryprefix, cursor)
+	insertfirstsandlasts(permprefix, cursor, dbconnection)
+	buildtrigramindices(permprefix, cursor)
 	findwordcounts(cursor, dbconnection)
 
 if buildlex == 'y':

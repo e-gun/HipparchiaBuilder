@@ -134,7 +134,7 @@ def compilenewauthors(aumapper, wkmapper):
 	for key in aumapper.keys():
 		author = dbauthorandworkloader(aumapper[key], cursor)
 		for w in author.listofworks:
-			suffix = ' ' + w.title
+			suffix = ' (' + w.title +')'
 			newuniversalid = wkmapper[w.universalid]
 			newlanguage = author.language
 			newidxname = re.sub(r'\s{1,}$', '', author.idxname + suffix)
@@ -174,6 +174,9 @@ def compilenewworks(newauthors, wkmapper):
 
 	for a in newauthors:
 		db = remapper[a.universalid]
+		modifyauthorsdb(a.universalid, a.idxname, cursor)
+		dbc.commit()
+
 		print(a.universalid, a.idxname)
 		q = 'SELECT DISTINCT level_05_value FROM '+db+' ORDER BY level_05_value'
 		cursor.execute(q)
@@ -207,6 +210,42 @@ def compilenewworks(newauthors, wkmapper):
 	return
 
 
+def modifyauthorsdb(newentryname, worktitle, cursor):
+	"""
+	the idxname of "ZZ0080" will be "Black Sea and Scythia Minor"
+	the title of "in0001" should be set to "Black Sea and Scythia Minor IosPE I(2) [Scythia]"
+
+	:param tempentryname:
+	:param newentryname:
+	:param worktitle:
+	:param cursor:
+	:return:
+	"""
+
+	idx = worktitle
+	clean = worktitle
+	aka = re.search(r'\((.*?)\)$', worktitle)
+	try:
+		aka = aka.group(1)
+	except:
+		aka = worktitle
+
+	short = re.search(r'\[(.*?)\]\)$', worktitle)
+	try:
+		short = short.group(1)
+	except:
+		short = aka
+
+
+	q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname) ' \
+			' VALUES (%s, %s, %s, %s, %s, %s)'
+	d = (newentryname, 'G', idx, aka, short, clean)
+	print('q,d',q,d)
+	cursor.execute(q, d)
+
+	return
+
+
 def buidlnewindividualworkdb(db, results):
 	"""
 
@@ -231,6 +270,7 @@ def buidlnewindividualworkdb(db, results):
 	dbc.commit()
 
 	return
+
 
 def updateworksdb(newdb, olddb, docname, cursor):
 	"""
@@ -371,3 +411,37 @@ def convertdate(date):
 
 
 	return numericaldate
+
+
+def deletetemporarydbs(temprefix):
+	"""
+
+	kill off the first pass info now that you have made the second pass
+
+	:param temprefix:
+	:return:
+	"""
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
+	d = (temprefix+'%',)
+	cursor.execute(q, d)
+	results = cursor.fetchall()
+
+	for r in results:
+		dropdb = r[0]
+		q = 'DROP TABLE public.'+dropdb
+		cursor.execute(q)
+
+	q = 'DELETE FROM authors WHERE universalid LIKE %s'
+	d = (temprefix + '%',)
+	cursor.execute(q, d)
+
+	q = 'DELETE FROM works WHERE universalid LIKE %s'
+	d = (temprefix + '%',)
+	cursor.execute(q, d)
+
+	dbc.commit()
+
+	return
