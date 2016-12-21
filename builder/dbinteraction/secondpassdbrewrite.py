@@ -192,40 +192,63 @@ def compilenewworks(newauthors, wkmapper):
 
 	# remapper: {'in0009': 'ZZ0080w009', 'in0014': 'ZZ0080w020', 'in0002': 'ZZ0080w002', ... }
 
+	thework = []
+
 	for a in newauthors:
 		db = remapper[a.universalid]
 		modifyauthorsdb(a.universalid, a.idxname, cursor)
 		dbc.commit()
+		thework.append((a, db))
 
-		print(a.universalid, a.idxname)
-		q = 'SELECT DISTINCT level_05_value FROM '+db+' ORDER BY level_05_value'
-		cursor.execute(q)
+	pool = Pool(processes=int(config['io']['workers']))
+	pool.map(parallelnewworkworker, thework)
+
+	return
+
+
+def parallelnewworkworker(authoranddbtuple):
+	"""
+
+	compile new works in parallel to go faster
+
+	:param authoranddbtuple: (authorobject, dbname)
+	:return:
+	"""
+	a = authoranddbtuple[0]
+	db = authoranddbtuple[1]
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	print(a.universalid, a.idxname)
+	q = 'SELECT DISTINCT level_05_value FROM ' + db + ' ORDER BY level_05_value'
+	cursor.execute(q)
+	results = cursor.fetchall()
+
+	dbnumber = 0
+	for document in results:
+		# can't use docname as the dbname because you will find items like 257a or, worse, 1960:4,173)
+		docname = document[0]
+
+		dbnumber += 1
+		# unfortunately you can have more than 1000 documents: see SEG 1–41 [N. Shore Black Sea]
+		dbstring = hex(dbnumber)
+		dbstring = dbstring[2:]
+		if len(dbstring) == 1:
+			dbstring = '00' + dbstring
+		elif len(dbstring) == 2:
+			dbstring = '0' + dbstring
+
+		q = 'SELECT * FROM ' + db + ' WHERE level_05_value LIKE %s ORDER BY index'
+		d = (document[0],)
+		cursor.execute(q, d)
 		results = cursor.fetchall()
 
-		dbnumber = 0
-		for document in results:
-			# can't use docname as the dbname because you will find items like 257a or, worse, 1960:4,173)
-			docname = document[0]
-
-			dbnumber += 1
-			# unfortunately you can have more than 1000 documents: see SEG 1–41 [N. Shore Black Sea]
-			dbstring = hex(dbnumber)
-			dbstring = dbstring[2:]
-			if len(dbstring) == 1:
-				dbstring = '00'+dbstring
-			elif len(dbstring) == 2:
-				dbstring = '0' + dbstring
-
-			q = 'SELECT * FROM '+db+' WHERE level_05_value LIKE %s ORDER BY index'
-			d = (document[0],)
-			cursor.execute(q, d)
-			results = cursor.fetchall()
-
-			newdb = a.universalid +'w' + dbstring
-			buidlnewindividualworkdb(newdb, results)
-			updateworksdb(newdb, db, docname, cursor)
-			setmetadata(newdb, cursor)
-			dbc.commit()
+		newdb = a.universalid + 'w' + dbstring
+		buidlnewindividualworkdb(newdb, results)
+		updateworksdb(newdb, db, docname, cursor)
+		setmetadata(newdb, cursor)
+		dbc.commit()
 
 	return
 
