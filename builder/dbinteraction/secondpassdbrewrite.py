@@ -57,7 +57,7 @@ but you can't fill out 'floruit' yet: you need line 1 of the newwork db
 but the new work dbs need to be exctracted from the old work db
 
 level05 = document number (sorta: not always the same as what is asserted at level06)
-lelel01 = race 9recto, verso, etc; usually null)
+level01 = face (recto, verso, etc; usually recto: this will result in spammy output unless you use workarounds in HipparchiaServer)
 level00 = line
 
 """
@@ -210,10 +210,12 @@ def parallelnewworkworker(authoranddbtuple):
 	"""
 
 	compile new works in parallel to go faster
+	but maybe the loop inside of this is where the real speed gains would lie: 'for document in results:...'
 
 	:param authoranddbtuple: (authorobject, dbname)
 	:return:
 	"""
+
 	a = authoranddbtuple[0]
 	db = authoranddbtuple[1]
 
@@ -280,10 +282,17 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 		short = aka
 
 
-	q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname) ' \
+	q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, recorded_date) ' \
 			' VALUES (%s, %s, %s, %s, %s, %s)'
-	d = (newentryname, 'G', idx, aka, short, clean)
+	d = (newentryname, 'G', idx, aka, short, clean, 'Varia')
 	cursor.execute(q, d)
+
+	# inscription 'authors' can set their location via their idxname
+	if newentryname[0:2] == 'in':
+		loc = re.search(r'(.*?)\s\(', worktitle)
+		q = 'UPDATE authors SET location=%s WHERE universalid=%s'
+		d = (loc.group(1),newentryname)
+		cursor.execute(q, d)
 
 	return
 
@@ -432,9 +441,19 @@ def setmetadata(db, cursor):
 	# note that 'face' has been represented by a whitespace: ' '
 
 	q = 'UPDATE works SET publication_info=%s, provenance=%s, recorded_date=%s, converted_date=%s, levellabels_00=%s, ' \
-			'levellabels_01=%s, levellabels_02=%s, levellabels_03=%s, levellabels_04=%s, levellabels_05=%s WHERE universalid=%s'
-	d = (pi, pr, dt, cd, 'line', ' ', '', '', '', '', db)
+			'levellabels_01=%s, levellabels_02=%s, levellabels_03=%s, levellabels_04=%s, levellabels_05=%s, ' \
+			'authentic=%s WHERE universalid=%s'
+	d = (pi, pr, dt, cd, 'line', ' ', '', '', '', '', True, db)
 	cursor.execute(q,d)
+
+	if db[0:2] == 'in':
+		q = 'UPDATE works SET transmission=%s, worktype=%s WHERE universalid=%s'
+		d = ('inscription', 'inscription', db)
+		cursor.execute(q, d)
+	if db[0:2] == 'dp':
+		q = 'UPDATE works SET transmission=%s, worktype=%s WHERE universalid=%s'
+		d = ('papyrus', 'papyrus', db)
+		cursor.execute(q, d)
 
 	# things we put in annotations
 
@@ -472,9 +491,131 @@ def convertdate(date):
 	:return:
 	"""
 
-	numericaldate = 9999
+	datemapper = {
+		'[unknown]': 1500,
+		'archaic': -700,
+		'Hell.': -250,
+		'aet Hell': -250,
+		'aet Rom': 150,
+		'aet Chr': 400,
+		'init aet Hell': -310,
+		'Late Hell.': -1,
+		'Late Imp.': 250,
+		'late archaic': -600,
+		'I bc': -50,
+		'I bc-I ac': 1,
+		'I bc?': -25,
+		'I-II ac': 100,
+		'II ac': -150,
+		'II bc': 150,
+		'II-I bc': -100,
+		'II-I bc?': -105,
+		'II-III ac': 300,
+		'II-beg.III ac': 280,
+		'II/I bc': -100,
+		'III ac': 250,
+		'IIIp': 250,
+		'III bc': -250,
+		'III bc?': -240,
+		'III-II bc': -200,
+		'III/IIa': -200,
+		'IV ac?': 355,
+		'IV bc': -350,
+		'IV bc?': -325,
+		'IV-III bc': -300,
+		'IV-III bc?': -310,
+		'IV-III/II? bc': -275,
+		'IV-V ac': 400,
+		'Ia-Ip': 1,
+		'V bc': -450,
+		'V-IV bc': -400,
+		'V/IVa': -400,
+		'VI bc': -550,
+		'VIp': 550,
+		'XVII-XIX ac?': 1800,
 
+	}
 
+	if date in datemapper:
+		numericaldate = datemapper[date]
+	else:
+		modifier = 1
+
+		# '161 ac', '185-170/69 bc'
+		BCE = re.compile(r'(\sbc|\sBC)')
+		CE = re.compile(r'(\sac|\sAD)')
+		if re.search(BCE, date) is not None:
+			modifier = -1
+		date = re.sub(BCE,'',date)
+		date = re.sub(CE, '', date)
+
+		# '357a', '550p'
+		BCE = re.compile(r'\da$')
+		if re.search(BCE, date) is not None:
+			modifier = -1
+			date = re.sub(r'a$','',date)
+		if re.search(r'\dp$', date) is not None:
+			date = re.sub(r'p$', '', date)
+
+		fudge = 0
+		if re.search(r'ante',date) is not None:
+			date = re.sub(r'ante','',date)
+			fudge = -20
+		if re.search(r'post',date) is not None:
+			date = re.sub(r'post','',date)
+			fudge = 20
+		if re.search(r'init', date) is not None:
+			date = re.sub(r'init', '', date)
+			fudge = -25
+
+		if re.search(r'paullo',date) is not None:
+			fudge = 10 * modifier
+			date = re.sub(r'paullo', '', date)
+
+		# clear out things we won'd use from here on out
+		date = re.sub(r'^c\s','', date)
+		date = re.sub(r'(c\.\s)','', date)
+		date = re.sub(r'\sbc|\sBC\sac|\sAD','', date)
+		date = re.sub(r'\?','', date)
+		# '44/45' ==> '45'
+		splityears = re.compile(r'(\d{1,})(/\d{1,})(.*?)')
+		if re.search(splityears, date) is not None:
+			split = re.search(splityears, date)
+			date = split.group(1)+split.group(3)
+
+		# what is one supposed to say about: "193-211, 223-235 or 244-279 ac"?
+		# let's just go with our first value
+		if len(date.split(',')) > 1:
+			date = date.split(',')
+			date = date[0]
+		if len(date.split(' or ')) > 1:
+			date = date.split(' or ')
+			date = date[0]
+
+		if len(date.split('-')) > 1:
+			# take the middle of any range you find
+			halves = date.split('-')
+			first = halves[0]
+			second = halves[1]
+			if re.search(r'\d', first) is not None and re.search(r'\d', second) is not None:
+				first = re.sub(r'\D','',first)
+				first = int(first)
+				second = re.sub(r'\D', '', second)
+				second = int(second)
+				numericaldate = (first + second)/2 * modifier + fudge
+			else:
+				numericaldate = 9999
+		elif re.search(r'\d', date) is not None:
+			# we're just a collection of digits? '47', vel sim?
+			try:
+				numericaldate = int(date) * modifier + fudge
+			except:
+				# oops: maybe we saw something like 'III bc' but it was not in datemapper{}
+				numericaldate = 8888
+		else:
+			numericaldate = 7777
+
+	print('date -> number:\n\t',date,'\n\t',numericaldate)
 	return numericaldate
 
 
@@ -510,3 +651,5 @@ def deletetemporarydbs(temprefix):
 	dbc.commit()
 
 	return
+
+
