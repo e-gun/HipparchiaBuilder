@@ -289,18 +289,24 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 
 	idx = worktitle
 	clean = worktitle
-	aka = re.search(r'\((.*?)\)$', worktitle)
-	try:
-		aka = aka.group(1)
-	except:
+
+	if 	newentryname[0:2] == 'dp':
 		aka = worktitle
+	else:
+		aka = re.search(r'\((.*?)\)$', worktitle)
+		try:
+			aka = aka.group(1)
+		except:
+			aka = worktitle
 
-	short = re.search(r'\[(.*?)\]\)$', worktitle)
-	try:
-		short = short.group(1)
-	except:
-		short = aka
-
+	if 	newentryname[0:2] == 'dp':
+		short = worktitle
+	else:
+		short = re.search(r'\[(.*?)\]\)$', worktitle)
+		try:
+			short = short.group(1)
+		except:
+			short = aka
 
 	q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, recorded_date) ' \
 			' VALUES (%s, %s, %s, %s, %s, %s, %s)'
@@ -555,8 +561,11 @@ def convertdate(date):
 		'I bc-I ac': 1,
 		'Ia/Ip': 1,
 		'Ip': 50,
+		'I ac': 50,
 		'Ia': -50,
 		'I-II ac': 100,
+		'I-IIa': -100,
+		'I-IIp': 100,
 		'I-IIIp': 111,
 		'III-Ia': -111,
 		'I/IIp': 100,
@@ -601,20 +610,21 @@ def convertdate(date):
 		'VIa': -550,
 		'VIp': 550,
 		'VI ac': 550,
+		'VI/VIIp': 600,
+		'VIIp': 650,
 		'VII/VIIIp': 700,
 		'XVII-XIX ac': 1800,
-
 	}
-
-	# swap papyrus BCE info format for inscription BCE info format
-	date = re.sub(r'\sspc$',' ac', date)
-	date = re.sub(r'\ssac$', ' bc', date)
 
 	# drop things that will only confuse the issue
 	date = re.sub(r'(\?|\(\?\))', '', date)
 	date = re.sub(r'med\s','', date)
-	date = re.sub(r'^c\s', '', date)
+	date = re.sub(r'^c(\s|)', '', date)
 	date = re.sub(r'/(antea|postea|paullo )','', date)
+
+	# swap papyrus BCE info format for one of the inscription BCE info formats
+	date = re.sub(r'\sspc$','p', date)
+	date = re.sub(r'\ssac$', 'a', date)
 
 	fudge = 0
 	if re.search(r'^(ante|a|ante fin)\s', date) is not None:
@@ -689,6 +699,10 @@ def convertdate(date):
 				second = re.sub(r'\D', '', second)
 				second = int(second)
 				numericaldate = (first + second)/2 * modifier + (fudge * modifier)
+			elif re.search(r'\d', first) is not None:
+				# you'll get here with something like '172- BC?'
+				first = re.sub(r'\D','',first)
+				numericaldate = int(first) * modifier + (fudge * modifier)
 			else:
 				numericaldate = 9999
 		elif re.search(r'\d', date) is not None:

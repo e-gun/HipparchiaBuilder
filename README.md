@@ -1,17 +1,17 @@
 # HipparchiaBuilder
 
-convert tlg-e and phi author files into a database
+convert greek and latin data files into a searchable database
 
 this database can be read by HipparchiaServer
 
 you will need:
 
-    the tlg and phi data (presumably from a cd-rom disk)
+    the TLG_E and PHI00005 and PHI7 data (presumably from cd-rom disks)
         your config file will need to point to this data properly
 
     the lexical data 
         Diogenes contains a folder named Perseus_Data
-        some cleaning of random bad characters in that data is required [basically, strip all high value ascii chars]
+        some cleaning of random bad characters in that data is required [basically, strip all non-ascii chars]
         Diogenes can be found via 
             https://community.dur.ac.uk/p.j.heslin/Software/Diogenes/
         your config file will need to point to this data properly
@@ -35,7 +35,7 @@ you will need:
         flask
         psycopg2
         bs4
-    postgresql9
+    postgresql9 [ideally 9.6]
 
 see also: HipparchiaBSD
     these are starter files for installing hipparchia into a virtualbox (or a non-virtual one) running BSD 10.3
