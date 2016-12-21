@@ -107,7 +107,7 @@ def parallelbuildinscriptionscorpus(insdatapath, temporaryprefix):
 	return True
 
 
-def parallelbuildpapyrusscorpus(papdatapath):
+def parallelbuildpapyrusscorpus(papdatapath, temporaryprefix):
 	"""
 	the whole enchilada
 	you a few shifts in the comments and conditionals will let you build portions instead
@@ -125,7 +125,7 @@ def parallelbuildpapyrusscorpus(papdatapath):
 	# ap = []
 	for a in ap:
 		if int(a[3:]) < 9999:
-			thework.append(({a: allpapyri[a]}, 'G', 'dp', papdatapath, dataprefix))
+			thework.append(({a: allpapyri[a]}, 'G', temporaryprefix, papdatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	

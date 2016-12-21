@@ -171,10 +171,16 @@ def compilenewauthors(aumapper, wkmapper):
 			suffix = ' (' + w.title +')'
 			newuniversalid = wkmapper[w.universalid]
 			newlanguage = author.language
-			newidxname = re.sub(r'\s{1,}$', '', author.idxname + suffix)
-			newakaname = re.sub(r'\s{1,}$', '', author.akaname + suffix)
-			newshortname = re.sub(r'\s{1,}$', '', author.shortname + suffix)
-			newcleanname = re.sub(r'\s{1,}$', '', author.cleanname + suffix)
+			if w.title != ' ':
+				# the papyri are not very good at setting their titles
+				newidxname = re.sub(r'\s{1,}$', '', author.idxname + suffix)
+				newakaname = re.sub(r'\s{1,}$', '', author.akaname + suffix)
+				newshortname = re.sub(r'\s{1,}$', '', author.shortname + suffix)
+				newcleanname = re.sub(r'\s{1,}$', '', author.cleanname + suffix)
+			else:
+				newidxname = re.sub(r'\s{1,}$', '', author.idxname)
+				newcleanname, newshortname, newakaname = newidxname, newidxname, newidxname
+
 			newgenres = author.genres
 			newrecdate = author.recorded_date
 			newconvdate = author.converted_date
@@ -371,7 +377,15 @@ def updateworksdb(newdb, olddb, docname, cursor):
 	cursor.execute(q, d)
 	r = cursor.fetchone()
 
-	newtitle = r[0] + ' - ' + docname
+	if r[0] != ' ':
+		newtitle = r[0] + ' - ' + docname
+	else:
+		# I bet you are a papyrus
+		q = 'SELECT idxname FROM authors WHERE universalid = %s'
+		d = (newdb[0:6],)
+		cursor.execute(q, d)
+		r = cursor.fetchone()
+		newtitle = r[0] + ' - ' + docname
 
 	q = 'INSERT INTO works (universalid, title) VALUES (%s, %s)'
 	d = (newdb, newtitle)
@@ -430,6 +444,8 @@ def setmetadata(db, cursor):
 	try:
 		pr = pr.group(1)
 	except:
+		pr = '[unknown]'
+	if pr == '?':
 		pr = '[unknown]'
 
 	rg = re.search(region, ln)
@@ -584,10 +600,15 @@ def convertdate(date):
 		'VI/Va': -500,
 		'VIa': -550,
 		'VIp': 550,
+		'VI ac': 550,
 		'VII/VIIIp': 700,
 		'XVII-XIX ac': 1800,
 
 	}
+
+	# swap papyrus BCE info format for inscription BCE info format
+	date = re.sub(r'\sspc$',' ac', date)
+	date = re.sub(r'\ssac$', ' bc', date)
 
 	# drop things that will only confuse the issue
 	date = re.sub(r'(\?|\(\?\))', '', date)
@@ -632,8 +653,8 @@ def convertdate(date):
 
 		modifier = 1
 		# '161 ac', '185-170/69 bc'
-		BCE = re.compile(r'(\sbc|\sBC)')
-		CE = re.compile(r'(\sac|\sAD)')
+		BCE = re.compile(r'(\sbc|\sBC|^BC\s)')
+		CE = re.compile(r'(\sac|\sAD|^AD\s)')
 		if re.search(BCE, date) is not None:
 			modifier = -1
 		date = re.sub(BCE,'',date)

@@ -53,14 +53,16 @@ if buildgreekauthors == 'y':
 	buildtrigramindices(workcategoryprefix, cursor)
 	findwordcounts(cursor, dbconnection)
 
+# note the dbcitationinsert() has a check for the dbprefix that constrains your choice of tmp values here
+# if you fail the match, then you will overwrite things like the level05 data that you need later
 if buildinscriptions == 'y':
-	tmpprefix = 'ZZ'
+	tmpprefix = 'XX'
 	permprefix = 'in'
 	print('purging the old build dbs')
 	resetauthorsandworksdbs(permprefix)
 	print('building inscription dbs')
 	corpus_builder.parallelbuildinscriptionscorpus(ins, tmpprefix)
-	print('remapping the inscription dbs: turning works into authors and documents into works')
+	print('remapping the inscription dbs: turning works into authors and embedded documents into individual works')
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 	newauthors = compilenewauthors(aumapper, wkmapper)
 	compilenewworks(newauthors, wkmapper)
@@ -71,16 +73,18 @@ if buildinscriptions == 'y':
 	findwordcounts(cursor, dbconnection)
 
 if buildpapyri == 'y':
-	tmpprefix = 'ZZ'
+	tmpprefix = 'YY'
 	permprefix = 'dp'
-	print('building papyrus dbs')
+	print('purging the old build dbs')
 	resetauthorsandworksdbs(permprefix)
-	corpus_builder.parallelbuildpapyrusscorpus(ins, tmpprefix)
+	print('building papyrus dbs')
+	corpus_builder.parallelbuildpapyrusscorpus(ddp, tmpprefix)
+	print('remapping the inscription dbs: turning works into authors and embedded documents into individual works')
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 	newauthors = compilenewauthors(aumapper, wkmapper)
 	compilenewworks(newauthors, wkmapper)
 	deletetemporarydbs(tmpprefix)
-	print('compiling metadata for papyrus dbs')
+	print('compiling metadata for inscription dbs')
 	insertfirstsandlasts(permprefix, cursor, dbconnection)
 	buildtrigramindices(permprefix, cursor)
 	findwordcounts(cursor, dbconnection)
