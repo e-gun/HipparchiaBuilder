@@ -283,7 +283,7 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 
 
 	q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, recorded_date) ' \
-			' VALUES (%s, %s, %s, %s, %s, %s)'
+			' VALUES (%s, %s, %s, %s, %s, %s, %s)'
 	d = (newentryname, 'G', idx, aka, short, clean, 'Varia')
 	cursor.execute(q, d)
 
@@ -406,6 +406,7 @@ def setmetadata(db, cursor):
 	dt = re.search(date,ln)
 	try:
 		dt = dt.group(1)
+		dt = re.sub(r'(^\s{1,}|\s{1,}$)', '', dt)
 	except:
 		dt = '[unknown]'
 
@@ -491,56 +492,108 @@ def convertdate(date):
 	:return:
 	"""
 
+	originaldate = date
+
 	datemapper = {
 		'[unknown]': 1500,
+		'date': 1500,
 		'archaic': -700,
 		'Hell.': -250,
 		'aet Hell': -250,
-		'aet Rom': 150,
+		'aet Rom': 50,
+		'aet Rom tard': 100,
+		'aet Imp tard': 400,
 		'aet Chr': 400,
+		'aet Imp': 200,
+		'aet Aur': 170,
+		'aet Had': 125,
+		'aet Ves': 70,
+		'aet Nero': 60,
+		'aet Claud': 50,
+		'aet Aug': 1,
 		'init aet Hell': -310,
 		'Late Hell.': -1,
+		'aet Hell tard': -1,
 		'Late Imp.': 250,
 		'late archaic': -600,
 		'I bc': -50,
 		'I bc-I ac': 1,
-		'I bc?': -25,
+		'Ia/Ip': 1,
+		'Ip': 50,
+		'Ia': -50,
 		'I-II ac': 100,
-		'II ac': -150,
-		'II bc': 150,
+		'I/IIp': 100,
+		'II ac': 150,
+		'II bc': -150,
+		'IIp': 150,
+		'IIa': -150,
 		'II-I bc': -100,
-		'II-I bc?': -105,
+		'II/Ia': -100,
 		'II-III ac': 300,
+		'II/IIIp': 300,
 		'II-beg.III ac': 280,
 		'II/I bc': -100,
 		'III ac': 250,
 		'IIIp': 250,
+		'IIIa': -250,
 		'III bc': -250,
-		'III bc?': -240,
 		'III-II bc': -200,
 		'III/IIa': -200,
-		'IV ac?': 355,
+		'IV ac': 350,
 		'IV bc': -350,
-		'IV bc?': -325,
+		'IVp': 350,
+		'IVa': -350,
 		'IV-III bc': -300,
-		'IV-III bc?': -310,
-		'IV-III/II? bc': -275,
+		'IV/IIIa': -300,
+		'IV-III/II bc': -275,
 		'IV-V ac': 400,
 		'Ia-Ip': 1,
 		'V bc': -450,
+		'V ac': 450,
+		'Va': -450,
+		'Vp': 450,
 		'V-IV bc': -400,
 		'V/IVa': -400,
 		'VI bc': -550,
+		'VIa': -550,
 		'VIp': 550,
-		'XVII-XIX ac?': 1800,
+		'XVII-XIX ac': 1800,
 
 	}
+
+	# drop things that will only confuse the issue
+	date = re.sub(r'(\?)', '', date)
+	date = re.sub(r'med\s','', date)
+	date = re.sub(r'^c\s', '', date)
+	date = re.sub(r'/(antea|postea)','', date)
+
+	fudge = 0
+	if re.search(r'^(ante|a|ante fin)\s', date) is not None:
+		date = re.sub(r'^(ante|a|ante fin)\s', '', date)
+		fudge = -20
+	if re.search(r'^(post|p)\s', date) is not None:
+		date = re.sub(r'^(post|p)\s', '', date)
+		fudge = 20
+	if re.search(r'init\s', date) is not None:
+		date = re.sub(r'init\s', '', date)
+		fudge = -25
+	if re.search(r'^fin\s', date) is not None:
+		date = re.sub(r'^fin\s', '', date)
+		fudge = 25
 
 	if date in datemapper:
 		numericaldate = datemapper[date]
 	else:
-		modifier = 1
+		# what is one supposed to say about: "193-211, 223-235 or 244-279 ac"?
+		# let's just go with our first value
+		if len(date.split(',')) > 1:
+			date = date.split(',')
+			date = date[0]
+		if len(date.split(' or ')) > 1:
+			date = date.split(' or ')
+			date = date[0]
 
+		modifier = 1
 		# '161 ac', '185-170/69 bc'
 		BCE = re.compile(r'(\sbc|\sBC)')
 		CE = re.compile(r'(\sac|\sAD)')
@@ -557,17 +610,6 @@ def convertdate(date):
 		if re.search(r'\dp$', date) is not None:
 			date = re.sub(r'p$', '', date)
 
-		fudge = 0
-		if re.search(r'ante',date) is not None:
-			date = re.sub(r'ante','',date)
-			fudge = -20
-		if re.search(r'post',date) is not None:
-			date = re.sub(r'post','',date)
-			fudge = 20
-		if re.search(r'init', date) is not None:
-			date = re.sub(r'init', '', date)
-			fudge = -25
-
 		if re.search(r'paullo',date) is not None:
 			fudge = 10 * modifier
 			date = re.sub(r'paullo', '', date)
@@ -576,21 +618,11 @@ def convertdate(date):
 		date = re.sub(r'^c\s','', date)
 		date = re.sub(r'(c\.\s)','', date)
 		date = re.sub(r'\sbc|\sBC\sac|\sAD','', date)
-		date = re.sub(r'\?','', date)
 		# '44/45' ==> '45'
 		splityears = re.compile(r'(\d{1,})(/\d{1,})(.*?)')
 		if re.search(splityears, date) is not None:
 			split = re.search(splityears, date)
 			date = split.group(1)+split.group(3)
-
-		# what is one supposed to say about: "193-211, 223-235 or 244-279 ac"?
-		# let's just go with our first value
-		if len(date.split(',')) > 1:
-			date = date.split(',')
-			date = date[0]
-		if len(date.split(' or ')) > 1:
-			date = date.split(' or ')
-			date = date[0]
 
 		if len(date.split('-')) > 1:
 			# take the middle of any range you find
@@ -602,7 +634,7 @@ def convertdate(date):
 				first = int(first)
 				second = re.sub(r'\D', '', second)
 				second = int(second)
-				numericaldate = (first + second)/2 * modifier + fudge
+				numericaldate = (first + second)/2 * modifier + (fudge * modifier)
 			else:
 				numericaldate = 9999
 		elif re.search(r'\d', date) is not None:
@@ -615,7 +647,9 @@ def convertdate(date):
 		else:
 			numericaldate = 7777
 
-	print('date -> number:\n\t',date,'\n\t',numericaldate)
+	if numericaldate > 2000:
+		print('date -> number:\n\t"',originaldate,'"\n\t',numericaldate)
+
 	return numericaldate
 
 
