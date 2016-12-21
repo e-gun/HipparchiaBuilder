@@ -72,12 +72,26 @@ cursor = dbconnection.cursor()
 def resetauthorsandworksdbs(prefix):
 	"""
 	clean out any old info before insterting new info
+	you have to purge the dbs every time because the names can change between builds
 
 	:param prefix:
 	:return:
 	"""
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
+
+	q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
+	d = (prefix + '%',)
+	cursor.execute(q, d)
+	results = cursor.fetchall()
+
+	count = 0
+	for r in results:
+		count += 1
+		q = 'DROP TABLE public.'+r[0]
+		cursor.execute(q)
+		if count % 500 == 0:
+			dbc.commit()
 
 	q = 'DELETE FROM authors WHERE universalid LIKE %s'
 	d = (prefix + '%',)
@@ -328,7 +342,7 @@ def buidlnewindividualworkdb(db, results):
 		for level in [2,3,4]: # levels 04, 03, 02
 			if r[level] != '1':
 				if level != 4:
-					print('found unusual level data:', db,r[0],level,r[level])
+					print('unusual level data:', db,r[0],level,r[level])
 				r[5] = r[level] + ' ' + r[5]
 			r[level] = '-1'
 
@@ -497,6 +511,9 @@ def convertdate(date):
 	datemapper = {
 		'[unknown]': 1500,
 		'date': 1500,
+		'aet tard': 1000,
+		'aet inferior': 1200,
+		'aet Byz': 700,
 		'archaic': -700,
 		'Hell.': -250,
 		'aet Hell': -250,
@@ -505,7 +522,9 @@ def convertdate(date):
 		'aet Imp tard': 400,
 		'aet Chr': 400,
 		'aet Imp': 200,
+		'aet Carac': 205,
 		'aet Aur': 170,
+		'aet Ant': 145,
 		'aet Had': 125,
 		'aet Ves': 70,
 		'aet Nero': 60,
@@ -522,6 +541,8 @@ def convertdate(date):
 		'Ip': 50,
 		'Ia': -50,
 		'I-II ac': 100,
+		'I-IIIp': 111,
+		'III-Ia': -111,
 		'I/IIp': 100,
 		'II ac': 150,
 		'II bc': -150,
@@ -529,8 +550,9 @@ def convertdate(date):
 		'IIa': -150,
 		'II-I bc': -100,
 		'II/Ia': -100,
-		'II-III ac': 300,
-		'II/IIIp': 300,
+		'II-III ac': 200,
+		'II/IIIp': 200,
+		'II-IIIp': 200,
 		'II-beg.III ac': 280,
 		'II/I bc': -100,
 		'III ac': 250,
@@ -539,6 +561,7 @@ def convertdate(date):
 		'III bc': -250,
 		'III-II bc': -200,
 		'III/IIa': -200,
+		'III/IVp': 300,
 		'IV ac': 350,
 		'IV bc': -350,
 		'IVp': 350,
@@ -547,6 +570,7 @@ def convertdate(date):
 		'IV/IIIa': -300,
 		'IV-III/II bc': -275,
 		'IV-V ac': 400,
+		'IV/Vp': 400,
 		'Ia-Ip': 1,
 		'V bc': -450,
 		'V ac': 450,
@@ -554,23 +578,30 @@ def convertdate(date):
 		'Vp': 450,
 		'V-IV bc': -400,
 		'V/IVa': -400,
+		'V-IVa': -400,
+		'V/VIp': 500,
 		'VI bc': -550,
+		'VI/Va': -500,
 		'VIa': -550,
 		'VIp': 550,
+		'VII/VIIIp': 700,
 		'XVII-XIX ac': 1800,
 
 	}
 
 	# drop things that will only confuse the issue
-	date = re.sub(r'(\?)', '', date)
+	date = re.sub(r'(\?|\(\?\))', '', date)
 	date = re.sub(r'med\s','', date)
 	date = re.sub(r'^c\s', '', date)
-	date = re.sub(r'/(antea|postea)','', date)
+	date = re.sub(r'/(antea|postea|paullo )','', date)
 
 	fudge = 0
 	if re.search(r'^(ante|a|ante fin)\s', date) is not None:
 		date = re.sub(r'^(ante|a|ante fin)\s', '', date)
 		fudge = -20
+	if re.search(r'^p\spost\s', date) is not None:
+		date = re.sub(r'^p\spost\s', '', date)
+		fudge = 10
 	if re.search(r'^(post|p)\s', date) is not None:
 		date = re.sub(r'^(post|p)\s', '', date)
 		fudge = 20
@@ -585,13 +616,19 @@ def convertdate(date):
 		numericaldate = datemapper[date]
 	else:
 		# what is one supposed to say about: "193-211, 223-235 or 244-279 ac"?
-		# let's just go with our first value
+		# let's just go with our last value (esp. since the BCE info is probably there and only there)
 		if len(date.split(',')) > 1:
 			date = date.split(',')
-			date = date[0]
+			last = len(date) - 1
+			date = date[last]
 		if len(date.split(' or ')) > 1:
 			date = date.split(' or ')
-			date = date[0]
+			last = len(date) - 1
+			date = date[last]
+		if len(date.split(' vel ')) > 1:
+			date = date.split(' vel ')
+			last = len(date) - 1
+			date = date[last]
 
 		modifier = 1
 		# '161 ac', '185-170/69 bc'
@@ -609,10 +646,6 @@ def convertdate(date):
 			date = re.sub(r'a$','',date)
 		if re.search(r'\dp$', date) is not None:
 			date = re.sub(r'p$', '', date)
-
-		if re.search(r'paullo',date) is not None:
-			fudge = 10 * modifier
-			date = re.sub(r'paullo', '', date)
 
 		# clear out things we won'd use from here on out
 		date = re.sub(r'^c\s','', date)
@@ -648,7 +681,7 @@ def convertdate(date):
 			numericaldate = 7777
 
 	if numericaldate > 2000:
-		print('date -> number:\n\t"',originaldate,'"\n\t',numericaldate)
+		print('date -> number:\n\t',originaldate,'\n\t',numericaldate)
 
 	return numericaldate
 

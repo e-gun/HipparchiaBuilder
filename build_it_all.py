@@ -56,9 +56,11 @@ if buildgreekauthors == 'y':
 if buildinscriptions == 'y':
 	tmpprefix = 'ZZ'
 	permprefix = 'in'
-	print('building inscription dbs')
+	print('purging the old build dbs')
 	resetauthorsandworksdbs(permprefix)
+	print('building inscription dbs')
 	corpus_builder.parallelbuildinscriptionscorpus(ins, tmpprefix)
+	print('remapping the inscription dbs: turning works into authors and documents into works')
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 	newauthors = compilenewauthors(aumapper, wkmapper)
 	compilenewworks(newauthors, wkmapper)
