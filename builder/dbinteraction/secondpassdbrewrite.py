@@ -354,7 +354,8 @@ def buidlnewindividualworkdb(db, results):
 		for level in [2,3,4]: # levels 04, 03, 02
 			if r[level] != '1':
 				if level != 4:
-					print('unusual level data:', db,r[0],level,r[level])
+					# print('unusual level data:', db,r[0],level,r[level])
+					pass
 				r[5] = r[level] + ' ' + r[5]
 			r[level] = '-1'
 
@@ -474,6 +475,9 @@ def setmetadata(db, cursor):
 	elif pr == '[unknown]' and ct != '[unknown]':
 		pr = ct
 
+	if len(pr) > 64:
+		pr = pr[0:63]
+
 	# labels need to be '' and not None because of the way findtoplevelofwork() is coded in HipparchiaServer
 	# note that 'face' has been represented by a whitespace: ' '
 
@@ -536,22 +540,38 @@ def convertdate(date):
 		'aet tard': 1000,
 		'aet inferior': 1200,
 		'aet Byz': 700,
+		'Byz': 700,
 		'archaic': -700,
 		'Hell.': -250,
 		'aet Hell': -250,
+		'Early Hell.': -300,
 		'aet Rom': 50,
+		'Rom': 50,
+		'Rom.': 50,
+		'Ptol.': -100,
+		'Early Ptol.': -275,
 		'aet Rom tard': 100,
 		'aet Imp tard': 400,
+		'late Imp.': 400,
 		'aet Chr': 400,
+		'Chr.': 400,
 		'aet Imp': 200,
+		'Imp': 200,
 		'aet Carac': 205,
 		'aet Aur': 170,
 		'aet Ant': 145,
 		'aet Had': 125,
+		'aet Commod': 185,
+		'aet Hadriani': 125,
+		'aet Tra/aet Had': 115,
+		'aet Tra': 105,
 		'aet Ves': 70,
 		'aet Nero': 60,
 		'aet Claud': 50,
+		'aet Aug/aet Tib': 15,
+		'aet Tib': 25,
 		'aet Aug': 1,
+		'Augustan': 1,
 		'init aet Hell': -310,
 		'Late Hell.': -1,
 		'aet Hell tard': -1,
@@ -562,6 +582,14 @@ def convertdate(date):
 		'Ia/Ip': 1,
 		'Ip': 50,
 		'I ac': 50,
+		'1st bc': -50,
+		'1st ac': 50, # is this right? do the editors mean 'ante' or 'after'? looks like 'after'
+		'2nd ac': 150, # is this right? do the editors mean 'ante' or 'after'?
+		'2nd bc': -150,
+		'3rd bc': -250,
+		'3rd ac': 250,
+		'4th bc': -350,
+		'4th ac': 350,
 		'Ia': -50,
 		'I-II ac': 100,
 		'I-IIa': -100,
@@ -614,12 +642,18 @@ def convertdate(date):
 		'VIIp': 650,
 		'VII/VIIIp': 700,
 		'XVII-XIX ac': 1800,
+		'6.Jh.n.Chr.': 550,
+		'7.Jh.n.Chr.': 650,
+		'8.Jh.n.Chr.': 750,
+		'9.Jh.n.Chr.': 850,
+		'10./11.Jh.n.Chr.': 1000
 	}
 
 	# drop things that will only confuse the issue
 	date = re.sub(r'(\?|\(\?\))', '', date)
-	date = re.sub(r'med\s','', date)
-	date = re.sub(r'^c(\s|)', '', date)
+	date = re.sub(r'(med\s|mid-)','', date)
+	date = re.sub(r'^c(\.|)(\s|)', '', date)
+	date = re.sub(r'^s\s', '', date)
 	date = re.sub(r'/(antea|postea|paullo )','', date)
 
 	# swap papyrus BCE info format for one of the inscription BCE info formats
@@ -627,20 +661,20 @@ def convertdate(date):
 	date = re.sub(r'\ssac$', 'a', date)
 
 	fudge = 0
-	if re.search(r'^(ante|a|ante fin)\s', date) is not None:
-		date = re.sub(r'^(ante|a|ante fin)\s', '', date)
+	if re.search(r'^(ante|a|ante fin|bef\.)\s', date) is not None:
+		date = re.sub(r'^(ante|a|ante fin|bef\.)\s', '', date)
 		fudge = -20
-	if re.search(r'^p\spost\s', date) is not None:
-		date = re.sub(r'^p\spost\s', '', date)
+	if re.search(r'^(p\spost\s|sh\.aft\.\s)', date) is not None:
+		date = re.sub(r'^(p\spost\s|sh\.aft\.\s)', '', date)
 		fudge = 10
-	if re.search(r'^(post|p)\s', date) is not None:
-		date = re.sub(r'^(post|p)\s', '', date)
+	if re.search(r'^(post|p|aft\.|after|aft\. mid\.)\s', date) is not None:
+		date = re.sub(r'^(post|p|aft\.|after|aft\. mid\.)\s', '', date)
 		fudge = 20
-	if re.search(r'init\s', date) is not None:
-		date = re.sub(r'init\s', '', date)
+	if re.search(r'(init\s|early\s|1\.Ha+lfte|beg\.\s)', date) is not None:
+		date = re.sub(r'(init\s|early\s|1\.Ha+lfte|beg\.\s)', '', date)
 		fudge = -25
-	if re.search(r'^fin\s', date) is not None:
-		date = re.sub(r'^fin\s', '', date)
+	if re.search(r'^(fin\s|ex s\s|2\.Ha+lfte|end\s)', date) is not None:
+		date = re.sub(r'^(fin\s|ex s\s|2\.Ha+lfte|end\s)', '', date)
 		fudge = 25
 
 	if date in datemapper:
@@ -716,7 +750,9 @@ def convertdate(date):
 			numericaldate = 7777
 
 	if numericaldate > 2000:
-		print('date -> number:\n\t',originaldate,'\n\t',numericaldate)
+		print('unparseable date:',originaldate)
+
+	numericaldate = round(int(numericaldate),1)
 
 	return numericaldate
 
