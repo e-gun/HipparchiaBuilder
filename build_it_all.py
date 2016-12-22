@@ -58,7 +58,7 @@ if buildgreekauthors == 'y':
 if buildinscriptions == 'y':
 	tmpprefix = 'XX'
 	permprefix = 'in'
-	print('purging the old build dbs')
+	print('purging the old inscription dbs')
 	resetauthorsandworksdbs(permprefix)
 	print('building inscription dbs')
 	corpus_builder.parallelbuildinscriptionscorpus(ins, tmpprefix)
@@ -75,7 +75,7 @@ if buildinscriptions == 'y':
 if buildpapyri == 'y':
 	tmpprefix = 'YY'
 	permprefix = 'dp'
-	print('purging the old build dbs')
+	print('purging the old papyrus dbs')
 	resetauthorsandworksdbs(permprefix)
 	print('building papyrus dbs')
 	corpus_builder.parallelbuildpapyrusscorpus(ddp, tmpprefix)

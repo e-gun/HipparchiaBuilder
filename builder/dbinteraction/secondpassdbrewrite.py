@@ -253,9 +253,18 @@ def parallelnewworkworker(authoranddbtuple):
 		docname = document[0]
 
 		dbnumber += 1
-		# unfortunately you can have more than 1000 documents: see SEG 1–41 [N. Shore Black Sea]
-		dbstring = hex(dbnumber)
-		dbstring = dbstring[2:]
+
+		if dbnumber > 999:
+			# unfortunately you can have more than 1000 documents: see SEG 1–41 [N. Shore Black Sea]
+			# still more unfortunately you can have more than 0x999 documents:
+			# 	('in001aw1000', 'Suppl. Epigr. Gr. 1-41 [SEG] - 35:172')
+			# so we will need to clone the author to give us more space for works
+			# the alternative is to allow four digit work numbers, but that would involve a fair amount of refactoring
+			print('need to clone author: more than 999 works')
+			a = cloneauthor(a, cursor)
+			dbnumber = 1
+
+		dbstring = str(dbnumber)
 		if len(dbstring) == 1:
 			dbstring = '00' + dbstring
 		elif len(dbstring) == 2:
@@ -273,6 +282,40 @@ def parallelnewworkworker(authoranddbtuple):
 		dbc.commit()
 
 	return
+
+def cloneauthor(authorobject, cursor):
+	"""
+	copy an author so you can hold more works
+	:param authorobject:
+	:return:
+	"""
+
+	newauthorobject = authorobject
+	currentid = authorobject.universalid
+	# need to avoid dbname collisions here: remember that the namespace has been compressed into effectively two characters (inXX)
+	# 	'in1b05' has more than 1000 entries
+	#	'in1b0F' will be its continuation
+	#	'in1bAF' will continue in1b0F'
+	# it should be impossible for any two authors to generate the same set of continuations
+	ending = currentid[-1]
+	if 64 < ord(ending) < 91:
+		# already in the A-Z range (ie., we are looking at work #2000+!)
+		# we can't turn 'in1b0F' into 'in1b0G' because 'in1b06' is capable of generating 'in1b0G'
+		# so we increment the '0': 'in1bAF'
+		char = str(ord(currentid[-2,-1])+1)
+		newid = authorobject.universalid[:-2] + char + ending
+	else:
+		# take the last character of the work and push it into an otherwise impossible register
+		val = int(ending,16)
+		char = chr(val+65) # 0 -> A, 1 -> B, ...
+		newid = authorobject.universalid[:-1] + char
+
+	newauthorobject.universalid = newid
+
+	modifyauthorsdb(newauthorobject.universalid, newauthorobject.idxname, cursor)
+	print('\t',authorobject.universalid,' --> ', newauthorobject.universalid)
+
+	return newauthorobject
 
 
 def modifyauthorsdb(newentryname, worktitle, cursor):
@@ -396,7 +439,10 @@ def updateworksdb(newdb, olddb, docname, cursor):
 
 	q = 'INSERT INTO works (universalid, title) VALUES (%s, %s)'
 	d = (newdb, newtitle)
-	cursor.execute(q, d)
+	try:
+		cursor.execute(q, d)
+	except:
+		print('failed to insert work\n\t',d)
 
 	return
 
@@ -541,14 +587,18 @@ def convertdate(date):
 		'aet inferior': 1200,
 		'aet Byz': 700,
 		'Byz': 700,
+		'Byz.': 700,
 		'archaic': -700,
 		'Hell.': -250,
+		'hellenistisch': -250,
+		'Hellenistic': -250,
 		'aet Hell': -250,
 		'Early Hell.': -300,
 		'aet Rom': 50,
 		'Rom': 50,
 		'Rom.': 50,
 		'Ptol.': -100,
+		'Ptol./Rom.': -20,
 		'Early Ptol.': -275,
 		'aet Rom tard': 100,
 		'aet Imp tard': 400,
@@ -556,21 +606,29 @@ def convertdate(date):
 		'aet Chr': 400,
 		'Chr.': 400,
 		'aet Imp': 200,
+		'aet imp': 200,
 		'Imp': 200,
+		'Imp.': 200,
 		'aet Carac': 205,
 		'aet Aur': 170,
 		'aet Ant': 145,
 		'aet Had': 125,
 		'aet Commod': 185,
 		'aet Hadriani': 125,
+		'aetate Hadriani': 125,
+		'Hadrian': 125,
 		'aet Tra/aet Had': 115,
 		'aet Tra': 105,
+		'aet Dom': 90,
+		'aet Flav': 85,
 		'aet Ves': 70,
 		'aet Nero': 60,
 		'aet Claud': 50,
 		'aet Aug/aet Tib': 15,
 		'aet Tib': 25,
 		'aet Aug': 1,
+		'aet Augusti': 1,
+		'aetate Augusti': 1,
 		'Augustan': 1,
 		'init aet Hell': -310,
 		'Late Hell.': -1,
@@ -581,6 +639,7 @@ def convertdate(date):
 		'I bc-I ac': 1,
 		'Ia/Ip': 1,
 		'Ip': 50,
+		'I p': 50,
 		'I ac': 50,
 		'1st bc': -50,
 		'1st ac': 50, # is this right? do the editors mean 'ante' or 'after'? looks like 'after'
@@ -590,45 +649,68 @@ def convertdate(date):
 		'3rd ac': 250,
 		'4th bc': -350,
 		'4th ac': 350,
+		'5th bc': -450,
+		'5th ac': 450,
+		'6th bc': -550,
+		'6th ac': 550,
 		'Ia': -50,
+		'I a': -50,
+		'I-II': 100,
 		'I-II ac': 100,
 		'I-IIa': -100,
 		'I-IIp': 100,
 		'I-IIIp': 111,
 		'III-Ia': -111,
 		'I/IIp': 100,
+		'I/II': 100,
 		'II ac': 150,
 		'II bc': -150,
 		'IIp': 150,
 		'IIa': -150,
+		'II p': 150,
+		'II a': -150,
 		'II-I bc': -100,
 		'II/Ia': -100,
+		'II/I': -100,
 		'II-III ac': 200,
+		'II-III': 200,
 		'II/IIIp': 200,
 		'II-IIIp': 200,
+		'II/III': 200,
+		'II/IV': 300,
 		'II-beg.III ac': 280,
 		'II/I bc': -100,
 		'III ac': 250,
 		'IIIp': 250,
 		'IIIa': -250,
+		'III p': 250,
+		'III a': -250,
 		'III bc': -250,
 		'III-II bc': -200,
 		'III/IIa': -200,
+		'III/II': -200,
 		'III/IVp': 300,
 		'IV ac': 350,
 		'IV bc': -350,
 		'IVp': 350,
 		'IVa': -350,
+		'IV p': 350,
+		'IV a': -350,
 		'IV-III bc': -300,
+		'IV-III': -300,
+		'IV/III': -300,
 		'IV/IIIa': -300,
 		'IV-III/II bc': -275,
 		'IV-V ac': 400,
 		'IV/Vp': 400,
+		'IV/V': 400,
 		'Ia-Ip': 1,
 		'V bc': -450,
 		'V ac': 450,
 		'Va': -450,
 		'Vp': 450,
+		'V a': -450,
+		'V p': 450,
 		'V-IV bc': -400,
 		'V/IVa': -400,
 		'V-IVa': -400,
@@ -636,45 +718,60 @@ def convertdate(date):
 		'VI bc': -550,
 		'VI/Va': -500,
 		'VIa': -550,
+		'VIIa': -650,
 		'VIp': 550,
 		'VI ac': 550,
 		'VI/VIIp': 600,
 		'VIIp': 650,
 		'VII/VIIIp': 700,
 		'XVII-XIX ac': 1800,
+		'3. Jh. v.Chr.': -250,
+		'2. Jh. v.Chr.': -150,
+		'1. Jh. v.Chr.': -50,
+		'1./2. Jh. n.Chr.': 100,
 		'6.Jh.n.Chr.': 550,
 		'7.Jh.n.Chr.': 650,
 		'8.Jh.n.Chr.': 750,
 		'9.Jh.n.Chr.': 850,
-		'10./11.Jh.n.Chr.': 1000
+		'10./11.Jh.n.Chr.': 1000,
+		'fru+he Kaiserzeit': 10,
+		'Fru+he Kaiserzeit': 10,
+		'hellenistisch-fru+he Kaiserzeit': -100,
+		'spa+thellenistisch': -25,
+		'Kaiserzeit': 100,
 	}
 
 	# drop things that will only confuse the issue
 	date = re.sub(r'(\?|\(\?\))', '', date)
-	date = re.sub(r'(med\s|mid-)','', date)
+	date = re.sub(r'(c\.\smid\.\s|med\s|mid-|med\ss\s)','', date)
 	date = re.sub(r'^c(\.|)(\s|)', '', date)
+	date = re.sub(r'^ca\.\s','',date)
 	date = re.sub(r'^s\s', '', date)
 	date = re.sub(r'/(antea|postea|paullo )','', date)
+	date = re.sub(r'/in\s','',date) # 'fin II/in IIIp'
 
 	# swap papyrus BCE info format for one of the inscription BCE info formats
 	date = re.sub(r'\sspc$','p', date)
 	date = re.sub(r'\ssac$', 'a', date)
 
 	fudge = 0
-	if re.search(r'^(ante|a|ante fin|bef\.)\s', date) is not None:
-		date = re.sub(r'^(ante|a|ante fin|bef\.)\s', '', date)
+	if re.search(r'^(ante|a|ante fin|bef\.|ante c)\s', date) is not None:
+		date = re.sub(r'^(ante|a|ante fin|bef\.|ante c)\s', '', date)
 		fudge = -20
 	if re.search(r'^(p\spost\s|sh\.aft\.\s)', date) is not None:
 		date = re.sub(r'^(p\spost\s|sh\.aft\.\s)', '', date)
 		fudge = 10
-	if re.search(r'^(post|p|aft\.|after|aft\. mid\.)\s', date) is not None:
-		date = re.sub(r'^(post|p|aft\.|after|aft\. mid\.)\s', '', date)
+	if re.search(r'^paullo ante ', date) is not None:
+		date = re.sub(r'^paullo ante ','',date)
+		fudge = -10
+	if re.search(r'^(post|p|aft\.|after|aft\. mid\.|post med s|post c)\s', date) is not None:
+		date = re.sub(r'^(post|p|aft\.|after|aft\. mid\.|post med s|post c)\s', '', date)
 		fudge = 20
-	if re.search(r'(init\s|early\s|1\.Ha+lfte|beg\.\s)', date) is not None:
-		date = re.sub(r'(init\s|early\s|1\.Ha+lfte|beg\.\s)', '', date)
+	if re.search(r'(init\s|early\s|1\.Ha+lfte|beg\.\s|beg\s|before\s|^in\ss\s|^init\ss\s|^in\s)', date) is not None:
+		date = re.sub(r'(init\s|early\s|1\.Ha+lfte|beg\.\s|beg\s|before\s|^in\ss\s|^init\ss\s|^in\s)', '', date)
 		fudge = -25
-	if re.search(r'^(fin\s|ex s\s|2\.Ha+lfte|end\s)', date) is not None:
-		date = re.sub(r'^(fin\s|ex s\s|2\.Ha+lfte|end\s)', '', date)
+	if re.search(r'^(fin\s|fin\ss\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s)', date) is not None:
+		date = re.sub(r'^(fin\s|fin\ss\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s)', '', date)
 		fudge = 25
 
 	if date in datemapper:
@@ -712,9 +809,15 @@ def convertdate(date):
 		if re.search(r'\dp$', date) is not None:
 			date = re.sub(r'p$', '', date)
 
+		# '357 a', '550 p'
+		BCE = re.compile(r'\d\sa$')
+		if re.search(BCE, date) is not None:
+			modifier = -1
+			date = re.sub(r'\sa$','',date)
+		if re.search(r'\d\sp$', date) is not None:
+			date = re.sub(r'\sp$', '', date)
+
 		# clear out things we won'd use from here on out
-		date = re.sub(r'^c\s','', date)
-		date = re.sub(r'(c\.\s)','', date)
 		date = re.sub(r'\sbc|\sBC\sac|\sAD','', date)
 		# '44/45' ==> '45'
 		splityears = re.compile(r'(\d{1,})(/\d{1,})(.*?)')
@@ -750,7 +853,7 @@ def convertdate(date):
 			numericaldate = 7777
 
 	if numericaldate > 2000:
-		print('unparseable date:',originaldate)
+		print('unparseable date:',originaldate,'[currently looks like',date,']')
 
 	numericaldate = round(int(numericaldate),1)
 
