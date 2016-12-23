@@ -5,11 +5,13 @@
 	License: GPL 3 (see LICENSE in the top level directory of the distribution)
 """
 
+
 import re
 import configparser
 from multiprocessing import Pool
 from builder.dbinteraction.db import setconnection, dbauthorloadersubroutine, dbauthorandworkloader, dbauthoradder, tablemaker
 from builder.builder_classes import dbAuthor, dbOpus, dbWorkLine
+from builder.parsers.regex_substitutions import latinadiacriticals
 
 """
 
@@ -62,6 +64,7 @@ level00 = line
 
 """
 
+
 config = configparser.ConfigParser()
 config.read('config.ini')
 
@@ -89,7 +92,12 @@ def resetauthorsandworksdbs(prefix):
 	for r in results:
 		count += 1
 		q = 'DROP TABLE public.'+r[0]
-		cursor.execute(q)
+		try:
+			cursor.execute(q)
+		except:
+			# 'table "in090cw001" does not exist'
+			# because a build got interrupted? one hopes it is safe to pass
+			pass
 		if count % 500 == 0:
 			dbc.commit()
 
@@ -230,7 +238,8 @@ def parallelnewworkworker(authoranddbtuple):
 	"""
 
 	compile new works in parallel to go faster
-	but maybe the loop inside of this is where the real speed gains would lie: 'for document in results:...'
+	the loop inside of this is where the real speed gains would lie: 'for document in results:...'
+	but note how much fun cloneauthor() would be in a multiprocessing environment
 
 	:param authoranddbtuple: (authorobject, dbname)
 	:return:
@@ -263,6 +272,7 @@ def parallelnewworkworker(authoranddbtuple):
 			print('need to clone author: more than 999 works')
 			a = cloneauthor(a, cursor)
 			dbnumber = 1
+			# should do something about renaming the clone to mark that it is a continuation: 'pt 2', pt 3', ...
 
 		dbstring = str(dbnumber)
 		if len(dbstring) == 1:
@@ -283,6 +293,7 @@ def parallelnewworkworker(authoranddbtuple):
 
 	return
 
+
 def cloneauthor(authorobject, cursor):
 	"""
 	copy an author so you can hold more works
@@ -292,6 +303,8 @@ def cloneauthor(authorobject, cursor):
 
 	newauthorobject = authorobject
 	currentid = authorobject.universalid
+
+
 	# need to avoid dbname collisions here: remember that the namespace has been compressed into effectively two characters (inXX)
 	# 	'in1b05' has more than 1000 entries
 	#	'in1b0F' will be its continuation
@@ -302,8 +315,14 @@ def cloneauthor(authorobject, cursor):
 		# already in the A-Z range (ie., we are looking at work #2000+!)
 		# we can't turn 'in1b0F' into 'in1b0G' because 'in1b06' is capable of generating 'in1b0G'
 		# so we increment the '0': 'in1bAF'
-		char = str(ord(currentid[-2:-1])+1)
-		newid = authorobject.universalid[:-2] + char + ending
+		if re.search(r'[0-9a-f]', currentid[-2:-1]) is not None:
+			# this is the first time we have done this
+			val = int(currentid[-2:-1], 16)
+			char = chr(val + 65)
+		else:
+			# there is an 'A' or such in this position; increment it
+			char = chr(ord(currentid[-2:-1]) + 1)
+		newid = currentid[:-2] + char + ending
 	else:
 		# take the last character of the work and push it into an otherwise impossible register
 		val = int(ending,16)
@@ -312,8 +331,18 @@ def cloneauthor(authorobject, cursor):
 
 	newauthorobject.universalid = newid
 
+	suffix = '(pt. 2)'
+	if re.search(r'\(pt\.\s\d{1,}\)$',newauthorobject.idxname) is not None:
+		count = re.search(r'\(pt\.\s(\d{1,})\)$',newauthorobject.idxname)
+		count = str(int(count.group(1))+1)
+		suffix = '(pt. '+count+')'
+		# kill off '(pt. 2)' to make way for '(pt. 3)'
+		newauthorobject.idxname = newauthorobject.idxname[:-7] + suffix
+	else:
+		newauthorobject.idxname = newauthorobject.idxname + suffix
+
 	modifyauthorsdb(newauthorobject.universalid, newauthorobject.idxname, cursor)
-	print('\t',authorobject.universalid,' --> ', newauthorobject.universalid)
+	print('\t',currentid,' --> ', newauthorobject.universalid)
 
 	return newauthorobject
 
@@ -492,6 +521,7 @@ def setmetadata(db, cursor):
 		dt = '[unknown]'
 
 	cd = convertdate(dt)
+	dt = latinadiacriticals(dt)
 
 	pr = re.search(prov, ln)
 	try:
@@ -570,6 +600,40 @@ def setmetadata(db, cursor):
 	return
 
 
+def deletetemporarydbs(temprefix):
+	"""
+
+	kill off the first pass info now that you have made the second pass
+
+	:param temprefix:
+	:return:
+	"""
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
+	d = (temprefix+'%',)
+	cursor.execute(q, d)
+	results = cursor.fetchall()
+
+	for r in results:
+		dropdb = r[0]
+		q = 'DROP TABLE public.'+dropdb
+		cursor.execute(q)
+
+	q = 'DELETE FROM authors WHERE universalid LIKE %s'
+	d = (temprefix + '%',)
+	cursor.execute(q, d)
+
+	q = 'DELETE FROM works WHERE universalid LIKE %s'
+	d = (temprefix + '%',)
+	cursor.execute(q, d)
+
+	dbc.commit()
+
+	return
+
+
 def convertdate(date):
 	"""
 	take a string date and try to assign a number to it: IV AD --> 450, etc.
@@ -592,8 +656,11 @@ def convertdate(date):
 		'2./3.Jh.n.Chr.': 200,
 		'2.Jh.n.Chr.': 150,
 		'2.Jh.v.Chr.': -150,
+		'2nd/3rd ac': 200,
 		'2nd ac': 150,
 		'2nd bc': -150,
+		'2nd/1st': -100,
+		'4th/3rd': -300,
 		'3. Jh. v.Chr.': -250,
 		'3.Jh.n.Chr.': 250,
 		'3.Jh.v.Chr.': -250,
@@ -602,6 +669,7 @@ def convertdate(date):
 		'3rd bc': -250,
 		'4.Jh.n.Chr.': 350,
 		'4.Jh.v.Chr.': -350,
+		'4th/3rd bc': -300,
 		'4th ac': 350,
 		'4th bc': -350,
 		'5.Jh.n.Chr.': 450,
@@ -612,6 +680,11 @@ def convertdate(date):
 		'6.Jh.v.Chr.': -550,
 		'6th ac': 550,
 		'6th bc': -550,
+		'7th ac': 650,
+		'7th bc': -650,
+		'8th ac': 750,
+		'8th bc': -750,
+		'9th ac': 850,
 		'7.Jh.n.Chr.': 650,
 		'7.Jh.v.Chr.': -650,
 		'8.Jh.n.Chr.': 750,
@@ -642,24 +715,29 @@ def convertdate(date):
 		'aet Rom': 50,
 		'aet tard': 1000,
 		'aet Tib': 25,
+		'aet Tit': 80,
 		'aet Tra': 105,
 		'aet Tra/aet Had': 115,
 		'aet Ves': 70,
+		'aet Ves/aet Dom': 80,
 		'aetate Augusti': 1,
 		'aetate Hadriani': 125,
 		'archaic': -700,
 		'Augustan': 1,
+		'Augustus': 1,
 		'Byz.': 700,
 		'Byz': 700,
 		'byzantinisch': 700,
 		'byzantinische Zeit': 700,
 		'Chr.': 400,
+		'Constantine': 315,
 		'date': 1500,
 		'Early Hell.': -300,
 		'Early Ptol.': -275,
 		'fru+hhellenistisch': -300,
-		'fru+he Kaiserzeit': 10,
-		'Fru+he Kaiserzeit': 10,
+		'fru+he Kaiserzeit': 25,
+		'Fru+he Kaiserzeit': 25,
+		'fru+he Kaiserzeit (Augustus?)': 1,
 		'Hadrian': 125,
 		'hadrianisch': 125,
 		'Hell.': -250,
@@ -680,6 +758,7 @@ def convertdate(date):
 		'I/II': 100,
 		'I/IIp': 100,
 		'Ia-Ip': 1,
+		'I-Vp': 250,
 		'Ia': -50,
 		'Ia/Ip': 1,
 		'II a': -150,
@@ -718,6 +797,7 @@ def convertdate(date):
 		'IV ac': 350,
 		'IV bc': -350,
 		'IV p': 350,
+		'IV-IIa': -200,
 		'IV-III bc': -300,
 		'IV-III': -300,
 		'IV-III/II bc': -275,
@@ -729,15 +809,20 @@ def convertdate(date):
 		'IVa': -350,
 		'IVp': 350,
 		'Kaiserzeit': 100,
+		'kaiserzeitlich': 100,
 		'late archaic': -600,
+		'Late Archaic': -600,
 		'Late Hell.': -1,
 		'Late Imp.': 250,
 		'late Imp.': 400,
+		'Marcus Aurelius': 170,
 		'Ptol.': -100,
 		'Ptol./Rom.': -20,
 		'ro+misch': 50,
 		'Rom.': 50,
 		'Rom': 50,
+		'Roman': 50,
+		'Rom./Byz.': 600,
 		'spa+thellenistisch': -25,
 		'V a': -450,
 		'V ac': 450,
@@ -755,6 +840,7 @@ def convertdate(date):
 		'VIa': -550,
 		'VII/VIIIp': 700,
 		'VIIa': -650,
+		'VIIIa': -750,
 		'VIIp': 650,
 		'VIp': 550,
 		'Vp': 450,
@@ -762,12 +848,15 @@ def convertdate(date):
 	}
 
 	# drop things that will only confuse the issue
+	date = re.sub(r'\[K\.\d{1,}\]','',date)
+	date = re.sub(r'\[\]','', date)
 	date = re.sub(r'(\?|\(\?\))', '', date)
 	date = re.sub(r'(c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s)','', date)
-	date = re.sub(r'^c(\.|)(\s|)', '', date)
 	date = re.sub(r'^(ca\.\s|um\s)','',date)
+	date = re.sub(r'^c(\.|)(\s|)', '', date)
 	date = re.sub(r'^s\s', '', date)
-	date = re.sub(r'/(antea|postea|paullo )','', date)
+	date = re.sub(r'^wohl\s','',date)
+	date = re.sub(r'/(antea|postea|paullo |fru+hestens )','', date)
 	date = re.sub(r'/in\s','',date) # 'fin II/in IIIp'
 
 	# swap papyrus BCE info format for one of the inscription BCE info formats
@@ -775,8 +864,9 @@ def convertdate(date):
 	date = re.sub(r'\ssac$', 'a', date)
 
 	fudge = 0
-	if re.search(r'^(ante|a|ante fin|bef\.|ante c)\s', date) is not None:
-		date = re.sub(r'^(ante|a|ante fin|bef\.|ante c)\s', '', date)
+	# look out for order of regex: 'ante med' should come before 'ante', etc
+	if re.search(r'^(ante fin|ante med|ante|a|bef\.|ante c)\s', date) is not None:
+		date = re.sub(r'^(ante fin|ante med|ante|a|bef\.|ante c)\s', '', date)
 		fudge = -20
 	if re.search(r'^(p\spost\s|sh\.aft\.\s|1\.Viertel\s)', date) is not None:
 		date = re.sub(r'^(p\spost\s|sh\.aft\.\s|1\.Viertel\s)', '', date)
@@ -784,15 +874,18 @@ def convertdate(date):
 	if re.search(r'^paullo ante ', date) is not None:
 		date = re.sub(r'^paullo ante ','',date)
 		fudge = -10
-	if re.search(r'^(post|p|aft\.|after|aft\. mid\.|post med s|post c|2\.Ha+lfte des)\s', date) is not None:
-		date = re.sub(r'^(post|p|aft\.|after|aft\. mid\.|post med s|post c|2\.Ha+lfte des)\s', '', date)
+	if re.search(r'^(after|aft\. mid\.|aft\.|post med s|post c|post|p|2\.Ha+lfte des)\s', date) is not None:
+		date = re.sub(r'^(after|aft\. mid\.|aft\.|post med s|post c|post|p|2\.Ha+lfte des)\s', '', date)
 		fudge = 20
-	if re.search(r'(init\s|early\s|1\.Ha+lfte|beg\.\s|beg\s|before\s|^in\ss\s|^init\ss\s|^in\s)', date) is not None:
-		date = re.sub(r'(init\s|early\s|1\.Ha+lfte|beg\.\s|beg\s|before\s|^in\ss\s|^init\ss\s|^in\s)', '', date)
+	if re.search(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|beg\.\s|beg\s|before\s|^in\ss\s|^in\s)', date) is not None:
+		date = re.sub(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|beg\.\s|beg\s|before\s|^in\ss\s|^in\s)', '', date)
 		fudge = -25
-	if re.search(r'^(fin\s|fin\ss\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s|letztes Drittel)', date) is not None:
-		date = re.sub(r'^(fin\s|fin\ss\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s|letztes Drittel)', '', date)
+	if re.search(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s|letztes Drittel|later\s)', date) is not None:
+		date = re.sub(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s|letztes Drittel|later\s)', '', date)
 		fudge = 25
+
+	# one last blast
+	date = re.sub(r'^s\s','',date)
 
 	if date in datemapper:
 		numericaldate = datemapper[date]
@@ -873,44 +966,11 @@ def convertdate(date):
 			numericaldate = 7777
 
 	if numericaldate > 2000:
-		print('unparseable date:',originaldate,'[currently looks like',date,']')
+		print('\tunparseable date:',originaldate,'[currently looks like',date,']')
 
 	numericaldate = round(int(numericaldate),1)
 
 	return numericaldate
 
-
-def deletetemporarydbs(temprefix):
-	"""
-
-	kill off the first pass info now that you have made the second pass
-
-	:param temprefix:
-	:return:
-	"""
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
-
-	q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
-	d = (temprefix+'%',)
-	cursor.execute(q, d)
-	results = cursor.fetchall()
-
-	for r in results:
-		dropdb = r[0]
-		q = 'DROP TABLE public.'+dropdb
-		cursor.execute(q)
-
-	q = 'DELETE FROM authors WHERE universalid LIKE %s'
-	d = (temprefix + '%',)
-	cursor.execute(q, d)
-
-	q = 'DELETE FROM works WHERE universalid LIKE %s'
-	d = (temprefix + '%',)
-	cursor.execute(q, d)
-
-	dbc.commit()
-
-	return
 
 
