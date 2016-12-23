@@ -311,14 +311,21 @@ def bce(stringdate, fudge):
 def ce(stringdate, fudge):
 	pad = re.compile(r'p\. A\.D\. (\d{1,}).*?')
 	aad = re.compile(r'a\. A\.D\. (\d{1,}).*?')
-	ad = re.compile(r'A\.D\. (\d{1,}).*?')
+	ada = re.compile(r'A\.D\. (\d{1,})$')
+	adb = re.compile(r'A\.D\. (\d{1,}).*?')
 
 	if re.search(aad, stringdate) is not None:
 		date = int(re.search(aad, stringdate).group(1)) * 100 * (1) - 50 - fudge['a.']
 	elif re.search(pad, stringdate) is not None:
 		date = int(re.search(pad, stringdate).group(1)) * 100 * (1) - 50 + fudge['p.']
 	else:
-		date = int(re.search(ad, stringdate).group(1)) * 100 * (1) - 50
+		if re.search(ada, stringdate) is not None:
+			# AD 12
+			# 'AD 12' gets assigned to 1150 if you don't make this check
+			date = int(re.search(ada, stringdate).group(1))
+		else:
+			# AD 12th (vel sim.)
+			date = int(re.search(adb, stringdate).group(1)) * 100 * (1) - 50
 	if '?' in stringdate:
 		date += 1
 
