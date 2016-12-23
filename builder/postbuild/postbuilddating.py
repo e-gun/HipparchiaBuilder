@@ -1,0 +1,354 @@
+# -*- coding: utf-8 -*-
+"""
+	HipparchiaBuilder: generate a database of Greek and Latin texts
+	Copyright: E Gunderson 2016
+	License: GPL 3 (see LICENSE in the top level directory of the distribution)
+"""
+
+import re
+
+
+def convertdate(date):
+	"""
+	take a string date and try to assign a number to it: IV AD --> 450, etc.
+
+	:param date:
+	:return:
+	"""
+
+	originaldate = date
+
+	datemapper = {
+		'[unknown]': 1500,
+		'1. Jh. v.Chr.': -50,
+		'1./2. Jh. n.Chr.': 100,
+		'1.Jh.v.Chr.': -50,
+		'1st ac': 50,
+		'1st bc': -50,
+		'2. Jh. v.Chr.': -150,
+		'2./1.Jh.v.Chr.': 100,
+		'2./3.Jh.n.Chr.': 200,
+		'2.Jh.n.Chr.': 150,
+		'2.Jh.v.Chr.': -150,
+		'2nd/3rd ac': 200,
+		'2nd ac': 150,
+		'2nd bc': -150,
+		'2nd/1st': -100,
+		'4th/3rd': -300,
+		'3. Jh. v.Chr.': -250,
+		'3.Jh.n.Chr.': 250,
+		'3.Jh.v.Chr.': -250,
+		'3rd/2nd bc': -200,
+		'3rd ac': 250,
+		'3rd bc': -250,
+		'4.Jh.n.Chr.': 350,
+		'4.Jh.v.Chr.': -350,
+		'4th/3rd bc': -300,
+		'4th ac': 350,
+		'4th bc': -350,
+		'5.Jh.n.Chr.': 450,
+		'5.Jh.v.Chr.': -450,
+		'5th ac': 450,
+		'5th bc': -450,
+		'6.Jh.n.Chr.': 550,
+		'6.Jh.v.Chr.': -550,
+		'6th ac': 550,
+		'6th bc': -550,
+		'7th ac': 650,
+		'7th bc': -650,
+		'8th ac': 750,
+		'8th bc': -750,
+		'9th ac': 850,
+		'7.Jh.n.Chr.': 650,
+		'7.Jh.v.Chr.': -650,
+		'8.Jh.n.Chr.': 750,
+		'9.Jh.n.Chr.': 850,
+		'10./11.Jh.n.Chr.': 1000,
+		'aet Ant': 145,
+		'aet Aug': 1,
+		'aet Aug/aet Tib': 15,
+		'aet Augusti': 1,
+		'aet Aur': 170,
+		'aet Byz': 700,
+		'aet Carac': 205,
+		'aet Chr': 400,
+		'aet Claud': 50,
+		'aet Commod': 185,
+		'aet Dom': 90,
+		'aet Flav': 85,
+		'aet Had': 125,
+		'aet Hadriani': 125,
+		'aet Hell tard': -1,
+		'aet Hell': -250,
+		'aet Imp tard': 400,
+		'aet imp': 200,
+		'aet Imp': 200,
+		'aet inferior': 1200,
+		'aet Nero': 60,
+		'aet Rom tard': 100,
+		'aet Rom': 50,
+		'aet tard': 1000,
+		'aet Tib': 25,
+		'aet Tit': 80,
+		'aet Tra': 105,
+		'aet Tra/aet Had': 115,
+		'aet Ves': 70,
+		'aet Ves/aet Dom': 80,
+		'aetate Augusti': 1,
+		'aetate Hadriani': 125,
+		'archaic': -700,
+		'Augustan': 1,
+		'Augustus': 1,
+		'Byz.': 700,
+		'Byz': 700,
+		'byzantinisch': 700,
+		'byzantinische Zeit': 700,
+		'Chr.': 400,
+		'Constantine': 315,
+		'date': 1500,
+		'Early Hell.': -300,
+		'Early Ptol.': -275,
+		'fru+hhellenistisch': -300,
+		'fru+he Kaiserzeit': 25,
+		'Fru+he Kaiserzeit': 25,
+		'fru+he Kaiserzeit (Augustus?)': 1,
+		'Hadrian': 125,
+		'hadrianisch': 125,
+		'Hell.': -250,
+		'Hellenistic': -250,
+		'hellenistisch-fru+he Kaiserzeit': -100,
+		'hellenistisch': -250,
+		'hristlich': 400, # the 'c' will have been chopped
+		'I a': -50,
+		'I ac': 50,
+		'I bc-I ac': 1,
+		'I bc': -50,
+		'I p': 50,
+		'I-II ac': 100,
+		'I-II': 100,
+		'I-IIa': -100,
+		'III/II/Ia': -150,
+		'I-IIIp': 111,
+		'I-IIp': 100,
+		'I/II': 100,
+		'I/IIp': 100,
+		'Ia-Ip': 1,
+		'I-Vp': 250,
+		'Ia': -50,
+		'Ia/Ip': 1,
+		'II a': -150,
+		'II ac': 150,
+		'II bc': -150,
+		'II p': 150,
+		'II-beg.III ac': 280,
+		'II-I bc': -100,
+		'II-I a': -100,
+		'II-III ac': 200,
+		'II-III': 200,
+		'II-IIIp': 200,
+		'II/I bc': -100,
+		'II/I': -100,
+		'II/Ia': -100,
+		'II/III': 200,
+		'II/IIIp': 200,
+		'II/IV': 300,
+		'IIa': -150,
+		'III a': -250,
+		'III ac': 250,
+		'III bc': -250,
+		'III p': 250,
+		'III-Ia': -111,
+		'III-II bc': -200,
+		'III/II': -200,
+		'III/IIa': -200,
+		'III/IVp': 300,
+		'III-IVp': 300,
+		'IIIa': -250,
+		'IIIp': 250,
+		'IIp': 150,
+		'Imp.': 200,
+		'Imp': 200,
+		'init aet Hell': -310,
+		'Ip': 50,
+		'IV a': -350,
+		'IV ac': 350,
+		'IV bc': -350,
+		'IV p': 350,
+		'IV-IIa': -200,
+		'IV-III bc': -300,
+		'IV-III': -300,
+		'IV-III/II bc': -275,
+		'IV-V ac': 400,
+		'IV/III': -300,
+		'IV/IIIa': -300,
+		'IV/V': 400,
+		'IV/Vp': 400,
+		'IVa': -350,
+		'IVp': 350,
+		'IV-Vp': 400,
+		'VII-VIIIp': 700,
+		'Kaiserzeit': 100,
+		'kaiserzeitlich': 100,
+		'late archaic': -600,
+		'Late Archaic': -600,
+		'Late Hell.': -1,
+		'Late Imp.': 250,
+		'late Imp.': 400,
+		'Marcus Aurelius': 170,
+		'Ptol.': -100,
+		'Ptol./Rom.': -20,
+		'ro+misch': 50,
+		'Rom.': 50,
+		'Rom': 50,
+		'Roman': 50,
+		'Rom./Byz.': 600,
+		'spa+thellenistisch': -25,
+		'V a': -450,
+		'V ac': 450,
+		'V bc': -450,
+		'V p': 450,
+		'V-IV bc': -400,
+		'V-IVa': -400,
+		'V/IVa': -400,
+		'V/VIp': 500,
+		'Va': -450,
+		'VI ac': 550,
+		'VI bc': -550,
+		'VI/Va': -500,
+		'VI/VIIp': 600,
+		'VIa': -550,
+		'VI-VIIp': 600,
+		'VII/VIIIp': 700,
+		'VIIa': -650,
+		'VIIIa': -750,
+		'VIIIp': 750,
+		'VIIp': 650,
+		'VIp': 550,
+		'Vp': 450,
+		'XVII-XIX ac': 1800,
+	}
+
+	# drop things that will only confuse the issue
+	date = re.sub(r'\[K\.\d{1,}\]','',date)
+	date = re.sub(r'\[\]','', date)
+	date = re.sub(r'(\?|\(\?\))', '', date)
+	date = re.sub(r'(c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s)','', date)
+	date = re.sub(r'^(ca\.\s|um\s)','',date)
+	date = re.sub(r'^c(\.|)(\s|)', '', date)
+	date = re.sub(r'^s\s', '', date)
+	date = re.sub(r'^wohl\s','',date)
+	date = re.sub(r'/(antea|postea|paullo |fru+hestens )','', date)
+	date = re.sub(r'/in\s','',date) # 'fin II/in IIIp'
+
+	# swap papyrus BCE info format for one of the inscription BCE info formats
+	date = re.sub(r'\sspc$','p', date)
+	date = re.sub(r'\ssac$', 'a', date)
+
+	fudge = 0
+	# look out for order of regex: 'ante med' should come before 'ante', etc
+	if re.search(r'^(ante fin|ante med|ante|a|bef\.|ante c)\s', date) is not None:
+		date = re.sub(r'^(ante fin|ante med|ante|a|bef\.|ante c)\s', '', date)
+		fudge = -20
+	if re.search(r'^(p\spost\s|sh\.aft\.\s|1\.Viertel\s)', date) is not None:
+		date = re.sub(r'^(p\spost\s|sh\.aft\.\s|1\.Viertel\s)', '', date)
+		fudge = 10
+	if re.search(r'^paullo ante ', date) is not None:
+		date = re.sub(r'^paullo ante ','',date)
+		fudge = -10
+	if re.search(r'^(after|aft\. mid\.|aft\.|post med s|post c|post|p|2\.Ha+lfte des)\s', date) is not None:
+		date = re.sub(r'^(after|aft\. mid\.|aft\.|post med s|post c|post|p|2\.Ha+lfte des)\s', '', date)
+		fudge = 20
+	if re.search(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|beg\.\s|beg\s|before\s|^in\ss\s|^in\s)', date) is not None:
+		date = re.sub(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|beg\.\s|beg\s|before\s|^in\ss\s|^in\s)', '', date)
+		fudge = -25
+	if re.search(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s|letztes Drittel|later\s)', date) is not None:
+		date = re.sub(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s|letztes Drittel|later\s)', '', date)
+		fudge = 25
+
+	# one last blast
+	date = re.sub(r'^s\s','',date)
+
+	if date in datemapper:
+		numericaldate = datemapper[date]
+	else:
+		# what is one supposed to say about: "193-211, 223-235 or 244-279 ac"?
+		# let's just go with our last value (esp. since the BCE info is probably there and only there)
+		if len(date.split(',')) > 1:
+			date = date.split(',')
+			last = len(date) - 1
+			date = date[last]
+		if len(date.split(' or ')) > 1:
+			date = date.split(' or ')
+			last = len(date) - 1
+			date = date[last]
+		if len(date.split(' vel ')) > 1:
+			date = date.split(' vel ')
+			last = len(date) - 1
+			date = date[last]
+
+		modifier = 1
+		# '161 ac', '185-170/69 bc'
+		BCE = re.compile(r'(\sbc|\sBC|^BC\s|v\.Chr\.)')
+		CE = re.compile(r'(\sac|\sAD|^AD\s|n\.Chr\.)')
+		if re.search(BCE, date) is not None:
+			modifier = -1
+		date = re.sub(BCE,'',date)
+		date = re.sub(CE, '', date)
+
+		# '357a', '550p'
+		BCE = re.compile(r'\da$')
+		if re.search(BCE, date) is not None:
+			modifier = -1
+			date = re.sub(r'a$','',date)
+		if re.search(r'\dp$', date) is not None:
+			date = re.sub(r'p$', '', date)
+
+		# '357 a', '550 p'
+		BCE = re.compile(r'\d\sa$')
+		if re.search(BCE, date) is not None:
+			modifier = -1
+			date = re.sub(r'\sa$','',date)
+		if re.search(r'\d\sp$', date) is not None:
+			date = re.sub(r'\sp$', '', date)
+
+		# clear out things we won'd use from here on out
+		date = re.sub(r'\sbc|\sBC\sac|\sAD','', date)
+		# '44/45' ==> '45'
+		splityears = re.compile(r'(\d{1,})(/\d{1,})(.*?)')
+		if re.search(splityears, date) is not None:
+			split = re.search(splityears, date)
+			date = split.group(1)+split.group(3)
+
+		if len(date.split('-')) > 1:
+			# take the middle of any range you find
+			halves = date.split('-')
+			first = halves[0]
+			second = halves[1]
+			if re.search(r'\d', first) is not None and re.search(r'\d', second) is not None:
+				first = re.sub(r'\D','',first)
+				first = int(first)
+				second = re.sub(r'\D', '', second)
+				second = int(second)
+				numericaldate = (first + second)/2 * modifier + (fudge * modifier)
+			elif re.search(r'\d', first) is not None:
+				# you'll get here with something like '172- BC?'
+				first = re.sub(r'\D','',first)
+				numericaldate = int(first) * modifier + (fudge * modifier)
+			else:
+				numericaldate = 9999
+		elif re.search(r'\d', date) is not None:
+			# we're just a collection of digits? '47', vel sim?
+			try:
+				numericaldate = int(date) * modifier + fudge
+			except:
+				# oops: maybe we saw something like 'III bc' but it was not in datemapper{}
+				numericaldate = 8888
+		else:
+			numericaldate = 7777
+
+	if numericaldate > 2000:
+		print('\tunparseable date:',originaldate,'[currently looks like',date,']')
+
+	numericaldate = round(int(numericaldate),1)
+
+	return numericaldate

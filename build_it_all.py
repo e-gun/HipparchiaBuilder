@@ -6,13 +6,14 @@
 	License: GPL 3 (see LICENSE in the top level directory of the distribution)
 """
 
-import time
 import configparser
-from builder.dbinteraction.db import setconnection
+import time
+
 from builder import corpus_builder
 from builder.dbinteraction.build_lexica import formatliddellandscott, formatlewisandshort, grammarloader, analysisloader
-from builder.dbinteraction.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
-from builder.dbinteraction.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs, resetauthorsandworksdbs
+from builder.dbinteraction.db import setconnection
+from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
+from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs, resetauthorsandworksdbs
 
 config = configparser.ConfigParser()
 config.read('config.ini')
