@@ -264,18 +264,7 @@ def parallelnewworkworker(authoranddbtuple):
 
 		dbnumber += 1
 
-		if dbnumber > 999:
-			# unfortunately you can have more than 1000 documents: see SEG 1–41 [N. Shore Black Sea]
-			# still more unfortunately you can have more than 0x999 documents:
-			# 	('in001aw1000', 'Suppl. Epigr. Gr. 1-41 [SEG] - 35:172')
-			# so we will need to clone the author to give us more space for works
-			# the alternative is to allow four digit work numbers, but that would involve a fair amount of refactoring
-			print('need to clone author: more than 999 works')
-			a = cloneauthor(a, cursor)
-			dbnumber = 1
-			# should do something about renaming the clone to mark that it is a continuation: 'pt 2', pt 3', ...
-
-		dbstring = str(dbnumber)
+		dbstring = rebasedcouter(dbnumber)
 		if len(dbstring) == 1:
 			dbstring = '00' + dbstring
 		elif len(dbstring) == 2:
@@ -290,7 +279,7 @@ def parallelnewworkworker(authoranddbtuple):
 		buidlnewindividualworkdb(newdb, results)
 		updateworksdb(newdb, db, docname, cursor)
 		setmetadata(newdb, cursor)
-		if dbnumber % 50 == 0:
+		if dbnumber % 100 == 0:
 			dbc.commit()
 
 	dbc.commit()
@@ -298,62 +287,44 @@ def parallelnewworkworker(authoranddbtuple):
 	return
 
 
-def cloneauthor(authorobject, cursor):
+def rebasedcouter(decimalvalue):
 	"""
-	copy an author so you can hold more works
-	:param authorobject:
+
+	return a three character encoding of a decimal number: 'base 36'
+	designed to allow work names to fit into a three 'digit' space
+
+	:param decimalvalue:
 	:return:
 	"""
 
-	newauthorobject = authorobject
-	currentid = authorobject.universalid
+	remap = { 0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
+			  10: 'a', 11: 'b', 12: 'c', 13: 'd', 14: 'e', 15: 'f', 16: 'g', 17: 'h', 18: 'i', 19: 'j',
+			  20: 'k', 21: 'l', 22: 'm', 23: 'n', 24: 'o', 25: 'p', 26: 'q', 27: 'r', 28: 's', 29: 't',
+			  30: 'u', 31: 'v', 32: 'w', 33: 'x', 34: 'y', 35: 'z' }
 
+	base = len(remap)
 
-	# need to avoid dbname collisions here: remember that the namespace has been compressed into effectively two characters (inXX)
-	# 	'in1b05' has more than 1000 entries
-	#	'in1b0F' will be its continuation
-	#	'in1bAF' will continue in1b0F'
-	# it should be impossible for any two authors to generate the same set of continuations
-	ending = currentid[-1]
-	if 64 < ord(ending) < 91:
-		# already in the A-Z range (ie., we are looking at work #2000+!)
-		# we can't turn 'in1b0F' into 'in1b0G' because 'in1b06' is capable of generating 'in1b0G'
-		# so we increment the '0': 'in1bAF'
-		if re.search(r'[0-9a-f]', currentid[-2:-1]) is not None:
-			# this is the first time we have done this
-			val = int(currentid[-2:-1], 16)
-			char = chr(val + 65)
+	lastdigit = remap[decimalvalue % base]
+	remainder = int(decimalvalue / base)
+	if remainder > 0:
+		seconddigit = remap[remainder % base]
+		remainder = int(remainder / base)
+		if remainder > 0:
+			thirddigit = remap[remainder % base]
 		else:
-			# there is an 'A' or such in this position; increment it
-			char = chr(ord(currentid[-2:-1]) + 1)
-		newid = currentid[:-2] + char + ending
+			thirddigit = '0'
 	else:
-		# take the last character of the work and push it into an otherwise impossible register
-		val = int(ending,16)
-		char = chr(val+65) # 0 -> A, 1 -> B, ...
-		newid = authorobject.universalid[:-1] + char
+		seconddigit = '0'
+		thirddigit = '0'
 
-	newauthorobject.universalid = newid
+	rebased = thirddigit+seconddigit+lastdigit
 
-	suffix = '(pt. 2)'
-	if re.search(r'\(pt\.\s\d{1,}\)$',newauthorobject.idxname) is not None:
-		count = re.search(r'\(pt\.\s(\d{1,})\)$',newauthorobject.idxname)
-		count = str(int(count.group(1))+1)
-		suffix = '(pt. '+count+')'
-		# kill off '(pt. 2)' to make way for '(pt. 3)'
-		newauthorobject.idxname = newauthorobject.idxname[:-7] + suffix
-	else:
-		newauthorobject.idxname = newauthorobject.idxname + suffix
-
-	modifyauthorsdb(newauthorobject.universalid, newauthorobject.idxname, cursor)
-	print('\t',currentid,' --> ', newauthorobject.universalid)
-
-	return newauthorobject
+	return rebased
 
 
 def modifyauthorsdb(newentryname, worktitle, cursor):
 	"""
-	the idxname of "ZZ0080" will be "Black Sea and Scythia Minor"
+	the idxname of something like "ZZ0080" will be "Black Sea and Scythia Minor"
 	the title of "in0001" should be set to "Black Sea and Scythia Minor IosPE I(2) [Scythia]"
 
 	:param tempentryname:
@@ -637,5 +608,60 @@ def deletetemporarydbs(temprefix):
 
 	return
 
+
+# slated for removal
+
+
+def cloneauthor(authorobject, cursor):
+	"""
+	copy an author so you can hold more works
+	:param authorobject:
+	:return:
+	"""
+
+	newauthorobject = authorobject
+	currentid = authorobject.universalid
+
+
+	# need to avoid dbname collisions here: remember that the namespace has been compressed into effectively two characters (inXX)
+	# 	'in1b05' has more than 1000 entries
+	#	'in1b0F' will be its continuation
+	#	'in1bAF' will continue in1b0F'
+	# it should be impossible for any two authors to generate the same set of continuations
+	ending = currentid[-1]
+	if 64 < ord(ending) < 91:
+		# already in the A-Z range (ie., we are looking at work #2000+!)
+		# we can't turn 'in1b0F' into 'in1b0G' because 'in1b06' is capable of generating 'in1b0G'
+		# so we increment the '0': 'in1bAF'
+		if re.search(r'[0-9a-f]', currentid[-2:-1]) is not None:
+			# this is the first time we have done this
+			val = int(currentid[-2:-1], 16)
+			char = chr(val + 65)
+		else:
+			# there is an 'A' or such in this position; increment it
+			char = chr(ord(currentid[-2:-1]) + 1)
+		newid = currentid[:-2] + char + ending
+	else:
+		# take the last character of the work and push it into an otherwise impossible register
+		val = int(ending,16)
+		char = chr(val+65) # 0 -> A, 1 -> B, ...
+		newid = authorobject.universalid[:-1] + char
+
+	newauthorobject.universalid = newid
+
+	suffix = '(pt. 2)'
+	if re.search(r'\(pt\.\s\d{1,}\)$',newauthorobject.idxname) is not None:
+		count = re.search(r'\(pt\.\s(\d{1,})\)$',newauthorobject.idxname)
+		count = str(int(count.group(1))+1)
+		suffix = '(pt. '+count+')'
+		# kill off '(pt. 2)' to make way for '(pt. 3)'
+		newauthorobject.idxname = newauthorobject.idxname[:-7] + suffix
+	else:
+		newauthorobject.idxname = newauthorobject.idxname + suffix
+
+	modifyauthorsdb(newauthorobject.universalid, newauthorobject.idxname, cursor)
+	print('\t',currentid,' --> ', newauthorobject.universalid)
+
+	return newauthorobject
 
 

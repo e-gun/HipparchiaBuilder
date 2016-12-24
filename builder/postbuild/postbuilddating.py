@@ -122,6 +122,7 @@ def convertdate(date):
 		'I a': -50,
 		'I ac': 50,
 		'I bc-I ac': 1,
+		'I sac/Ip': 1,
 		'I bc': -50,
 		'I p': 50,
 		'I-II ac': 100,
@@ -211,6 +212,7 @@ def convertdate(date):
 		'V-IVa': -400,
 		'V/IVa': -400,
 		'V/VIp': 500,
+		'V-VIp': 500,
 		'Va': -450,
 		'VI ac': 550,
 		'VI bc': -550,
@@ -218,6 +220,7 @@ def convertdate(date):
 		'VI/VIIp': 600,
 		'VIa': -550,
 		'VI-VIIp': 600,
+		'VI-VIIIp': 600,
 		'VII/VIIIp': 700,
 		'VIIa': -650,
 		'VIIIa': -750,
@@ -229,6 +232,8 @@ def convertdate(date):
 	}
 
 	# drop things that will only confuse the issue
+	date = re.sub(r'^(AD -|-cAD)','',date)
+	date = re.sub(r'<hmu_discarded_form>.*?','',date)
 	date = re.sub(r'\[K\.\d{1,}\]','',date)
 	date = re.sub(r'\[\]','', date)
 	date = re.sub(r'(\?|\(\?\))', '', date)

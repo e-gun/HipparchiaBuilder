@@ -75,10 +75,13 @@ def findwordcounts(cursor, dbconnection):
 	query = 'SELECT universalid FROM works WHERE wordcount IS NULL ORDER BY universalid ASC'
 	cursor.execute(query)
 	results = cursor.fetchall()
-	
+
+	count = 0
 	for r in results:
+		count += 1
 		oneworkwordcounts(r[0], cursor, dbconnection)
-		
+		if count % 500 == 0:
+			print('\tcount recorded for',count,'works')
 	return
 
 
