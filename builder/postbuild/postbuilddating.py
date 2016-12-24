@@ -12,6 +12,8 @@ def convertdate(date):
 	"""
 	take a string date and try to assign a number to it: IV AD --> 450, etc.
 
+	a very messy way to achieve highly suspect results
+
 	:param date:
 	:return:
 	"""
@@ -68,9 +70,12 @@ def convertdate(date):
 		'9.Jh.n.Chr.': 850,
 		'9th ac': 850,
 		'10./11.Jh.n.Chr.': 1000,
+		'11th': 1050,
+		'12th': 1150,
 		'aet Ant': 145,
 		'aet Aug': 1,
 		'aet Aug/aet Tib': 15,
+		'aet Aug/Tib': 15,
 		'aet Augusti': 1,
 		'aet Aur': 170,
 		'aet Byz': 700,
@@ -96,10 +101,13 @@ def convertdate(date):
 		'aet tard': 1000,
 		'aet Tib': 25,
 		'aet Tit': 80,
+		'Titus': 80,
 		'aet Tra': 105,
+		'Trajan': 105,
 		'Trajanic': 105,
 		'aet Tra/aet Had': 115,
 		'aet Ves': 70,
+		'Vespasian': 70,
 		'aet Ves/aet Dom': 80,
 		'aetate Augusti': 1,
 		'aetate Hadriani': 125,
@@ -112,6 +120,7 @@ def convertdate(date):
 		'byzantinische Zeit': 700,
 		'Chr.': 400,
 		'Constantine': 315,
+		'Classical': -400,
 		'date': 1500,
 		'Early Hell.': -300,
 		'Early Ptol.': -275,
@@ -121,18 +130,23 @@ def convertdate(date):
 		'fru+hhellenistisch': -300,
 		'Hadrian': 125,
 		'hadrianisch': 125,
+		'Hadrianic': 125,
 		'Hell.': -250,
 		'Hellenistic': -250,
 		'hellenistisch-fru+he Kaiserzeit': -100,
+		'Hadrianic-early Antonine': 140,
 		'hellenistisch': -250,
+		'1st half Antonine': 155,
 		'hristlich': 400, # the 'c' will have been chopped
 		'I a': -50,
+		'Ia/aet Imp': 25,
 		'I ac': 50,
 		'I bc-I ac': 1,
 		'I bc': -50,
 		'I p': 50,
 		'I sac/Ip': 1,
 		'I-II ac': 100,
+		'I/II ac': 100,
 		'I-II': 100,
 		'I-IIa': -100,
 		'I-IIIp': 111,
@@ -158,6 +172,7 @@ def convertdate(date):
 		'II/I': -100,
 		'II/Ia': -100,
 		'II/III': 200,
+		'II/III ac': 200,
 		'II/IIIp': 200,
 		'II/IV': 300,
 		'IIa': -150,
@@ -186,6 +201,7 @@ def convertdate(date):
 		'IV-Ia': -200,
 		'IV-IIa': -200,
 		'IV-III bc': -300,
+		'IV/III bc': -300,
 		'IV-III': -300,
 		'IV-III/II bc': -275,
 		'IV-V ac': 400,
@@ -205,9 +221,11 @@ def convertdate(date):
 		'Late Hell.': -1,
 		'Late Imp.': 250,
 		'late Imp.': 400,
+		'Late Ptol.': -50,
 		'Marcus Aurelius': 170,
 		'Ptol.': -100,
 		'Ptol./Rom.': -20,
+		'pre-Ptol.': -333,
 		'ro+misch': 50,
 		'Rom.': 50,
 		'Rom./Byz.': 600,
@@ -220,6 +238,7 @@ def convertdate(date):
 		'V bc': -450,
 		'V p': 450,
 		'V-IV bc': -400,
+		'V/IV bc': -400,
 		'V-IVa': -400,
 		'V-VIp': 500,
 		'V/IVa': -400,
@@ -230,6 +249,7 @@ def convertdate(date):
 		'VI-VIIIp': 600,
 		'VI-VIIp': 600,
 		'VI/Va': -500,
+		'VI/V bc': -500,
 		'VI/VIIp': 600,
 		'VIa': -550,
 		'VII-VIIIp': 700,
@@ -248,10 +268,11 @@ def convertdate(date):
 	date = re.sub(r'^(AD -|-cAD)','',date)
 	date = re.sub(r'<hmu_discarded_form>.*?','',date)
 	date = re.sub(r'\[K\.\d{1,}\]','',date)
+	date = re.sub(r'\(or later\)|\sor\slater$', '', date)
 	date = re.sub(r'\[\]','', date)
 	date = re.sub(r'(\?|\(\?\))', '', date)
-	date = re.sub(r'(c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s)','', date)
-	date = re.sub(r'^(ca\.\s|um\s)','',date)
+	date = re.sub(r'(middle\s|c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s)','', date)
+	date = re.sub(r'^(ca\.\s|um\s|prob\s|poss\.\s)','',date)
 	date = re.sub(r'^c(\.|)(\s|)', '', date)
 	date = re.sub(r'^s\s', '', date)
 	date = re.sub(r'^wohl\s','',date)
@@ -270,14 +291,14 @@ def convertdate(date):
 	if re.search(r'^(p\spost\s|sh\.aft\.\s|1\.Viertel\s)', date) is not None:
 		date = re.sub(r'^(p\spost\s|sh\.aft\.\s|1\.Viertel\s)', '', date)
 		fudge = 10
-	if re.search(r'^paullo ante ', date) is not None:
-		date = re.sub(r'^paullo ante ','',date)
+	if re.search(r'^(paullo ante |p ante c |p ante )', date) is not None:
+		date = re.sub(r'^(paullo ante |p ante c |p ante )','',date)
 		fudge = -10
 	if re.search(r'^(after|aft\. mid\.|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', date) is not None:
 		date = re.sub(r'^(after|aft\. mid\.|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', '', date)
 		fudge = 20
-	if re.search(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|beg\.\s|beg\s|before\s|^in\ss\s|^in\s)', date) is not None:
-		date = re.sub(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|beg\.\s|beg\s|before\s|^in\ss\s|^in\s)', '', date)
+	if re.search(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s)', date) is not None:
+		date = re.sub(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s)', '', date)
 		fudge = -25
 	if re.search(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s|letztes Drittel|later\s)', date) is not None:
 		date = re.sub(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s|letztes Drittel|later\s)', '', date)
