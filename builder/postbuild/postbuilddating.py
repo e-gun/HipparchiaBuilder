@@ -331,8 +331,12 @@ def convertdate(date):
 			second = halves[1]
 			if re.search(r'\d', first) is not None and re.search(r'\d', second) is not None:
 				first = re.sub(r'\D','',first)
-				first = int(first)
 				second = re.sub(r'\D', '', second)
+				# note the problem with 100-15 and/or 75-6
+				if len(first) > len(second):
+					difference = len(first) - len(second)
+					second = first[0:difference]+second[(-1*len(second)):]
+				first = int(first)
 				second = int(second)
 				numericaldate = (first + second)/2 * modifier + (fudge * modifier)
 			elif re.search(r'\d', first) is not None:

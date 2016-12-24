@@ -99,7 +99,7 @@ def resetauthorsandworksdbs(prefix):
 			# 'table "in090cw001" does not exist'
 			# because a build got interrupted? one hopes it is safe to pass
 			pass
-		if count % 500 == 0:
+		if count % 1000 == 0:
 			dbc.commit()
 
 	q = 'DELETE FROM authors WHERE universalid LIKE %s'
