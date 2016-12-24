@@ -73,47 +73,6 @@ dbconnection = setconnection(config)
 cursor = dbconnection.cursor()
 
 
-def resetauthorsandworksdbs(prefix):
-	"""
-	clean out any old info before insterting new info
-	you have to purge the dbs every time because the names can change between builds
-
-	:param prefix:
-	:return:
-	"""
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
-
-	q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
-	d = (prefix + '%',)
-	cursor.execute(q, d)
-	results = cursor.fetchall()
-
-	count = 0
-	for r in results:
-		count += 1
-		q = 'DROP TABLE public.'+r[0]
-		try:
-			cursor.execute(q)
-		except:
-			# 'table "in090cw001" does not exist'
-			# because a build got interrupted? one hopes it is safe to pass
-			pass
-		if count % 1000 == 0:
-			dbc.commit()
-
-	q = 'DELETE FROM authors WHERE universalid LIKE %s'
-	d = (prefix + '%',)
-	cursor.execute(q, d)
-
-	q = 'DELETE FROM works WHERE universalid LIKE %s'
-	d = (prefix + '%',)
-	cursor.execute(q, d)
-
-	dbc.commit()
-	return
-
-
 def builddbremappers(oldprefix, newprefix):
 
 	dbc = setconnection(config)
@@ -226,8 +185,8 @@ def compilenewworks(newauthors, wkmapper):
 	for a in newauthors:
 		db = remapper[a.universalid]
 		modifyauthorsdb(a.universalid, a.idxname, cursor)
-		dbc.commit()
 		thework.append((a, db))
+	dbc.commit()
 
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelnewworkworker, thework)
@@ -276,7 +235,7 @@ def parallelnewworkworker(authoranddbtuple):
 		results = cursor.fetchall()
 
 		newdb = a.universalid + 'w' + dbstring
-		buidlnewindividualworkdb(newdb, results)
+		buidlnewindividualworkdb(newdb, results, cursor)
 		updateworksdb(newdb, db, docname, cursor)
 		setmetadata(newdb, cursor)
 		if dbnumber % 100 == 0:
@@ -370,7 +329,7 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 	return
 
 
-def buidlnewindividualworkdb(db, results):
+def buidlnewindividualworkdb(db, results, cursor):
 	"""
 
 	send me all of the matching lines from one db and i will build a new workdb with only these lines
@@ -379,9 +338,6 @@ def buidlnewindividualworkdb(db, results):
 	:param results:
 	:return:
 	"""
-
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
 
 	tablemaker(db, cursor)
 
@@ -410,8 +366,6 @@ def buidlnewindividualworkdb(db, results):
 											  ' VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 		d = tuple(r)
 		cursor.execute(q, d)
-
-	dbc.commit()
 
 	return
 
@@ -496,7 +450,6 @@ def setmetadata(db, cursor):
 		dt = '[unknown]'
 
 	cd = convertdate(dt)
-	dt = latinadiacriticals(dt)
 
 	pr = re.search(prov, ln)
 	try:
@@ -528,6 +481,9 @@ def setmetadata(db, cursor):
 
 	if len(pr) > 64:
 		pr = pr[0:63]
+
+	for item in [pi, pr, dt]:
+		item = latinadiacriticals(item)
 
 	# labels need to be '' and not None because of the way findtoplevelofwork() is coded in HipparchiaServer
 	# note that 'face' has been represented by a whitespace: ' '

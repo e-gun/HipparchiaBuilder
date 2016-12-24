@@ -6,11 +6,14 @@
 """
 
 import json
-from builder.parsers.parse_binfiles import peekatcanon
-
+import configparser
 import psycopg2
 
+from builder.parsers.parse_binfiles import peekatcanon
 from builder.builder_classes import dbOpus, dbAuthor
+
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 
 def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
@@ -325,3 +328,44 @@ def setconnection(config):
 	return dbconnection
 
 
+def resetauthorsandworksdbs(prefix):
+	"""
+	clean out any old info before insterting new info
+	you have to purge the inscription and ddp dbs every time because the names can change between builds
+
+	:param prefix:
+	:return:
+	"""
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
+	d = (prefix + '%',)
+	cursor.execute(q, d)
+	results = cursor.fetchall()
+
+	count = 0
+	for r in results:
+		count += 1
+		q = 'DROP TABLE public.'+r[0]
+		try:
+			cursor.execute(q)
+		except:
+			# 'table "in090cw001" does not exist'
+			# because a build got interrupted? one hopes it is safe to pass
+			pass
+		if count % 500 == 0:
+			dbc.commit()
+		if count % 2500 == 0:
+			print('\t', count, 'of', len(results), 'tables dropped')
+
+	q = 'DELETE FROM authors WHERE universalid LIKE %s'
+	d = (prefix + '%',)
+	cursor.execute(q, d)
+
+	q = 'DELETE FROM works WHERE universalid LIKE %s'
+	d = (prefix + '%',)
+	cursor.execute(q, d)
+
+	dbc.commit()
+	return

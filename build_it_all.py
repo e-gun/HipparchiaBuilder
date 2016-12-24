@@ -11,9 +11,9 @@ import time
 
 from builder import corpus_builder
 from builder.dbinteraction.build_lexica import formatliddellandscott, formatlewisandshort, grammarloader, analysisloader
-from builder.dbinteraction.db import setconnection
+from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
-from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs, resetauthorsandworksdbs
+from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -59,7 +59,7 @@ if buildgreekauthors == 'y':
 if buildinscriptions == 'y':
 	tmpprefix = 'XX'
 	permprefix = 'in'
-	print('purging the old inscription dbs')
+	print('dropping any existing inscription tables')
 	resetauthorsandworksdbs(permprefix)
 	print('building inscription dbs')
 	corpus_builder.parallelbuildinscriptionscorpus(ins, tmpprefix)
@@ -76,7 +76,7 @@ if buildinscriptions == 'y':
 if buildpapyri == 'y':
 	tmpprefix = 'YY'
 	permprefix = 'dp'
-	print('purging the old papyrus dbs')
+	print('dropping any existing papyrus tables')
 	resetauthorsandworksdbs(permprefix)
 	print('building papyrus dbs')
 	corpus_builder.parallelbuildpapyrusscorpus(ddp, tmpprefix)
