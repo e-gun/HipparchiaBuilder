@@ -41,7 +41,8 @@ if buildlatinauthors == 'y':
 	print('building latin dbs')
 	corpus_builder.parallelbuildlatincorpus(phi, cursor)
 	print('compiling metadata for latin dbs')
-	insertfirstsandlasts(workcategoryprefix, cursor, dbconnection)
+	insertfirstsandlasts(workcategoryprefix, cursor)
+	dbconnection.commit()
 	buildtrigramindices(workcategoryprefix, cursor)
 	findwordcounts(cursor, dbconnection)
 
@@ -50,7 +51,8 @@ if buildgreekauthors == 'y':
 	print('building greek dbs')
 	corpus_builder.parallelbuildgreekcorpus(tlg, dbconnection, cursor)
 	print('compiling metadata for greek dbs')
-	insertfirstsandlasts(workcategoryprefix, cursor, dbconnection)
+	insertfirstsandlasts(workcategoryprefix, cursor)
+	dbconnection.commit()
 	buildtrigramindices(workcategoryprefix, cursor)
 	findwordcounts(cursor, dbconnection)
 
@@ -69,7 +71,8 @@ if buildinscriptions == 'y':
 	compilenewworks(newauthors, wkmapper)
 	deletetemporarydbs(tmpprefix)
 	print('compiling metadata for inscription dbs')
-	insertfirstsandlasts(permprefix, cursor, dbconnection)
+	insertfirstsandlasts(permprefix, cursor)
+	dbconnection.commit()
 	buildtrigramindices(permprefix, cursor)
 	findwordcounts(cursor, dbconnection)
 
@@ -86,7 +89,8 @@ if buildpapyri == 'y':
 	compilenewworks(newauthors, wkmapper)
 	deletetemporarydbs(tmpprefix)
 	print('compiling metadata for inscription dbs')
-	insertfirstsandlasts(permprefix, cursor, dbconnection)
+	insertfirstsandlasts(permprefix, cursor)
+	dbconnection.commit()
 	buildtrigramindices(permprefix, cursor)
 	findwordcounts(cursor, dbconnection)
 

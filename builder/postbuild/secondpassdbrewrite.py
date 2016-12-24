@@ -199,7 +199,6 @@ def parallelnewworkworker(authoranddbtuple):
 
 	compile new works in parallel to go faster
 	the loop inside of this is where the real speed gains would lie: 'for document in results:...'
-	but note how much fun cloneauthor() would be in a multiprocessing environment
 
 	:param authoranddbtuple: (authorobject, dbname)
 	:return:

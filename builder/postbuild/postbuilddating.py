@@ -30,10 +30,13 @@ def convertdate(date):
 		'1st bc': -50,
 		'2. Ha+lfte 1. Jh. n.Chr.': 75,
 		'2. Jh. v.Chr.': -150,
-		'2./1.Jh.v.Chr.': 100,
+		'2./1.Jh.v.Chr.': -100,
+		'2./1.Jh.n.Chr.': 100,
 		'2./3.Jh.n.Chr.': 200,
 		'2.Jh.n.Chr.': 150,
 		'2.Jh.v.Chr.': -150,
+		'1.Jh.n.Chr.': 50,
+		'1. Jh.n.Chr.': 50,
 		'2nd ac': 150,
 		'2nd bc': -150,
 		'2nd/1st': -100,
@@ -46,6 +49,7 @@ def convertdate(date):
 		'3rd/2nd bc': -200,
 		'4. Jh. v.Chr.': -350,
 		'4. Viertel 2. Jh. v.Chr.': -110,
+		'letztes Viertel 1. Jh.v.Chr.': -15,
 		'4.Jh.n.Chr.': 350,
 		'4.Jh.v.Chr.': -350,
 		'4th ac': 350,
@@ -56,6 +60,7 @@ def convertdate(date):
 		'5.Jh.v.Chr.': -450,
 		'5th ac': 450,
 		'5th bc': -450,
+		'5th c. bc': -450,
 		'6.Jh.n.Chr.': 550,
 		'6.Jh.v.Chr.': -550,
 		'6th ac': 550,
@@ -77,14 +82,19 @@ def convertdate(date):
 		'aet Aug/aet Tib': 15,
 		'aet Aug/Tib': 15,
 		'aet Augusti': 1,
+		'aetat Augusti': 1,
 		'aet Aur': 170,
 		'aet Byz': 700,
 		'aet Carac': 205,
 		'aet Chr': 400,
+		'aet Aug/Claud': 30,
 		'aet Claud': 50,
 		'aet Commod': 185,
+		'aet Dioc': 290,
 		'aet Dom': 90,
 		'aet Flav': 85,
+		'flavisch': 85,
+		'Julio-Claudian': 25,
 		'aet Had': 125,
 		'aet Had/Aur': 150,
 		'aet Hadriani': 125,
@@ -100,6 +110,7 @@ def convertdate(date):
 		'aet Rom': 50,
 		'aet tard': 1000,
 		'aet Tib': 25,
+		'Tiberius': 25,
 		'aet Tit': 80,
 		'Titus': 80,
 		'aet Tra': 105,
@@ -170,6 +181,7 @@ def convertdate(date):
 		'II-IIIp': 200,
 		'II/I bc': -100,
 		'II/I': -100,
+		'II-I': -100,
 		'II/Ia': -100,
 		'II/III': 200,
 		'II/III ac': 200,
@@ -182,6 +194,7 @@ def convertdate(date):
 		'III p': 250,
 		'III-Ia': -111,
 		'III-II bc': -200,
+		'III-II': -200,
 		'III-IVp': 300,
 		'III/II': -200,
 		'III/II/Ia': -150,
@@ -204,6 +217,7 @@ def convertdate(date):
 		'IV/III bc': -300,
 		'IV-III': -300,
 		'IV-III/II bc': -275,
+		'IV-V': 400,
 		'IV-V ac': 400,
 		'IV-VIp': 450,
 		'IV-Vp': 400,
@@ -241,6 +255,7 @@ def convertdate(date):
 		'V/IV bc': -400,
 		'V-IVa': -400,
 		'V-VIp': 500,
+		'V-VI': 500,
 		'V/IVa': -400,
 		'V/VIp': 500,
 		'Va': -450,
@@ -250,11 +265,14 @@ def convertdate(date):
 		'VI-VIIp': 600,
 		'VI/Va': -500,
 		'VI/V bc': -500,
+		'VI-IVa': -450,
 		'VI/VIIp': 600,
+		'VI-VII': 600,
 		'VIa': -550,
 		'VII-VIIIp': 700,
 		'VII/VIIIp': 700,
 		'VIIa': -650,
+		'VII ac': -650,
 		'VIIIa': -750,
 		'VIIIp': 750,
 		'VIIp': 650,
@@ -272,7 +290,7 @@ def convertdate(date):
 	date = re.sub(r'\[\]','', date)
 	date = re.sub(r'(\?|\(\?\))', '', date)
 	date = re.sub(r'(middle\s|c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s)','', date)
-	date = re.sub(r'^(ca\.\s|um\s|prob\s|poss\.\s)','',date)
+	date = re.sub(r'^(ca\.\s|um\s|prob\s|poss\.\s|non post )','',date)
 	date = re.sub(r'^c(\.|)(\s|)', '', date)
 	date = re.sub(r'^s\s', '', date)
 	date = re.sub(r'^wohl\s','',date)
@@ -297,8 +315,8 @@ def convertdate(date):
 	if re.search(r'^(after|aft\. mid\.|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', date) is not None:
 		date = re.sub(r'^(after|aft\. mid\.|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', '', date)
 		fudge = 20
-	if re.search(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s)', date) is not None:
-		date = re.sub(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s)', '', date)
+	if re.search(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|bef\. mid\.\s|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s)', date) is not None:
+		date = re.sub(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|bef\. mid\.\s|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s)', '', date)
 		fudge = -25
 	if re.search(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s|letztes Drittel|later\s)', date) is not None:
 		date = re.sub(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende\s|letztes Drittel|later\s)', '', date)

@@ -6,14 +6,15 @@
 """
 
 import configparser
-from multiprocessing import Pool
+from multiprocessing import Process, Manager, Pool
 from builder.dbinteraction.db import setconnection
+from builder.builder_classes import MPCounter
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def insertfirstsandlasts(workcategoryprefix, cursor, dbconnection):
+def insertfirstsandlasts(workcategoryprefix, cursor):
 	"""
 	public.works needs to know
 		firstline integer,
@@ -27,14 +28,24 @@ def insertfirstsandlasts(workcategoryprefix, cursor, dbconnection):
 	data = (workcategoryprefix+'%',)
 	cursor.execute(query, data)
 	results = cursor.fetchall()
-	
+
+	manager = Manager()
+	wks = manager.list()
+	commitcount = MPCounter()
+
 	for r in results:
-		oneworkdinsertfirstsandlasts(r[0], cursor, dbconnection)
-	
+		wks.append(r[0])
+
+	workers = int(config['io']['workers'])
+	jobs = [Process(target=mpinsertfirstsandlasts, args=(wks, commitcount)) for i in
+			range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
 	return
 
 
-def oneworkdinsertfirstsandlasts(universalid, cursor, dbconnection):
+def mpinsertfirstsandlasts(universalids, commitcount):
 	"""
 	public.works needs to know
 		firstline integer,
@@ -45,22 +56,38 @@ def oneworkdinsertfirstsandlasts(universalid, cursor, dbconnection):
 	:param dbconnection:
 	:return:
 	"""
-	
-	query = 'SELECT index FROM ' + universalid + ' ORDER BY index ASC LIMIT 1'
-	cursor.execute(query)
-	firstline = cursor.fetchone()
-	first = int(firstline[0])
-	
-	query = 'SELECT index FROM ' + universalid + ' ORDER BY index DESC LIMIT 1'
-	cursor.execute(query)
-	lastline = cursor.fetchone()
-	last = int(lastline[0])
-	
-	query = 'UPDATE works SET firstline=%s, lastline=%s WHERE universalid=%s'
-	data = (first, last, universalid)
-	cursor.execute(query, data)
-	
-	dbconnection.commit()
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	while len(universalids) > 0:
+		try:
+			universalid = universalids.pop()
+		except:
+			universalid = ''
+
+		if universalid != '':
+			query = 'SELECT index FROM ' + universalid + ' ORDER BY index ASC LIMIT 1'
+			cursor.execute(query)
+			firstline = cursor.fetchone()
+			first = int(firstline[0])
+
+			query = 'SELECT index FROM ' + universalid + ' ORDER BY index DESC LIMIT 1'
+			cursor.execute(query)
+			lastline = cursor.fetchone()
+			last = int(lastline[0])
+
+			query = 'UPDATE works SET firstline=%s, lastline=%s WHERE universalid=%s'
+			data = (first, last, universalid)
+			cursor.execute(query, data)
+
+		commitcount.increment()
+		if commitcount.value % 250 == 0:
+			dbc.commit()
+		if commitcount.value % 10000 == 0:
+			print('\t',commitcount.value,'works examined')
+
+	dbc.commit()
 	
 	return
 
@@ -76,16 +103,24 @@ def findwordcounts(cursor, dbconnection):
 	cursor.execute(query)
 	results = cursor.fetchall()
 
-	count = 0
+	manager = Manager()
+	wks = manager.list()
+	commitcount = MPCounter()
+
 	for r in results:
-		count += 1
-		oneworkwordcounts(r[0], cursor, dbconnection)
-		if count % 500 == 0:
-			print('\tcount recorded for',count,'works')
+		wks.append(r[0])
+
+	workers = int(config['io']['workers'])
+	jobs = [Process(target=mpworkwordcounts, args=(wks, commitcount)) for i in
+			range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+
 	return
 
 
-def oneworkwordcounts(universalid, cursor, dbconnection):
+def mpworkwordcounts(universalids, commitcount):
 	"""
 	if you don't already have an official wordcount, generate one
 	
@@ -96,28 +131,44 @@ def oneworkwordcounts(universalid, cursor, dbconnection):
 	:param dbconnection:
 	:return:
 	"""
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	while len(universalids) > 0:
+		try:
+			universalid = universalids.pop()
+		except:
+			universalid = ''
+
+		if universalid != '':
+			query = 'SELECT COUNT (hyphenated_words) FROM ' + universalid + ' WHERE hyphenated_words <> %s'
+			data = ('',)
+			cursor.execute(query, data)
+			hcount = cursor.fetchone()
+
+			query = 'SELECT stripped_line FROM ' + universalid + ' ORDER BY index ASC'
+			cursor.execute(query)
+			lines = cursor.fetchall()
+			wordcount = 0
+			for line in lines:
+				words = line[0].split(' ')
+				words = [x for x in words if x]
+				wordcount += len(words)
+
+			totalwords = wordcount - hcount[0]
+
+			query = 'UPDATE works SET wordcount=%s WHERE universalid=%s'
+			data = (totalwords, universalid)
+			cursor.execute(query, data)
+
+			commitcount.increment()
+			if commitcount.value % 250 == 0:
+				dbc.commit()
+			if commitcount.value % 10000 == 0:
+				print('\t', commitcount.value, 'works examined')
 	
-	query = 'SELECT COUNT (hyphenated_words) FROM ' + universalid + ' WHERE hyphenated_words <> %s'
-	data = ('',)
-	cursor.execute(query, data)
-	hcount = cursor.fetchone()
-	
-	query = 'SELECT stripped_line FROM ' + universalid + ' ORDER BY index ASC'
-	cursor.execute(query)
-	lines = cursor.fetchall()
-	wordcount = 0
-	for line in lines:
-		words = line[0].split(' ')
-		words = [x for x in words if x]
-		wordcount += len(words)
-	
-	totalwords = wordcount - hcount[0]
-	
-	query = 'UPDATE works SET wordcount=%s WHERE universalid=%s'
-	data = (totalwords, universalid)
-	cursor.execute(query, data)
-	
-	dbconnection.commit()
+	dbc.commit()
 	
 	return
 
@@ -150,11 +201,11 @@ def buildtrigramindices(workcategoryprefix, cursor):
 
 def mpindexbuilder(results):
 	"""
-	mp aware indexing pool: helps you crank through 'em
+	(soon to be) mp aware indexing pool: helps you crank through 'em
 	:param results:
 	:return:
 	"""
-	
+
 	buildoneindex(results)
 
 	return
@@ -195,3 +246,5 @@ def buildoneindex(universalid):
 	del dbc
 	
 	return
+
+
