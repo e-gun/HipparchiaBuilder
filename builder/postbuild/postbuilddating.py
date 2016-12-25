@@ -110,6 +110,7 @@ def convertdate(date):
 		'aet Rom': 50,
 		'aet tard': 1000,
 		'aet Tib': 25,
+		'aet Tib/Gaii': 35,
 		'Tiberius': 25,
 		'aet Tit': 80,
 		'Titus': 80,
@@ -120,11 +121,14 @@ def convertdate(date):
 		'aet Ves': 70,
 		'Vespasian': 70,
 		'aet Ves/aet Dom': 80,
+		'aet Ves/Dom': 80,
 		'aetate Augusti': 1,
 		'aetate Hadriani': 125,
 		'archaic': -700,
+		'Archaic': -700,
 		'Augustan': 1,
 		'Augustus': 1,
+		'August': 1,
 		'Byz.': 700,
 		'Byz': 700,
 		'byzantinisch': 700,
@@ -210,11 +214,15 @@ def convertdate(date):
 		'III/II/Ia': -150,
 		'III/IIa': -200,
 		'III/IVp': 300,
+		'III/VI': 450,
 		'IIIa': -250,
 		'IIIp': 250,
 		'IIp': 150,
 		'Imp.': 200,
 		'Imp': 200,
+		'Imperial': 200,
+		'Roman Imp': 200,
+		'imperial': 200,
 		'init aet Hell': -310,
 		'Ip': 50,
 		'IV a': -350,
@@ -276,6 +284,7 @@ def convertdate(date):
 		'VI/Va': -500,
 		'VI/V bc': -500,
 		'VI-IVa': -450,
+		'VI/V': -500,
 		'VI/VIIp': 600,
 		'VI-VII': 600,
 		'VIa': -550,
@@ -285,6 +294,7 @@ def convertdate(date):
 		'VII ac': -650,
 		'VIIIa': -750,
 		'VIIIp': 750,
+		'VIII p': 750,
 		'VIIp': 650,
 		'VIp': 550,
 		'Vp': 450,
@@ -300,7 +310,7 @@ def convertdate(date):
 	date = re.sub(r'\[\]','', date)
 	date = re.sub(r'(\?|\(\?\))', '', date)
 	date = re.sub(r'(middle\s|c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s)','', date)
-	date = re.sub(r'^(ca\.\s|um\s|prob\s|poss\.\s|non post )','',date)
+	date = re.sub(r'^(ca\.\s|um\s|prob\s|poss\.\s|non post |ante fere )','',date)
 	date = re.sub(r'^c(\.|)(\s|)', '', date)
 	date = re.sub(r'^s\s', '', date)
 	date = re.sub(r'^wohl\s','',date)
@@ -322,8 +332,8 @@ def convertdate(date):
 	if re.search(r'^(paullo ante |p ante c |p ante )', date) is not None:
 		date = re.sub(r'^(paullo ante |p ante c |p ante )','',date)
 		fudge = -10
-	if re.search(r'^(after|aft\. mid\.|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', date) is not None:
-		date = re.sub(r'^(after|aft\. mid\.|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', '', date)
+	if re.search(r'^(after|aft\. mid\.|aft\. c.\(\s|)|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', date) is not None:
+		date = re.sub(r'^(after|aft\. mid\.|aft\. c.\(\s|)|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', '', date)
 		fudge = 20
 	if re.search(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|bef\. mid\.\s|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s)', date) is not None:
 		date = re.sub(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|bef\. mid\.\s|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s)', '', date)

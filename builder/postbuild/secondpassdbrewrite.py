@@ -222,7 +222,7 @@ def parallelnewworkworker(authoranddbtuple):
 
 		dbnumber += 1
 
-		dbstring = rebasedcouter(dbnumber)
+		dbstring = rebasedcounter(dbnumber)
 		if len(dbstring) == 1:
 			dbstring = '00' + dbstring
 		elif len(dbstring) == 2:
@@ -245,7 +245,7 @@ def parallelnewworkworker(authoranddbtuple):
 	return
 
 
-def rebasedcouter(decimalvalue):
+def rebasedcounter(decimalvalue):
 	"""
 
 	return a three character encoding of a decimal number: 'base 36'
