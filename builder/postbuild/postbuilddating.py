@@ -384,7 +384,14 @@ def convertdate(date):
 		splityears = re.compile(r'(\d{1,})(/\d{1,})(.*?)')
 		if re.search(splityears, date) is not None:
 			split = re.search(splityears, date)
-			date = split.group(1)+split.group(3)
+			date = split.group(1)
+			if int(date[-1]) > int(split.group(2)[1:]):
+				# 332/1 is BCE
+				modifier = -1
+			if int(date[-1]) == 0 and int(split.group(2)[1:]) != 1:
+				# 330/1 is CE
+				# 330/29 is BCE
+				modifier = -1
 
 		if len(date.split('-')) > 1:
 			# take the middle of any range you find
