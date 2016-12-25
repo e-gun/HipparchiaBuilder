@@ -73,7 +73,7 @@ def stripaccents(texttostrip):
 		('(í|ï)', 'i'),
 		('(Ó|Ö)', 'O'),
 		('(ó|ö)', 'o'),
-		('(ῥ|Ῥ)', 'ρ'),
+		('(ῥ|ῤ|Ῥ)', 'ρ'),
 		# some sort of problem with acute alpha which seems to be unkillable
 		# (u'u\1f71',u'\u03b1'),
 		('(ἀ|ἁ|ἂ|ἃ|ἄ|ἅ|ἆ|ἇ|ᾀ|ᾁ|ᾂ|ᾃ|ᾄ|ᾅ|ᾆ|ᾇ|ᾲ|ᾳ|ᾴ|ᾶ|ᾷ|ᾰ|ᾱ|ὰ|ά)', 'α'),
