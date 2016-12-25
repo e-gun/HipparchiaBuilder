@@ -458,6 +458,13 @@ def setmetadata(db, cursor):
 	if pr == '?':
 		pr = '[unknown]'
 
+	# necessary because of the check for bad chars in HipparchiaServer's makeselection parser
+	pr = re.sub(r'\*⟪',' ', pr)
+	pr = re.sub(r':',' - ', pr)
+	pr = re.sub(r'\s\?','?', pr)
+	pr = re.sub(r'\s{2,}',' ',pr)
+	pr = re.sub(r'(^\s|\s)$','',pr)
+
 	rg = re.search(region, ln)
 	try:
 		rg = rg.group(1)

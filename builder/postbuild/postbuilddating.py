@@ -135,6 +135,7 @@ def convertdate(date):
 		'date': 1500,
 		'Early Hell.': -300,
 		'Early Ptol.': -275,
+		'end 4th-beg. 3rd bc': 300,
 		'fru+he Kaiserzeit (Augustus?)': 1,
 		'fru+he Kaiserzeit': 25,
 		'Fru+he Kaiserzeit': 25,

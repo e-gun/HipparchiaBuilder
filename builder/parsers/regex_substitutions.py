@@ -71,13 +71,13 @@ def replaceaddnlchars(texttoclean):
 	
 	texttoclean = re.sub(r'\^(\d{1,2})+', r'<hmu_blank_quarter_spaces quantity="\1" /> ', texttoclean)
 	
-	pounds = re.compile(r'\#(\d{1,4})')
+	pounds = re.compile(r'#(\d{1,4})')
 	texttoclean = re.sub(pounds, poundsubstitutes, texttoclean)
-	texttoclean = re.sub(r'\#', u'\u0374', texttoclean)
+	texttoclean = re.sub(r'#', u'\u0374', texttoclean)
 	
-	percents = re.compile(r'\%(\d{1,3})')
+	percents = re.compile(r'%(\d{1,3})')
 	texttoclean = re.sub(percents, percentsubstitutes, texttoclean)
-	texttoclean = re.sub(r'\%', u'\u2020', texttoclean)
+	texttoclean = re.sub(r'%', u'\u2020', texttoclean)
 	
 	ltsqbrackets = re.compile(r'\[(\d{1,2})')
 	texttoclean = re.sub(ltsqbrackets, leftbracketsubstitutions, texttoclean)
@@ -97,10 +97,10 @@ def replaceaddnlchars(texttoclean):
 	texttoclean = re.sub(rtcurlybracket, rtcurlybracketsubstitutes, texttoclean)
 	texttoclean = re.sub(r'\}', r'</span>', texttoclean)
 	
-	ltanglebracket = re.compile(r'\<(\d{1,2})')
+	ltanglebracket = re.compile(r'<(\d{1,2})')
 	texttoclean = re.sub(ltanglebracket, ltanglebracketsubstitutes, texttoclean)
 	
-	rtanglebracket = re.compile(r'\>(\d{1,2})')
+	rtanglebracket = re.compile(r'>(\d{1,2})')
 	texttoclean = re.sub(rtanglebracket, rtanglebracketsubstitutes, texttoclean)
 	
 	
@@ -128,12 +128,12 @@ def replacelatinmarkup(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
-	ands = re.compile(r'\&(\d{1,2})(.*?)(\&\d{0,1})')
+	ands = re.compile(r'&(\d{1,2})(.*?)(&\d{0,1})')
 	texttoclean = re.sub(ands, andsubstitutes, texttoclean)
 	
 	#texttoclean = re.sub(r'\&(.*?)\&', r'<hmu_shift_latin_font value="regular">\1</hmu_shift_latin_font>', texttoclean)
 	
-	anddollars = re.compile(r'\&(\d{1,2})(.*?)(\$\d{0,1})')
+	anddollars = re.compile(r'&(\d{1,2})(.*?)(\$\d{0,1})')
 	texttoclean = re.sub(anddollars, andsubstitutes, texttoclean)
 	
 	# these strays are rough
@@ -1395,6 +1395,16 @@ def latinadiacriticals(texttoclean):
 		(r'O\+', r'Ö'),
 		(r'u\+', r'ü'),
 		(r'U\+', r'Ü'),
+		(r'a\=', r'â'),
+		(r'A\=', r'Â'),
+		(r'e\=', r'ê'),
+		(r'E\=', r'Ê'),
+		(r'i\=', r'î'),
+		(r'I\=', r'Î'),
+		(r'o\=', r'ô'),
+		(r'O\=', r'Ô'),
+		(r'u\=', r'û'),
+		(r'U\=', r'Û'),
 		(r'a\\', r'à'),
 		(r'A\\', r'À'),
 		(r'e\\', r'è'),
@@ -1440,8 +1450,8 @@ def doublecheckromanwithingreek(match):
 	:param matchgroups:
 	:return:
 	"""
-	linetermination = re.compile(r'(\&\d{0,2})(.*?)(\s{0,1}$)')
-	internaltermination = re.compile(r'(\&\d{0,2})(.*?)\$(\d{0,2})')
+	linetermination = re.compile(r'(&\d{0,2})(.*?)(\s{0,1}$)')
+	internaltermination = re.compile(r'(&\d{0,2})(.*?)\$(\d{0,2})')
 	if re.search(internaltermination, match.group(1) + match.group(2)) is not None:
 		substitution = re.sub(internaltermination, r'<hmu_roman_in_a_greek_text>\2</hmu_roman_in_a_greek_text>',
 		                      match.group(1) + match.group(2))
@@ -1787,7 +1797,7 @@ def cleanworkname(betacodeworkname):
 	
 	workname = replacelatinbetacode(betacodeworkname)
 	
-	percents = re.compile(r'\%(\d{1,3})')
+	percents = re.compile(r'%(\d{1,3})')
 	workname = re.sub(percents, percentsubstitutes, workname)
 	workname = re.sub(r'\[2(.*?)]2', r'⟪\1⟫',workname)
 	workname = re.sub(r'<.*?>','', workname)
