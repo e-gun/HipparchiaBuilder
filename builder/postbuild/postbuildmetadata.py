@@ -30,15 +30,16 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 	results = cursor.fetchall()
 
 	manager = Manager()
-	wks = manager.list()
+	uids = manager.list()
 	commitcount = MPCounter()
 
 	for r in results:
-		wks.append(r[0])
+		uids.append(r[0])
+
+	print('\t', len(uids), 'works to examine')
 
 	workers = int(config['io']['workers'])
-	jobs = [Process(target=mpinsertfirstsandlasts, args=(wks, commitcount)) for i in
-			range(workers)]
+	jobs = [Process(target=mpinsertfirstsandlasts, args=(uids, commitcount)) for i in range(workers)]
 	for j in jobs: j.start()
 	for j in jobs: j.join()
 
@@ -102,25 +103,26 @@ def findwordcounts(cursor, dbconnection):
 	query = 'SELECT universalid FROM works WHERE wordcount IS NULL ORDER BY universalid ASC'
 	cursor.execute(query)
 	results = cursor.fetchall()
+	dbconnection.commit()
 
 	manager = Manager()
-	wks = manager.list()
+	uids = manager.list()
 	commitcount = MPCounter()
 
 	for r in results:
-		wks.append(r[0])
+		uids.append(r[0])
+
+	print('\t',len(uids),'works to examine')
 
 	workers = int(config['io']['workers'])
-	jobs = [Process(target=mpworkwordcounts, args=(wks, commitcount)) for i in
-			range(workers)]
+	jobs = [Process(target=mpworkwordcountworker, args=(uids, commitcount)) for i in range(workers)]
 	for j in jobs: j.start()
 	for j in jobs: j.join()
-
 
 	return
 
 
-def mpworkwordcounts(universalids, commitcount):
+def mpworkwordcountworker(universalids, commitcount):
 	"""
 	if you don't already have an official wordcount, generate one
 	
@@ -189,62 +191,65 @@ def buildtrigramindices(workcategoryprefix, cursor):
 	cursor.execute(query,data)
 	results = cursor.fetchall()
 	
-	resultarray = []
+	manager = Manager()
+	uids = manager.list()
+	commitcount = MPCounter()
+
 	for r in results:
-		resultarray.append(r[0])
-	
-	pool = Pool(processes=int(config['io']['workers']))
-	pool.map(mpindexbuilder, resultarray)
-	
+		uids.append(r[0])
+
+	print('\t',len(uids),'works to index')
+
+	workers = int(config['io']['workers'])
+	jobs = [Process(target=mpindexbuilder, args=(uids, commitcount)) for i in range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+
 	return
 
 
-def mpindexbuilder(results):
+def mpindexbuilder(universalids, commitcount):
 	"""
-	(soon to be) mp aware indexing pool: helps you crank through 'em
+	mp aware indexing pool: helps you crank through 'em
+
 	:param results:
 	:return:
 	"""
 
-	buildoneindex(results)
-
-	return
-
-
-def buildoneindex(universalid):
-	"""
-	build indices for the works based on trigrams keyed to the stripped line
-	
-	(allow one author at a time so you can debug)
-	
-	:param universalid:
-	:param cursor:
-	:param dbconnection:
-	:return:
-	"""
 	dbc = setconnection(config)
 	curs = dbc.cursor()
-	
-	for column in [('_mu','accented_line'), ('_st','stripped_line')]:
-		query = 'DROP INDEX IF EXISTS '+universalid+column[0]+'_trgm_idx'
+
+	while len(universalids) > 0:
 		try:
-			curs.execute(query)
-			dbc.commit()
+			universalid = universalids.pop()
 		except:
-			print('failed to drop index for',universalid)
-			pass
-		
-		query = 'CREATE INDEX '+universalid+column[0]+'_trgm_idx ON '+universalid+' USING GIN ('+column[1]+' gin_trgm_ops)'
-		try:
-			curs.execute(query)
-			dbc.commit()
-		except:
-			print('failed to create index for',universalid,'\n\t',query)
-	
+			universalid = ''
+
+		if universalid != '':
+			for column in [('_mu', 'accented_line'), ('_st', 'stripped_line')]:
+				query = 'DROP INDEX IF EXISTS ' + universalid + column[0] + '_trgm_idx'
+				try:
+					curs.execute(query)
+				except:
+					print('failed to drop index for', universalid)
+					pass
+
+				query = 'CREATE INDEX ' + universalid + column[0] + '_trgm_idx ON ' + universalid + ' USING GIN (' + column[
+					1] + ' gin_trgm_ops)'
+				try:
+					curs.execute(query)
+				except:
+					print('failed to create index for', universalid, '\n\t', query)
+
+			commitcount.increment()
+			if commitcount.value % 250 == 0:
+				dbc.commit()
+			if commitcount.value % 10000 == 0:
+				print('\t', commitcount.value, 'indices created')
+
 	dbc.commit()
-	curs.close()
-	del dbc
-	
+
 	return
 
 

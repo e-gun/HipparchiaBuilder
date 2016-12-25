@@ -344,6 +344,8 @@ def resetauthorsandworksdbs(prefix):
 	cursor.execute(q, d)
 	results = cursor.fetchall()
 
+	print('\t', len(results), 'tables to drop')
+
 	count = 0
 	for r in results:
 		count += 1
@@ -357,7 +359,7 @@ def resetauthorsandworksdbs(prefix):
 		if count % 500 == 0:
 			dbc.commit()
 		if count % 2500 == 0:
-			print('\t', count, 'of', len(results), 'tables dropped')
+			print('\t', count,'tables dropped')
 
 	q = 'DELETE FROM authors WHERE universalid LIKE %s'
 	d = (prefix + '%',)

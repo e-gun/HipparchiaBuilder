@@ -157,6 +157,8 @@ def convertdate(date):
 		'I p': 50,
 		'I sac/Ip': 1,
 		'I-II ac': 100,
+		'spc I-II': 100,
+		'spc II-III': 200,
 		'I/II ac': 100,
 		'I-II': 100,
 		'I-IIa': -100,
@@ -167,12 +169,16 @@ def convertdate(date):
 		'I/II': 100,
 		'I/IIp': 100,
 		'Ia-Ip': 1,
+		'I spc': 1,
 		'Ia': -50,
 		'Ia/Ip': 1,
+		'II spc': 50,
 		'II a': -150,
 		'II ac': 150,
 		'II bc': -150,
 		'II p': 150,
+		'spc II': 150,
+		'IV spc': 350,
 		'II-beg.III ac': 280,
 		'II-I a': -100,
 		'II-I bc': -100,
@@ -186,14 +192,17 @@ def convertdate(date):
 		'II/III': 200,
 		'II/III ac': 200,
 		'II/IIIp': 200,
+		'II/III spcs': 200,
 		'II/IV': 300,
 		'IIa': -150,
 		'III a': -250,
 		'III ac': 250,
+		'III spc': 250,
 		'III bc': -250,
 		'III p': 250,
 		'III-Ia': -111,
 		'III-II bc': -200,
+		'III-II a': -200,
 		'III-II': -200,
 		'III-IVp': 300,
 		'III/II': -200,
@@ -409,7 +418,8 @@ def convertdate(date):
 			numericaldate = 7777
 
 	if numericaldate > 2000:
-		print('\tunparseable date:',originaldate,'[currently looks like',date,']')
+		if originaldate != '?':
+			print('\tunparseable date:',originaldate,'[currently looks like',date,']')
 
 	numericaldate = round(int(numericaldate),1)
 
