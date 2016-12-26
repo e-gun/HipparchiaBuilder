@@ -33,6 +33,7 @@ def parallelbuildlatincorpus(latindatapath, cursor):
 	al = list(alllatinauthors.keys())
 	al = [x for x in al if x[0:3] == dataprefix]
 	al = [x for x in al if int(x[3:]) < 9999]
+	# al = [x for x in al if int(x[3:]) == 448]
 	al.sort()
 	thework = []
 	# al = []

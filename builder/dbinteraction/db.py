@@ -49,7 +49,7 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 
 	for indexedat in range(len(authorobject.works)):
 		# warning: '002' might be the value at work[0]
-		workmaker(authorobject, indexedat, cursor)
+		workmaker(authorobject, authorobject.works[indexedat].worknumber, indexedat, cursor)
 
 	index = 0
 	for line in dbreadyversion:
@@ -77,6 +77,7 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 			try:
 				wk = authorobject.works[authorobject.workdict[wn]]
 				wklvs = list(wk.structure.keys())
+				wklvs.sort()
 				try:
 					toplvl = wklvs.pop()
 				except:
@@ -105,12 +106,14 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 							# do we want '-1' instead?
 							tups[lvl] = (lvl, -1)
 
+				# print('ll',wn,wkuniversalid,wk.structure,wklvs, toplvl,tups,line[2])
 				# tempting to not add the -1's, but they are used to check top levels later
-				query = 'INSERT INTO ' + authorobject.universalid + ' (index, wkuniversalid, level_00_value, level_01_value, ' \
+				query = 'INSERT INTO ' + authorobject.universalid + \
+						' (index, wkuniversalid, level_00_value, level_01_value, ' \
 						'level_02_value, level_03_value, level_04_value, level_05_value, marked_up_line, accented_line, ' \
 						'stripped_line, hyphenated_words, annotations) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-				data = (index, wkuniversalid, tups[0][1], tups[1][1], tups[2][1], tups[3][1], tups[4][1], tups[5][1], line[2],
-						line[3], line[4], line[5], line[6])
+				data = (index, wkuniversalid, tups[0][1], tups[1][1], tups[2][1], tups[3][1], tups[4][1], tups[5][1],
+						line[2], line[3], line[4], line[5], line[6])
 				try:
 					cursor.execute(query, data)
 
@@ -185,7 +188,6 @@ def tablenamer(authorobject, indexedat):
 	nm = authorobject.number
 	wn = wk.worknumber
 
-
 	if wn < 10:
 		nn = '00' + str(wn)
 	elif wn < 100:
@@ -224,9 +226,9 @@ def dbauthoradder(authorobject, cursor):
 		pass
 
 	query = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, genres, recorded_date, converted_date, location) ' \
-	        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+			'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 	data = (uid, lang, authorobject.idxname, authorobject.aka, authorobject.shortname, authorobject.cleanname,
-	        authorobject.genre, '', '', '')
+			authorobject.genre, '', '', '')
 	try:
 		cursor.execute(query, data)
 	except:
@@ -288,7 +290,7 @@ def dbauthorandworkloader(authoruid, cursor):
 	return author
 
 
-def workmaker(authorobject, indexedat, cursor):
+def workmaker(authorobject, worknumber, indexedat, cursor):
 	uid = tablenamer(authorobject, indexedat)
 	wk = authorobject.works[indexedat]
 
@@ -307,7 +309,7 @@ def workmaker(authorobject, indexedat, cursor):
 			ll.append('')
 
 	query = 'INSERT INTO works (universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02, levellabels_03, levellabels_04, levellabels_05) ' \
-	        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+			'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 	data = (uid, wk.title, wk.language, '', ll[0], ll[1], ll[2], ll[3], ll[4], ll[5])
 	try:
 		cursor.execute(query, data)
@@ -320,10 +322,10 @@ def workmaker(authorobject, indexedat, cursor):
 
 def setconnection(config):
 	dbconnection = psycopg2.connect(user=config['db']['DBUSER'], host=config['db']['DBHOST'],
-	                                port=config['db']['DBPORT'], database=config['db']['DBNAME'],
-	                                password=config['db']['DBPASS'])
+									port=config['db']['DBPORT'], database=config['db']['DBNAME'],
+									password=config['db']['DBPASS'])
 	# dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-	
+
 	return dbconnection
 
 
@@ -348,7 +350,7 @@ def resetauthorsandworksdbs(prefix):
 	count = 0
 	for r in results:
 		count += 1
-		q = 'DROP TABLE public.'+r[0]
+		q = 'DROP TABLE public.' + r[0]
 		try:
 			cursor.execute(q)
 		except:
@@ -358,7 +360,7 @@ def resetauthorsandworksdbs(prefix):
 		if count % 500 == 0:
 			dbc.commit()
 		if count % 10000 == 0:
-			print('\t', count,'tables dropped')
+			print('\t', count, 'tables dropped')
 
 	q = 'DELETE FROM authors WHERE universalid LIKE %s'
 	d = (prefix + '%',)
@@ -370,5 +372,4 @@ def resetauthorsandworksdbs(prefix):
 
 	dbc.commit()
 	return
-
 

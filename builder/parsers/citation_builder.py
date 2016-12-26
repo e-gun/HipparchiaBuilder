@@ -242,7 +242,7 @@ def levelsixparsing(action, fullcitation, hexsequence):
 		3: 'authabbrev',
 		97: 'region', # 'a'
 		98: 'city', # 'b'
-		99: 'textdirection', # 'c'
+		99: 'notes', # 'c' (will be textdirection in INS/DDP)
 		100: 'date', # 'd'
 		101: 'publicationinfo', # 'e'
 		102: 'additionalpubinfo', # 'f'
