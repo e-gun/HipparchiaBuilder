@@ -24,7 +24,7 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 	"""
 	
 	print('inserting work db metatata: first/last lines')
-	query = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid ASC'
+	query = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid DESC'
 	data = (workcategoryprefix+'%',)
 	cursor.execute(query, data)
 	results = cursor.fetchall()
@@ -51,7 +51,6 @@ def mpinsertfirstsandlasts(universalids, commitcount):
 	public.works needs to know
 		firstline integer,
         lastline integer
-
 	(allow one author at a time so you can debug)
 	:param cursor:
 	:param dbconnection:
@@ -67,14 +66,16 @@ def mpinsertfirstsandlasts(universalids, commitcount):
 		except:
 			universalid = ''
 
+		auid = universalid[0:6]
+
 		if universalid != '':
-			query = 'SELECT index FROM ' + universalid[0:6] + ' WHERE wkuniversalid=%s ORDER BY index ASC LIMIT 1'
+			query = 'SELECT index FROM ' + auid + ' WHERE wkuniversalid = %s ORDER BY index ASC LIMIT 1'
 			data = (universalid,)
-			print('query, data',query, data)
+			cursor.execute(query, data)
 			firstline = cursor.fetchone()
 			first = int(firstline[0])
 
-			query = 'SELECT index FROM ' + universalid[0:6] + ' WHERE wkuniversalid=%s ORDER BY index DESC LIMIT 1'
+			query = 'SELECT index FROM ' + auid + ' WHERE wkuniversalid = %s ORDER BY index DESC LIMIT 1'
 			data = (universalid,)
 			cursor.execute(query, data)
 			lastline = cursor.fetchone()
@@ -88,10 +89,10 @@ def mpinsertfirstsandlasts(universalids, commitcount):
 		if commitcount.value % 250 == 0:
 			dbc.commit()
 		if commitcount.value % 10000 == 0:
-			print('\t',commitcount.value,'works examined')
+			print('\t', commitcount.value, 'works examined')
 
 	dbc.commit()
-	
+
 	return
 
 
