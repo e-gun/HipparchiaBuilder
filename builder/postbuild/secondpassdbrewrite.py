@@ -10,7 +10,7 @@ import re
 from multiprocessing import Pool
 
 from builder.builder_classes import dbAuthor
-from builder.dbinteraction.db import setconnection, dbauthorandworkloader, tablemaker
+from builder.dbinteraction.db import setconnection, dbauthorandworkloader, authortablemaker
 from builder.parsers.regex_substitutions import latinadiacriticals
 from builder.postbuild.postbuilddating import convertdate
 
@@ -338,6 +338,7 @@ def buidlnewindividualworkdb(db, results, cursor):
 	:return:
 	"""
 
+	# need to be refactored to work with authortablemaker()
 	tablemaker(db, cursor)
 
 	for r in results:

@@ -36,7 +36,7 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 	for r in results:
 		uids.append(r[0])
 
-	print('\t', len(uids), 'works to examine')
+	print('\t', len(uids), 'authors to examine')
 
 	workers = int(config['io']['workers'])
 	jobs = [Process(target=mpinsertfirstsandlasts, args=(uids, commitcount)) for i in range(workers)]
@@ -68,13 +68,15 @@ def mpinsertfirstsandlasts(universalids, commitcount):
 			universalid = ''
 
 		if universalid != '':
-			query = 'SELECT index FROM ' + universalid + ' ORDER BY index ASC LIMIT 1'
-			cursor.execute(query)
+			query = 'SELECT index FROM ' + universalid[0:6] + ' WHERE wkuniversalid=%s ORDER BY index ASC LIMIT 1'
+			data = (universalid,)
+			print('query, data',query, data)
 			firstline = cursor.fetchone()
 			first = int(firstline[0])
 
-			query = 'SELECT index FROM ' + universalid + ' ORDER BY index DESC LIMIT 1'
-			cursor.execute(query)
+			query = 'SELECT index FROM ' + universalid[0:6] + ' WHERE wkuniversalid=%s ORDER BY index DESC LIMIT 1'
+			data = (universalid,)
+			cursor.execute(query, data)
 			lastline = cursor.fetchone()
 			last = int(lastline[0])
 
@@ -144,13 +146,14 @@ def mpworkwordcountworker(universalids, commitcount):
 			universalid = ''
 
 		if universalid != '':
-			query = 'SELECT COUNT (hyphenated_words) FROM ' + universalid + ' WHERE hyphenated_words <> %s'
-			data = ('',)
+			query = 'SELECT COUNT (hyphenated_words) FROM ' + universalid[0:6] + ' WHERE (wkuniversalid=%s AND hyphenated_words <> %s)'
+			data = (universalid,'')
 			cursor.execute(query, data)
 			hcount = cursor.fetchone()
 
-			query = 'SELECT stripped_line FROM ' + universalid + ' ORDER BY index ASC'
-			cursor.execute(query)
+			query = 'SELECT stripped_line FROM ' + universalid[0:6] + ' WHERE wkuniversalid=%s ORDER BY index ASC'
+			data = (universalid,)
+			cursor.execute(query, data)
 			lines = cursor.fetchall()
 			wordcount = 0
 			for line in lines:
@@ -186,7 +189,7 @@ def buildtrigramindices(workcategoryprefix, cursor):
 	
 	print('building indices for work dbs')
 	
-	query = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid ASC'
+	query = 'SELECT universalid FROM authors WHERE universalid LIKE %s ORDER BY universalid ASC'
 	data = (workcategoryprefix+'%',)
 	cursor.execute(query,data)
 	results = cursor.fetchall()
@@ -198,7 +201,7 @@ def buildtrigramindices(workcategoryprefix, cursor):
 	for r in results:
 		uids.append(r[0])
 
-	print('\t',len(uids),'works to index')
+	print('\t',len(uids),'authors to index')
 
 	workers = int(config['io']['workers'])
 	jobs = [Process(target=mpindexbuilder, args=(uids, commitcount)) for i in range(workers)]
@@ -245,7 +248,7 @@ def mpindexbuilder(universalids, commitcount):
 			commitcount.increment()
 			if commitcount.value % 250 == 0:
 				dbc.commit()
-			if commitcount.value % 10000 == 0:
+			if commitcount.value % 250 == 0:
 				print('\t', commitcount.value, 'indices created')
 
 	dbc.commit()

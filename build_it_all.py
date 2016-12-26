@@ -39,7 +39,7 @@ start = time.time()
 if buildlatinauthors == 'y':
 	workcategoryprefix = 'lt'
 	print('building latin dbs')
-	corpus_builder.parallelbuildlatincorpus(phi, cursor)
+	#corpus_builder.parallelbuildlatincorpus(phi, cursor)
 	print('compiling metadata for latin dbs')
 	insertfirstsandlasts(workcategoryprefix, cursor)
 	dbconnection.commit()
