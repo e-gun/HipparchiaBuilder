@@ -30,7 +30,7 @@ you will need:
              83368 latin_lewis_short_a-k.xml
              81768 latin_lewis_short_l-z.xml
 
-    python 3.5
+    python 3.6
         pip
         flask
         psycopg2
