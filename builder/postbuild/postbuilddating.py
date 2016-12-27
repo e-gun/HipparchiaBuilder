@@ -36,7 +36,7 @@ def convertdate(date):
 		'1st/2nd ac': 100,
 		'2. Ha+lfte 1. Jh. n.Chr.': 75,
 		'2. Jh. v.Chr.': -150,
-		'2. Jhdt. n.Chr.: 150,
+		'2. Jhdt. n.Chr.': 150,
 		'2./1.Jh.n.Chr.': 100,
 		'2./1.Jh.v.Chr.': -100,
 		'2./3.Jh.n.Chr.': 200,
