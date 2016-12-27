@@ -431,6 +431,9 @@ def setmetadata(wkid, cursor):
 	marked_up_line where level_00_value == 1 ought to contain metadata about the document
 	example: "<hmu_metadata_provenance value="Oxy" /><hmu_metadata_date value="AD 224" /><hmu_metadata_documentnumber value="10" />[ <hmu_roman_in_a_greek_text>c ̣]</hmu_roman_in_a_greek_text>∙τ̣ε̣[∙4]ε[∙8]"
 
+	oops: metadata not set for dp9b01w09y, etc.
+	db vs wkid issues below: all done?
+
 	:param db:
 	:param cursor:
 	:return:
@@ -522,16 +525,16 @@ def setmetadata(wkid, cursor):
 	q = 'UPDATE works SET publication_info=%s, provenance=%s, recorded_date=%s, converted_date=%s, levellabels_00=%s, ' \
 			'levellabels_01=%s, levellabels_02=%s, levellabels_03=%s, levellabels_04=%s, levellabels_05=%s, ' \
 			'authentic=%s WHERE universalid=%s'
-	d = (pi, pr, dt, cd, 'line', ' ', '', '', '', '', True, db)
+	d = (pi, pr, dt, cd, 'line', ' ', '', '', '', '', True, wkid)
 	cursor.execute(q,d)
 
 	if db[0:2] == 'in':
 		q = 'UPDATE works SET transmission=%s, worktype=%s WHERE universalid=%s'
-		d = ('inscription', 'inscription', db)
+		d = ('inscription', 'inscription', wkid)
 		cursor.execute(q, d)
 	if db[0:2] == 'dp':
 		q = 'UPDATE works SET transmission=%s, worktype=%s WHERE universalid=%s'
-		d = ('papyrus', 'papyrus', db)
+		d = ('papyrus', 'papyrus', wkid)
 		cursor.execute(q, d)
 
 	# things we put in annotations

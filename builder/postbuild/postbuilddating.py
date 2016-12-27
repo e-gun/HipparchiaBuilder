@@ -286,6 +286,7 @@ def convertdate(date):
 		'Va': -450,
 		'VI ac': 550,
 		'VI bc': -550,
+		'VI-Ia': -300,
 		'VI-VIIIp': 600,
 		'VI-VIIp': 600,
 		'VI/Va': -500,
