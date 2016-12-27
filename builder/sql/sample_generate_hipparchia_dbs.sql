@@ -24,6 +24,7 @@ ALTER DATABASE "hipparchiaDB" OWNER TO hippa_wr;
 
 CREATE EXTENSION pg_trgm;
 
+
 -- Table: public.authors
 
 -- DROP TABLE public.authors;
@@ -37,6 +38,7 @@ CREATE TABLE public.authors
   shortname character varying(128),
   cleanname character varying(128),
   genres character varying(512),
+  recorded_date character varying(64),
   converted_date character varying(8),
   location character varying(128)
 )
@@ -67,6 +69,9 @@ CREATE TABLE public.works
   workgenre character varying(32),
   transmission character varying(32),
   worktype character varying(32),
+  provenance character varying(64),
+  recorded_date character varying(64),
+  converted_date character varying(8),
   wordcount integer,
   firstline integer,
   lastline integer,
@@ -79,6 +84,7 @@ ALTER TABLE public.works
   OWNER TO hippa_wr;
 GRANT ALL ON TABLE public.works TO hippa_wr;
 GRANT SELECT ON TABLE public.works TO hippa_rd;
+
 
 -- Table: public.greek_dictionary
 
