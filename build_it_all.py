@@ -14,6 +14,7 @@ from builder.dbinteraction.build_lexica import formatliddellandscott, formatlewi
 from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
 from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs
+from builder.dbinteraction.versioning import timestampthebuild
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -24,6 +25,7 @@ buildinscriptions = config['build']['buildinscriptions']
 buildpapyri = config['build']['buildpapyri']
 buildlex = config['build']['buildlex']
 buildgram = config['build']['buildgram']
+
 
 dbconnection = setconnection(config)
 # dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
@@ -40,21 +42,26 @@ if buildlatinauthors == 'y':
 	workcategoryprefix = 'lt'
 	print('building latin dbs')
 	corpus_builder.parallelbuildlatincorpus(phi, cursor)
+	dbconnection.commit()
 	print('compiling metadata for latin dbs')
 	insertfirstsandlasts(workcategoryprefix, cursor)
 	dbconnection.commit()
 	buildtrigramindices(workcategoryprefix, cursor)
 	findwordcounts(cursor, dbconnection)
+	timestampthebuild(workcategoryprefix, dbconnection, cursor)
+	dbconnection.commit()
 
 if buildgreekauthors == 'y':
 	workcategoryprefix = 'gr'
 	print('building greek dbs')
 	corpus_builder.parallelbuildgreekcorpus(tlg, dbconnection, cursor)
+	dbconnection.commit()
 	print('compiling metadata for greek dbs')
 	insertfirstsandlasts(workcategoryprefix, cursor)
 	dbconnection.commit()
 	buildtrigramindices(workcategoryprefix, cursor)
 	findwordcounts(cursor, dbconnection)
+	timestampthebuild(workcategoryprefix, dbconnection, cursor)
 
 # note the dbcitationinsert() has a check for the dbprefix that constrains your choice of tmp values here
 # if you fail the match, then you will overwrite things like the level05 data that you need later
@@ -75,6 +82,8 @@ if buildinscriptions == 'y':
 	dbconnection.commit()
 	buildtrigramindices(permprefix, cursor)
 	findwordcounts(cursor, dbconnection)
+	timestampthebuild(permprefix, dbconnection, cursor)
+	dbconnection.commit()
 
 if buildpapyri == 'y':
 	tmpprefix = 'YY'
@@ -93,11 +102,15 @@ if buildpapyri == 'y':
 	dbconnection.commit()
 	buildtrigramindices(permprefix, cursor)
 	findwordcounts(cursor, dbconnection)
+	timestampthebuild(permprefix, dbconnection, cursor)
+	dbconnection.commit()
 
 if buildlex == 'y':
 	print('building lexical dbs')
 	formatliddellandscott(dbconnection, cursor, '../')
 	formatlewisandshort(dbconnection, cursor, '../')
+	timestampthebuild('lx', dbconnection, cursor)
+	dbconnection.commit()
 
 if buildgram == 'y':
 	print('building grammar dbs')
@@ -105,6 +118,8 @@ if buildgram == 'y':
 	analysisloader('../HipparchiaData/lexica/greek-analyses.txt', 'greek_morphology', 'g', dbconnection, cursor)
 	grammarloader('ll', '../HipparchiaData/lexica/', dbconnection, cursor)
 	analysisloader('../HipparchiaData/lexica/latin-analyses.txt', 'latin_morphology', 'l', dbconnection, cursor)
+	timestampthebuild('lm', dbconnection, cursor)
+	dbconnection.commit()
 
 stop = time.time()
 took = round((stop-start)/60, 2)
