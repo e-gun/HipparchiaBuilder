@@ -231,8 +231,9 @@ def dbauthoradder(authorobject, cursor):
 			authorobject.genre, '', '', '')
 	try:
 		cursor.execute(query, data)
-	except:
+	except Exception as e:
 		print('dbauthoradder() failed to insert', authorobject.cleanname)
+		print(e.message)
 		print('aborted query was:', query, data)
 
 	return
