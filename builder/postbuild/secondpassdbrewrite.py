@@ -188,7 +188,9 @@ def compilenewworks(newauthors, wkmapper):
 		thework.append((a, db))
 	dbc.commit()
 
-	pool = Pool(processes=int(config['io']['workers']))
+	workers = int(config['io']['workers'])
+	workers = 1
+	pool = Pool(processes=workers)
 	pool.map(parallelnewworkworker, thework)
 
 	return
@@ -200,44 +202,49 @@ def parallelnewworkworker(authoranddbtuple):
 	compile new works in parallel to go faster
 	the loop inside of this is where the real speed gains would lie: 'for document in results:...'
 
-	:param authoranddbtuple: (authorobject, dbname)
+	:param authoranddbtuple: (authorobject, wkid)
 	:return:
 	"""
 
 	a = authoranddbtuple[0]
-	db = authoranddbtuple[1]
+	wkid = authoranddbtuple[1]
+	db = wkid[0:6]
 
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
 	print(a.universalid, a.idxname)
-	q = 'SELECT DISTINCT level_05_value FROM ' + db + ' ORDER BY level_05_value'
-	cursor.execute(q)
+	authortablemaker(a.universalid, cursor)
+	dbc.commit()
+
+	q = 'SELECT DISTINCT level_05_value FROM ' + db + ' WHERE wkuniversalid=%s ORDER BY level_05_value'
+	d = (wkid,)
+	cursor.execute(q, d)
 	results = cursor.fetchall()
 
-	dbnumber = 0
+	wknum = 0
 	for document in results:
-		# can't use docname as the dbname because you will find items like 257a or, worse, 1960:4,173)
-		docname = document[0]
+		# can't use docname as the thee character dbname because you will find items like 257a or, worse, 1960:4,173)
 
-		dbnumber += 1
+		wknum += 1
+		dbstring = rebasedcounter(wknum)
 
-		dbstring = rebasedcounter(dbnumber)
 		if len(dbstring) == 1:
 			dbstring = '00' + dbstring
 		elif len(dbstring) == 2:
 			dbstring = '0' + dbstring
 
-		q = 'SELECT * FROM ' + db + ' WHERE level_05_value LIKE %s ORDER BY index'
-		d = (document[0],)
+		q = 'SELECT * FROM ' + db + ' WHERE (wkuniversalid=%s AND level_05_value=%s) ORDER BY index'
+		d = (wkid, document[0])
 		cursor.execute(q, d)
 		results = cursor.fetchall()
 
-		newdb = a.universalid + 'w' + dbstring
-		buidlnewindividualworkdb(newdb, results, cursor)
-		updateworksdb(newdb, db, docname, cursor)
-		setmetadata(newdb, cursor)
-		if dbnumber % 100 == 0:
+		newwkid = a.universalid + 'w' + dbstring
+		insertnewworksintonewauthor(newwkid, results, cursor)
+		docname = document[0]
+		updateworksdb(newwkid, db, docname, cursor)
+		setmetadata(newwkid, cursor)
+		if wknum % 100 == 0:
 			dbc.commit()
 
 	dbc.commit()
@@ -328,7 +335,7 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 	return
 
 
-def buidlnewindividualworkdb(db, results, cursor):
+def insertnewworksintonewauthor(newwkuid, results, cursor):
 	"""
 
 	send me all of the matching lines from one db and i will build a new workdb with only these lines
@@ -338,8 +345,7 @@ def buidlnewindividualworkdb(db, results, cursor):
 	:return:
 	"""
 
-	# need to be refactored to work with authortablemaker()
-	tablemaker(db, cursor)
+	db = newwkuid[0:6]
 
 	for r in results:
 		r = list(r)
@@ -362,9 +368,18 @@ def buidlnewindividualworkdb(db, results, cursor):
 				r[5] = r[level] + ' ' + r[5]
 			r[level] = '-1'
 
-		q = 'INSERT INTO ' + db + ' (index, level_05_value, level_04_value, level_03_value, level_02_value, level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words, annotations)' \
-											  ' VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-		d = tuple(r)
+		q = 'INSERT INTO ' + db + ' (index, wkuniversalid, level_05_value, level_04_value, level_03_value, level_02_value, ' \
+						'level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words, ' \
+						'annotations) ' \
+						'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+
+		d = (0, 'id0000w000', 'level_05_value', 'level_04_value', 'level_03_value', 'level_02_value', 'level_01_value',
+		'level_00_value', 'marked_up_line', 'accented_line', 'stripped_line', 'hyphenated_words', 'annotations')
+
+		d = (r[0], newwkuid, 'level_05_value', 'level_04_value', 'level_03_value', 'level_02_value', 'level_01_value',
+		'level_00_value', 'marked_up_line', 'accented_line', 'stripped_line', 'hyphenated_words', 'annotations')
+		#d = (r[0], newwkuid, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12])
+		print('qd',q,d)
 		cursor.execute(q, d)
 
 	return
@@ -384,6 +399,12 @@ def updateworksdb(newdb, olddb, docname, cursor):
 	d = (olddb,)
 	cursor.execute(q, d)
 	r = cursor.fetchone()
+
+	try:
+		r[0]
+	except:
+		r = []
+		r.append(' ')
 
 	if r[0] != ' ':
 		newtitle = r[0] + ' - ' + docname
@@ -405,7 +426,7 @@ def updateworksdb(newdb, olddb, docname, cursor):
 	return
 
 
-def setmetadata(db, cursor):
+def setmetadata(wkid, cursor):
 	"""
 	marked_up_line where level_00_value == 1 ought to contain metadata about the document
 	example: "<hmu_metadata_provenance value="Oxy" /><hmu_metadata_date value="AD 224" /><hmu_metadata_documentnumber value="10" />[ <hmu_roman_in_a_greek_text>c ̣]</hmu_roman_in_a_greek_text>∙τ̣ε̣[∙4]ε[∙8]"
@@ -414,6 +435,8 @@ def setmetadata(db, cursor):
 	:param cursor:
 	:return:
 	"""
+
+	db = wkid[0:6]
 
 	prov = re.compile(r'<hmu_metadata_provenance value="(.*?)" />')
 	date = re.compile(r'<hmu_metadata_date value="(.*?)" />')
@@ -426,8 +449,9 @@ def setmetadata(db, cursor):
 	reprints = re.compile(r'<hmu_metadata_reprints value="(.*?)" />')
 	doc = re.compile(r'<hmu_metadata_documentnumber value="(.*?)" />')
 
-	q = 'SELECT index, marked_up_line, annotations FROM '+db+' ORDER BY index LIMIT 1'
-	cursor.execute(q)
+	q = 'SELECT index, marked_up_line, annotations FROM '+db+' WHERE wkuniversalid=%s ORDER BY index LIMIT 1'
+	d = (wkid,)
+	cursor.execute(q,d)
 	r = cursor.fetchone()
 	idx = r[0]
 	ln = r[1]
@@ -554,8 +578,13 @@ def deletetemporarydbs(temprefix):
 	cursor.execute(q, d)
 	results = cursor.fetchall()
 
+	authors = []
 	for r in results:
-		dropdb = r[0]
+		authors.append(r[0])
+	authors = list(set(authors))
+
+	for a in authors:
+		dropdb = a
 		q = 'DROP TABLE public.'+dropdb
 		cursor.execute(q)
 

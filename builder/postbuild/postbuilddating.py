@@ -332,8 +332,8 @@ def convertdate(date):
 	if re.search(r'^(paullo ante |p ante c |p ante )', date) is not None:
 		date = re.sub(r'^(paullo ante |p ante c |p ante )','',date)
 		fudge = -10
-	if re.search(r'^(after|aft\. mid\.|aft\. c.\(\s|)|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', date) is not None:
-		date = re.sub(r'^(after|aft\. mid\.|aft\. c.\(\s|)|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', '', date)
+	if re.search(r'^(after|aft\. mid\.|aft\. c.\(\s\)|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', date) is not None:
+		date = re.sub(r'^(after|aft\. mid\.|aft\. c.\(\s\)|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', '', date)
 		fudge = 20
 	if re.search(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|bef\. mid\.\s|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s)', date) is not None:
 		date = re.sub(r'(^init\ss\s|init\s|early\s|1\.Ha+lfte|bef\. mid\.\s|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s)', '', date)

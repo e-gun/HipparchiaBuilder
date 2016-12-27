@@ -121,6 +121,7 @@ def parallelbuildpapyrusscorpus(papdatapath, temporaryprefix):
 	ap = list(allpapyri.keys())
 	# prune other dbs
 	ap = [x for x in ap if dataprefix in x]
+	ap = [x for x in ap if int(x[3:]) == 71]
 	ap.sort()
 	thework = []
 	# ap = []

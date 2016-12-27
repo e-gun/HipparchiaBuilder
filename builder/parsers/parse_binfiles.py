@@ -127,6 +127,50 @@ and they *should* have sequential ids: 0528 = 130, 16; 0529 = 130, 17
 """
 
 
+def resetbininfo(relativepath, cursor, dbconnection):
+	bininfo = {
+		'genre': 'LIST3CLA.BIN',
+		'genre_clx': 'LIST3CLX.BIN',
+		'recorded_date': 'LIST3DAT.BIN',
+		'epithet': 'LIST3EPI.BIN',
+		'gender': 'LIST3FEM.BIN',
+		'location': 'LIST3GEO.BIN',
+		'canon': 'DOCCAN2.TXT'
+	}
+
+	# relativepath = relativepath[:-3]
+	genres = buildlabellist(relativepath + bininfo['genre_clx'])
+	epithets = buildlabellist(relativepath + bininfo['epithet'])
+	locations = buildlabellist(relativepath + bininfo['location'])
+	canonfile = relativepath + bininfo['canon']
+	dates = buildlabellist(relativepath + bininfo['recorded_date'])
+	numdates = convertdatelist(dates)
+
+	cleandates = {}
+	for d in dates:
+		newdate = re.sub(r'`', '', d)
+		cleandates[newdate] = dates[d]
+
+	wipegreekauthorcolumn('genres', cursor, dbconnection)
+	# wipegreekauthorcolumn('epithet', cursor, dbconnection)
+	wipegreekauthorcolumn('location', cursor, dbconnection)
+	wipegreekauthorcolumn('recorded_date', cursor, dbconnection)
+	wipegreekauthorcolumn('converted_date', cursor, dbconnection)
+
+	# dbloadlist(genres, 'genres', cursor, dbconnection)
+	dbloadlist(epithets, 'genres', cursor, dbconnection)
+	dbloadlist(locations, 'location', cursor, dbconnection)
+	dbloadlist(cleandates, 'recorded_date', cursor, dbconnection)
+	dbloadlist(numdates, 'converted_date', cursor, dbconnection)
+
+	dbconnection.commit()
+
+	# canoninfo: do this last so that you can reset shortname
+	loadgkcanon(canonfile, cursor, dbconnection)
+
+	return
+
+
 def npop(numbertopop, listtopop):
 	ret = []
 	for i in range(0, numbertopop):
@@ -577,7 +621,7 @@ def gkcanoncleaner(txt):
 	txt = parsers.regex_substitutions.latinadiacriticals(txt)
 	txt = txt.split('\n')
 	# txt = txt[:-1]
-	
+
 	return txt
 
 
@@ -864,48 +908,6 @@ def latinloadcanon(canonfile, cursor):
 		data = (canoninfo[work],work)
 		cursor.execute(query, data)
 		
-	return
-
-
-def resetbininfo(relativepath, cursor, dbconnection):
-
-	bininfo = {
-		'genre': 'LIST3CLA.BIN',
-		'genre_clx': 'LIST3CLX.BIN',
-		'recorded_date': 'LIST3DAT.BIN',
-		'epithet': 'LIST3EPI.BIN',
-		'gender': 'LIST3FEM.BIN',
-		'location': 'LIST3GEO.BIN',
-		'canon': 'DOCCAN2.TXT'
-	}
-
-	# relativepath = relativepath[:-3]
-	genres = buildlabellist(relativepath + bininfo['genre_clx'])
-	epithets = buildlabellist(relativepath + bininfo['epithet'])
-	locations = buildlabellist(relativepath + bininfo['location'])
-	canonfile = relativepath + bininfo['canon']
-	dates = buildlabellist(relativepath + bininfo['recorded_date'])
-	numdates = convertdatelist(dates)
-
-	cleandates = []
-	for d in dates:
-		cleandates.append(re.sub(r'`','',d))
-
-	wipegreekauthorcolumn('genres', cursor, dbconnection)
-	# wipegreekauthorcolumn('epithet', cursor, dbconnection)
-	wipegreekauthorcolumn('location', cursor, dbconnection)
-	wipegreekauthorcolumn('recorded_date', cursor, dbconnection)
-	wipegreekauthorcolumn('converted_date', cursor, dbconnection)
-
-	# dbloadlist(genres, 'genres', cursor, dbconnection)
-	dbloadlist(epithets, 'genres', cursor, dbconnection)
-	dbloadlist(locations, 'location', cursor, dbconnection)
-	dbloadlist(cleandates, 'recorded_date', cursor, dbconnection)
-	dbloadlist(numdates, 'converted_date', cursor, dbconnection)
-
-	# canoninfo: do this last so that you can reset shortname
-	loadgkcanon(canonfile, cursor, dbconnection)
-	
 	return
 
 

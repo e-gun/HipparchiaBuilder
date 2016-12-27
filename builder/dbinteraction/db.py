@@ -345,12 +345,17 @@ def resetauthorsandworksdbs(prefix):
 	cursor.execute(q, d)
 	results = cursor.fetchall()
 
-	print('\t', len(results), 'tables to drop')
+	authors = []
+	for r in results:
+		authors.append(r[0])
+	authors = list(set(authors))
+
+	print('\t', len(authors), 'tables to drop')
 
 	count = 0
-	for r in results:
+	for a in authors:
 		count += 1
-		q = 'DROP TABLE public.' + r[0]
+		q = 'DROP TABLE public.' + a
 		try:
 			cursor.execute(q)
 		except:
