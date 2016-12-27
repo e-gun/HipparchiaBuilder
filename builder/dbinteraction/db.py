@@ -344,10 +344,11 @@ def resetauthorsandworksdbs(prefix):
 	d = (prefix + '%',)
 	cursor.execute(q, d)
 	results = cursor.fetchall()
+	dbc.commit()
 
 	authors = []
 	for r in results:
-		authors.append(r[0])
+		authors.append(r[0][0:6])
 	authors = list(set(authors))
 
 	print('\t', len(authors), 'tables to drop')

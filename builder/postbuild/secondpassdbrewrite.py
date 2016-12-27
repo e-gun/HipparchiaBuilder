@@ -340,6 +340,10 @@ def insertnewworksintonewauthor(newwkuid, results, cursor):
 
 	send me all of the matching lines from one db and i will build a new workdb with only these lines
 
+	a sample result:
+
+	(3166, 'YY0071w007', '411', '1', '1', '1', 'r', '1', '<hmu_metadata_provenance value="Herm nome?" /><hmu_metadata_date value="VII spc" /><hmu_metadata_documentnumber value="25" />☧ ἐὰν ϲχολάϲῃϲ <hmu_unconventional_form_written_by_scribe>ϲχολαϲειϲ</hmu_unconventional_form_written_by_scribe> θέλειϲ ἀπ̣ελθεῖν κα̣ὶ̣ ∙ε∙∙[ <hmu_roman_in_a_greek_text>c ̣ ]</hmu_roman_in_a_greek_text>', '☧ ἐὰν ϲχολάϲῃϲ ϲχολαϲειϲ θέλειϲ ἀπελθεῖν καὶ ∙ε∙∙ c  ', '☧ εαν ϲχολαϲηϲ ϲχολαϲειϲ θελειϲ απελθειν και ∙ε∙∙ c  ', '', '')
+
 	:param docname:
 	:param results:
 	:return:
@@ -356,30 +360,27 @@ def insertnewworksintonewauthor(newwkuid, results, cursor):
 		# level04 will yield things like: 'face C, right'
 		# this material will get merged with level01; but what sort of complications will arise?
 
-		r[1] = '-1' # level05
-		if r[5] == '1': # level 01
-			r[5] = 'recto'
+		r[2] = '-1' # level05
+		if r[6] == '1': # level 01
+			r[6] = 'recto'
 
-		for level in [2,3,4]: # levels 04, 03, 02
+		for level in [3,4,5]: # levels 04, 03, 02
 			if r[level] != '1':
 				if level != 4:
 					# print('unusual level data:', db,r[0],level,r[level])
 					pass
-				r[5] = r[level] + ' ' + r[5]
+				r[6] = r[level] + ' ' + r[6]
 			r[level] = '-1'
+
+		# r[1] = tmpdbid: 'YY0071w007', vel sim
+		# swap this out for newwkuid
+
+		r = r[0:1] + [newwkuid] + r[2:]
+		d = tuple(r)
 
 		q = 'INSERT INTO ' + db + ' (index, wkuniversalid, level_05_value, level_04_value, level_03_value, level_02_value, ' \
 						'level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words, ' \
-						'annotations) ' \
-						'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-
-		d = (0, 'id0000w000', 'level_05_value', 'level_04_value', 'level_03_value', 'level_02_value', 'level_01_value',
-		'level_00_value', 'marked_up_line', 'accented_line', 'stripped_line', 'hyphenated_words', 'annotations')
-
-		d = (r[0], newwkuid, 'level_05_value', 'level_04_value', 'level_03_value', 'level_02_value', 'level_01_value',
-		'level_00_value', 'marked_up_line', 'accented_line', 'stripped_line', 'hyphenated_words', 'annotations')
-		#d = (r[0], newwkuid, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12])
-		print('qd',q,d)
+						'annotations) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 		cursor.execute(q, d)
 
 	return
@@ -570,6 +571,7 @@ def deletetemporarydbs(temprefix):
 	:param temprefix:
 	:return:
 	"""
+
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
@@ -580,7 +582,8 @@ def deletetemporarydbs(temprefix):
 
 	authors = []
 	for r in results:
-		authors.append(r[0])
+		a = r[0]
+		authors.append(a[0:6])
 	authors = list(set(authors))
 
 	for a in authors:

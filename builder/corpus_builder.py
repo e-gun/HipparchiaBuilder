@@ -33,7 +33,6 @@ def parallelbuildlatincorpus(latindatapath, cursor):
 	al = list(alllatinauthors.keys())
 	al = [x for x in al if x[0:3] == dataprefix]
 	al = [x for x in al if int(x[3:]) < 9999]
-	# al = [x for x in al if int(x[3:]) == 448]
 	al.sort()
 	thework = []
 	# al = []
@@ -121,7 +120,6 @@ def parallelbuildpapyrusscorpus(papdatapath, temporaryprefix):
 	ap = list(allpapyri.keys())
 	# prune other dbs
 	ap = [x for x in ap if dataprefix in x]
-	ap = [x for x in ap if int(x[3:]) == 71]
 	ap.sort()
 	thework = []
 	# ap = []
