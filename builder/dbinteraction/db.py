@@ -232,8 +232,8 @@ def dbauthoradder(authorobject, cursor):
 	try:
 		cursor.execute(query, data)
 	except:
-		print('failed to insert', authorobject.cleanname)
-		print('aborted query was:', query)
+		print('dbauthoradder() failed to insert', authorobject.cleanname)
+		print('aborted query was:', query, data)
 
 	return
 
@@ -314,7 +314,7 @@ def workmaker(authorobject, worknumber, indexedat, cursor):
 	try:
 		cursor.execute(query, data)
 	except:
-		print('failed to insert', uid, wk.title)
+		print('workmaker() failed to insert', uid, wk.title)
 		print(cursor.query)
 
 	return
