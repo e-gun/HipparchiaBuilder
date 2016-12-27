@@ -450,7 +450,7 @@ def convertdate(date):
 				numericaldate = int(first) * modifier + (fudge * modifier)
 			else:
 				numericaldate = 9999
-		elif re.search(r'^\d{1,}\s{1,}\d{1,}$') is not None:
+		elif re.search(r'^\d{1,}\s{1,}\d{1,}$', date) is not None:
 			# '86  88'
 			halves = date.split(' ')
 			first = halves[0]
