@@ -454,7 +454,7 @@ def convertdate(date):
 			# '86  88'
 			halves = date.split(' ')
 			first = halves[0]
-			numericaldate = first * modifier + (fudge * modifier)
+			numericaldate = int(first) * modifier + (fudge * modifier)
 		elif re.search(r'\d', date) is not None:
 			# we're just a collection of digits? '47', vel sim?
 			try:
