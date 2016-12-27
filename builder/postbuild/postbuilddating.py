@@ -173,8 +173,11 @@ def convertdate(date):
 		'I-Vp': 250,
 		'I/II': 100,
 		'I/IIp': 100,
+		'I/IIa': -100,
 		'Ia-Ip': 1,
 		'I spc': 1,
+		'I sac-Ip': 1,
+		'III sac': -250,
 		'Ia': -50,
 		'Ia/Ip': 1,
 		'II spc': 50,
@@ -182,6 +185,7 @@ def convertdate(date):
 		'II ac': 150,
 		'II bc': -150,
 		'II p': 150,
+		'II-I sac': -100,
 		'spc II': 150,
 		'IV spc': 350,
 		'II-beg.III ac': 280,
@@ -199,8 +203,11 @@ def convertdate(date):
 		'II/IIIp': 200,
 		'II/III spcs': 200,
 		'II/IV': 300,
+		'II-IVp': 300,
 		'IIa': -150,
 		'III a': -250,
+		'III-p': 250,
+		'-IIIp': 250,
 		'III ac': 250,
 		'III spc': 250,
 		'III bc': -250,
@@ -296,6 +303,7 @@ def convertdate(date):
 		'VIIIp': 750,
 		'VIII p': 750,
 		'VIIp': 650,
+		'VII-VIIIspc': -700,
 		'VIp': 550,
 		'Vp': 450,
 		'XIp': 1050,
@@ -303,8 +311,8 @@ def convertdate(date):
 	}
 
 	# drop things that will only confuse the issue
-	date = re.sub(r'^(AD -|-cAD)','',date)
-	date = re.sub(r'<hmu_discarded_form>.*?','',date)
+	date = re.sub(r'^(AD -|-cAD|Ad )','',date)
+	date = re.sub(r'<hmu_discarded_form>.*?$','',date)
 	date = re.sub(r'\[K\.\d{1,}\]','',date)
 	date = re.sub(r'\(or later\)|\sor\slater$', '', date)
 	date = re.sub(r'\[\]','', date)

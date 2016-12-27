@@ -36,7 +36,7 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 	for r in results:
 		uids.append(r[0])
 
-	print('\t', len(uids), 'authors to examine')
+	print('\t', len(uids), 'items to examine')
 
 	workers = int(config['io']['workers'])
 	jobs = [Process(target=mpinsertfirstsandlasts, args=(uids, commitcount)) for i in range(workers)]
@@ -188,7 +188,7 @@ def buildtrigramindices(workcategoryprefix, cursor):
 	:return:
 	"""
 	
-	print('building indices for work dbs')
+	print('building indices for author dbs')
 	
 	query = 'SELECT universalid FROM authors WHERE universalid LIKE %s ORDER BY universalid ASC'
 	data = (workcategoryprefix+'%',)
@@ -202,7 +202,7 @@ def buildtrigramindices(workcategoryprefix, cursor):
 	for r in results:
 		uids.append(r[0])
 
-	print('\t',len(uids),'authors to index')
+	print('\t',len(uids),'items to index')
 
 	workers = int(config['io']['workers'])
 	jobs = [Process(target=mpindexbuilder, args=(uids, commitcount)) for i in range(workers)]

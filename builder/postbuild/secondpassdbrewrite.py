@@ -189,7 +189,6 @@ def compilenewworks(newauthors, wkmapper):
 	dbc.commit()
 
 	workers = int(config['io']['workers'])
-	workers = 1
 	pool = Pool(processes=workers)
 	pool.map(parallelnewworkworker, thework)
 
