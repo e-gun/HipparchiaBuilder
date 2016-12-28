@@ -1,3 +1,5 @@
+-- sqltemplateversion = 12272016
+
 -- Role: hippa_wr
 
 -- DROP ROLE hippa_wr;
