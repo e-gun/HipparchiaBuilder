@@ -396,7 +396,7 @@ def capitals(match):
 		'G': u'Γ',
 		'H': u'Η',
 		'I': u'Ι',
-		'J': u'J', # need the unused J because Roman characters are present
+		'J': u'⒣', # need the unused J because Roman characters are present; but see IG I3 1-2 [1-500 501-1517]) - 370: fr d-f, line 69 - Jέ[κτει Jεμέραι -- ⒣εμέραι is what we want
 		'K': u'Κ',
 		'L': u'Λ',
 		'M': u'Μ',
