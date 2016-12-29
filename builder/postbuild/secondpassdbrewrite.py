@@ -18,7 +18,7 @@ from builder.postbuild.postbuilddating import convertdate
 
 """
 
-the goal is to take an ins or ddp db as built by the standard parser and to break it down into a new set of databases
+the goal is to take an ins, ddp, or chr db as built by the standard parser and to break it down into a new set of databases
 
 the original files just heap up various documents inside of larger works, but this means you lose useful access to the
 location and date information for each individual document, information that could be used as the basis for a search
@@ -612,61 +612,3 @@ def deletetemporarydbs(temprefix):
 	dbc.commit()
 
 	return
-
-
-# slated for removal
-
-
-def cloneauthor(authorobject, cursor):
-	"""
-	copy an author so you can hold more works
-	:param authorobject:
-	:return:
-	"""
-
-	newauthorobject = authorobject
-	currentid = authorobject.universalid
-
-
-	# need to avoid dbname collisions here: remember that the namespace has been compressed into effectively two characters (inXX)
-	# 	'in1b05' has more than 1000 entries
-	#	'in1b0F' will be its continuation
-	#	'in1bAF' will continue in1b0F'
-	# it should be impossible for any two authors to generate the same set of continuations
-	ending = currentid[-1]
-	if 64 < ord(ending) < 91:
-		# already in the A-Z range (ie., we are looking at work #2000+!)
-		# we can't turn 'in1b0F' into 'in1b0G' because 'in1b06' is capable of generating 'in1b0G'
-		# so we increment the '0': 'in1bAF'
-		if re.search(r'[0-9a-f]', currentid[-2:-1]) is not None:
-			# this is the first time we have done this
-			val = int(currentid[-2:-1], 16)
-			char = chr(val + 65)
-		else:
-			# there is an 'A' or such in this position; increment it
-			char = chr(ord(currentid[-2:-1]) + 1)
-		newid = currentid[:-2] + char + ending
-	else:
-		# take the last character of the work and push it into an otherwise impossible register
-		val = int(ending,16)
-		char = chr(val+65) # 0 -> A, 1 -> B, ...
-		newid = authorobject.universalid[:-1] + char
-
-	newauthorobject.universalid = newid
-
-	suffix = '(pt. 2)'
-	if re.search(r'\(pt\.\s\d{1,}\)$',newauthorobject.idxname) is not None:
-		count = re.search(r'\(pt\.\s(\d{1,})\)$',newauthorobject.idxname)
-		count = str(int(count.group(1))+1)
-		suffix = '(pt. '+count+')'
-		# kill off '(pt. 2)' to make way for '(pt. 3)'
-		newauthorobject.idxname = newauthorobject.idxname[:-7] + suffix
-	else:
-		newauthorobject.idxname = newauthorobject.idxname + suffix
-
-	modifyauthorsdb(newauthorobject.universalid, newauthorobject.idxname, cursor)
-	print('\t',currentid,' --> ', newauthorobject.universalid)
-
-	return newauthorobject
-
-
