@@ -333,7 +333,7 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 	cursor.execute(q, d)
 
 	# inscription 'authors' can set their location via their idxname
-	if newentryname[0:2] == 'in':
+	if newentryname[0:2] in ['in', 'ch']:
 		loc = re.search(r'(.*?)\s\(', worktitle)
 		q = 'UPDATE authors SET location=%s WHERE universalid=%s'
 		d = (loc.group(1),newentryname)
