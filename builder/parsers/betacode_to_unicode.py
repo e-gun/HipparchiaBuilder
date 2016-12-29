@@ -136,6 +136,9 @@ def purgehybridgreekandlatinwords(texttoclean):
 	mix = re.compile(r'([α-ωϲ])([a-z])')
 	transformed = re.sub(mix,decoupler,texttoclean)
 
+	mix = re.compile(r'([ἁἑἱὁὑἡὡῥ])([a-z])')
+	transformed = re.sub(mix, debreather, texttoclean)
+
 	return transformed
 
 
@@ -156,3 +159,33 @@ def decoupler(matchgroup):
 	transformed += latinchar
 
 	return transformed
+
+
+def debreather(matchgroup):
+	"""
+
+	another helper for purgehybridgreekandlatinwords()
+
+	:param matchgroup:
+	:return:
+	"""
+
+	greekchar = matchgroup.group(1)
+	latinchar = matchgroup.group(2)
+
+	errantbreathing = {
+		u'ἁ': '(A',
+		u'ἑ': '(E',
+		u'ἱ': '(I',
+		u'ὁ': '(O',
+		u'ὑ': '(U',
+		u'ἡ': '(H',
+		u'ὡ': '(W',
+		u'ῥ': '(R'
+
+	}
+
+	transformed = errantbreathing[greekchar] + latinchar
+
+	return transformed
+
