@@ -332,7 +332,7 @@ def setconnection(config):
 	return dbconnection
 
 
-def resetauthorsandworksdbs(prefix):
+def resetauthorsandworksdbs(tmpprefix, prefix):
 	"""
 	clean out any old info before insterting new info
 	you have to purge the inscription and ddp dbs every time because the names can change between builds
@@ -343,41 +343,42 @@ def resetauthorsandworksdbs(prefix):
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
-	d = (prefix + '%',)
-	cursor.execute(q, d)
-	results = cursor.fetchall()
-	dbc.commit()
+	for zap in [tmpprefix, prefix]:
+		q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
+		d = (zap + '%',)
+		cursor.execute(q, d)
+		results = cursor.fetchall()
+		dbc.commit()
 
-	authors = []
-	for r in results:
-		authors.append(r[0][0:6])
-	authors = list(set(authors))
+		authors = []
+		for r in results:
+			authors.append(r[0][0:6])
+		authors = list(set(authors))
 
-	print('\t', len(authors), 'tables to drop')
+		print('\t', len(authors), zap, 'tables to drop')
 
-	count = 0
-	for a in authors:
-		count += 1
-		q = 'DROP TABLE public.' + a
-		try:
-			cursor.execute(q)
-		except:
-			# 'table "in090cw001" does not exist'
-			# because a build got interrupted? one hopes it is safe to pass
-			pass
-		if count % 500 == 0:
-			dbc.commit()
-		if count % 10000 == 0:
-			print('\t', count, 'tables dropped')
+		count = 0
+		for a in authors:
+			count += 1
+			q = 'DROP TABLE public.' + a
+			try:
+				cursor.execute(q)
+			except:
+				# 'table "in090cw001" does not exist'
+				# because a build got interrupted? one hopes it is safe to pass
+				pass
+			if count % 500 == 0:
+				dbc.commit()
+			if count % 10000 == 0:
+				print('\t', count, zap, 'tables dropped')
 
-	q = 'DELETE FROM authors WHERE universalid LIKE %s'
-	d = (prefix + '%',)
-	cursor.execute(q, d)
+		q = 'DELETE FROM authors WHERE universalid LIKE %s'
+		d = (zap + '%',)
+		cursor.execute(q, d)
 
-	q = 'DELETE FROM works WHERE universalid LIKE %s'
-	d = (prefix + '%',)
-	cursor.execute(q, d)
+		q = 'DELETE FROM works WHERE universalid LIKE %s'
+		d = (zap + '%',)
+		cursor.execute(q, d)
 
 	dbc.commit()
 	return

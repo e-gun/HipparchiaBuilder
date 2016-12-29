@@ -190,6 +190,12 @@ def compilenewworks(newauthors, wkmapper):
 		thework.append((a, db))
 	dbc.commit()
 
+	# DEUGGING
+	# for w in thework:
+	# 	if 'ZZ0019' in w[1]:
+	# 		print(w[0].universalid,w[0].idxname)
+	# ch0901 PBacch
+
 	workers = int(config['io']['workers'])
 	pool = Pool(processes=workers)
 	pool.map(parallelnewworkworker, thework)

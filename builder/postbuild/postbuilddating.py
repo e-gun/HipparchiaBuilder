@@ -67,6 +67,7 @@ def convertdate(date):
 		'5th ac': 450,
 		'5th bc': -450,
 		'5th c. bc': -450,
+		'5th/6th ac': 500,
 		'6.Jh.n.Chr.': 550,
 		'6.Jh.v.Chr.': -550,
 		'6th ac': 550,
@@ -82,8 +83,16 @@ def convertdate(date):
 		'9.Jh.n.Chr.': 850,
 		'9th ac': 850,
 		'10./11.Jh.n.Chr.': 1000,
+		'10th': 950,
 		'11th': 1050,
 		'12th': 1150,
+		'13th': 1250,
+		'14th': 1350,
+		'10th ac': 950,
+		'11th ac': 1050,
+		'12th ac': 1150,
+		'13th ac': 1250,
+		'14th ac': 1350,
 		'adv. Imp.': 400,
 		'aet Ant': 145,
 		'aet Aug': 1,
@@ -93,6 +102,9 @@ def convertdate(date):
 		'aet Augusti': 1,
 		'aet Aur': 170,
 		'aet Byz': 700,
+		'Early Byz': 400,
+		'Middle Byz': 700,
+		'Late Byz': 1200,
 		'aet Carac': 205,
 		'aet Chr': 400,
 		'aet Claud': 50,
@@ -132,6 +144,7 @@ def convertdate(date):
 		'Augustus': 1,
 		'Byz.': 700,
 		'Byz': 700,
+		'Byzantine': 700,
 		'byzantinisch': 700,
 		'byzantinische Zeit': 700,
 		'Chr.': 400,
@@ -140,6 +153,7 @@ def convertdate(date):
 		'date': 1500,
 		'Early Hell.': -300,
 		'Early Ptol.': -275,
+		'Early Chr': 200,
 		'end 4th-beg. 3rd bc': 300,
 		'flavisch': 85,
 		'fru+he Kaiserzeit (Augustus?)': 1,
@@ -267,6 +281,7 @@ def convertdate(date):
 		'Late Ptol.': -50,
 		'letztes Viertel 1. Jh.v.Chr.': -15,
 		'Marcus Aurelius': 170,
+		'Merov.': 600,
 		'Nero': 60,
 		'pre-Ptol.': -333,
 		'Ptol.': -100,
@@ -331,7 +346,7 @@ def convertdate(date):
 	date = re.sub(r'^(AD c |AD -|-cAD|Ad )','',date)
 	date = re.sub(r'<hmu_discarded_form>.*?$','',date)
 	date = re.sub(r'\[K\.\d{1,}\]','',date)
-	date = re.sub(r'\(or later\)|\sor\slater$', '', date)
+	date = re.sub(r'\(or later\)|\sor\slater$|\[o\.s\.\]', '', date)
 	date = re.sub(r'\[\]','', date)
 	date = re.sub(r'(\?|\(\?\))', '', date)
 	date = re.sub(r'(middle\s|c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s|mittlere |Mitte |Zeit des |erste |Erste )','', date)
@@ -341,6 +356,7 @@ def convertdate(date):
 	date = re.sub(r'^wohl\s','',date)
 	date = re.sub(r'/(antea|postea|paullo |fru+hestens |wohl noch |vielleicht noch |kaum spa+ter als )','', date)
 	date = re.sub(r'/in\s','',date) # 'fin II/in IIIp'
+	date = re.sub(r'\[(\d{1,})\sac\]',r'\1', date)
 
 	# swap papyrus BCE info format for one of the inscription BCE info formats
 	date = re.sub(r'\sspc$','p', date)

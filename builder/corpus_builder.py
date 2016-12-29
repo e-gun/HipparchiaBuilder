@@ -134,6 +134,31 @@ def parallelbuildpapyrusscorpus(papdatapath, temporaryprefix):
 	return True
 
 
+def parallelbuildchristianinscriptions(chrdatapath, temporaryprefix):
+	"""
+	the whole enchilada
+	you a few shifts in the comments and conditionals will let you build portions instead
+	:return:
+	"""
+	dataprefix = 'CHR'
+	allchr = filereaders.findauthors(chrdatapath)
+	allchr = checkextant(allchr, chrdatapath)
+
+	ac = list(allchr.keys())
+	# prune other dbs
+	ac = [x for x in ac if dataprefix in x]
+	ac.sort()
+	thework = []
+	# ac = []
+	for a in ac:
+		if int(a[3:]) < 1000:
+			thework.append(({a: allchr[a]}, 'G', temporaryprefix, chrdatapath, dataprefix))
+	pool = Pool(processes=int(config['io']['workers']))
+	pool.map(parallelworker, thework)
+
+	return True
+
+
 def parallelworker(thework):
 	dbc = setconnection(config)
 	cur = dbc.cursor()
@@ -257,7 +282,7 @@ def initialworkparsing(authorobject, language, datapath):
 	txt = regex_substitutions.replacequotationmarks(txt)
 	txt = regex_substitutions.replaceaddnlchars(txt)
 	# now you are about to get a bunch of brackets added to the data via hmu_markup
-	if language == 'G':
+	if language == 'G' and authorobject.language == 'G':
 		# where else/how else to handle colons?
 		txt = re.sub(r':','·',txt)
 		txt = regex_substitutions.findromanwithingreek(txt)

@@ -24,6 +24,7 @@ buildgreekauthors = config['build']['buildgreekauthors']
 buildlatinauthors = config['build']['buildlatinauthors']
 buildinscriptions = config['build']['buildinscriptions']
 buildpapyri = config['build']['buildpapyri']
+buildchristians = config['build']['buildchristians']
 buildlex = config['build']['buildlex']
 buildgram = config['build']['buildgram']
 
@@ -36,6 +37,7 @@ tlg = config['io']['tlg']
 phi = config['io']['phi']
 ins = config['io']['ins']
 ddp = config['io']['ddp']
+chr = config['io']['chr']
 
 start = time.time()
 
@@ -70,11 +72,12 @@ if buildinscriptions == 'y':
 	tmpprefix = 'XX'
 	permprefix = 'in'
 	print('dropping any existing inscription tables')
-	resetauthorsandworksdbs(permprefix)
-	print('building inscription dbs')
+	resetauthorsandworksdbs(tmpprefix, permprefix)
+	print('building inscription data')
 	corpus_builder.parallelbuildinscriptionscorpus(ins, tmpprefix)
-	print('remapping the inscription dbs: turning works into authors and embedded documents into individual works')
+	print('remapping the inscription data: turning works into authors and embedded documents into individual works')
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
+	print('aumapper, wkmapper', aumapper, wkmapper)
 	newauthors = compilenewauthors(aumapper, wkmapper)
 	compilenewworks(newauthors, wkmapper)
 	deletetemporarydbs(tmpprefix)
@@ -90,10 +93,30 @@ if buildpapyri == 'y':
 	tmpprefix = 'YY'
 	permprefix = 'dp'
 	print('dropping any existing papyrus tables')
-	resetauthorsandworksdbs(permprefix)
-	print('building papyrus dbs')
+	resetauthorsandworksdbs(tmpprefix, permprefix)
+	print('building papyrus data')
 	corpus_builder.parallelbuildpapyrusscorpus(ddp, tmpprefix)
-	print('remapping the inscription dbs: turning works into authors and embedded documents into individual works')
+	print('remapping the inscription data: turning works into authors and embedded documents into individual works')
+	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
+	newauthors = compilenewauthors(aumapper, wkmapper)
+	compilenewworks(newauthors, wkmapper)
+	deletetemporarydbs(tmpprefix)
+	print('compiling metadata for inscription dbs')
+	insertfirstsandlasts(permprefix, cursor)
+	dbconnection.commit()
+	buildtrigramindices(permprefix, cursor)
+	findwordcounts(cursor, dbconnection)
+	timestampthebuild(permprefix, dbconnection, cursor)
+	dbconnection.commit()
+
+if buildchristians == 'y':
+	tmpprefix = 'ZZ'
+	permprefix = 'ch'
+	print('dropping any existing christian inscription tables')
+	resetauthorsandworksdbs(tmpprefix, permprefix)
+	print('building christian inscription data')
+	corpus_builder.parallelbuildchristianinscriptions(chr, tmpprefix)
+	print('remapping the inscription data: turning works into authors and embedded documents into individual works')
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 	newauthors = compilenewauthors(aumapper, wkmapper)
 	compilenewworks(newauthors, wkmapper)
