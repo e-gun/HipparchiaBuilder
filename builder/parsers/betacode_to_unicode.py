@@ -54,6 +54,7 @@ def parsegreekinsidelatin(texttoclean):
 def restoreromanwithingreek(texttoclean):
 	search = r'<hmu_roman_in_a_greek_text>(.*?)</hmu_roman_in_a_greek_text>'
 	texttoclean = re.sub(search, parseromaninsidegreek, texttoclean)
+
 	return texttoclean
 
 
@@ -117,3 +118,41 @@ def stripaccents(texttostrip):
 	
 	return texttostrip
 
+
+def purgehybridgreekandlatinwords(texttoclean):
+	"""
+
+	files that have both greek and latin are naughty about flagging the swaps in language
+	the result can be stuff like this:
+		"domno piissimo αugusto λeone anno χϝι et ξonstantino"
+
+	this will look for g+latin and turn it into Latin
+	the roman numeral problem will remain: so the real fix is to dig into this elsewhere/earlier
+
+	:param texttoclean:
+	:return:
+	"""
+
+	mix = re.compile(r'([α-ωϲ])([a-z])')
+	transformed = re.sub(mix,decoupler,texttoclean)
+
+	return transformed
+
+
+def decoupler(matchgroup):
+	"""
+
+	helper for purgehybridgreekandlatinwords()
+
+	:param matchgroup:
+	:return:
+	"""
+	greekchar = matchgroup.group(1)
+	latinchar = matchgroup.group(2)
+
+	invals = u'αβξδεφγηι⒣κλμνοπρϲτυϝωχυζ'
+	outvals = u'ABCDEFGHIJKLMNOPRSTUVWXYZ'
+	transformed = greekchar.translate(str.maketrans(invals, outvals))
+	transformed += latinchar
+
+	return transformed

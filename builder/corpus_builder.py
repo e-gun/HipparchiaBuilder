@@ -151,7 +151,9 @@ def parallelbuildchristianinscriptions(chrdatapath, temporaryprefix):
 	thework = []
 	# ac = []
 	for a in ac:
-		if int(a[3:]) < 1000:
+		if int(a[3:]) < 1000 and int(a[3:]) != 21:
+			# CHR0021 Judaica [Hebrew/Aramaic]
+			# don't know how to read either language
 			thework.append(({a: allchr[a]}, 'G', temporaryprefix, chrdatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
@@ -293,6 +295,9 @@ def initialworkparsing(authorobject, language, datapath):
 	else:
 		txt = regex_substitutions.replacelatinmarkup(txt)
 		txt = regex_substitutions.replacelatinbetacode(txt)
+
+	# last pass to mitigate the 'αugusto λeone anno χϝι et ξonstantino' problem
+	txt = betacode_to_unicode.purgehybridgreekandlatinwords(txt)
 
 	return txt
 
