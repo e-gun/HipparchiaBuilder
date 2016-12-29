@@ -133,11 +133,11 @@ def purgehybridgreekandlatinwords(texttoclean):
 	:return:
 	"""
 
-	mix = re.compile(r'([α-ωϲ])([a-z])')
+	mix = re.compile(r'([α-ωϲϝ])([a-z])')
 	transformed = re.sub(mix,decoupler,texttoclean)
 
 	mix = re.compile(r'([ἁἑἱὁὑἡὡῥ])([a-z])')
-	transformed = re.sub(mix, debreather, texttoclean)
+	transformed = re.sub(mix, debreather, transformed)
 
 	return transformed
 
