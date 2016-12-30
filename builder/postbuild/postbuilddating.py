@@ -149,6 +149,7 @@ def convertdate(date):
 		'byzantinisch': 700,
 		'byzantinische Zeit': 700,
 		'Chr.': 400,
+		'Christ.': 400,
 		'Classical': -400,
 		'Constantine': 315,
 		'Carolingian': 775,
@@ -347,6 +348,8 @@ def convertdate(date):
 	}
 
 	# drop things that will only confuse the issue
+	date = re.sub(r', or sh\. bef\.(\s|$)','',date)
+	date = re.sub(r'(.*?)/⟪\d⟫',r'\1',date)
 	date = re.sub(r'^(AD c |AD -|-cAD|Ad )','',date)
 	date = re.sub(r'<hmu_discarded_form>.*?$','',date)
 	date = re.sub(r'\[K\.\d{1,}\]','',date)
@@ -373,8 +376,8 @@ def convertdate(date):
 	if re.search(r'^(ante fin|ante med|ante|sh\. bef\.|sh\.bef\.|bef\.|ante c|a)\s', date) is not None:
 		date = re.sub(r'^(ante fin|ante med|ante|sh\. bef\.|sh\.bef\.|bef\.|ante c|a)\s', '', date)
 		fudge = -20
-	if re.search(r'^(p\spost\s|sh\.aft\.\s|1\.Viertel\s)', date) is not None:
-		date = re.sub(r'^(p\spost\s|sh\.aft\.\s|1\.Viertel\s)', '', date)
+	if re.search(r'^(p\spost\sc\s|p\spost\s|sh\.aft\.\s|1\.Viertel\s)', date) is not None:
+		date = re.sub(r'^(p\spost\sc\s|p\spost\s|sh\.aft\.\s|1\.Viertel\s)', '', date)
 		fudge = 10
 	if re.search(r'^(paullo ante |p ante c |p ante )', date) is not None:
 		date = re.sub(r'^(paullo ante |p ante c |p ante )','',date)
