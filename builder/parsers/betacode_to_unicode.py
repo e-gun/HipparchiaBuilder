@@ -133,15 +133,21 @@ def purgehybridgreekandlatinwords(texttoclean):
 	:return:
 	"""
 
+	# fixes: ξonstantino
 	mix = re.compile(r'([α-ωϲϝ])([a-z])')
 	transformed = re.sub(mix,unmixer,texttoclean)
 
+	# fixes: s(anctae) ῥomanae
 	mix = re.compile(r'([ἁἑἱὁὑἡὡῥ])([a-z])')
 	transformed = re.sub(mix, unbreather, transformed)
 
-	# λ. Pomponius
-	mix = re.compile(r'(^|\s)([α-ωϲϝ])(\.\s|\.$)')
-	transformed = re.sub(mix, unperiodic, transformed)
+	# fixes: λ. Pomponius
+	mix = re.compile(r'(\s)([α-ωϲϝ])(\.\s|\.$)')
+	transformed = re.sub(mix, unpunctuated, transformed)
+
+	# fixes: ξ[apitoli]o or ξ(apitolio)
+	mix = re.compile(r'(\s)([α-ωϲϝ])(\[|\()')
+	transformed = re.sub(mix, unpunctuated, transformed)
 
 	return transformed
 
@@ -198,12 +204,15 @@ def unbreather(matchgroup):
 	return transformed
 
 
-def unperiodic(matchgroup):
+def unpunctuated(matchgroup):
 	"""
 
 	another helper for purgehybridgreekandlatinwords()
 
-	fixes: λ. Pomponius
+	depending on matchgroup.group(3):
+
+		fixes: λ. Pomponius
+		fixes: ξ[apitoli]o or ξ(apitolio)
 
 	:param matchgroup:
 	:return:
@@ -211,12 +220,14 @@ def unperiodic(matchgroup):
 
 	initial = matchgroup.group(1)
 	greekchar = matchgroup.group(2)
-	period = matchgroup.group(3)
+	punct = matchgroup.group(3)
 
 	invals = u'αβξδεφγηι⒣κλμνοπρϲτυϝωχυζ'
 	outvals = u'ABCDEFGHIJKLMNOPRSTUVWXYZ'
 	transformed = greekchar.translate(str.maketrans(invals, outvals))
 
-	transformed = initial + transformed + period
+	transformed = initial + transformed + punct
 
 	return transformed
+
+
