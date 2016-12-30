@@ -6,11 +6,16 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-
+import configparser
 from datetime import datetime
 
 
 sqltemplateversion = 12272016
+
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+stamp = config['build']['timestamp']
 
 
 def versiontablemaker(dbconnection, cursor):
@@ -49,7 +54,10 @@ def timestampthebuild(corpusname, dbconnection, cursor):
 	:return:
 	"""
 
-	now = datetime.now().strftime("%Y-%m-%d %H:%M")
+	if stamp == 'y':
+		now = datetime.now().strftime("%Y-%m-%d %H:%M")
+	else:
+		now = '[an undated build]'
 
 	q = 'SELECT to_regclass(%s);'
 	d = ('public.builderversion',)

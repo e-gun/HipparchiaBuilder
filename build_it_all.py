@@ -81,7 +81,6 @@ if buildinscriptions == 'y':
 	corpus_builder.parallelbuildinscriptionscorpus(ins, tmpprefix)
 	print('remapping the inscription data: turning works into authors and embedded documents into individual works')
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
-	print('aumapper, wkmapper', aumapper, wkmapper)
 	newauthors = compilenewauthors(aumapper, wkmapper)
 	compilenewworks(newauthors, wkmapper)
 	deletetemporarydbs(tmpprefix)
