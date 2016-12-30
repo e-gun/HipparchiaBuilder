@@ -5,15 +5,13 @@
 	License: GPL 3 (see LICENSE in the top level directory of the distribution)
 """
 
-import struct
-import binascii
+
 import re
 import psycopg2
 import configparser
+from multiprocessing import Pool
 from builder import parsers
 from builder import file_io
-from builder.parsers.swappers import hextohighunicode
-
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -166,7 +164,7 @@ def resetbininfo(relativepath, cursor, dbconnection):
 	dbconnection.commit()
 
 	# canoninfo: do this last so that you can reset shortname
-	loadgkcanon(canonfile, cursor, dbconnection)
+	loadgkcanon(canonfile)
 
 	return
 
@@ -668,21 +666,53 @@ def worknamecleaner(matchgroup):
 	return cleanedname
 
 
-def loadgkcanon(canonfile, cursor, dbconnection):
+def loadgkcanon(canonfile):
+	"""
+
+	this is suprisingly slow at the end of a build
+	there are 8412 of UPDATES to run: parallelize them
+
+	:param canonfile:
+	:param cursor:
+	:param dbconnection:
+	:return:
+	"""
+
 	#txt = file_io.filereaders.dirtyhexloader(canonfile)
 	txt = file_io.filereaders.highunicodefileload(canonfile)
 	txt += '\n<authorentry>'
 
 	txt = gkcanoncleaner(txt)
-	
-	for line in txt:
-		if line[0:5] == '<auth':
-			modifygkauthordb(line, cursor)
-			# pass
-		elif line[0:6] == '\t<work':
-			modifygkworksdb(line, cursor)
-	
-	dbconnection.commit()
+	thework = []
+
+	for t in txt:
+		thework.append(t)
+	pool = Pool(processes=int(config['io']['workers']))
+	pool.map(parallelcanonworker, thework)
+
+	return
+
+
+def parallelcanonworker(thework):
+	"""
+
+	speed up loadgkcanon()
+
+	:param thework:
+	:return:
+	"""
+
+	dbc = mkdbconn(config)
+	cur = dbc.cursor()
+
+	if thework[0:5] == '<auth':
+		modifygkauthordb(thework, cur)
+	# pass
+	elif thework[0:6] == '\t<work':
+		modifygkworksdb(thework, cur)
+
+	dbc.commit()
+
 	return
 
 
@@ -963,3 +993,13 @@ def streamout(txt,outfile):
 	f.write(txt)
 	f.close()
 	return
+
+# to avoid circular imports from db
+
+def mkdbconn(config):
+	dbconnection = psycopg2.connect(user=config['db']['DBUSER'], host=config['db']['DBHOST'],
+									port=config['db']['DBPORT'], database=config['db']['DBNAME'],
+									password=config['db']['DBPASS'])
+	# dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+
+	return dbconnection
