@@ -218,7 +218,10 @@ def dbauthoradder(authorobject, cursor):
 	"""
 	# steal from above: get a table name and then drop the 'w001' bit
 	uid = authorobject.universalid
-	lang = authorobject.works[0].language
+	if authorobject.language == '':
+		lang = authorobject.works[0].language
+	else:
+		lang = authorobject.language
 
 	query = 'DELETE FROM authors WHERE universalid = %s'
 	data = (uid,)
