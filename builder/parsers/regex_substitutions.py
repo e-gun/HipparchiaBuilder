@@ -1189,7 +1189,7 @@ def rtanglebracketsubstitutes(match):
 	
 	substitutions = {
 		#1: u'\u0332',
-		1: r'⟫',
+		1: r'⟫', # see note in ltanglebracketsubstitutes()
 		2: u'\u2032',
 		16: u'\u2032',
 		19: u'\u2032',

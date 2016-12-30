@@ -63,10 +63,6 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 						worklist = []
 						bytecount = bytecount + 2
 						authorname = getpascalstr(idtfiledatastream, bytecount)
-						if re.search(r'Latin',authorname) is not None:
-							print('\tswitching to Latin for',authornumber,authorname)
-							# because CHR and INS are not uniformly Greek
-							language = 'L'
 						authorobject = Author(authornumber, language, uidprefix, dataprefix)
 						authorobject.idxname = authorname
 						bytecount = bytecount + len(authorname)
