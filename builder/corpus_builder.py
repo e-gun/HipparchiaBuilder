@@ -22,7 +22,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def parallelbuildlatincorpus(latindatapath, cursor):
+def parallelbuildlatincorpus(latindatapath):
 	"""
 	the whole enchilada
 	you a few shifts in the comments and conditionals will let you build portions instead
@@ -44,13 +44,10 @@ def parallelbuildlatincorpus(latindatapath, cursor):
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	
-	if len(al) > 0:
-		parse_binfiles.latinloadcanon(latindatapath + dataprefix + '9999.TXT', cursor)
-	
 	return True
 
 
-def parallelbuildgreekcorpus(greekdatapath, dbconnection, cursor):
+def parallelbuildgreekcorpus(greekdatapath):
 	"""
 	the whole enchilada
 	you a few shifts in the comments and conditionals will let you build portions instead
@@ -71,10 +68,7 @@ def parallelbuildgreekcorpus(greekdatapath, dbconnection, cursor):
 		thework.append(({a: allgreekauthors[a]}, 'G', 'gr', greekdatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
-	
-	if len(ag) > 0:
-		parse_binfiles.resetbininfo(greekdatapath, cursor, dbconnection)
-	
+
 	return True
 
 

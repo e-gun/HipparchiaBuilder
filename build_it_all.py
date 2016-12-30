@@ -16,6 +16,7 @@ from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
 from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs
 from builder.dbinteraction.versioning import timestampthebuild
+from builder.parsers import parse_binfiles
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -44,7 +45,9 @@ start = time.time()
 if buildlatinauthors == 'y':
 	workcategoryprefix = 'lt'
 	print('building latin dbs')
-	corpus_builder.parallelbuildlatincorpus(phi, cursor)
+	corpus_builder.parallelbuildlatincorpus(phi)
+	dataprefix = 'LAT'
+	parse_binfiles.latinloadcanon(phi + dataprefix + '9999.TXT', cursor)
 	dbconnection.commit()
 	print('compiling metadata for latin dbs')
 	insertfirstsandlasts(workcategoryprefix, cursor)
@@ -57,7 +60,8 @@ if buildlatinauthors == 'y':
 if buildgreekauthors == 'y':
 	workcategoryprefix = 'gr'
 	print('building greek dbs')
-	corpus_builder.parallelbuildgreekcorpus(tlg, dbconnection, cursor)
+	corpus_builder.parallelbuildgreekcorpus(tlg)
+	parse_binfiles.resetbininfo(tlg, cursor, dbconnection)
 	dbconnection.commit()
 	print('compiling metadata for greek dbs')
 	insertfirstsandlasts(workcategoryprefix, cursor)
