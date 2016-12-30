@@ -142,11 +142,11 @@ def purgehybridgreekandlatinwords(texttoclean):
 	transformed = re.sub(mix, unbreather, transformed)
 
 	# fixes: λ. Pomponius
-	mix = re.compile(r'(\s)([α-ωϲϝ])(\.\s|\.$)')
+	mix = re.compile(r'(\s)([α-ωϲϝ])(\.\s[A-Z])')
 	transformed = re.sub(mix, unpunctuated, transformed)
 
 	# fixes: ξ[apitoli]o or ξ(apitolio)
-	mix = re.compile(r'(\s)([α-ωϲϝ])(\[|\()')
+	mix = re.compile(r'(\s)([α-ωϲϝ])(\[|\([a-z])')
 	transformed = re.sub(mix, unpunctuated, transformed)
 
 	return transformed

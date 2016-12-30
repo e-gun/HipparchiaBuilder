@@ -356,6 +356,8 @@ def convertdate(date):
 	date = re.sub(r'(middle\s|c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s|mittlere |Mitte |Zeit des |erste |Erste )','', date)
 	date = re.sub(r'^(ca\.\s|um\s|prob\s|poss\.\s|non post |ante fere |term\.post )','',date)
 	date = re.sub(r'^c(\.|)(\s|)', '', date)
+	date = re.sub(r'^c.(\d)', r'\1', date)
+	date = re.sub(r'^\[(\d{1,} ac)\]', r'\1', date)
 	date = re.sub(r'^(s\s|-)', '', date)
 	date = re.sub(r'^wohl\s','',date)
 	date = re.sub(r'/(antea|postea|paullo |fru+hestens |wohl noch |vielleicht noch |kaum spa+ter als )','', date)
@@ -482,6 +484,26 @@ def convertdate(date):
 			except:
 				# oops: maybe we saw something like 'III bc' but it was not in datemapper{}
 				numericaldate = 8888
+		elif len(date.split(';')) > 1:
+			halves = date.split('-')
+			first = halves[0]
+			second = halves[1]
+			if re.search(r'\d', first) is not None and re.search(r'\d', second) is not None:
+				first = re.sub(r'\D','',first)
+				second = re.sub(r'\D', '', second)
+				# note the problem with 100-15 and/or 75-6
+				if len(first) > len(second):
+					difference = len(first) - len(second)
+					second = first[0:difference]+second[(-1*len(second)):]
+				first = int(first)
+				second = int(second)
+				numericaldate = (first + second)/2 * modifier + (fudge * modifier)
+			elif re.search(r'\d', first) is not None:
+				# you'll get here with something like '172- BC?'
+				first = re.sub(r'\D','',first)
+				numericaldate = int(first) * modifier + (fudge * modifier)
+			else:
+				numericaldate = 9000
 		else:
 			numericaldate = 7777
 

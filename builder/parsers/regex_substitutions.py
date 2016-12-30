@@ -1126,7 +1126,9 @@ def ltanglebracketsubstitutes(match):
 	val = int(match.group(1))
 	
 	substitutions = {
-		1: '',
+		# 1: '',
+		1: '⟪', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
+		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
 		2: u'\u2035',
 		16: u'\u2035',
 		19: u'\u2035',
@@ -1186,7 +1188,8 @@ def rtanglebracketsubstitutes(match):
 	val = int(match.group(1))
 	
 	substitutions = {
-		1: u'\u0332',
+		#1: u'\u0332',
+		1: r'⟫',
 		2: u'\u2032',
 		16: u'\u2032',
 		19: u'\u2032',
