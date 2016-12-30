@@ -146,7 +146,7 @@ def purgehybridgreekandlatinwords(texttoclean):
 	transformed = re.sub(mix, unpunctuated, transformed)
 
 	# fixes: ξ[apitoli]o or ξ(apitolio)
-	mix = re.compile(r'(\s)([α-ωϲϝ])(\[|\([a-z])')
+	mix = re.compile(r'(\s)([α-ωϲϝ])(\[[a-z]|\([a-z])')
 	transformed = re.sub(mix, unpunctuated, transformed)
 
 	return transformed
