@@ -70,6 +70,7 @@ def convertdate(date):
 		'5th/6th ac': 500,
 		'6.Jh.n.Chr.': 550,
 		'6.Jh.v.Chr.': -550,
+		'6./7.Jh.n.Chr.': 600,
 		'6th ac': 550,
 		'6th bc': -550,
 		'7.Jh.n.Chr.': 650,
@@ -121,6 +122,7 @@ def convertdate(date):
 		'aet Imp tard': 400,
 		'aet imp': 200,
 		'aet Imp': 200,
+		'Early Imp.': 100,
 		'aet inferior': 1200,
 		'aet Nero': 60,
 		'aet Nerv': 97,
@@ -151,6 +153,7 @@ def convertdate(date):
 		'Chr.': 400,
 		'Christ.': 400,
 		'Classical': -400,
+		'aet Christ': 400,
 		'Constantine': 315,
 		'Carolingian': 775,
 		'date': 1500,
@@ -233,6 +236,8 @@ def convertdate(date):
 		'III-II bc': -200,
 		'III-II': -200,
 		'III-IV': 300,
+		'III/IV': 300,
+		'III/IV ac': 300,
 		'III-IVp': 300,
 		'III-p': 250,
 		'III/II': -200,
@@ -313,6 +318,7 @@ def convertdate(date):
 		'V p': 450,
 		'V-IV bc': -400,
 		'V-IVa': -400,
+		'V/IV': -400,
 		'V-VI': 500,
 		'V-VIp': 500,
 		'V/IV bc': -400,
@@ -330,6 +336,7 @@ def convertdate(date):
 		'VI/V bc': -500,
 		'VI/V': -500,
 		'VI/Va': -500,
+		'VI-V': -500,
 		'VI/VIIp': 600,
 		'VIa': -550,
 		'VII ac': -650,
@@ -347,49 +354,61 @@ def convertdate(date):
 		'XVII-XIX ac': 1800,
 	}
 
+
+	waffles = re.compile(r'(prob\. |\(or later\)|\sor\slater$|\[o\.s\.\]|, or sh\. bef\.(\s|$))')
+	uselessspans = re.compile(r'(middle\s|c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s|mittlere |Mitte |Zeit des |erste |Erste )')
+	approx = re.compile(r'^(um\s|prob\s|poss\.\s|non post |ante fere |term\.post |ca\.\s|\.|)(\s)')
+	badslashing = re.compile(r'/(antea|postea|paullo |fru+hestens |wohl noch |vielleicht noch |kaum spa+ter als |in\s)')
+	superfluous = re.compile(r'(<hmu_discarded_form>.*?$|^(wohl|Schicht)\s|\[K\.\d{1,}\]|^(s\s|-))')
+	unpunctuate = re.compile(r'(\?|\(\?\)|\[|\])')
+	ceispositive = re.compile(r'^(AD c |AD -|-cAD|Ad )')
+
 	# drop things that will only confuse the issue
-	date = re.sub(r', or sh\. bef\.(\s|$)','',date)
-	date = re.sub(r'(.*?)/⟪\d⟫',r'\1',date)
-	date = re.sub(r'^(AD c |AD -|-cAD|Ad )','',date)
-	date = re.sub(r'<hmu_discarded_form>.*?$','',date)
-	date = re.sub(r'\[K\.\d{1,}\]','',date)
-	date = re.sub(r'\(or later\)|\sor\slater$|\[o\.s\.\]', '', date)
-	date = re.sub(r'\[\]','', date)
-	date = re.sub(r'(\?|\(\?\))', '', date)
-	date = re.sub(r'(middle\s|c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s|mittlere |Mitte |Zeit des |erste |Erste )','', date)
-	date = re.sub(r'^(ca\.\s|um\s|prob\s|poss\.\s|non post |ante fere |term\.post )','',date)
-	date = re.sub(r'^c(\.|)(\s|)', '', date)
+	date = re.sub(waffles,'',date)
+	date = re.sub(ceispositive,'',date)
+	date = re.sub(superfluous,'',date)
+	date = re.sub(uselessspans,'', date)
+	# 'unpunctuate' needs to come after 'superfluous'
+	date = re.sub(unpunctuate, '', date)
+	date = re.sub(approx,'',date)
+	date = re.sub(badslashing, '', date)
+	# reformat
 	date = re.sub(r'^c.(\d)', r'\1', date)
 	date = re.sub(r'^\[(\d{1,} ac)\]', r'\1', date)
-	date = re.sub(r'^(s\s|-)', '', date)
-	date = re.sub(r'^wohl\s','',date)
-	date = re.sub(r'/(antea|postea|paullo |fru+hestens |wohl noch |vielleicht noch |kaum spa+ter als )','', date)
-	date = re.sub(r'/in\s','',date) # 'fin II/in IIIp'
 	date = re.sub(r'\[(\d{1,})\sac\]',r'\1', date)
-
+	date = re.sub(r'p c\.(\d)',r'\1',date)
+	date = re.sub(r' od(er|\.) eher','/',date)
+	date = re.sub(r'(.*?)/⟪\d⟫',r'\1',date)
 	# swap papyrus BCE info format for one of the inscription BCE info formats
 	date = re.sub(r'\sspc$','p', date)
 	date = re.sub(r'\ssac$', 'a', date)
 
 	fudge = 0
 	# look out for order of regex: 'ante med' should come before 'ante', etc
-	if re.search(r'^(ante fin|ante med|ante|sh\. bef\.|sh\.bef\.|bef\.|ante c|a)\s', date) is not None:
-		date = re.sub(r'^(ante fin|ante med|ante|sh\. bef\.|sh\.bef\.|bef\.|ante c|a)\s', '', date)
+	negmiddles = re.compile(r'^(ante fin|ante med|ante|sh\. bef\.|sh\.bef\.|bef\.|ante c|a|fru+hestens)\s')
+	shafters = re.compile(r'^(p\spost\sc\s|p\spost\s|sh\.aft\.\s|1\.Viertel\s)')
+	shbefores = re.compile(r'^(paullo ante |p ante c |p ante )')
+	afters = re.compile(r'^(sh\. aft\.|after|aft\. mid\.|aft\. c.\(\s\)|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s')
+	starts = re.compile(r'(^init\ss\s|init/med |init\s|early\s|1\.Ha+lfte|bef\. mid\.\s|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s|^Anf\.\s|fru+hes )')
+	ends = re.compile(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende des |Ende\s|letztes Drittel\s|later\s)')
+
+	if re.search(negmiddles, date) is not None:
+		date = re.sub(negmiddles, '', date)
 		fudge = -20
-	if re.search(r'^(p\spost\sc\s|p\spost\s|sh\.aft\.\s|1\.Viertel\s)', date) is not None:
-		date = re.sub(r'^(p\spost\sc\s|p\spost\s|sh\.aft\.\s|1\.Viertel\s)', '', date)
+	if re.search(shafters, date) is not None:
+		date = re.sub(shafters, '', date)
 		fudge = 10
-	if re.search(r'^(paullo ante |p ante c |p ante )', date) is not None:
-		date = re.sub(r'^(paullo ante |p ante c |p ante )','',date)
+	if re.search(shbefores, date) is not None:
+		date = re.sub(shbefores,'',date)
 		fudge = -10
-	if re.search(r'^(after|aft\. mid\.|aft\. c.\(\s\)|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', date) is not None:
-		date = re.sub(r'^(after|aft\. mid\.|aft\. c.\(\s\)|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s', '', date)
+	if re.search(afters, date) is not None:
+		date = re.sub(afters, '', date)
 		fudge = 20
-	if re.search(r'(^init\ss\s|init/med |init\s|early\s|1\.Ha+lfte|bef\. mid\.\s|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s|^Anf\.\s|fru+hes )', date) is not None:
-		date = re.sub(r'(^init\ss\s|init/med |init\s|early\s|1\.Ha+lfte|bef\. mid\.\s|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s|^Anf\.\s|fru+hes )', '', date)
+	if re.search(starts, date) is not None:
+		date = re.sub(starts, '', date)
 		fudge = -25
-	if re.search(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende des |Ende\s|letztes Drittel|later\s)', date) is not None:
-		date = re.sub(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende des |Ende\s|letztes Drittel|later\s)', '', date)
+	if re.search(ends, date) is not None:
+		date = re.sub(ends, '', date)
 		fudge = 25
 
 	# one last blast (or two)
@@ -480,15 +499,8 @@ def convertdate(date):
 			halves = date.split(' ')
 			first = halves[0]
 			numericaldate = int(first) * modifier + (fudge * modifier)
-		elif re.search(r'\d', date) is not None:
-			# we're just a collection of digits? '47', vel sim?
-			try:
-				numericaldate = int(date) * modifier + fudge
-			except:
-				# oops: maybe we saw something like 'III bc' but it was not in datemapper{}
-				numericaldate = 8888
 		elif len(date.split(';')) > 1:
-			halves = date.split('-')
+			halves = date.split(';')
 			first = halves[0]
 			second = halves[1]
 			if re.search(r'\d', first) is not None and re.search(r'\d', second) is not None:
@@ -507,6 +519,15 @@ def convertdate(date):
 				numericaldate = int(first) * modifier + (fudge * modifier)
 			else:
 				numericaldate = 9000
+		elif re.search(r'\d', date) is not None:
+			# do me late/last
+			# we're just a collection of digits? '47', vel sim?
+			try:
+				numericaldate = int(date) * modifier + fudge
+			except:
+				# oops: there are still characters left but it was not in datemapper{}
+				print('')
+				numericaldate = 8888
 		else:
 			numericaldate = 7777
 

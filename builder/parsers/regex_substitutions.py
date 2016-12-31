@@ -917,7 +917,7 @@ def leftbracketsubstitutions(match):
 		3: '❴',
 		2: '⟪',
 		# 2: '‹',
-		1: '('
+		1: '⦅' # supposed to be parenthesis '('; but can interfere with betacode parsing; either swap here or change order of execution
 		}
 	
 	if val in substitutions:
@@ -969,7 +969,7 @@ def rightbracketsubstitutions(match):
 		3: '❵',
 		2: '⟫',
 		# 2: '›',
-		1: ')'
+		1: '⦆' # swapped for ')'
 	}
 	
 	if val in substitutions:
@@ -1055,7 +1055,10 @@ def ltcurlybracketsubstitutes(match):
 		28: r'<hmu_date_or_numeric_equivalent_of_date>',
 		27: u'\u0359',
 		26: r'<hmu_recitfied_form>',
-		10: u'\u0332',
+		# 10: u'\u0332',
+		10: r'⟪', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
+		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
+		# cf. ltanglebracketsubstitutes() #1
 		9: r'<hmu_alternative_reading>',
 		8: r'<hmu_numerical_equivalent>',
 		7: r'<hmu_reading_discarded_in_another_source>',
@@ -1094,7 +1097,10 @@ def rtcurlybracketsubstitutes(match):
 		28: r'</hmu_date_or_numeric_equivalent_of_date>',
 		27: u'\u0359',
 		26: r'</hmu_recitfied_form>',
-		10: u'\u0332',
+		# 10: u'\u0332',
+		10: r'⟫', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
+		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
+		# cf. ltanglebracketsubstitutes() #1
 		9: r'</hmu_alternative_reading>',
 		8: r'</hmu_numerical_equivalent>',
 		7: r'</hmu_reading_discarded_in_another_source>',

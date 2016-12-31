@@ -12,6 +12,17 @@ import re
 def lowercaseletters(betacode):
 	"""
 	swap betacode for unicode values
+
+	notice the problem that we can get with the papyri:
+		μεμίϲθ(ωμαἰ ὡϲ πρόκ(ἐιται
+		vs
+		μεμίϲθ(ωμαι) ὡϲ πρόκ(ε)ιται
+
+	the betacode knows how to prevent this:
+		MEMI/SQ[1WMAI]1 W(S PRO/K[1E]1ITAI
+
+	so you can't convert '[1' and ']1' into '(' and ')' before you get here
+
 	:param betacode:
 	:return:
 	"""

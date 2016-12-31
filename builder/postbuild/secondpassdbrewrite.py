@@ -439,8 +439,8 @@ def setmetadata(wkid, cursor):
 	marked_up_line where level_00_value == 1 ought to contain metadata about the document
 	example: "<hmu_metadata_provenance value="Oxy" /><hmu_metadata_date value="AD 224" /><hmu_metadata_documentnumber value="10" />[ <hmu_roman_in_a_greek_text>c ̣]</hmu_roman_in_a_greek_text>∙τ̣ε̣[∙4]ε[∙8]"
 
-	oops: metadata not set for dp9b01w09y, etc.
-	db vs wkid issues below: all done?
+	all of this is fairly slow: maybe all selects should hapen and then all updates rather than swapping
+	between selects and updates
 
 	:param db:
 	:param cursor:
@@ -524,8 +524,9 @@ def setmetadata(wkid, cursor):
 	if len(pr) > 64:
 		pr = pr[0:63]
 
-	for item in [pi, pr, dt]:
-		item = latinadiacriticals(item)
+	pi = latinadiacriticals(pi)
+	pr = latinadiacriticals(pr)
+	dt = latinadiacriticals(dt)
 
 	# labels need to be '' and not None because of the way findtoplevelofwork() is coded in HipparchiaServer
 	# note that 'face' has been represented by a whitespace: ' '
@@ -536,11 +537,11 @@ def setmetadata(wkid, cursor):
 	d = (pi, pr, dt, cd, 'line', ' ', '', '', '', '', True, wkid)
 	cursor.execute(q,d)
 
-	if db[0:2] == 'in':
+	if db[0:2] in ['in', 'ch']:
 		q = 'UPDATE works SET transmission=%s, worktype=%s WHERE universalid=%s'
 		d = ('inscription', 'inscription', wkid)
 		cursor.execute(q, d)
-	if db[0:2] == 'dp':
+	if db[0:2] in ['dp']:
 		q = 'UPDATE works SET transmission=%s, worktype=%s WHERE universalid=%s'
 		d = ('papyrus', 'papyrus', wkid)
 		cursor.execute(q, d)
