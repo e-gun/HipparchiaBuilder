@@ -28,9 +28,10 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 		inserting work db metatata: wordcounts
 
 	the following is supposed to be the faster way:
+	[http://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql]
 
-		CREATE TEMP TABLE tmp_x
-		[populate tmp_x]
+		CREATE TEMP TABLE tmp_x AS SELECT * FROM works LIMIT 0;
+		[populate tmp_x; but people want to do it via a file and so save INSERT time]
 
 		UPDATE works
 		SET    column = tmp_x.column

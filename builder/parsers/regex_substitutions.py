@@ -34,11 +34,20 @@ def earlybirdsubstitutions(texttoclean):
 		(r'_', u' \u2014 '),  # doing this without spaces was producing problems with giant 'hyphenated' line ends
 		(r'\s\'', r' ‘'),
 		(r'\'( |\.|,|;)', r'’\1'),
+		# the papyri exposed an interesting problem with '?'
+		# let's try to deal with this at earlybirdsubstitutions() because if you let '?' turn into '\u0323' it seems impossible to undo that
+		#
 		# many papyrus lines start like: '[ &c ? ]$' (cf. '[ &c ? $TO\ PRA=]GMA')
 		# this will end up as: '[ <hmu_roman_in_a_greek_text>c ̣ ]</hmu_roman_in_a_greek_text>'
-		# let's try to deal with this here and now because if you let '?' turn into '\u0323' it seems impossible to undo that
+		# the space after '?' is not always there
+		# 	'[ &c ?]$! KEKEI/NHKA DI/KH PERI\ U(/BREWS [4!!!!!!!!!![ &c ?]4 ]$'
+		# also get a version of the pattern that does not have '[' early because we are not starting a line:
+		#	'&{10m4}10 [ c ? ]$IASNI#80 *)EZIKEH\ M[ARTURW= &c ? ]$'
+		# this one also fails to have '&c' because the '&' came earlier
 		# here's hoping there is no other way to achieve this pattern...
-		(r'\[\s&c\s\?\s(.*?)\$', r'[ c ﹖\1$') # the question mark needs to be preserved, so we substitute a small question mark
+		(r'&c\s\?(.*?)\$', r'𝕔 ﹖\1$'), # the question mark needs to be preserved, so we substitute a small question mark
+		(r'\[\sc\s\?(.*?)\$', r'[ 𝕔 ﹖\1$'), # try to catch '&{10m4}10 [ c ? ]$I' without doing any damage
+		(r'&\?(.*?)\](.*?)\$',r'﹖\1]\2$') # some stray lonely '?' cases remain
 	)
 	
 	for i in range(0, len(betacodetuples)):
@@ -190,7 +199,6 @@ def debughostilesubstitutions(texttoclean):
 	return texttoclean
 
 
-
 def cleanuplingeringmesses(texttoclean):
 	"""
 
@@ -207,26 +215,34 @@ def cleanuplingeringmesses(texttoclean):
 	# restoremissing(matchgroup) will not work!
 	# let's address the '?' in earlybirds...
 
-	missing = re.compile(r'\[ <hmu_roman_in_a_greek_text>c(.*?)\]</hmu_roman_in_a_greek_text>')
-	texttoclean = re.sub(missing, r'[ c \1 ]', texttoclean)
+	missing = re.compile(r'\[(\s{1,})<hmu_roman_in_a_greek_text>c(.*?)\]</hmu_roman_in_a_greek_text>')
+	#texttoclean = re.sub(missing, r'[\1c \2 ]', texttoclean)
+	texttoclean = re.sub(missing, bracketspacer, texttoclean)
 
 	return texttoclean
 
 
-def restoremissing(matchgroup):
+def bracketspacer(matchgroup):
 	"""
+	this is not good:
+		'[      <hmu_roman_in_a_greek_text>c 27     </hmu_roman_in_a_greek_text>π]όλεωϲ χ⦅αίρειν⦆. ὁμολογῶ'
 
-	the nightmare that ensues when '?' gets replaced by '\u0323'
+	it should be:
+		'[(spaces)c 27(spaces)π]όλεωϲ χ⦅αίρειν⦆. ὁμολογῶ'
+
+	not too hard to get the spaces right; but they will only display in a compacted manner if sent out as
+	so you should substitute u'\u00a0' (no-break space)
 
 	:param matchgroup:
 	:return:
 	"""
 
-	find = matchgroup.group(1)
+	grpone = re.sub(r'\s',u'\u00a0', matchgroup.group(1))
+	grptwo = re.sub(r'\s',u'\u00a0', matchgroup.group(2))
 
-	find = re.sub(u'\u0323',r'?', find)
+	substitute = '['+grpone+'𝕔'+grptwo+']'
 
-	return find
+	return substitute
 
 
 #
