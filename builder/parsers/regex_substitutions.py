@@ -34,6 +34,11 @@ def earlybirdsubstitutions(texttoclean):
 		(r'_', u' \u2014 '),  # doing this without spaces was producing problems with giant 'hyphenated' line ends
 		(r'\s\'', r' ‘'),
 		(r'\'( |\.|,|;)', r'’\1'),
+		# many papyrus lines start like: '[ &c ? ]$' (cf. '[ &c ? $TO\ PRA=]GMA')
+		# this will end up as: '[ <hmu_roman_in_a_greek_text>c ̣ ]</hmu_roman_in_a_greek_text>'
+		# let's try to deal with this here and now because if you let '?' turn into '\u0323' it seems impossible to undo that
+		# here's hoping there is no other way to achieve this pattern...
+		(r'\[\s&c\s\?\s(.*?)\$', r'[ c ﹖\1$') # the question mark needs to be preserved, so we substitute a small question mark
 	)
 	
 	for i in range(0, len(betacodetuples)):
@@ -198,14 +203,30 @@ def cleanuplingeringmesses(texttoclean):
 
 	# many papyrus lines start like: '[ &c ? ]$'
 	# this ends up as: '[ <hmu_roman_in_a_greek_text>c ̣ ]</hmu_roman_in_a_greek_text>'
+	# good luck geting re to find that pattern, though: some sort of bug in re?
+	# restoremissing(matchgroup) will not work!
+	# let's address the '?' in earlybirds...
 
-	unknownmissing = re.compile(r'\[ <hmu_roman_in_a_greek_text>c ̣ \]</hmu_roman_in_a_greek_text>')
-	knownmissing = re.compile(r'\[ <hmu_roman_in_a_greek_text>c (.*?)\]</hmu_roman_in_a_greek_text>')
+	missing = re.compile(r'\[ <hmu_roman_in_a_greek_text>c(.*?)\]</hmu_roman_in_a_greek_text>')
+	texttoclean = re.sub(missing, r'[ c \1 ]', texttoclean)
 
-	cleaned = re.sub(unknownmissing, r'[ c ? ]', texttoclean)
-	cleaned = re.sub(knownmissing, r'[ c \1 ]', cleaned)
+	return texttoclean
 
-	return cleaned
+
+def restoremissing(matchgroup):
+	"""
+
+	the nightmare that ensues when '?' gets replaced by '\u0323'
+
+	:param matchgroup:
+	:return:
+	"""
+
+	find = matchgroup.group(1)
+
+	find = re.sub(u'\u0323',r'?', find)
+
+	return find
 
 
 #
