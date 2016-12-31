@@ -324,6 +324,7 @@ def convertdate(date):
 		'V/IV bc': -400,
 		'V/IVa': -400,
 		'V/VIp': 500,
+		'V/VII spc': 550,
 		'Va': -450,
 		'Vespasian': 70,
 		'VI ac': 550,
@@ -360,8 +361,8 @@ def convertdate(date):
 	approx = re.compile(r'^(um\s|prob\s|poss\.\s|non post |ante fere |term\.post |ca\.\s|\.|)(\s)')
 	badslashing = re.compile(r'/(antea|postea|paullo |fru+hestens |wohl noch |vielleicht noch |kaum spa+ter als |in\s)')
 	superfluous = re.compile(r'(<hmu_discarded_form>.*?$|^(wohl|Schicht)\s|\[K\.\d{1,}\]|^(s\s|-))')
-	unpunctuate = re.compile(r'(\?|\(\?\)|\[|\])')
-	ceispositive = re.compile(r'^(AD c |AD -|-cAD|Ad )')
+	unpunctuate = re.compile(r'(\?|\(\?\)|\[|\]|\')')
+	ceispositive = re.compile(r'^(AD c |AD -|-cAD|Ad |cAD )')
 
 	# drop things that will only confuse the issue
 	date = re.sub(waffles,'',date)
@@ -372,7 +373,7 @@ def convertdate(date):
 	date = re.sub(unpunctuate, '', date)
 	date = re.sub(approx,'',date)
 	date = re.sub(badslashing, '', date)
-	# reformat
+	# reformat / preserve a match
 	date = re.sub(r'^c.(\d)', r'\1', date)
 	date = re.sub(r'^\[(\d{1,} ac)\]', r'\1', date)
 	date = re.sub(r'\[(\d{1,})\sac\]',r'\1', date)
@@ -382,6 +383,8 @@ def convertdate(date):
 	# swap papyrus BCE info format for one of the inscription BCE info formats
 	date = re.sub(r'\sspc$','p', date)
 	date = re.sub(r'\ssac$', 'a', date)
+	date = re.sub(r'^c([IV])',r'\1',date)
+
 
 	fudge = 0
 	# look out for order of regex: 'ante med' should come before 'ante', etc
@@ -526,14 +529,13 @@ def convertdate(date):
 				numericaldate = int(date) * modifier + fudge
 			except:
 				# oops: there are still characters left but it was not in datemapper{}
-				print('')
 				numericaldate = 8888
 		else:
 			numericaldate = 7777
 
 	if numericaldate > 2000:
-		if originaldate != '?':
-			print('\tunparseable date:',originaldate,'[currently looks like',date,']')
+		if originaldate != '?' and originaldate != '[unknown]':
+			print('\tunparseable date:',originaldate)
 
 	numericaldate = round(int(numericaldate),1)
 

@@ -185,6 +185,29 @@ def debughostilesubstitutions(texttoclean):
 	return texttoclean
 
 
+
+def cleanuplingeringmesses(texttoclean):
+	"""
+
+	we've made it to the bitter end but there is something ugly in the results
+	here we can clean things up that we are too lazy/stupid/afraid-of-worse to prevent from ending up at this end
+
+	:param texttoclean:
+	:return:
+	"""
+
+	# many papyrus lines start like: '[ &c ? ]$'
+	# this ends up as: '[ <hmu_roman_in_a_greek_text>c ̣ ]</hmu_roman_in_a_greek_text>'
+
+	unknownmissing = re.compile(r'\[ <hmu_roman_in_a_greek_text>c ̣ \]</hmu_roman_in_a_greek_text>')
+	knownmissing = re.compile(r'\[ <hmu_roman_in_a_greek_text>c (.*?)\]</hmu_roman_in_a_greek_text>')
+
+	cleaned = re.sub(unknownmissing, r'[ c ? ]', texttoclean)
+	cleaned = re.sub(knownmissing, r'[ c \1 ]', cleaned)
+
+	return cleaned
+
+
 #
 # matchgroup substitutions
 #

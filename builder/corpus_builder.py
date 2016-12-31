@@ -297,6 +297,7 @@ def initialworkparsing(authorobject, language, datapath):
 		txt = regex_substitutions.replacelatinbetacode(txt)
 
 	# last pass to mitigate the 'αugusto λeone anno χϝι et ξonstantino' problem
+	txt = regex_substitutions.cleanuplingeringmesses(txt)
 	txt = betacode_to_unicode.purgehybridgreekandlatinwords(txt)
 
 	return txt
