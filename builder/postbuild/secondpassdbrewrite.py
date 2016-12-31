@@ -439,9 +439,6 @@ def setmetadata(wkid, cursor):
 	marked_up_line where level_00_value == 1 ought to contain metadata about the document
 	example: "<hmu_metadata_provenance value="Oxy" /><hmu_metadata_date value="AD 224" /><hmu_metadata_documentnumber value="10" />[ <hmu_roman_in_a_greek_text>c ̣]</hmu_roman_in_a_greek_text>∙τ̣ε̣[∙4]ε[∙8]"
 
-	all of this is fairly slow: maybe all selects should hapen and then all updates rather than swapping
-	between selects and updates
-
 	:param db:
 	:param cursor:
 	:return:

@@ -20,6 +20,27 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 	public.works needs to know
 		firstline integer,
         lastline integer,
+
+    all of this is fairly slow: thousands of UPDATEs flying at the server makes it sad
+
+	long execution at
+		inserting work db metatata: first/last lines
+		inserting work db metatata: wordcounts
+
+	the following is supposed to be the faster way:
+
+		CREATE TEMP TABLE tmp_x
+		[populate tmp_x]
+
+		UPDATE works
+		SET    column = tmp_x.column
+		FROM   tmp_x
+		WHERE  works.universalid = tmp_x.universalid;
+
+		DROP TABLE tmp_x;
+
+	consider implementing it...
+
 	:param cursor:
 	:return:
 	"""
