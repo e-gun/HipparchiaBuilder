@@ -148,8 +148,7 @@ def parallelbuildchristianinscriptions(chrdatapath, temporaryprefix):
 	thework = []
 	# ac = []
 	for a in ac:
-		# < 1000 unless debugging
-		if int(a[3:]) == 10 and int(a[3:]) != 21:
+		if int(a[3:]) < 1000 and int(a[3:]) != 21:
 			# CHR0021 Judaica [Hebrew/Aramaic]
 			# don't know how to read either language
 			if re.search(r'Latin', allchr[a]) is not None:

@@ -19,26 +19,15 @@ config.read('config.ini')
 
     thousands of UPDATEs flying at the server makes it sad
 
-	long execution at
-		inserting work db metatata: first/last lines
-		inserting work db metatata: wordcounts
+    currently refactoring to dodge 'UPDATE' as much as possible or to update all relevant fields at once
 
-	the following is supposed to be the faster way:
+	the following is supposed to be the faster way: create a tmp table and then update another table from it
 	[http://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql]
 
-		CREATE TEMP TABLE tmp_x AS SELECT * FROM works LIMIT 0;
-		[populate tmp_x; but people want to do it via a file and so save INSERT time]
-
-		UPDATE works
-		SET    column = tmp_x.column
-		FROM   tmp_x
-		WHERE  works.universalid = tmp_x.universalid;
-
-		DROP TABLE tmp_x;
-
-	consider implementing it
-
-	currently refactoring to dodge 'UPDATE' as much as possible
+	long execution at
+		[collecting info about new works]
+		inserting work db metatata: first/last lines
+		inserting work db metatata: wordcounts
 
 """
 
@@ -193,28 +182,92 @@ def findwordcounts(cursor, dbconnection):
 	results = cursor.fetchall()
 	dbconnection.commit()
 
-	manager = Manager()
-	uids = manager.list()
-	commitcount = MPCounter()
-
+	uids = []
 	for r in results:
 		uids.append(r[0])
 
-	print('\t',len(uids),'works to examine')
-
-	workers = int(config['io']['workers'])
-	jobs = [Process(target=mpworkwordcountworker, args=(uids, commitcount)) for i in range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
+	counts = loadcounts(uids)
+	insertcounts(counts)
 
 	return
 
 
-def mpworkwordcountworker(universalids, commitcount):
+def loadcounts(uids):
+	"""
+
+	take a list of ids and grab wordcounts for the corresponding works
+
+	return a dict:
+		{ uid1: count1, uid2: count2, ... }
+
+	:param uids:
+	:return:
+	"""
+
+	manager = Manager()
+	uids = manager.list(uids)
+	counttuplelist = manager.list()
+	commitcount = MPCounter()
+
+	print('\t',len(uids),'works to examine')
+
+	workers = int(config['io']['workers'])
+	jobs = [Process(target=mpworkwordcountworker, args=(uids, counttuplelist, commitcount)) for i in range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+	countdict = {w[0]: w[1] for w in counttuplelist}
+
+	return countdict
+
+
+def insertcounts(countdict):
+	"""
+
+	avoid a long run of UPDATE statements: use a tmp table
+
+	countdict:
+		{ uid1: count1, uid2: count2, ... }
+
+
+	:param countdict:
+	:return:
+	"""
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	q = 'CREATE TEMP TABLE tmp_works AS SELECT * FROM works LIMIT 0'
+	cursor.execute(q)
+
+	count = 0
+	for id in countdict.keys():
+		count += 1
+		q = 'INSERT INTO tmp_works (universalid, wordcount) VALUES ( %s, %s )'
+		d = (id, countdict[id])
+		cursor.execute(q, d)
+		if count % 5000 == 0:
+			dbc.commit()
+
+	dbc.commit()
+	q = 'UPDATE works SET wordcount = tmp_works.wordcount FROM tmp_works WHERE works.universalid = tmp_works.universalid'
+	cursor.execute(q)
+	dbc.commit()
+
+	q = 'DROP TABLE tmp_works'
+	cursor.execute(q)
+	dbc.commit()
+
+	return
+
+
+def mpworkwordcountworker(universalids, counttuplelist, commitcount):
 	"""
 	if you don't already have an official wordcount, generate one
 	
-	(allow one author at a time so you can debug)
+	return a tuplelist:
+
+		[(uid1, count1), (uid2, count2), ...]
 	
 	:param universalid:
 	:param cursor:
@@ -249,10 +302,7 @@ def mpworkwordcountworker(universalids, commitcount):
 
 			totalwords = wordcount - hcount[0]
 
-			query = 'UPDATE works SET wordcount=%s WHERE universalid=%s'
-			data = (totalwords, universalid)
-			cursor.execute(query, data)
-
+			counttuplelist.append((universalid,totalwords))
 			commitcount.increment()
 			if commitcount.value % 250 == 0:
 				dbc.commit()
@@ -261,7 +311,7 @@ def mpworkwordcountworker(universalids, commitcount):
 	
 	dbc.commit()
 	
-	return
+	return counttuplelist
 
 
 def buildtrigramindices(workcategoryprefix, cursor):

@@ -213,6 +213,8 @@ def registernewworks(newworktuples):
 
 	newworktuples = [(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
 
+	note that the notations could be further refactored to avoid the UPDATES
+
 	:param newworktuples:
 	:return:
 	"""
