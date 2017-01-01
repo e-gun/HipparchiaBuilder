@@ -14,6 +14,33 @@ from builder.builder_classes import MPCounter
 config = configparser.ConfigParser()
 config.read('config.ini')
 
+"""
+	SPEED NOTES
+
+    thousands of UPDATEs flying at the server makes it sad
+
+	long execution at
+		inserting work db metatata: first/last lines
+		inserting work db metatata: wordcounts
+
+	the following is supposed to be the faster way:
+	[http://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql]
+
+		CREATE TEMP TABLE tmp_x AS SELECT * FROM works LIMIT 0;
+		[populate tmp_x; but people want to do it via a file and so save INSERT time]
+
+		UPDATE works
+		SET    column = tmp_x.column
+		FROM   tmp_x
+		WHERE  works.universalid = tmp_x.universalid;
+
+		DROP TABLE tmp_x;
+
+	consider implementing it
+
+	currently refactoring to dodge 'UPDATE' as much as possible
+
+"""
 
 def insertfirstsandlasts(workcategoryprefix, cursor):
 	"""
@@ -31,24 +58,85 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 	cursor.execute(query, data)
 	results = cursor.fetchall()
 
-	manager = Manager()
-	uids = manager.list()
-	commitcount = MPCounter()
-
+	uids = []
 	for r in results:
 		uids.append(r[0])
 
-	print('\t', len(uids), 'items to examine')
-
-	workers = int(config['io']['workers'])
-	jobs = [Process(target=mpinsertfirstsandlasts, args=(uids, commitcount)) for i in range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
+	boundaries = boundaryfinder(uids)
+	insertboundaries(boundaries)
 
 	return
 
 
-def mpinsertfirstsandlasts(universalids, commitcount):
+def boundaryfinder(uids):
+	"""
+
+	find first and last lines
+
+	return a list of tuples:
+
+		[(universalid1, first1, last1), (universalid2, first2, last2), ...]
+
+	:param uids:
+	:return:
+	"""
+
+	manager = Manager()
+	uids = manager.list(uids)
+	commitcount = MPCounter()
+	found = manager.list()
+
+	print('\t', len(uids), 'items to examine')
+	workers = int(config['io']['workers'])
+	jobs = [Process(target=mpfindfirstsandlasts, args=(uids, commitcount, found)) for i in range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+	return found
+
+
+def insertboundaries(boundariestuplelist):
+	"""
+
+	avoid a long run of UPDATE statements: use a tmp table
+
+	boundariestuplelist:
+		[(universalid1, first1, last1), (universalid2, first2, last2), ...]
+
+
+	:param boundariestuplelist:
+	:return:
+	"""
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	q = 'CREATE TEMP TABLE tmp_works AS SELECT * FROM works LIMIT 0'
+	cursor.execute(q)
+
+	count = 0
+	for b in boundariestuplelist:
+		count += 1
+		q = 'INSERT INTO tmp_works (universalid, firstline, lastline) VALUES ( %s, %s, %s)'
+		d = b
+		cursor.execute(q, d)
+		if count % 5000 == 0:
+			dbc.commit()
+
+	dbc.commit()
+	q = 'UPDATE works SET firstline = tmp_works.firstline, lastline = tmp_works.lastline ' \
+			'FROM tmp_works WHERE works.universalid = tmp_works.universalid'
+	cursor.execute(q)
+	dbc.commit()
+
+	q = 'DROP TABLE tmp_works'
+	cursor.execute(q)
+	dbc.commit()
+
+	return
+
+
+def mpfindfirstsandlasts(universalids, commitcount, found):
 	"""
 	public.works needs to know
 		firstline integer,
@@ -71,21 +159,16 @@ def mpinsertfirstsandlasts(universalids, commitcount):
 		auid = universalid[0:6]
 
 		if universalid != '':
-			query = 'SELECT index FROM ' + auid + ' WHERE wkuniversalid = %s ORDER BY index ASC LIMIT 1'
+			query = 'SELECT index FROM ' + auid + ' WHERE wkuniversalid = %s ORDER BY index ASC'
 			data = (universalid,)
 			cursor.execute(query, data)
-			firstline = cursor.fetchone()
+			lines = cursor.fetchall()
+			firstline = lines[0]
+			lastline = lines[-1]
 			first = int(firstline[0])
-
-			query = 'SELECT index FROM ' + auid + ' WHERE wkuniversalid = %s ORDER BY index DESC LIMIT 1'
-			data = (universalid,)
-			cursor.execute(query, data)
-			lastline = cursor.fetchone()
 			last = int(lastline[0])
 
-			query = 'UPDATE works SET firstline=%s, lastline=%s WHERE universalid=%s'
-			data = (first, last, universalid)
-			cursor.execute(query, data)
+			found.append((universalid, first, last))
 
 		commitcount.increment()
 		if commitcount.value % 250 == 0:
