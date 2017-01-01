@@ -312,7 +312,7 @@ def parallelnewworkworker(workpile, newworktuples):
 				# can't use docname as the thee character dbname because you will find items like 257a or, worse, 1960:4,173)
 
 				wknum += 1
-				dbstring = rebasedcounter(wknum)
+				dbstring = rebasedcounter(wknum, 36)
 
 				if len(dbstring) == 1:
 					dbstring = '00' + dbstring
@@ -337,22 +337,34 @@ def parallelnewworkworker(workpile, newworktuples):
 	return newworktuples
 
 
-def rebasedcounter(decimalvalue):
+def rebasedcounter(decimalvalue, base):
 	"""
 
-	return a three character encoding of a decimal number: 'base 36'
+	return a three character encoding of a decimal number in 'base N'
 	designed to allow work names to fit into a three 'digit' space
 
 	:param decimalvalue:
 	:return:
 	"""
 
-	remap = { 0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
-			  10: 'a', 11: 'b', 12: 'c', 13: 'd', 14: 'e', 15: 'f', 16: 'g', 17: 'h', 18: 'i', 19: 'j',
-			  20: 'k', 21: 'l', 22: 'm', 23: 'n', 24: 'o', 25: 'p', 26: 'q', 27: 'r', 28: 's', 29: 't',
-			  30: 'u', 31: 'v', 32: 'w', 33: 'x', 34: 'y', 35: 'z' }
+	# base = 36
 
-	base = len(remap)
+	if base < 11:
+		iterable = range(0, base)
+		remap = {i: str(i) for i in iterable}
+	elif base < 37:
+		partone = {i: str(i) for i in range(0, 10)}
+		parttwo = {i: chr(87 + i) for i in range(10, base)}
+		remap = {**partone, **parttwo}
+	else:
+		print('unsupported base value', base, '- opting for base10')
+		remap = {i: str(i) for i in range(0, 10)}
+
+	# base = 36
+	# {0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
+	# 10: 'a', 11: 'b', 12: 'c', 13: 'd', 14: 'e', 15: 'f', 16: 'g', 17: 'h', 18: 'i', 19: 'j',
+	# 20: 'k', 21: 'l', 22: 'm', 23: 'n', 24: 'o', 25: 'p', 26: 'q', 27: 'r', 28: 's', 29: 't',
+	# 30: 'u', 31: 'v', 32: 'w', 33: 'x', 34: 'y', 35: 'z'}
 
 	lastdigit = remap[decimalvalue % base]
 	remainder = int(decimalvalue / base)
@@ -367,7 +379,7 @@ def rebasedcounter(decimalvalue):
 		seconddigit = '0'
 		thirddigit = '0'
 
-	rebased = thirddigit+seconddigit+lastdigit
+	rebased = thirddigit + seconddigit + lastdigit
 
 	return rebased
 
