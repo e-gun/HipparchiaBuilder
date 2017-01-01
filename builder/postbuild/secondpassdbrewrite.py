@@ -9,9 +9,9 @@
 
 import configparser
 import re
-from multiprocessing import Pool, Manager, Process
+from multiprocessing import Manager, Process
 
-from builder.builder_classes import dbAuthor
+from builder.builder_classes import dbAuthor, MPCounter
 from builder.dbinteraction.db import setconnection, dbauthorandworkloader, authortablemaker
 from builder.parsers.regex_substitutions import latinadiacriticals
 from builder.postbuild.postbuilddating import convertdate
@@ -70,7 +70,7 @@ level00 = line
 """
 	SPEED NOTES
 
-    all of this is fairly slow: thousands of UPDATEs flying at the server makes it sad
+    thousands of UPDATEs flying at the server makes it sad
 
 	long execution at
 		inserting work db metatata: first/last lines
@@ -90,6 +90,8 @@ level00 = line
 		DROP TABLE tmp_x;
 
 	consider implementing it
+
+	currently refactoring to dodge 'UPDATE' as much as possible
 
 """
 
@@ -234,44 +236,142 @@ def registernewworks(newworktuples):
 
 	registering pulled away from the mp compilation because the UPDATING looked like it was slowing us down
 
-	serializing to try to dodge locking issues [but it is slower ATM]
+	the following is supposed to be the faster way to do buld UPDATES:
+	[http://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql]
 
 	newworktuples = [(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
 
 	:param newworktuples:
 	:return:
 	"""
-
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	print('updating works table')
+	workinfodict = findnewtitles(newworktuples)
+	workinfodict = newworkmetata(workinfodict)
+
+	# workinfodict has ids as keys ('in0006w0lk') and then a dict attached that contains db keys and values: 'title': 'Attica (IG II/III2 3,1 [2789-5219]) - 3536', etc.
+	# note that you also have the key 'annotationsatindexvalue' it contains an index value and the notes to insert at that index location
+	# it will eventually require q = 'UPDATE '+db+' SET annotations=%s WHERE index=%s'
+
+	# insert new works into the works table: deletetemporarydbs() means that this is INSERT and not UPDATE
+
+	print('registering',len(workinfodict),'new works')
+
+	for w in workinfodict.keys():
+		columns = ['universalid', 'levellabels_00', 'levellabels_01']
+		vals = [w, 'line', ' '] # the whitesapce matters for levellabels_01
+		valstring = ['%s', '%s', '%s']
+		for key in workinfodict[w].keys():
+			if key != 'annotationsatindexvalue':
+				columns.append(key)
+				vals.append(workinfodict[w][key])
+				valstring.append('%s')
+		columns = ', '.join(columns)
+		valstring = ', '.join(valstring)
+		vals = tuple(vals)
+
+		q = 'INSERT INTO works ( '+columns+' ) VALUES ( '+valstring+' ) '
+		d = (vals)
+		cursor.execute(q, d)
+
+	print('updating the notations in', len(workinfodict),'works')
+
 	count = 0
-	for t in newworktuples:
+	for w in workinfodict:
 		count += 1
-		newwkid = t[0]
-		oldworkdb = t[1]
-		docname = t[2]
-		updateworksdb(newwkid, oldworkdb, docname, cursor)
+		if 'annotationsatindexvalue' in workinfodict[w]:
+			db = w[0:6]
+			idx = workinfodict[w]['annotationsatindexvalue'][1]
+			notes = workinfodict[w]['annotationsatindexvalue'][0]
+
+			q = 'UPDATE ' + db + ' SET annotations=%s WHERE index=%s'
+			d = (notes, idx)
+			cursor.execute(q, d)
 		if count % 2500 == 0:
-			print('\t', count, 'works registered')
 			dbc.commit()
-
-	dbc.commit()
-
-	count = 0
-	print('setting metadata for new works')
-	for t in newworktuples:
-		count += 1
-		newwkid = t[0]
-		setmetadata(newwkid, cursor)
-		if count % 2500 == 0:
-			print('\t',count,'set')
-			dbc.commit()
-
-	dbc.commit()
+		if count % 5000 == 0:
+			print('\t',count,'works updated')
 
 	return
+
+
+def findnewtitles(newworktuples):
+	"""
+
+	we are building a dictionary of new works
+
+	:param newworktuples:
+	:return:
+	"""
+
+	print('collecting info about new works: seeking',len(newworktuples),'titles')
+
+	count = MPCounter()
+	manager = Manager()
+	workpile = manager.list(newworktuples)
+	workinfolist = manager.list()
+
+	workers = int(config['io']['workers'])
+	jobs = [Process(target=buildnewworkinfotuplelist, args=(workpile, count, workinfolist)) for i in range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+	# manager was not populating the manager.dict()
+	# so we are doing this
+
+	returndict = {w[0]: {'title': w[1]} for w in workinfolist}
+
+	return returndict
+
+
+def newworkmetata(workinfodict):
+	"""
+
+	supplement the workinfodict with more information about the works
+
+	:param workinfodict:
+	:return:
+	"""
+
+	print('collecting info about new works: metadata')
+
+	count = MPCounter()
+	manager = Manager()
+	workpile = manager.list(workinfodict.keys())
+	metadatalist = manager.list()
+
+	workers = int(config['io']['workers'])
+	jobs = [Process(target=buildworkmetadatatuples, args=(workpile, count, metadatalist)) for i in range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+	# manager was not populating the manager.dict()
+	# so we are doing this
+	# newworkinfodict[wkid]['publication_info'] = pi
+	# newworkinfodict[wkid]['provenance'] = pr
+	# newworkinfodict[wkid]['recorded_date'] = dt
+	# newworkinfodict[wkid]['converted_date'] = cd
+	# newworkinfodict[wkid]['transmission'] = tr
+	# newworkinfodict[wkid]['worktype'] = ty
+	# newworkinfodict[wkid]['annotationsatindexvalue'] = (idx, notes)
+	# metadatalist.append((wkid, pi,pr,dt,cd,tr,ty,(notes,idx)))
+
+	resultsdict = { w[0]: {
+		'publication_info': w[1],
+		'provenance': w[2],
+		'recorded_date': w[3],
+		'converted_date': w[4],
+		'transmission': w[5],
+		'worktype': w[6],
+		'annotationsatindexvalue': w[7]
+		} for w in metadatalist }
+
+	# merge with previous results
+	for key in resultsdict.keys():
+		resultsdict[key]['title'] = workinfodict[key]['title']
+
+	return resultsdict
 
 
 def parallelnewworkworker(workpile, newworktuples):
@@ -334,197 +434,213 @@ def parallelnewworkworker(workpile, newworktuples):
 
 			dbc.commit()
 
+	dbc.commit()
+
 	return newworktuples
 
 
-def rebasedcounter(decimalvalue, base):
-	"""
-
-	return a three character encoding of a decimal number in 'base N'
-	designed to allow work names to fit into a three 'digit' space
-
-	:param decimalvalue:
-	:return:
-	"""
-
-	# base = 36
-
-	if base < 11:
-		iterable = range(0, base)
-		remap = {i: str(i) for i in iterable}
-	elif base < 37:
-		partone = {i: str(i) for i in range(0, 10)}
-		parttwo = {i: chr(87 + i) for i in range(10, base)}
-		remap = {**partone, **parttwo}
-	else:
-		print('unsupported base value', base, '- opting for base10')
-		remap = {i: str(i) for i in range(0, 10)}
-
-	# base = 36
-	# {0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
-	# 10: 'a', 11: 'b', 12: 'c', 13: 'd', 14: 'e', 15: 'f', 16: 'g', 17: 'h', 18: 'i', 19: 'j',
-	# 20: 'k', 21: 'l', 22: 'm', 23: 'n', 24: 'o', 25: 'p', 26: 'q', 27: 'r', 28: 's', 29: 't',
-	# 30: 'u', 31: 'v', 32: 'w', 33: 'x', 34: 'y', 35: 'z'}
-
-	lastdigit = remap[decimalvalue % base]
-	remainder = int(decimalvalue / base)
-	if remainder > 0:
-		seconddigit = remap[remainder % base]
-		remainder = int(remainder / base)
-		if remainder > 0:
-			thirddigit = remap[remainder % base]
-		else:
-			thirddigit = '0'
-	else:
-		seconddigit = '0'
-		thirddigit = '0'
-
-	rebased = thirddigit + seconddigit + lastdigit
-
-	return rebased
-
-
-def modifyauthorsdb(newentryname, worktitle, cursor):
-	"""
-	the idxname of something like "ZZ0080" will be "Black Sea and Scythia Minor"
-	the title of "in0001" should be set to "Black Sea and Scythia Minor IosPE I(2) [Scythia]"
-
-	:param tempentryname:
-	:param newentryname:
-	:param worktitle:
-	:param cursor:
-	:return:
-	"""
-
-	idx = worktitle
-	clean = worktitle
-
-	if 	newentryname[0:2] == 'dp':
-		aka = worktitle
-	else:
-		aka = re.search(r'\((.*?)\)$', worktitle)
-		try:
-			aka = aka.group(1)
-		except:
-			aka = worktitle
-
-	if 	newentryname[0:2] == 'dp':
-		short = worktitle
-	else:
-		short = re.search(r'\[(.*?)\]\)$', worktitle)
-		try:
-			short = short.group(1)
-		except:
-			short = aka
-
-	# do if... else... so that you don't do A then B (and pay the UPDATE price)
-	if newentryname[0:2] in ['in', 'ch']:
-		# inscription 'authors' can set their location via their idxname
-		loc = re.search(r'(.*?)\s\(', worktitle)
-		loc = loc.group(1)
-		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, location, recorded_date) ' \
-				' VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
-		d = (newentryname, 'G', idx, aka, short, clean, loc, 'Varia')
-		cursor.execute(q, d)
-	else:
-		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, recorded_date) ' \
-				' VALUES (%s, %s, %s, %s, %s, %s, %s)'
-		d = (newentryname, 'G', idx, aka, short, clean, 'Varia')
-		cursor.execute(q, d)
-
-	return
-
-
-def insertnewworksintonewauthor(newwkuid, results, cursor):
-	"""
-
-	send me all of the matching lines from one db and i will build a new workdb with only these lines
-
-	a sample result:
-
-	(3166, 'YY0071w007', '411', '1', '1', '1', 'r', '1', '<hmu_metadata_provenance value="Herm nome?" /><hmu_metadata_date value="VII spc" /><hmu_metadata_documentnumber value="25" />☧ ἐὰν ϲχολάϲῃϲ <hmu_unconventional_form_written_by_scribe>ϲχολαϲειϲ</hmu_unconventional_form_written_by_scribe> θέλειϲ ἀπ̣ελθεῖν κα̣ὶ̣ ∙ε∙∙[ <hmu_roman_in_a_greek_text>c ̣ ]</hmu_roman_in_a_greek_text>', '☧ ἐὰν ϲχολάϲῃϲ ϲχολαϲειϲ θέλειϲ ἀπελθεῖν καὶ ∙ε∙∙ c  ', '☧ εαν ϲχολαϲηϲ ϲχολαϲειϲ θελειϲ απελθειν και ∙ε∙∙ c  ', '', '')
-
-	:param docname:
-	:param results:
-	:return:
-	"""
-
-	db = newwkuid[0:6]
-
-	for r in results:
-		r = list(r)
-		# you need to have '-1' in the unused levels otherwise HipparchiaServer will have trouble building citations
-		# level05 has been converted to the dbname, so we can discard it
-		# level01 is sometimes used: 'recto', 'verso'
-		# this is a problem since irregularly shaped works irritate HipparchiaServer
-		# level04 will yield things like: 'face C, right'
-		# this material will get merged with level01; but what sort of complications will arise?
-
-		r[2] = '-1' # level05
-		if r[6] == '1': # level 01
-			r[6] = 'recto'
-
-		for level in [3,4,5]: # levels 04, 03, 02
-			if r[level] != '1':
-				if level != 4:
-					# print('unusual level data:', db,r[0],level,r[level])
-					pass
-				r[6] = r[level] + ' ' + r[6]
-			r[level] = '-1'
-
-		# r[1] = tmpdbid: 'YY0071w007', vel sim
-		# swap this out for newwkuid
-
-		r = r[0:1] + [newwkuid] + r[2:]
-		d = tuple(r)
-
-		q = 'INSERT INTO ' + db + ' (index, wkuniversalid, level_05_value, level_04_value, level_03_value, level_02_value, ' \
-						'level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words, ' \
-						'annotations) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-		cursor.execute(q, d)
-
-	return
-
-
-def updateworksdb(newdb, olddb, docname, cursor):
+def buildnewworkinfotuplelist(worktuplelist, commitcount, wlist):
 	"""
 	the title of "ZZ0080w001" will be "IosPE I(2) [Scythia]"
 	the title of "in0001wNNN" should be the same with a document ID suffix: " - 181", etc.
+
 	:param newdb:
 	:param docname:
 	:param cursor:
 	:return:
 	"""
 
-	q = 'SELECT title FROM works WHERE universalid = %s'
-	d = (olddb,)
-	cursor.execute(q, d)
-	r = cursor.fetchone()
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
 
-	try:
-		r[0]
-	except:
-		r = []
-		r.append(' ')
+	while worktuplelist:
+		try:
+			wt = worktuplelist.pop()
+		except:
+			wt = (False, False, False)
 
-	if r[0] != ' ':
-		newtitle = r[0] + ' - ' + docname
-	else:
-		# I bet you are a papyrus
-		q = 'SELECT idxname FROM authors WHERE universalid = %s'
-		d = (newdb[0:6],)
-		cursor.execute(q, d)
-		r = cursor.fetchone()
-		newtitle = r[0] + ' - ' + docname
+		if wt != (False, False, False):
+			newdb, olddb, docname = wt
 
-	q = 'INSERT INTO works (universalid, title) VALUES (%s, %s)'
-	d = (newdb, newtitle)
-	try:
-		cursor.execute(q, d)
-	except:
-		print('failed to insert work\n\t',d)
+			q = 'SELECT title FROM works WHERE universalid = %s'
+			d = (olddb,)
+			cursor.execute(q, d)
+			r = cursor.fetchone()
 
-	return
+			try:
+				r[0]
+			except:
+				r = []
+				r.append(' ')
+
+			if r[0] != ' ':
+				newtitle = r[0] + ' - ' + docname
+			else:
+				# I bet you are a papyrus
+				q = 'SELECT idxname FROM authors WHERE universalid = %s'
+				d = (newdb[0:6],)
+				cursor.execute(q, d)
+				r = cursor.fetchone()
+				newtitle = r[0] + ' - ' + docname
+
+			wlist.append((newdb,newtitle))
+
+			commitcount.increment()
+			if commitcount.value % 1000 == 0:
+				dbc.commit()
+			if commitcount.value % 5000 == 0:
+				print('\t',commitcount.value,'titles collected')
+
+	dbc.commit()
+
+	return wlist
+
+
+def buildworkmetadatatuples(workpile, commitcount, metadatalist):
+	"""
+	marked_up_line where level_00_value == 1 ought to contain metadata about the document
+	example: "<hmu_metadata_provenance value="Oxy" /><hmu_metadata_date value="AD 224" /><hmu_metadata_documentnumber value="10" />[ <hmu_roman_in_a_greek_text>c ̣]</hmu_roman_in_a_greek_text>∙τ̣ε̣[∙4]ε[∙8]"
+
+	:param db:
+	:param cursor:
+	:return:
+	"""
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	prov = re.compile(r'<hmu_metadata_provenance value="(.*?)" />')
+	date = re.compile(r'<hmu_metadata_date value="(.*?)" />')
+	region = re.compile(r'<hmu_metadata_region value="(.*?)" />')
+	city = re.compile(r'<hmu_metadata_city value="(.*?)" />')
+	textdirection = re.compile(r'<hmu_metadata_texdirection value="(.*?)" />')
+	publicationinfo = re.compile(r'<hmu_metadata_publicationinfo value="(.*?)" />')
+	additionalpubinfo = re.compile(r'<hmu_metadata_additionalpubinfo value="(.*?)" />')
+	stillfurtherpubinfo = re.compile(r'<hmu_metadata_stillfurtherpubinfo value="(.*?)" />')
+	reprints = re.compile(r'<hmu_metadata_reprints value="(.*?)" />')
+	doc = re.compile(r'<hmu_metadata_documentnumber value="(.*?)" />')
+
+	while workpile:
+		try:
+			wkid = workpile.pop()
+		except:
+			wkid = False
+
+		if wkid != False:
+			commitcount.increment()
+			if commitcount.value % 1000 == 0:
+				dbc.commit()
+
+			db = wkid[0:6]
+
+			q = 'SELECT index, marked_up_line, annotations FROM '+db+' WHERE wkuniversalid=%s ORDER BY index LIMIT 1'
+			d = (wkid,)
+			cursor.execute(q,d)
+			r = cursor.fetchone()
+			idx = r[0]
+			ln = r[1]
+			an = r[2]
+
+			pi = []
+			for info in [publicationinfo, additionalpubinfo, stillfurtherpubinfo, reprints]:
+				p = re.search(info,ln)
+				if p is not None:
+					pi.append(p.group(1))
+			pi = '; '.join(pi)
+			if pi != '':
+				pi = '<volumename>'+pi+'<volumename>'
+
+			dt = re.search(date,ln)
+			try:
+				dt = dt.group(1)
+				dt = re.sub(r'(^\s{1,}|\s{1,}$)', '', dt)
+			except:
+				dt = '[unknown]'
+
+			cd = convertdate(dt)
+
+			pr = re.search(prov, ln)
+			try:
+				pr = pr.group(1)
+			except:
+				pr = '[unknown]'
+			if pr == '?':
+				pr = '[unknown]'
+
+			# necessary because of the check for bad chars in HipparchiaServer's makeselection parser
+			pr = re.sub(r'\*⟪',' ', pr)
+			pr = re.sub(r':',' - ', pr)
+			pr = re.sub(r'\s\?','?', pr)
+			pr = re.sub(r'\s{2,}',' ',pr)
+			pr = re.sub(r'(^\s|\s)$','',pr)
+
+			rg = re.search(region, ln)
+			try:
+				rg = rg.group(1)
+			except:
+				rg = '[unknown]'
+
+			ct = re.search(city, ln)
+			try:
+				ct = ct.group(1)
+			except:
+				ct = '[unknown]'
+
+			if rg != '[unknown]' and ct != '[unknown]':
+				ct = ct + ' ('+rg+')'
+
+			if pr != '[unknown]' and ct != '[unknown]':
+				pr = pr + '; ' + ct
+			elif pr == '[unknown]' and ct != '[unknown]':
+				pr = ct
+
+			if len(pr) > 64:
+				pr = pr[0:63]
+
+			pi = latinadiacriticals(pi)
+			pr = latinadiacriticals(pr)
+			dt = latinadiacriticals(dt)
+
+			if db[0:2] in ['in', 'ch']:
+				tr = 'inscription'
+				ty = 'inscription'
+			elif db[0:2] in ['dp']:
+				tr = 'papyrus'
+				ty = 'papyrus'
+			else:
+				# but you actually have a big problem if you end up here
+				tr = ''
+				ty = ''
+
+			# things we put in the annotations to the work itself
+
+			td = re.search(textdirection, ln)
+			try:
+				td = 'textdirection: '+td.group(1)
+			except:
+				td = ''
+
+			dn = re.search(doc, ln)
+			try:
+				dn = 'documentnumber: '+dn.group(1)
+			except:
+				dn = ''
+
+			if td != '' or dn != '':
+				newnotes = []
+				for n in [an, td, dn]:
+					if n != '':
+						newnotes.append(n)
+				notes = '; '.join(newnotes)
+			else:
+				notes = ''
+
+			# managed dict was a hassle; we have to do this in order and remember the order
+			metadatalist.append((wkid, pi,pr,dt,cd,tr,ty,(notes,idx)))
+
+	dbc.commit()
+
+	return metadatalist
 
 
 def setmetadata(wkid, cursor):
@@ -708,3 +824,153 @@ def deletetemporarydbs(temprefix):
 	dbc.commit()
 
 	return
+
+
+def rebasedcounter(decimalvalue, base):
+	"""
+
+	return a three character encoding of a decimal number in 'base N'
+	designed to allow work names to fit into a three 'digit' space
+
+	:param decimalvalue:
+	:return:
+	"""
+
+	# base = 36
+
+	if base < 11:
+		iterable = range(0, base)
+		remap = {i: str(i) for i in iterable}
+	elif base < 37:
+		partone = {i: str(i) for i in range(0, 10)}
+		parttwo = {i: chr(87 + i) for i in range(10, base)}
+		remap = {**partone, **parttwo}
+	else:
+		print('unsupported base value', base, '- opting for base10')
+		remap = {i: str(i) for i in range(0, 10)}
+
+	# base = 36
+	# {0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
+	# 10: 'a', 11: 'b', 12: 'c', 13: 'd', 14: 'e', 15: 'f', 16: 'g', 17: 'h', 18: 'i', 19: 'j',
+	# 20: 'k', 21: 'l', 22: 'm', 23: 'n', 24: 'o', 25: 'p', 26: 'q', 27: 'r', 28: 's', 29: 't',
+	# 30: 'u', 31: 'v', 32: 'w', 33: 'x', 34: 'y', 35: 'z'}
+
+	lastdigit = remap[decimalvalue % base]
+	remainder = int(decimalvalue / base)
+	if remainder > 0:
+		seconddigit = remap[remainder % base]
+		remainder = int(remainder / base)
+		if remainder > 0:
+			thirddigit = remap[remainder % base]
+		else:
+			thirddigit = '0'
+	else:
+		seconddigit = '0'
+		thirddigit = '0'
+
+	rebased = thirddigit + seconddigit + lastdigit
+
+	return rebased
+
+
+def modifyauthorsdb(newentryname, worktitle, cursor):
+	"""
+	the idxname of something like "ZZ0080" will be "Black Sea and Scythia Minor"
+	the title of "in0001" should be set to "Black Sea and Scythia Minor IosPE I(2) [Scythia]"
+
+	:param tempentryname:
+	:param newentryname:
+	:param worktitle:
+	:param cursor:
+	:return:
+	"""
+
+	idx = worktitle
+	clean = worktitle
+
+	if 	newentryname[0:2] == 'dp':
+		aka = worktitle
+	else:
+		aka = re.search(r'\((.*?)\)$', worktitle)
+		try:
+			aka = aka.group(1)
+		except:
+			aka = worktitle
+
+	if 	newentryname[0:2] == 'dp':
+		short = worktitle
+	else:
+		short = re.search(r'\[(.*?)\]\)$', worktitle)
+		try:
+			short = short.group(1)
+		except:
+			short = aka
+
+	# do if... else... so that you don't do A then B (and pay the UPDATE price)
+	if newentryname[0:2] in ['in', 'ch']:
+		# inscription 'authors' can set their location via their idxname
+		loc = re.search(r'(.*?)\s\(', worktitle)
+		loc = loc.group(1)
+		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, location, recorded_date) ' \
+				' VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+		d = (newentryname, 'G', idx, aka, short, clean, loc, 'Varia')
+		cursor.execute(q, d)
+	else:
+		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, recorded_date) ' \
+				' VALUES (%s, %s, %s, %s, %s, %s, %s)'
+		d = (newentryname, 'G', idx, aka, short, clean, 'Varia')
+		cursor.execute(q, d)
+
+	return
+
+
+def insertnewworksintonewauthor(newwkuid, results, cursor):
+	"""
+
+	send me all of the matching lines from one db and i will build a new workdb with only these lines
+
+	a sample result:
+
+	(3166, 'YY0071w007', '411', '1', '1', '1', 'r', '1', '<hmu_metadata_provenance value="Herm nome?" /><hmu_metadata_date value="VII spc" /><hmu_metadata_documentnumber value="25" />☧ ἐὰν ϲχολάϲῃϲ <hmu_unconventional_form_written_by_scribe>ϲχολαϲειϲ</hmu_unconventional_form_written_by_scribe> θέλειϲ ἀπ̣ελθεῖν κα̣ὶ̣ ∙ε∙∙[ <hmu_roman_in_a_greek_text>c ̣ ]</hmu_roman_in_a_greek_text>', '☧ ἐὰν ϲχολάϲῃϲ ϲχολαϲειϲ θέλειϲ ἀπελθεῖν καὶ ∙ε∙∙ c  ', '☧ εαν ϲχολαϲηϲ ϲχολαϲειϲ θελειϲ απελθειν και ∙ε∙∙ c  ', '', '')
+
+	:param docname:
+	:param results:
+	:return:
+	"""
+
+	db = newwkuid[0:6]
+
+	for r in results:
+		r = list(r)
+		# you need to have '-1' in the unused levels otherwise HipparchiaServer will have trouble building citations
+		# level05 has been converted to the dbname, so we can discard it
+		# level01 is sometimes used: 'recto', 'verso'
+		# this is a problem since irregularly shaped works irritate HipparchiaServer
+		# level04 will yield things like: 'face C, right'
+		# this material will get merged with level01; but what sort of complications will arise?
+
+		r[2] = '-1' # level05
+		if r[6] == '1': # level 01
+			r[6] = 'recto'
+
+		for level in [3,4,5]: # levels 04, 03, 02
+			if r[level] != '1':
+				if level != 4:
+					# print('unusual level data:', db,r[0],level,r[level])
+					pass
+				r[6] = r[level] + ' ' + r[6]
+			r[level] = '-1'
+
+		# r[1] = tmpdbid: 'YY0071w007', vel sim
+		# swap this out for newwkuid
+
+		r = r[0:1] + [newwkuid] + r[2:]
+		d = tuple(r)
+
+		q = 'INSERT INTO ' + db + ' (index, wkuniversalid, level_05_value, level_04_value, level_03_value, level_02_value, ' \
+						'level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words, ' \
+						'annotations) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+		cursor.execute(q, d)
+
+	return
+
