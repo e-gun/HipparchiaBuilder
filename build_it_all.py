@@ -14,7 +14,8 @@ from builder import corpus_builder
 from builder.dbinteraction.build_lexica import formatliddellandscott, formatlewisandshort, grammarloader, analysisloader
 from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
-from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs
+from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs, \
+	registernewworks
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.parsers import parse_binfiles
 
@@ -82,7 +83,8 @@ if buildinscriptions == 'y':
 	print('remapping the inscription data: turning works into authors and embedded documents into individual works')
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 	newauthors = compilenewauthors(aumapper, wkmapper)
-	compilenewworks(newauthors, wkmapper)
+	newworktuples = compilenewworks(newauthors, wkmapper)
+	registernewworks(newworktuples)
 	deletetemporarydbs(tmpprefix)
 	print('compiling metadata for inscription dbs')
 	insertfirstsandlasts(permprefix, cursor)
@@ -102,7 +104,8 @@ if buildpapyri == 'y':
 	print('remapping the inscription data: turning works into authors and embedded documents into individual works')
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 	newauthors = compilenewauthors(aumapper, wkmapper)
-	compilenewworks(newauthors, wkmapper)
+	newworktuples = compilenewworks(newauthors, wkmapper)
+	registernewworks(newworktuples)
 	deletetemporarydbs(tmpprefix)
 	print('compiling metadata for inscription dbs')
 	insertfirstsandlasts(permprefix, cursor)
@@ -122,7 +125,8 @@ if buildchristians == 'y':
 	print('remapping the inscription data: turning works into authors and embedded documents into individual works')
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 	newauthors = compilenewauthors(aumapper, wkmapper)
-	compilenewworks(newauthors, wkmapper)
+	newworktuples = compilenewworks(newauthors, wkmapper)
+	registernewworks(newworktuples)
 	deletetemporarydbs(tmpprefix)
 	print('compiling metadata for inscription dbs')
 	insertfirstsandlasts(permprefix, cursor)

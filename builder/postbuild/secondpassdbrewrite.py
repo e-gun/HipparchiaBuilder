@@ -9,7 +9,7 @@
 
 import configparser
 import re
-from multiprocessing import Pool
+from multiprocessing import Pool, Manager, Process
 
 from builder.builder_classes import dbAuthor
 from builder.dbinteraction.db import setconnection, dbauthorandworkloader, authortablemaker
@@ -67,6 +67,31 @@ level00 = line
 
 """
 
+"""
+	SPEED NOTES
+
+    all of this is fairly slow: thousands of UPDATEs flying at the server makes it sad
+
+	long execution at
+		inserting work db metatata: first/last lines
+		inserting work db metatata: wordcounts
+
+	the following is supposed to be the faster way:
+	[http://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql]
+
+		CREATE TEMP TABLE tmp_x AS SELECT * FROM works LIMIT 0;
+		[populate tmp_x; but people want to do it via a file and so save INSERT time]
+
+		UPDATE works
+		SET    column = tmp_x.column
+		FROM   tmp_x
+		WHERE  works.universalid = tmp_x.universalid;
+
+		DROP TABLE tmp_x;
+
+	consider implementing it
+
+"""
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -190,20 +215,66 @@ def compilenewworks(newauthors, wkmapper):
 		thework.append((a, db))
 	dbc.commit()
 
-	# DEUGGING
-	# for w in thework:
-	# 	if 'ZZ0019' in w[1]:
-	# 		print(w[0].universalid,w[0].idxname)
-	# ch0901 PBacch
+	manager = Manager()
+	workpile = manager.list(thework)
+	newworktuples = manager.list()
 
 	workers = int(config['io']['workers'])
-	pool = Pool(processes=workers)
-	pool.map(parallelnewworkworker, thework)
+	jobs = [Process(target=parallelnewworkworker, args=(workpile, newworktuples)) for i in range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+	# newworktuples = [(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
+
+	return newworktuples
+
+
+def registernewworks(newworktuples):
+	"""
+
+	registering pulled away from the mp compilation because the UPDATING looked like it was slowing us down
+
+	serializing to try to dodge locking issues [but it is slower ATM]
+
+	newworktuples = [(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
+
+	:param newworktuples:
+	:return:
+	"""
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	print('updating works table')
+	count = 0
+	for t in newworktuples:
+		count += 1
+		newwkid = t[0]
+		oldworkdb = t[1]
+		docname = t[2]
+		updateworksdb(newwkid, oldworkdb, docname, cursor)
+		if count % 2500 == 0:
+			print('\t', count, 'works registered')
+			dbc.commit()
+
+	dbc.commit()
+
+	count = 0
+	print('setting metadata for new works')
+	for t in newworktuples:
+		count += 1
+		newwkid = t[0]
+		setmetadata(newwkid, cursor)
+		if count % 2500 == 0:
+			print('\t',count,'set')
+			dbc.commit()
+
+	dbc.commit()
 
 	return
 
 
-def parallelnewworkworker(authoranddbtuple):
+def parallelnewworkworker(workpile, newworktuples):
 	"""
 
 	compile new works in parallel to go faster
@@ -213,50 +284,57 @@ def parallelnewworkworker(authoranddbtuple):
 	:return:
 	"""
 
-	a = authoranddbtuple[0]
-	wkid = authoranddbtuple[1]
-	db = wkid[0:6]
-
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	print(a.universalid, a.idxname)
-	authortablemaker(a.universalid, cursor)
-	dbc.commit()
+	while len(workpile) > 0:
+		try:
+			authoranddbtuple = workpile.pop()
+		except:
+			authoranddbtuple = (False, False)
 
-	q = 'SELECT DISTINCT level_05_value FROM ' + db + ' WHERE wkuniversalid=%s ORDER BY level_05_value'
-	d = (wkid,)
-	cursor.execute(q, d)
-	results = cursor.fetchall()
+		if authoranddbtuple is not False:
+			a = authoranddbtuple[0]
+			wkid = authoranddbtuple[1]
+			db = wkid[0:6]
 
-	wknum = 0
-	for document in results:
-		# can't use docname as the thee character dbname because you will find items like 257a or, worse, 1960:4,173)
-
-		wknum += 1
-		dbstring = rebasedcounter(wknum)
-
-		if len(dbstring) == 1:
-			dbstring = '00' + dbstring
-		elif len(dbstring) == 2:
-			dbstring = '0' + dbstring
-
-		q = 'SELECT * FROM ' + db + ' WHERE (wkuniversalid=%s AND level_05_value=%s) ORDER BY index'
-		d = (wkid, document[0])
-		cursor.execute(q, d)
-		results = cursor.fetchall()
-
-		newwkid = a.universalid + 'w' + dbstring
-		insertnewworksintonewauthor(newwkid, results, cursor)
-		docname = document[0]
-		updateworksdb(newwkid, db, docname, cursor)
-		setmetadata(newwkid, cursor)
-		if wknum % 100 == 0:
+			print(a.universalid, a.idxname)
+			authortablemaker(a.universalid, cursor)
 			dbc.commit()
 
-	dbc.commit()
+			q = 'SELECT DISTINCT level_05_value FROM ' + db + ' WHERE wkuniversalid=%s ORDER BY level_05_value'
+			d = (wkid,)
+			cursor.execute(q, d)
+			results = cursor.fetchall()
 
-	return
+			wknum = 0
+			for document in results:
+				# can't use docname as the thee character dbname because you will find items like 257a or, worse, 1960:4,173)
+
+				wknum += 1
+				dbstring = rebasedcounter(wknum)
+
+				if len(dbstring) == 1:
+					dbstring = '00' + dbstring
+				elif len(dbstring) == 2:
+					dbstring = '0' + dbstring
+
+				q = 'SELECT * FROM ' + db + ' WHERE (wkuniversalid=%s AND level_05_value=%s) ORDER BY index'
+				d = (wkid, document[0])
+				cursor.execute(q, d)
+				results = cursor.fetchall()
+
+				newwkid = a.universalid + 'w' + dbstring
+				insertnewworksintonewauthor(newwkid, results, cursor)
+				docname = document[0]
+				newworktuples.append((newwkid, db, docname))
+
+				if wknum % 100 == 0:
+					dbc.commit()
+
+			dbc.commit()
+
+	return newworktuples
 
 
 def rebasedcounter(decimalvalue):
@@ -327,16 +405,19 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 		except:
 			short = aka
 
-	q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, recorded_date) ' \
-			' VALUES (%s, %s, %s, %s, %s, %s, %s)'
-	d = (newentryname, 'G', idx, aka, short, clean, 'Varia')
-	cursor.execute(q, d)
-
-	# inscription 'authors' can set their location via their idxname
+	# do if... else... so that you don't do A then B (and pay the UPDATE price)
 	if newentryname[0:2] in ['in', 'ch']:
+		# inscription 'authors' can set their location via their idxname
 		loc = re.search(r'(.*?)\s\(', worktitle)
-		q = 'UPDATE authors SET location=%s WHERE universalid=%s'
-		d = (loc.group(1),newentryname)
+		loc = loc.group(1)
+		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, location, recorded_date) ' \
+				' VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
+		d = (newentryname, 'G', idx, aka, short, clean, loc, 'Varia')
+		cursor.execute(q, d)
+	else:
+		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, recorded_date) ' \
+				' VALUES (%s, %s, %s, %s, %s, %s, %s)'
+		d = (newentryname, 'G', idx, aka, short, clean, 'Varia')
 		cursor.execute(q, d)
 
 	return
@@ -528,22 +609,27 @@ def setmetadata(wkid, cursor):
 	# labels need to be '' and not None because of the way findtoplevelofwork() is coded in HipparchiaServer
 	# note that 'face' has been represented by a whitespace: ' '
 
-	q = 'UPDATE works SET publication_info=%s, provenance=%s, recorded_date=%s, converted_date=%s, levellabels_00=%s, ' \
-			'levellabels_01=%s, levellabels_02=%s, levellabels_03=%s, levellabels_04=%s, levellabels_05=%s, ' \
-			'authentic=%s WHERE universalid=%s'
-	d = (pi, pr, dt, cd, 'line', ' ', '', '', '', '', True, wkid)
-	cursor.execute(q,d)
-
+	# do if... else... so that you don't do A then B (and pay the UPDATE price)
 	if db[0:2] in ['in', 'ch']:
-		q = 'UPDATE works SET transmission=%s, worktype=%s WHERE universalid=%s'
-		d = ('inscription', 'inscription', wkid)
-		cursor.execute(q, d)
-	if db[0:2] in ['dp']:
-		q = 'UPDATE works SET transmission=%s, worktype=%s WHERE universalid=%s'
-		d = ('papyrus', 'papyrus', wkid)
-		cursor.execute(q, d)
+		tr = 'inscription'
+		ty = 'inscription'
+		q = 'UPDATE works SET publication_info=%s, provenance=%s, recorded_date=%s, converted_date=%s, levellabels_00=%s, ' \
+				'levellabels_01=%s, levellabels_02=%s, levellabels_03=%s, levellabels_04=%s, levellabels_05=%s, ' \
+				'authentic=%s, transmission=%s, worktype=%s WHERE universalid=%s'
+		d = (pi, pr, dt, cd, 'line', ' ', '', '', '', '', True, tr, ty, wkid)
+		cursor.execute(q,d)
+	elif db[0:2] in ['dp']:
+		tr = 'papyrus'
+		ty = 'papyrus'
+		q = 'UPDATE works SET publication_info=%s, provenance=%s, recorded_date=%s, converted_date=%s, levellabels_00=%s, ' \
+				'levellabels_01=%s, levellabels_02=%s, levellabels_03=%s, levellabels_04=%s, levellabels_05=%s, ' \
+				'authentic=%s, transmission=%s, worktype=%s WHERE universalid=%s'
+		d = (pi, pr, dt, cd, 'line', ' ', '', '', '', '', True, tr, ty, wkid)
+		cursor.execute(q,d)
+	else:
+		print('yikes, something bad happened:',db,'could not be registered in the works table because I do not understand its category')
 
-	# things we put in annotations
+	# things we put in the annotations to the work itself
 
 	td = re.search(textdirection, ln)
 	try:
