@@ -17,19 +17,17 @@ config.read('config.ini')
 """
 	SPEED NOTES
 
-    thousands of UPDATEs flying at the server makes it sad
+    thousands of UPDATEs flying at the postgresql server makes it sad
 
     currently refactoring to dodge 'UPDATE' as much as possible or to update all relevant fields at once
 
-	the following is supposed to be the faster way: create a tmp table and then update another table from it
+	the following the faster way to do bulk UPDATES: create a tmp table and then update another table from it
 	[http://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql]
 
-	long execution at
-		[collecting info about new works]
-		inserting work db metatata: first/last lines
-		inserting work db metatata: wordcounts
+	4-5x faster if you use this trick: worth the trouble
 
 """
+
 
 def insertfirstsandlasts(workcategoryprefix, cursor):
 	"""
@@ -77,7 +75,7 @@ def boundaryfinder(uids):
 
 	print('\t', len(uids), 'items to examine')
 	workers = int(config['io']['workers'])
-	jobs = [Process(target=mpfindfirstsandlasts, args=(uids, commitcount, found)) for i in range(workers)]
+	jobs = [Process(target=mpboundaryfinder, args=(uids, commitcount, found)) for i in range(workers)]
 	for j in jobs: j.start()
 	for j in jobs: j.join()
 
@@ -125,7 +123,7 @@ def insertboundaries(boundariestuplelist):
 	return
 
 
-def mpfindfirstsandlasts(universalids, commitcount, found):
+def mpboundaryfinder(universalids, commitcount, found):
 	"""
 	public.works needs to know
 		firstline integer,
@@ -186,13 +184,13 @@ def findwordcounts(cursor, dbconnection):
 	for r in results:
 		uids.append(r[0])
 
-	counts = loadcounts(uids)
+	counts = calculatewordcounts(uids)
 	insertcounts(counts)
 
 	return
 
 
-def loadcounts(uids):
+def calculatewordcounts(uids):
 	"""
 
 	take a list of ids and grab wordcounts for the corresponding works
