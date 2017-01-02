@@ -217,7 +217,7 @@ def cleanuplingeringmesses(texttoclean):
 	# see also: '[*MESORH\ &c `12 ] `302$'
 	# this failed without the second
 
-	missing = re.compile(r'\[(.*?)<hmu_roman_in_a_greek_text>c(.*?)\](.*?)</hmu_roman_in_a_greek_text>')
+	missing = re.compile(r'\[(\s{1,})<hmu_roman_in_a_greek_text>c(.*?)\](.*?)</hmu_roman_in_a_greek_text>')
 	#texttoclean = re.sub(missing, r'[\1c \2 ]', texttoclean)
 	texttoclean = re.sub(missing, bracketspacer, texttoclean)
 
