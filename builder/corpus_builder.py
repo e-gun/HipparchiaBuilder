@@ -85,7 +85,6 @@ def parallelbuildinscriptionscorpus(insdatapath, temporaryprefix):
 	ai = list(allinscriptions.keys())
 	# prune other dbs
 	ai = [x for x in ai if dataprefix in x]
-	ai = [x for x in ai if int(x[3:]) < 8000]
 
 	# the bibliographies are
 	#   INS8000 Delphi Bibliography [inscriptions] 31.56s
@@ -96,10 +95,11 @@ def parallelbuildinscriptionscorpus(insdatapath, temporaryprefix):
 	thework = []
 	# ai = []
 	for a in ai:
-		if re.search(r'Latin', allinscriptions[a]) is not None:
-			thework.append(({a: allinscriptions[a]}, 'L', temporaryprefix, insdatapath, dataprefix))
-		else:
-			thework.append(({a: allinscriptions[a]}, 'G', temporaryprefix, insdatapath, dataprefix))
+		if 0 < int(a[3:]) < 8000:
+			if re.search(r'Latin', allinscriptions[a]) is not None:
+				thework.append(({a: allinscriptions[a]}, 'L', temporaryprefix, insdatapath, dataprefix))
+			else:
+				thework.append(({a: allinscriptions[a]}, 'G', temporaryprefix, insdatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	
@@ -123,7 +123,7 @@ def parallelbuildpapyrusscorpus(papdatapath, temporaryprefix):
 	thework = []
 	# ap = []
 	for a in ap:
-		if int(a[3:]) < 9999:
+		if 0 < int(a[3:]) < 9999:
 			thework.append(({a: allpapyri[a]}, 'G', temporaryprefix, papdatapath, dataprefix))
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
@@ -148,7 +148,7 @@ def parallelbuildchristianinscriptions(chrdatapath, temporaryprefix):
 	thework = []
 	# ac = []
 	for a in ac:
-		if int(a[3:]) < 1000 and int(a[3:]) != 21:
+		if 0 < int(a[3:]) < 1000 and int(a[3:]) != 21:
 			# CHR0021 Judaica [Hebrew/Aramaic]
 			# don't know how to read either language
 			if re.search(r'Latin', allchr[a]) is not None:

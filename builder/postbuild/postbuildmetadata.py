@@ -24,7 +24,7 @@ config.read('config.ini')
 	the following the faster way to do bulk UPDATES: create a tmp table and then update another table from it
 	[http://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql]
 
-	4-5x faster if you use this trick: worth the trouble
+	10x+ faster if you use this trick: worth the trouble
 
 """
 

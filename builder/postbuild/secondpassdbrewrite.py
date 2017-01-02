@@ -206,10 +206,7 @@ def compilenewworks(newauthors, wkmapper):
 def registernewworks(newworktuples):
 	"""
 
-	registering pulled away from the mp compilation because the UPDATING looked like it was slowing us down
-
-	the following is supposed to be the faster way to do buld UPDATES:
-	[http://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql]
+	you have a list, now register the contents: INSERT into a pre-cleaned works table
 
 	newworktuples = [(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
 
@@ -221,8 +218,8 @@ def registernewworks(newworktuples):
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	workinfodict = findnewtitles(newworktuples)
-	workinfodict = newworkmetata(workinfodict)
+	workandtitletuplelist = findnewtitles(newworktuples)
+	workinfodict = buildnewworkmetata(workandtitletuplelist)
 
 	# workinfodict has ids as keys ('in0006w0lk') and then a dict attached that contains db keys and values: 'title': 'Attica (IG II/III2 3,1 [2789-5219]) - 3536', etc.
 	# note that you also have the key 'annotationsatindexvalue' it contains an index value and the notes to insert at that index location
@@ -275,31 +272,55 @@ def findnewtitles(newworktuples):
 
 	we are building a dictionary of new works
 
+	newworktuples:
+		[(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
+		[('dp0601w008', 'YY0007', '16'), ('dp0301w007', 'YY0004', '15 rp'), ('dp0201w00f', 'YY0003', '154'), ... ]
+
 	:param newworktuples:
 	:return:
 	"""
 
-	print('collecting info about new works: seeking',len(newworktuples),'titles')
+	print('collecting info about new works: building',len(newworktuples),'titles')
 
-	count = MPCounter()
-	manager = Manager()
-	workpile = manager.list(newworktuples)
-	workinfolist = manager.list()
+	oldprefix = newworktuples[0][1][0:2]
+	newprefix = newworktuples[0][0][0:2]
+	newworkdict = { t[0]: (t[1], t[2]) for t in newworktuples}
+	# newworklist = [t[0] for t in newworktuples]
 
-	workers = int(config['io']['workers'])
-	jobs = [Process(target=buildnewworkinfotuplelist, args=(workpile, count, workinfolist)) for i in range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
+	# [a] get all of the information you will need
+	# this first set is not actually needed?
+	q = 'SELECT universalid,title FROM works WHERE universalid LIKE %s'
+	d = (oldprefix+'%',)
+	cursor.execute(q, d)
+	results = cursor.fetchall()
+	# [('YY0002w050', 'Vol 5'), ('YY0002w060', 'Vol 6'), ('YY0002w070', 'Vol 7'), ...]
 
-	# manager was not populating the manager.dict()
-	# so we are doing this
-
-	returndict = {w[0]: {'title': w[1]} for w in workinfolist}
-
-	return returndict
+	oldworktitles = {r[0]: r[1] for r in results}
+	# {'YY0002w050': 'Vol 5', 'YY0002w060': 'Vol 6', 'YY0002w070': 'Vol 7', ...}
 
 
-def newworkmetata(workinfodict):
+	q = 'SELECT universalid,idxname FROM authors WHERE universalid LIKE %s'
+	d = (newprefix+'%',)
+	cursor.execute(q, d)
+	results = cursor.fetchall()
+	# [('dp0001', 'BGU (Vol 1)'), ('dp0002', 'BGU (Vol 2)'), ('dp0003', 'BGU (Vol 3)'), ...]
+
+	newauthornames = {r[0]: r[1] for r in results}
+	# { 'dp0001': 'BGU (Vol 1)', ... }
+
+	# [b] construct the titles from that information
+	workandtitletuplelist = []
+
+	for wk in newworkdict.keys():
+		# oldwkdb = newworkdict[wk][0]
+		newauid = wk[0:6]
+		thetitle = newauthornames[newauid] + ' - ' + newworkdict[wk][1]
+		workandtitletuplelist.append((wk,thetitle))
+
+	return workandtitletuplelist
+
+
+def buildnewworkmetata(workandtitletuplelist):
 	"""
 
 	supplement the workinfodict with more information about the works
@@ -307,6 +328,8 @@ def newworkmetata(workinfodict):
 	:param workinfodict:
 	:return:
 	"""
+
+	workinfodict = {w[0]: {'title': w[1]} for w in workandtitletuplelist}
 
 	print('collecting info about new works: metadata')
 
@@ -384,7 +407,6 @@ def parallelnewworkworker(workpile, newworktuples):
 			wknum = 0
 			for document in results:
 				# can't use docname as the thee character dbname because you will find items like 257a or, worse, 1960:4,173)
-
 				wknum += 1
 				dbstring = rebasedcounter(wknum, 36)
 
@@ -411,63 +433,6 @@ def parallelnewworkworker(workpile, newworktuples):
 	dbc.commit()
 
 	return newworktuples
-
-
-def buildnewworkinfotuplelist(worktuplelist, commitcount, wlist):
-	"""
-	the title of "ZZ0080w001" will be "IosPE I(2) [Scythia]"
-	the title of "in0001wNNN" should be the same with a document ID suffix: " - 181", etc.
-
-	:param newdb:
-	:param docname:
-	:param cursor:
-	:return:
-	"""
-
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
-
-	while worktuplelist:
-		try:
-			wt = worktuplelist.pop()
-		except:
-			wt = (False, False, False)
-
-		if wt != (False, False, False):
-			newdb, olddb, docname = wt
-
-			q = 'SELECT title FROM works WHERE universalid = %s'
-			d = (olddb,)
-			cursor.execute(q, d)
-			r = cursor.fetchone()
-
-			try:
-				r[0]
-			except:
-				r = []
-				r.append(' ')
-
-			if r[0] != ' ':
-				newtitle = r[0] + ' - ' + docname
-			else:
-				# I bet you are a papyrus
-				q = 'SELECT idxname FROM authors WHERE universalid = %s'
-				d = (newdb[0:6],)
-				cursor.execute(q, d)
-				r = cursor.fetchone()
-				newtitle = r[0] + ' - ' + docname
-
-			wlist.append((newdb,newtitle))
-
-			commitcount.increment()
-			if commitcount.value % 1000 == 0:
-				dbc.commit()
-			if commitcount.value % 5000 == 0:
-				print('\t',commitcount.value,'titles collected')
-
-	dbc.commit()
-
-	return wlist
 
 
 def buildworkmetadatatuples(workpile, commitcount, metadatalist):
@@ -805,4 +770,103 @@ def insertnewworksintonewauthor(newwkuid, results, cursor):
 		cursor.execute(q, d)
 
 	return
+
+
+# slated for removal
+def oldfindnewtitles(newworktuples):
+	"""
+
+	we are building a dictionary of new works
+
+	newworktuples:
+		[(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
+
+	:param newworktuples:
+	:return:
+	"""
+
+	print('collecting info about new works: seeking',len(newworktuples),'titles')
+
+	count = MPCounter()
+	manager = Manager()
+	workpile = manager.list(newworktuples)
+	workinfolist = manager.list()
+
+	workers = int(config['io']['workers'])
+	jobs = [Process(target=buildnewworkinfotuplelist, args=(workpile, count, workinfolist)) for i in range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+	# manager was not populating the manager.dict()
+	# so we are doing this
+
+	returndict = {w[0]: {'title': w[1]} for w in workinfolist}
+
+	return returndict
+
+
+def buildnewworkinfotuplelist(worktuplelist, commitcount, wlist):
+	"""
+	the title of "ZZ0080w001" will be "IosPE I(2) [Scythia]"
+	the title of "in0001wNNN" should be the same with a document ID suffix: " - 181", etc.
+
+	TODO
+
+	this one still seems too slow, esp. relative to the others which do more
+
+		[a] select all of the universalids with the right prefix
+		[b] map them to the dictionary...
+
+		this has got to be faster than iterating through a list...
+
+	:param newdb:
+	:param docname:
+	:param cursor:
+	:return:
+	"""
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	while worktuplelist:
+		try:
+			wt = worktuplelist.pop()
+		except:
+			wt = (False, False, False)
+
+		if wt != (False, False, False):
+			newdb, olddb, docname = wt
+
+			q = 'SELECT title FROM works WHERE universalid = %s'
+			d = (olddb,)
+			cursor.execute(q, d)
+			r = cursor.fetchone()
+
+			try:
+				r[0]
+			except:
+				r = []
+				r.append(' ')
+
+			if r[0] != ' ':
+				newtitle = r[0] + ' - ' + docname
+			else:
+				# I bet you are a papyrus
+				q = 'SELECT idxname FROM authors WHERE universalid = %s'
+				d = (newdb[0:6],)
+				cursor.execute(q, d)
+				r = cursor.fetchone()
+				newtitle = r[0] + ' - ' + docname
+
+			wlist.append((newdb,newtitle))
+
+			commitcount.increment()
+			if commitcount.value % 1000 == 0:
+				dbc.commit()
+			if commitcount.value % 5000 == 0:
+				print('\t',commitcount.value,'titles collected')
+
+	dbc.commit()
+
+	return wlist
 

@@ -214,8 +214,10 @@ def cleanuplingeringmesses(texttoclean):
 	# good luck geting re to find that pattern, though: some sort of bug in re?
 	# restoremissing(matchgroup) will not work!
 	# let's address the '?' in earlybirds...
+	# see also: '[*MESORH\ &c `12 ] `302$'
+	# this failed without the second
 
-	missing = re.compile(r'\[(\s{1,})<hmu_roman_in_a_greek_text>c(.*?)\]</hmu_roman_in_a_greek_text>')
+	missing = re.compile(r'\[(.*?)<hmu_roman_in_a_greek_text>c(.*?)\](.*?)</hmu_roman_in_a_greek_text>')
 	#texttoclean = re.sub(missing, r'[\1c \2 ]', texttoclean)
 	texttoclean = re.sub(missing, bracketspacer, texttoclean)
 
@@ -239,8 +241,9 @@ def bracketspacer(matchgroup):
 
 	grpone = re.sub(r'\s',u'\u00a0', matchgroup.group(1))
 	grptwo = re.sub(r'\s',u'\u00a0', matchgroup.group(2))
+	grpthree = re.sub(r'\s', u'\u00a0', matchgroup.group(3))
 
-	substitute = '['+grpone+'𝕔'+grptwo+']'
+	substitute = '['+grpone+'𝕔'+grptwo+']'+grpthree
 
 	return substitute
 

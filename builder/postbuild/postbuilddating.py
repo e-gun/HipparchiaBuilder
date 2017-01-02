@@ -357,11 +357,11 @@ def convertdate(date):
 
 
 	waffles = re.compile(r'(prob\. |\(or later\)|\sor\slater$|\[o\.s\.\]|, or sh\. bef\.(\s|$))')
-	uselessspans = re.compile(r'(middle\s|c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s|mittlere |Mitte |Zeit des |erste |Erste )')
+	uselessspans = re.compile(r'(middle\s|c\.med s\s|c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s|mittlere |Mitte |Zeit des |erste |Erste )')
 	approx = re.compile(r'^(um\s|prob\s|poss\.\s|non post |ante fere |term\.post |ca\.\s|\.|)(\s)')
 	badslashing = re.compile(r'/(antea|postea|paullo |fru+hestens |wohl noch |vielleicht noch |kaum spa+ter als |in\s)')
 	superfluous = re.compile(r'(<hmu_discarded_form>.*?$|^(wohl|Schicht)\s|\[K\.\d{1,}\]|^(s\s|-))')
-	unpunctuate = re.compile(r'(\?|\(\?\)|\[|\]|\')')
+	unpunctuate = re.compile(r'(\?|\(\?\)|\[|\]|\'|⟪|⟫)')
 	ceispositive = re.compile(r'^(AD c |AD -|-cAD|Ad |cAD )')
 
 	# drop things that will only confuse the issue
@@ -388,13 +388,17 @@ def convertdate(date):
 
 	fudge = 0
 	# look out for order of regex: 'ante med' should come before 'ante', etc
+	# starts have to come before negmiddles bec of 'bef. mid.' vs. 'sh. bef. mid.'
+	starts = re.compile(r'^(c\.init\s|init\ss\s|init/med |init\s|early\s|1\.Ha+lfte|bef\. mid\.\s|beg\.\s|beg\.|beg\s|before\s|in\ss\s|in\s|Anf\.\s|fru+hes )')
 	negmiddles = re.compile(r'^(ante fin|ante med|ante|sh\. bef\.|sh\.bef\.|bef\.|ante c|a|fru+hestens)\s')
-	shafters = re.compile(r'^(p\spost\sc\s|p\spost\s|sh\.aft\.\s|1\.Viertel\s)')
+	shafters = re.compile(r'^(p\spost\sc\s|p\spost\s|sh\. aft\. mid\.\s|sh\.aft\.\s|1\.Viertel\s)')
 	shbefores = re.compile(r'^(paullo ante |p ante c |p ante )')
 	afters = re.compile(r'^(sh\. aft\.|after|aft\. mid\.|aft\. c.\(\s\)|aft\.|post med s|post c|post|p|2\.Ha+lfte des|med/fin)\s')
-	starts = re.compile(r'(^init\ss\s|init/med |init\s|early\s|1\.Ha+lfte|bef\. mid\.\s|beg\.\s|beg\.|beg\s|before\s|^in\ss\s|^in\s|^Anf\.\s|fru+hes )')
-	ends = re.compile(r'^(fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende des |Ende\s|letztes Drittel\s|later\s)')
+	ends = re.compile(r'^(c\.fin\ss\s|fin\ss\s|fin\s|ex s\s|2\.Ha+lfte|end\s|late\s|c\.fin\ss|Ende des |Ende\s|letztes Drittel\s|later\s)')
 
+	if re.search(starts, date) is not None:
+		date = re.sub(starts, '', date)
+		fudge = -25
 	if re.search(negmiddles, date) is not None:
 		date = re.sub(negmiddles, '', date)
 		fudge = -20
@@ -407,9 +411,6 @@ def convertdate(date):
 	if re.search(afters, date) is not None:
 		date = re.sub(afters, '', date)
 		fudge = 20
-	if re.search(starts, date) is not None:
-		date = re.sub(starts, '', date)
-		fudge = -25
 	if re.search(ends, date) is not None:
 		date = re.sub(ends, '', date)
 		fudge = 25
