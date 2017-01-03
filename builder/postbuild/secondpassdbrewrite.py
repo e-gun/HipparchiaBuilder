@@ -229,7 +229,9 @@ def registernewworks(newworktuples):
 
 	print('registering',len(workinfodict),'new works')
 
+	count = 0
 	for w in workinfodict.keys():
+		count += 1
 		columns = ['universalid', 'levellabels_00', 'levellabels_01']
 		vals = [w, 'line', ' '] # the whitesapce matters for levellabels_01
 		valstring = ['%s', '%s', '%s']
@@ -245,6 +247,9 @@ def registernewworks(newworktuples):
 		q = 'INSERT INTO works ( '+columns+' ) VALUES ( '+valstring+' ) '
 		d = (vals)
 		cursor.execute(q, d)
+		if count % 2500 == 0:
+			dbc.commit()
+	dbc.commit()
 
 	print('updating the notations in', len(workinfodict),'works')
 
@@ -263,6 +268,7 @@ def registernewworks(newworktuples):
 			dbc.commit()
 		if count % 5000 == 0:
 			print('\t',count,'works updated')
+	dbc.commit()
 
 	return
 
