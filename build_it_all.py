@@ -22,119 +22,98 @@ from builder.parsers import parse_binfiles
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-buildgreekauthors = config['build']['buildgreekauthors']
-buildlatinauthors = config['build']['buildlatinauthors']
-buildinscriptions = config['build']['buildinscriptions']
-buildpapyri = config['build']['buildpapyri']
-buildchristians = config['build']['buildchristians']
-buildlex = config['build']['buildlex']
-buildgram = config['build']['buildgram']
+buildgreekauthors = config['corporatobuild']['buildgreekauthors']
+buildlatinauthors = config['corporatobuild']['buildlatinauthors']
+buildinscriptions = config['corporatobuild']['buildinscriptions']
+buildpapyri = config['corporatobuild']['buildpapyri']
+buildchristians = config['corporatobuild']['buildchristians']
+buildlex = config['corporatobuild']['buildlex']
+buildgram = config['corporatobuild']['buildgram']
 
 
 dbconnection = setconnection(config)
-# dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 cursor = dbconnection.cursor()
 
-tlg = config['io']['tlg']
-phi = config['io']['phi']
-ins = config['io']['ins']
-ddp = config['io']['ddp']
-chr = config['io']['chr']
 
 start = time.time()
 
+corpusvars = {
+	'latin': {'dataprefix': 'LAT',
+			'datapath': config['io']['phi'],
+			'tmpprefix': None,
+			'corpusabbrev': 'lt',
+			'maxfilenumber': 9999,  # canon at 9999
+			'minfilenumber': 0,
+			'exclusionlist': [],
+			'languagevalue': 'L'
+			},
+	'greek': {'dataprefix': 'TLG',
+			'datapath': config['io']['tlg'],
+			'tmpprefix': None,
+			'corpusabbrev': 'gk',
+			'maxfilenumber': 9999,
+			'minfilenumber': 0,
+			'exclusionlist': [],
+			'languagevalue': 'G'
+			},
+	'inscriptions': {'dataprefix': 'INS',
+			'datapath': config['io']['ins'],
+			'tmpprefix': 'XX',
+			'corpusabbrev': 'in',
+			'maxfilenumber': 8000,  # 8000+ are bibliographies
+			'minfilenumber': 0,
+			'exclusionlist': [],
+			'languagevalue': 'B'
+			},
+	'papyri': {'dataprefix': 'DDP',
+			'datapath': config['io']['ddp'],
+			'tmpprefix': 'YY',
+			'corpusabbrev': 'dp',
+			'maxfilenumber': 1000,  # maxval is 213; checklist at 9999
+			'minfilenumber': 6,
+			'exclusionlist': [],
+			'languagevalue': 'B'
+			},
+	'christians': {'dataprefix': 'CHR',
+			'datapath': config['io']['chr'],
+			'tmpprefix': 'ZZ',
+			'corpusabbrev': 'ch',
+			'maxfilenumber': 1000,  # maxval is 140; bibliographies at 9900 and 9910
+			'minfilenumber': 0,
+			'exclusionlist': [21],  # CHR0021 Judaica [Hebrew/Aramaic]; don't know how to read either language
+			'languagevalue': 'B'
+			}
+}
+
+#
+# corpora
+#
+
+corporatobuild = []
+
 if buildlatinauthors == 'y':
-	workcategoryprefix = 'lt'
-	print('building latin dbs')
-	corpus_builder.parallelbuildlatincorpus(phi)
-	dataprefix = 'LAT'
-	parse_binfiles.latinloadcanon(phi + dataprefix + '9999.TXT', cursor)
-	dbconnection.commit()
-	print('compiling metadata for latin dbs')
-	insertfirstsandlasts(workcategoryprefix, cursor)
-	dbconnection.commit()
-	buildtrigramindices(workcategoryprefix, cursor)
-	findwordcounts(cursor, dbconnection)
-	timestampthebuild(workcategoryprefix, dbconnection, cursor)
-	dbconnection.commit()
+	corporatobuild.append('latin')
 
 if buildgreekauthors == 'y':
-	workcategoryprefix = 'gr'
-	print('building greek dbs')
-	corpus_builder.parallelbuildgreekcorpus(tlg)
-	parse_binfiles.resetbininfo(tlg, cursor, dbconnection)
-	dbconnection.commit()
-	print('compiling metadata for greek dbs')
-	insertfirstsandlasts(workcategoryprefix, cursor)
-	dbconnection.commit()
-	buildtrigramindices(workcategoryprefix, cursor)
-	findwordcounts(cursor, dbconnection)
-	timestampthebuild(workcategoryprefix, dbconnection, cursor)
+	corporatobuild.append('greek')
 
-# note the dbcitationinsert() has a check for the dbprefix that constrains your choice of tmp values here
-# if you fail the match, then you will overwrite things like the level05 data that you need later
 if buildinscriptions == 'y':
-	tmpprefix = 'XX'
-	permprefix = 'in'
-	print('dropping any existing inscription tables')
-	resetauthorsandworksdbs(tmpprefix, permprefix)
-	print('building inscription data')
-	corpus_builder.parallelbuildinscriptionscorpus(ins, tmpprefix)
-	print('remapping the inscription data: turning works into authors and embedded documents into individual works')
-	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
-	newauthors = compilenewauthors(aumapper, wkmapper)
-	newworktuples = compilenewworks(newauthors, wkmapper)
-	registernewworks(newworktuples)
-	deletetemporarydbs(tmpprefix)
-	print('compiling metadata for inscription dbs')
-	insertfirstsandlasts(permprefix, cursor)
-	dbconnection.commit()
-	buildtrigramindices(permprefix, cursor)
-	findwordcounts(cursor, dbconnection)
-	timestampthebuild(permprefix, dbconnection, cursor)
-	dbconnection.commit()
+	corporatobuild.append('inscriptions')
 
 if buildpapyri == 'y':
-	tmpprefix = 'YY'
-	permprefix = 'dp'
-	print('dropping any existing papyrus tables')
-	resetauthorsandworksdbs(tmpprefix, permprefix)
-	print('building papyrus data')
-	corpus_builder.parallelbuildpapyrusscorpus(ddp, tmpprefix)
-	print('remapping the inscription data: turning works into authors and embedded documents into individual works')
-	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
-	newauthors = compilenewauthors(aumapper, wkmapper)
-	newworktuples = compilenewworks(newauthors, wkmapper)
-	registernewworks(newworktuples)
-	deletetemporarydbs(tmpprefix)
-	print('compiling metadata for inscription dbs')
-	insertfirstsandlasts(permprefix, cursor)
-	dbconnection.commit()
-	buildtrigramindices(permprefix, cursor)
-	findwordcounts(cursor, dbconnection)
-	timestampthebuild(permprefix, dbconnection, cursor)
-	dbconnection.commit()
+	corporatobuild.append('papyri')
 
 if buildchristians == 'y':
-	tmpprefix = 'ZZ'
-	permprefix = 'ch'
-	print('dropping any existing christian inscription tables')
-	resetauthorsandworksdbs(tmpprefix, permprefix)
-	print('building christian inscription data')
-	corpus_builder.parallelbuildchristianinscriptions(chr, tmpprefix)
-	print('remapping the inscription data: turning works into authors and embedded documents into individual works')
-	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
-	newauthors = compilenewauthors(aumapper, wkmapper)
-	newworktuples = compilenewworks(newauthors, wkmapper)
-	registernewworks(newworktuples)
-	deletetemporarydbs(tmpprefix)
-	print('compiling metadata for inscription dbs')
-	insertfirstsandlasts(permprefix, cursor)
-	dbconnection.commit()
-	buildtrigramindices(permprefix, cursor)
-	findwordcounts(cursor, dbconnection)
-	timestampthebuild(permprefix, dbconnection, cursor)
-	dbconnection.commit()
+	corporatobuild.append('christians')
+
+for corpusname in corporatobuild:
+	corpus_builder.buildcorpusdbs(corpusname, corpusvars)
+	corpus_builder.remaptables(corpusname, corpusvars)
+	corpus_builder.buildcorpusmetadata(corpusname, corpusvars)
+
+#
+# lexica, etc
+#
 
 if buildlex == 'y':
 	print('building lexical dbs')
