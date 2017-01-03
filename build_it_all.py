@@ -48,7 +48,7 @@ corpusvars = {
 			{'dataprefix': 'TLG',
 			'datapath': config['io']['tlg'],
 			'tmpprefix': None,
-			'corpusabbrev': 'gk',
+			'corpusabbrev': 'gr',
 			'maxfilenumber': 9999,
 			'minfilenumber': 0,
 			'exclusionlist': [],

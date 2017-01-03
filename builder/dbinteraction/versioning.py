@@ -74,6 +74,8 @@ def timestampthebuild(corpusname, dbconnection, cursor):
 	except:
 		pass
 
+	dbconnection.commit()
+
 	q = 'INSERT INTO builderversion ( templateversion, corpusname, corpusbuilddate ) VALUES (%s, %s, %s)'
 	d = (sqltemplateversion, corpusname, now)
 	cursor.execute(q, d)
