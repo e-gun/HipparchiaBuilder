@@ -12,12 +12,8 @@ import time
 
 from builder import corpus_builder
 from builder.dbinteraction.build_lexica import formatliddellandscott, formatlewisandshort, grammarloader, analysisloader
-from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
-from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
-from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs, \
-	registernewworks
+from builder.dbinteraction.db import setconnection
 from builder.dbinteraction.versioning import timestampthebuild
-from builder.parsers import parse_binfiles
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -38,7 +34,8 @@ cursor = dbconnection.cursor()
 start = time.time()
 
 corpusvars = {
-	'latin': {'dataprefix': 'LAT',
+	'latin':
+			{'dataprefix': 'LAT',
 			'datapath': config['io']['phi'],
 			'tmpprefix': None,
 			'corpusabbrev': 'lt',
@@ -47,7 +44,8 @@ corpusvars = {
 			'exclusionlist': [],
 			'languagevalue': 'L'
 			},
-	'greek': {'dataprefix': 'TLG',
+	'greek':
+			{'dataprefix': 'TLG',
 			'datapath': config['io']['tlg'],
 			'tmpprefix': None,
 			'corpusabbrev': 'gk',
@@ -56,7 +54,8 @@ corpusvars = {
 			'exclusionlist': [],
 			'languagevalue': 'G'
 			},
-	'inscriptions': {'dataprefix': 'INS',
+	'inscriptions':
+			{'dataprefix': 'INS',
 			'datapath': config['io']['ins'],
 			'tmpprefix': 'XX',
 			'corpusabbrev': 'in',
@@ -65,7 +64,8 @@ corpusvars = {
 			'exclusionlist': [],
 			'languagevalue': 'B'
 			},
-	'papyri': {'dataprefix': 'DDP',
+	'papyri':
+			{'dataprefix': 'DDP',
 			'datapath': config['io']['ddp'],
 			'tmpprefix': 'YY',
 			'corpusabbrev': 'dp',
@@ -74,7 +74,8 @@ corpusvars = {
 			'exclusionlist': [],
 			'languagevalue': 'B'
 			},
-	'christians': {'dataprefix': 'CHR',
+	'christians':
+			{'dataprefix': 'CHR',
 			'datapath': config['io']['chr'],
 			'tmpprefix': 'ZZ',
 			'corpusabbrev': 'ch',
@@ -110,6 +111,7 @@ for corpusname in corporatobuild:
 	corpus_builder.buildcorpusdbs(corpusname, corpusvars)
 	corpus_builder.remaptables(corpusname, corpusvars)
 	corpus_builder.buildcorpusmetadata(corpusname, corpusvars)
+
 
 #
 # lexica, etc
