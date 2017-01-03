@@ -16,149 +16,138 @@ import builder.dbinteraction.dbprepsubstitutions
 from builder.dbinteraction import db
 from builder.file_io import filereaders
 from builder.parsers import idtfiles, regex_substitutions, betacode_to_unicode, parse_binfiles
-from builder.dbinteraction.db import setconnection
+from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
+from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
+from builder.dbinteraction.versioning import timestampthebuild
+from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs, \
+	registernewworks
+
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def parallelbuildlatincorpus(latindatapath):
+def buildcorpusdbs(corpusname, corpusvars):
 	"""
-	the whole enchilada
-	you a few shifts in the comments and conditionals will let you build portions instead
+
+	generic, unified corpus database builder
+
+	will take all files that match a set of criteria and compile them into a set of tables under a given rubric
+
+	:param corpusname:
 	:return:
 	"""
-	dataprefix = 'LAT'
-	alllatinauthors = filereaders.findauthors(latindatapath)
-	alllatinauthors = checkextant(alllatinauthors, latindatapath)
-	
-	al = list(alllatinauthors.keys())
-	al = [x for x in al if x[0:3] == dataprefix]
-	al = [x for x in al if int(x[3:]) < 9999]
-	al.sort()
-	thework = []
-	# al = []
-	
-	for a in al:
-		thework.append(({a: alllatinauthors[a]}, 'L', 'lt', latindatapath, dataprefix))
-	pool = Pool(processes=int(config['io']['workers']))
-	pool.map(parallelworker, thework)
-	
-	return True
+
+	if corpusvars[corpusname]['tmpprefix'] is not None:
+		print('\ndropping any existing',corpusname,'tables')
+		resetauthorsandworksdbs(corpusvars[corpusname]['tmpprefix'], corpusvars[corpusname]['corpusabbrev'])
+		# immediately rewrite the table prefix to the first pass only value
+		abbrev = corpusvars[corpusname]['tmpprefix']
+	else:
+		abbrev = corpusvars[corpusname]['corpusabbrev']
+
+	print('\nbuilding', corpusname, 'dbs')
 
 
-def parallelbuildgreekcorpus(greekdatapath):
-	"""
-	the whole enchilada
-	you a few shifts in the comments and conditionals will let you build portions instead
-	:return:
-	"""
-	dataprefix = 'TLG'
-	allgreekauthors = filereaders.findauthors(greekdatapath)
-	allgreekauthors = checkextant(allgreekauthors, greekdatapath)
-	
-	ag = list(allgreekauthors.keys())
-	ag = [x for x in ag if x[0:3] == dataprefix]
-	ag = [x for x in ag if int(x[3:]) < 9999]
-	ag.sort()
-	thework = []
-	# ag = []
-	
-	for a in ag:
-		thework.append(({a: allgreekauthors[a]}, 'G', 'gr', greekdatapath, dataprefix))
-	pool = Pool(processes=int(config['io']['workers']))
-	pool.map(parallelworker, thework)
+	dataprefix = corpusvars[corpusname]['dataprefix']
+	datapath = corpusvars[corpusname]['datapath']
+	lang = corpusvars[corpusname]['languagevalue']
 
-	return True
+	min = corpusvars[corpusname]['minfilenumber']
+	max = corpusvars[corpusname]['maxfilenumber']
+	exclusions = corpusvars[corpusname]['exclusionlist']
 
+	allauthors = filereaders.findauthors(datapath)
+	allauthors = checkextant(allauthors, datapath)
 
-def parallelbuildinscriptionscorpus(insdatapath, temporaryprefix):
-	"""
-	the whole enchilada
-	you a few shifts in the comments and conditionals will let you build portions instead
-	:return:
-	"""
-	dataprefix = 'INS'
-	allinscriptions = filereaders.findauthors(insdatapath)
-	allinscriptions = checkextant(allinscriptions, insdatapath)
-	
-	ai = list(allinscriptions.keys())
+	aa = list(allauthors.keys())
 	# prune other dbs
-	ai = [x for x in ai if dataprefix in x]
-
-	# the bibliographies are
-	#   INS8000 Delphi Bibliography [inscriptions] 31.56s
-	#   INS9900 Bibliography [Epigr., general] [inscriptions] 1.86s
-	#   INS9930 Bibliography [Epigr., Caria] [inscriptions] 21.97s
-	#   INS9920 Bibliography [Epigr., Ionia] [inscriptions] 23.66s
-	ai.sort()
+	aa = [x for x in aa if dataprefix in x]
+	aa.sort()
 	thework = []
-	# ai = []
-	for a in ai:
-		if 0 < int(a[3:]) < 8000:
-			if re.search(r'Latin', allinscriptions[a]) is not None:
-				thework.append(({a: allinscriptions[a]}, 'L', temporaryprefix, insdatapath, dataprefix))
+	# aa = []
+	for a in aa:
+		if min < int(a[3:]) < max and int(a[3:]) not in exclusions:
+			if lang != 'B':
+				thework.append(({a: allauthors[a]}, lang, abbrev, datapath, dataprefix))
 			else:
-				thework.append(({a: allinscriptions[a]}, 'G', temporaryprefix, insdatapath, dataprefix))
+				if re.search(r'Latin', allauthors[a]) is not None:
+					thework.append(({a: allauthors[a]}, 'L', abbrev, datapath, dataprefix))
+				else:
+					thework.append(({a: allauthors[a]}, 'G', abbrev, datapath, dataprefix))
+					
 	pool = Pool(processes=int(config['io']['workers']))
 	pool.map(parallelworker, thework)
 	
-	return True
+	
+	return
 
 
-def parallelbuildpapyrusscorpus(papdatapath, temporaryprefix):
+def remaptables(corpusname, corpusvars):
 	"""
-	the whole enchilada
-	you a few shifts in the comments and conditionals will let you build portions instead
+
+	see the comments at secondpassdbrewrite.py for what we are doing and why
+
+	basically INS, DDP, and CHR megafiles are getting broken up into smaller units
+
+	:param corpusname:
+	:param corpusvars:
 	:return:
 	"""
-	dataprefix = 'DDP'
-	allpapyri = filereaders.findauthors(papdatapath)
-	allpapyri = checkextant(allpapyri, papdatapath)
 
-	ap = list(allpapyri.keys())
-	# prune other dbs
-	ap = [x for x in ap if dataprefix in x]
-	ap.sort()
-	thework = []
-	# ap = []
-	for a in ap:
-		if 0 < int(a[3:]) < 9999:
-			thework.append(({a: allpapyri[a]}, 'G', temporaryprefix, papdatapath, dataprefix))
-	pool = Pool(processes=int(config['io']['workers']))
-	pool.map(parallelworker, thework)
+	if corpusvars[corpusname]['tmpprefix'] is not None:
+		needsremapping = True
+	else:
+		needsremapping = False
 
-	return True
+	if needsremapping == True:
+		tmpprefix = corpusvars[corpusname]['tmpprefix']
+		permprefix = corpusvars[corpusname]['corpusabbrev']
+
+		print('\nremapping the',corpusname,'data: turning works into authors and embedded documents into individual works')
+		aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
+		newauthors = compilenewauthors(aumapper, wkmapper)
+		newworktuples = compilenewworks(newauthors, wkmapper)
+		registernewworks(newworktuples)
+		deletetemporarydbs(tmpprefix)
+
+	return
 
 
-def parallelbuildchristianinscriptions(chrdatapath, temporaryprefix):
+def buildcorpusmetadata(corpusname, corpusvars):
 	"""
-	the whole enchilada
-	you a few shifts in the comments and conditionals will let you build portions instead
+
+	now that you have the core data for a corpus, record its metadata
+
+	:param corpusname:
+	:param corpusvars:
 	:return:
 	"""
-	dataprefix = 'CHR'
-	allchr = filereaders.findauthors(chrdatapath)
-	allchr = checkextant(allchr, chrdatapath)
 
-	ac = list(allchr.keys())
-	# prune other dbs
-	ac = [x for x in ac if dataprefix in x]
-	ac.sort()
-	thework = []
-	# ac = []
-	for a in ac:
-		if 0 < int(a[3:]) < 1000 and int(a[3:]) != 21:
-			# CHR0021 Judaica [Hebrew/Aramaic]
-			# don't know how to read either language
-			if re.search(r'Latin', allchr[a]) is not None:
-				thework.append(({a: allchr[a]}, 'L', temporaryprefix, chrdatapath, dataprefix))
-			else:
-				thework.append(({a: allchr[a]}, 'G', temporaryprefix, chrdatapath, dataprefix))
-	pool = Pool(processes=int(config['io']['workers']))
-	pool.map(parallelworker, thework)
+	dbconnection = setconnection(config)
+	cursor = dbconnection.cursor()
 
-	return True
+	print('\ncompiling metadata for', corpusname, 'dbs')
+
+	workcategoryprefix = corpusvars[corpusname]['corpusabbrev']
+
+	# is there metadata contained in a binfile? if so, load it
+	if corpusname == 'latin':
+		parse_binfiles.latinloadcanon(corpusvars[corpusname]['datapath'] + corpusvars[corpusname]['dataprefix'] + '9999.TXT', cursor)
+		dbconnection.commit()
+	if corpusname == 'greek':
+		parse_binfiles.resetbininfo(corpusvars[corpusname]['datapath'], cursor, dbconnection)
+		dbconnection.commit()
+
+	# generate the metadata from the data we built
+	insertfirstsandlasts(workcategoryprefix, cursor)
+	dbconnection.commit()
+	buildtrigramindices(workcategoryprefix, cursor)
+	findwordcounts(cursor, dbconnection)
+	timestampthebuild(workcategoryprefix, dbconnection, cursor)
+	dbconnection.commit()
+
+	return
 
 
 def parallelworker(thework):
