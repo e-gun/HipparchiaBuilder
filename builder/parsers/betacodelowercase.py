@@ -554,9 +554,9 @@ def lowercascircumflex(match):
 	
 	substitutions = {
 		'A': u'ᾶ',
-		'E': u'ε', # epsilon-for-eta; see something like 1-500 501-1517, Attica (IG I3 1-2 [1-500 501-1517]) - 370: fr d-f, line 75
+		'E': u'\u03b5\u0342', # epsilon-for-eta; see something like 1-500 501-1517, Attica (IG I3 1-2 [1-500 501-1517]) - 370: fr d-f, line 75
 		'I': u'ῖ',
-		'O': u'o', # to avoid blanking in a case of omicron-for-omega
+		'O': u'\u03bf\u0342', # to avoid blanking in a case of omicron-for-omega;  Attica (IG I3 1-2 [1-500 501-1517]) - 342: line 12; χρυϲο͂ν
 		'U': u'ῦ',
 		'H': u'ῆ',
 		'W': u'ῶ',
