@@ -15,7 +15,7 @@ sqltemplateversion = 12272016
 
 config = configparser.ConfigParser()
 config.read('config.ini')
-stamp = config['build']['timestamp']
+stamp = config['buildoptions']['timestamp']
 
 
 def versiontablemaker(dbconnection, cursor):
