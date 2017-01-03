@@ -38,16 +38,16 @@ def buildcorpusdbs(corpusname, corpusvars):
 	:return:
 	"""
 
+	print('\ndropping any existing', corpusname, 'tables')
 	if corpusvars[corpusname]['tmpprefix'] is not None:
-		print('\ndropping any existing',corpusname,'tables')
 		resetauthorsandworksdbs(corpusvars[corpusname]['tmpprefix'], corpusvars[corpusname]['corpusabbrev'])
 		# immediately rewrite the table prefix to the first pass only value
 		abbrev = corpusvars[corpusname]['tmpprefix']
 	else:
 		abbrev = corpusvars[corpusname]['corpusabbrev']
+		resetauthorsandworksdbs(abbrev, abbrev)
 
 	print('\nbuilding', corpusname, 'dbs')
-
 
 	dataprefix = corpusvars[corpusname]['dataprefix']
 	datapath = corpusvars[corpusname]['datapath']
