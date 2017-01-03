@@ -17,6 +17,9 @@ from .citation_builder import citationbuilder
 config = configparser.ConfigParser()
 config.read('config.ini')
 
+if config['buildoptions']['warnings'] == 'y':
+	warnings = True
+
 #
 # hex datafile and betacode cleanup
 #
@@ -277,7 +280,7 @@ def quotesubstitutesa(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_quote_markup value="' + match.group(1) + '" />'
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -305,7 +308,7 @@ def quotesubstitutesb(match):
 		substitute = substitutions[val][0] + core + substitutions[val][1]
 	else:
 		substitute = '<hmu_unhandled_quote_markup value="' + match.group(1) + '" />' + core
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -356,6 +359,7 @@ def poundsubstitutes(match):
 		29: u'\u00b7',
 		30: r'<hmu_idiosyncratic_char value="30">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		31: r'<hmu_idiosyncratic_char value="31">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		50: r'<hmu_undocumented_poundsign value="50">⊚</hmu_undocumented_poundsign>',
 		51: u'\u00b7',
 		52: u'\u205a',
 		53: u'\u205d',
@@ -484,6 +488,7 @@ def poundsubstitutes(match):
 		307: u'\u2e0e',  # but supposed to be just part of a coronis
 		308: u'\u2e0e', # but supposed to be just part of a coronis
 		310: u'\u2e0e',
+		311: u'\u2e0e', # but supposed to be just lower half of a coronis
 		312: u'\u2e0e', # but supposed to be just upper half of a coronis
 		313: u'\u2e0e',
 		314: r'<hmu_idiosyncratic_char value="314">◦</hmu_idiosyncratic_char>',  # idiosyncratic
@@ -506,6 +511,7 @@ def poundsubstitutes(match):
 		332: r'<hmu_impression_of_stamp_on_papyrus />⦻',
 		333: r'<hmu_text_enclosed_in_box_or_circle />',
 		334: r'<hmu_text_enclosed_in_brackets />',
+		335: r'<span class="strikethrough">N</span>',
 		336: r'<hum_redundant_s-type_sign />',
 		337: r'<hmu_seal_attached_to_papyrus>❊</hmu_seal_attached_to_papyrus>',
 		451: u'\u0283',
@@ -804,7 +810,7 @@ def poundsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_pound_sign value="'+match.group(1)+'" />▦'
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -834,6 +840,7 @@ def percentsubstitutes(match):
 		12: u'\u002a',  # look out for future problems: *
 		14: u'\u00a7',
 		15: u'\u02c8',
+		16: u'\u00a6',
 		17: u'\u2016',
 		18: u'\u0025',  # look out for future problems: '
 		19: u'\u2013',
@@ -867,26 +874,27 @@ def percentsubstitutes(match):
 		47: r'𐄑',
 		48: u'u23d1\u23d1',
 		49: u'\u23d1\u23d1\u23d1',
-		50: r'<hmu_papryological_fraction>((1/2))</hmu_papryological_fraction>',
-		51: r'<hmu_papryological_fraction>((1/4))</hmu_papryological_fraction>',
-		52: r'<hmu_papryological_fraction>((1/8))</hmu_papryological_fraction>',
-		53: r'<hmu_papryological_fraction>((1/16))</hmu_papryological_fraction>',
-		54: r'<hmu_papryological_fraction>((1/32))</hmu_papryological_fraction>',
-		55: r'<hmu_papryological_fraction>((1/64))</hmu_papryological_fraction>',
-		56: r'<hmu_papryological_fraction>((1/128))</hmu_papryological_fraction>',
+		50: r'<hmu_papryological_fraction>½</hmu_papryological_fraction>',
+		51: r'<hmu_papryological_fraction>¼</hmu_papryological_fraction>',
+		52: r'<hmu_papryological_fraction>⅛</hmu_papryological_fraction>',
+		53: r'<hmu_papryological_fraction>⅟16</hmu_papryological_fraction>',
+		54: r'<hmu_papryological_fraction>⅟32</hmu_papryological_fraction>',
+		55: r'<hmu_papryological_fraction>⅟64</hmu_papryological_fraction>',
+		56: r'<hmu_papryological_fraction>⅟128</hmu_papryological_fraction>',
 		57: r'<hmu_undocumented_percentsign value="57">⊚</hmu_undocumented_percentsign>',
-		59: r'<hmu_papryological_fraction>((3/4))</hmu_papryological_fraction>',
-		60: r'<hmu_papryological_fraction>((1/3))</hmu_papryological_fraction>',
-		61: r'<hmu_papryological_fraction>((1/6))</hmu_papryological_fraction>',
-		62: r'<hmu_papryological_fraction>((1/12))</hmu_papryological_fraction>',
-		63: r'<hmu_papryological_fraction>((1/24))</hmu_papryological_fraction>',
-		64: r'<hmu_papryological_fraction>((1/48))</hmu_papryological_fraction>',
-		65: r'<hmu_papryological_fraction>((1/96))</hmu_papryological_fraction>',
+		59: r'<hmu_papryological_fraction>¾</hmu_papryological_fraction>',
+		60: r'<hmu_papryological_fraction>⅓</hmu_papryological_fraction>',
+		61: r'<hmu_papryological_fraction>⅙</hmu_papryological_fraction>',
+		62: r'<hmu_papryological_fraction>⅟12</hmu_papryological_fraction>',
+		63: r'<hmu_papryological_fraction>⅟24</hmu_papryological_fraction>',
+		64: r'<hmu_papryological_fraction>⅟48</hmu_papryological_fraction>',
+		65: r'<hmu_papryological_fraction>⅟96</hmu_papryological_fraction>',
 		69: u'\u03b2\u0338',
-		70: r'<hmu_papryological_fraction>((1/50))</hmu_papryological_fraction>',
-		71: r'<hmu_papryological_fraction>((1/100))</hmu_papryological_fraction>',
-		72: r'<hmu_papryological_fraction>((1/100))</hmu_papryological_fraction>',
-		73: r'<hmu_papryological_fraction>((1/100))</hmu_papryological_fraction>',
+		70: r'<hmu_papryological_fraction>⅟50</hmu_papryological_fraction>',
+		71: r'<hmu_papryological_fraction>⅟100</hmu_papryological_fraction>',
+		72: r'<hmu_papryological_fraction>⅟100</hmu_papryological_fraction>',
+		73: r'<hmu_papryological_fraction>⅟100</hmu_papryological_fraction>',
+		75: r'<hmu_undocumented_percentsign value="75">⊚</hmu_undocumented_percentsign>',
 		79: r'<hmu_undocumented_percentsign value="79">⊚</hmu_undocumented_percentsign>',
 		80: u'\u0076\u002E',  # supposed to put the 'v' in italics too
 		81: r'<span class="italic">vac.</span>',
@@ -934,7 +942,7 @@ def percentsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_percent_sign value="' + match.group(1) + '" />▩'
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -987,7 +995,7 @@ def leftbracketsubstitutions(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_left_bracket value="' + match.group(1) + '" />'
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -1039,7 +1047,7 @@ def rightbracketsubstitutions(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_right_bracket value="' + match.group(1) + '" />'
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -1085,7 +1093,7 @@ def atsignsubstitutions(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_atsign value="' + match.group(1) + '" />'
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -1137,7 +1145,7 @@ def ltcurlybracketsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_ltcurlybracket value="' + match.group(1) + '" />'
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -1179,7 +1187,7 @@ def rtcurlybracketsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_rtcurlybracket value="' + match.group(1) + '" />'
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -1241,7 +1249,7 @@ def ltanglebracketsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_ltangle value="' + match.group(1) + '" />'
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -1303,7 +1311,7 @@ def rtanglebracketsubstitutes(match):
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_rtangle value="' + match.group(1) + '" />'
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -1349,7 +1357,7 @@ def dollarssubstitutes(match):
 		substitute = substitutions[val][0] + core + substitutions[val][1]
 	else:
 		substitute = '<hmu_unhandled_greek_font_shift value="' + match.group(1) + '" />' + core
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
@@ -1385,7 +1393,7 @@ def andsubstitutes(match):
 		substitute = substitutions[val][0] + core + substitutions[val][1]
 	else:
 		substitute = '<hmu_unhandled_latin_font_shift value="' + match.group(1) + '" />' + core
-		if config['build']['warnings'] == 'y':
+		if warnings == True:
 			print('\t',substitute)
 	
 	return substitute
