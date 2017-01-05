@@ -363,6 +363,8 @@ def convertdate(date, secondpass=False):
 	arabic = re.compile(r'\d')
 	ordinal = re.compile(r'((\d)st|(\d)nd|(\d)rd|(\d{1,})th)')
 	roman = re.compile(r'[IVX]')
+	ages = re.compile(r'aet')
+	digits = re.compile(r'\d')
 
 	gdate = -9999
 	ncdate = -9999
@@ -372,8 +374,15 @@ def convertdate(date, secondpass=False):
 		gdate = germandate(date)
 	elif re.search(arabic, date) is not None and re.search(ordinal,date) is not None and secondpass == False:
 		ncdate = numberedcenturydate(date, ordinal)
-	elif re.search(roman, date)is not None and secondpass == False:
+	elif re.search(roman, date) is not None and secondpass == False:
 		rdate = romannumeraldate(date)
+	elif re.search(ages, date) is not None and secondpass == False:
+		adate = aetatesdates(date)
+	elif re.search(digits, date) is not None and secondpass == False:
+		ddate = numericdate(date)
+
+	# at this point a grab bag should remain: 'späthellenistisch', etc.
+
 
 	waffles = re.compile(r'(prob\. |\(or later\)|\sor\slater$|\[o\.s\.\]|, or sh\. bef\.(\s|$))')
 	uselessspans = re.compile(r'(middle\s|c\.med s\s|c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s|mittlere |Mitte |Zeit des |erste |Erste )')
@@ -566,6 +575,10 @@ def convertdate(date, secondpass=False):
 		numericaldate = ncdate
 	elif rdate != -9999:
 		numericaldate = rdate
+	else:
+		# for debugging
+		#numericaldate = -9999
+		pass
 
 	numericaldate = round(int(numericaldate),1)
 
@@ -832,6 +845,55 @@ def romannumeraldate(stringdate):
 	if numericaldate == 0:
 		numericaldate = 1
 
-	print(original,'->',numericaldate)
-
 	return numericaldate
+
+
+def aetatesdates(stringdate):
+
+	return -9999
+
+
+def numericdate(stringdate):
+	"""
+
+	post 398/7 -> -390
+
+	DANGER:
+		'ac' vs 'a'
+		[c.950-978 ac] IS CE
+		p c 480-c 450a is BCE
+
+	:param stringdate:
+	:return:
+	"""
+
+	original = stringdate
+	modifier = 1
+	midcentury = -50
+	fudge = 0
+	numericaldate = -9999
+
+	dontcare = re.compile(r'^(p c |p c\.|p |perh c |poss\. |prob\. c\.|prob\. |cAD |AD |c\. |c\.|c )')
+	# subtract = re.compile()
+	tinysubtract = re.compile(r'^(sh\. bef\. |sh\.bef\. |before |bef\. )')
+	littleadd = re.compile(r'^(sh\. aft\. c\.|sh\. aft\. |sh\.aft\. |sh\.aft\.|sht\. after )')
+	add = re.compile(r'')
+	splitter = re.compile(r'')
+	nearestdecade = re.compile(r'^(post |ante )')
+	fix = re.compile(r'⟪⟫\[\]')
+
+	stringdate = re.sub(dontcare, '', stringdate)
+	stringdate = re.sub(r'\?', '', stringdate)
+	stringdate = re.sub(fix, '', stringdate)
+
+	if re.search(r'( bc$|bc$| BC$| a$|a$)', stringdate) is not None:
+		modifier = -1
+
+	if re.search(r'(BC.*?[/-].*?pc|bc.*?[/-].*?ac)$',original) is not None:
+		# I sac - I spc
+		numerals = re.findall(r'[IVX]{1,}',original)
+		digits = [map[n] for n in numerals]
+		digits[0] = digits[0] * -1
+		numericaldate = (((digits[0] + digits[1]) / 2) * modifier) + fudge
+
+	return -9999
