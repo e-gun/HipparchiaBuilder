@@ -9,8 +9,12 @@
 import re
 
 
-def convertdate(date):
+def convertdate(date, secondpass=False):
 	"""
+
+	there are 21584 distinct recorded_date values in the works table
+	[q = 'select distinct recorded_date from works order by recorded_date']
+
 	take a string date and try to assign a number to it: IV AD --> 450, etc.
 
 	a very messy way to achieve highly suspect results
@@ -355,6 +359,21 @@ def convertdate(date):
 		'XVII-XIX ac': 1800,
 	}
 
+	german = re.compile(r'(n\.|v\.Chr\.)')
+	arabic = re.compile(r'\d')
+	ordinal = re.compile(r'((\d)st|(\d)nd|(\d)rd|(\d{1,})th)')
+	roman = re.compile(r'[IVX]')
+
+	gdate = -9999
+	ncdate = -9999
+	rdate = -9999
+
+	if re.search(german, date) is not None and secondpass == False:
+		gdate = germandate(date)
+	elif re.search(arabic, date) is not None and re.search(ordinal,date) is not None and secondpass == False:
+		ncdate = numberedcenturydate(date, ordinal)
+	elif re.search(roman, date)is not None and secondpass == False:
+		rdate = romannumeraldate(date)
 
 	waffles = re.compile(r'(prob\. |\(or later\)|\sor\slater$|\[o\.s\.\]|, or sh\. bef\.(\s|$))')
 	uselessspans = re.compile(r'(middle\s|c\.med s\s|c\.\smid\.\s|med\s|mid-|med\ss\s|mid\s|mittlere |Mitte |Zeit des |erste |Erste )')
@@ -363,6 +382,7 @@ def convertdate(date):
 	superfluous = re.compile(r'(<hmu_discarded_form>.*?$|^(wohl|Schicht)\s|\[K\.\d{1,}\]|^(s\s|-))')
 	unpunctuate = re.compile(r'(\?|\(\?\)|\[|\]|\'|⟪|⟫)')
 	ceispositive = re.compile(r'^(AD c |AD -|-cAD|Ad |cAD )')
+
 
 	# drop things that will only confuse the issue
 	date = re.sub(waffles,'',date)
@@ -419,6 +439,7 @@ def convertdate(date):
 	date = re.sub(r'^s\s','',date)
 	date = re.sub(r'/in\s|/fin\s','/',date)
 
+	# elif
 	if date in datemapper:
 		numericaldate = datemapper[date]
 	else:
@@ -536,8 +557,281 @@ def convertdate(date):
 
 	if numericaldate > 2000:
 		if originaldate != '?' and originaldate != '[unknown]':
-			print('\tunparseable date:',originaldate)
+			# print('\tunparseable date:',originaldate)
+			pass
+
+	if gdate != -9999:
+		numericaldate = gdate
+	elif ncdate != -9999:
+		numericaldate = ncdate
+	elif rdate != -9999:
+		numericaldate = rdate
 
 	numericaldate = round(int(numericaldate),1)
+
+	return numericaldate
+
+
+def germandate(stringdate):
+	"""
+
+	a very large percentage of the German dates will pass through this with OK results
+
+	:param stringdate:
+	:return:
+	"""
+
+	original = stringdate
+
+	dontcare = re.compile(r'^(Frühjahr |wohl des |wohl noch |wohl |vielleicht noch |vermutlich |etwa |Mitte |frühestens |um |des |ca\. |ca\.|noch |nicht später als |nicht vor |nicht früher als |Wende des |Wende |2\.Drittel )')
+	subtract = re.compile(r'^(spätestens |am ehesten |nicht später als |kaum später als |term\.ante |1\.Hälfte |1\.Drittel |1. Viertel |1\.Viertel |Beginn |frühes |fruhes |erste Jahrzehnte |Anf\. |Anf |Anf\.| 1. H.)')
+	tinysubtract = re.compile(r'^(einige Zeit vor |\(kurz\) vor |kurz vor |vor |2. Viertel |2.Viertel )')
+	add = re.compile(r'^(nicht früher als |term\.post |nach |letztes Drittel |letztes Viertel |3\. Viertel |3\.Viertel |4. Viertel |2\. Hälfte |2\.Hälfte |2 Hälfte |spätes |ausgehendes |späteres |Ende )')
+	century = re.compile(r'(Jh\.| Jhdts\. |Jhdt\. )')
+	split = re.compile(r'(\d{1,})[-/](\d{1,})')
+	misleadingmiddles = re.compile(r'(-ca\.|-vor )')
+	# collapse = re.compile(r'( od | oder )')
+
+	modifier = 1
+	midcentury = -50
+	fudge = 0
+
+	stringdate = re.sub(dontcare, '', stringdate)
+	stringdate = re.sub(r'\?', '', stringdate)
+	stringdate = re.sub(misleadingmiddles, '-', stringdate)
+	# stringdate = re.sub(collapse,'/', stringdate)
+
+
+	if re.search(r'v\.Chr\.',stringdate) is not None and re.search(r'n\.Chr\.',stringdate) is not None:
+		parts = re.search(r'\d\s{0,1}v\.Chr(.*?)\d\s{0,1}n\.Chr(.*?)',stringdate)
+		try:
+			one = int(parts.group(1))
+			two = int(parts.group(3))
+			numericaldate = ((-1 * one * 100) + (two * 100)) / 2
+		except:
+			print('failed',original)
+			numericaldate = -9999
+		return numericaldate
+	elif re.search(r'zw.',stringdate) is not None:
+		parts = re.search(r'^zw.(\d{1,})\s{0,1}und(\d{1,})',stringdate)
+		if re.search(r'v\.Chr\.', stringdate) is not None:
+			modifier = -1
+			fudge += 100
+		one = int(parts.group(1))
+		two = int(parts.group(2))
+		numericaldate = (((-1 * one ) + (two )) / 2) * modifier + fudge
+		return numericaldate
+	elif re.search(r'v\.Chr\.',stringdate) is not None:
+		modifier = -1
+
+	stringdate = re.sub(r'(v\.|n\.)Chr\.', '', stringdate)
+
+	if re.search(subtract, stringdate) is not None:
+		stringdate = re.sub(subtract,'',stringdate)
+		fudge = -25
+
+	if re.search(tinysubtract, stringdate) is not None:
+		stringdate = re.sub(tinysubtract,'',stringdate)
+		fudge = -10
+
+	if re.search(add, stringdate) is not None:
+		stringdate = re.sub(add,'',stringdate)
+		fudge = 25
+
+	if re.search(century, stringdate) is not None:
+		stringdate = re.sub(century, '', stringdate)
+		modifier = modifier * 100
+
+	re.sub(r'(^\s|\s$)','',stringdate)
+
+	stringdate = re.sub(dontcare,'', stringdate)
+	stringdate = re.sub(r'\.', '', stringdate)
+
+	if re.search(split,stringdate) is not None:
+		parts = re.search(split,stringdate)
+		one = int(parts.group(1))
+		two = int(parts.group(2))
+		if modifier < 100:
+			numericaldate = ((one + two) / 2) * modifier
+		else:
+			numericaldate = (((one + two) / 2) * modifier) + fudge
+		return numericaldate
+
+	try:
+		if abs(modifier) != 1: # i.e., = 100 or -100
+			numericaldate = int(stringdate) * modifier + fudge + midcentury
+		else:
+			numericaldate = int(stringdate) * modifier + fudge
+	except:
+		numericaldate = convertdate(original, secondpass=True)
+
+	return numericaldate
+
+
+def numberedcenturydate(stringdate, ordinalregexfinder):
+	"""
+
+	try to parse a date that has something like '5th' in it
+
+	ordinal = re.compile(r'((\d)st|(\d)nd|(\d)rd|(\d{1,})th)')
+
+	:param stringdate:
+	:return:
+	"""
+	original = stringdate
+	modifier = 100
+	midcentury = -50
+	fudge = 0
+
+	dontcare = re.compile(r'^(prob\. |perh\. |c |c\.|c. )')
+	subtract = re.compile(r'^(not before |before )')
+	tinysubtract = re.compile(r'^(beg\. |beg\.|beg |earlier |early |in |sh\. bef\. mid\. |b:mid- )')
+	tinyadd = re.compile(r'^(end |later |late |ex |sh\. aft\. mid\. )')
+	add = re.compile(r' or later$')
+
+	stringdate = re.sub(dontcare, '', stringdate)
+	stringdate = re.sub(r'\?', '', stringdate)
+
+	if re.search(subtract, stringdate) is not None:
+		stringdate = re.sub(subtract,'',stringdate)
+		fudge = -75
+
+	if re.search(tinysubtract, stringdate) is not None:
+		stringdate = re.sub(tinysubtract,'',stringdate)
+		fudge = -25
+
+	if re.search(tinyadd, stringdate) is not None:
+		stringdate = re.sub(tinyadd,'',stringdate)
+		fudge = 25
+
+	if re.search(add, stringdate) is not None:
+		stringdate = re.sub(add,'',stringdate)
+		# note that 75 was not chosen because the candidate did not look right for it
+		fudge = 25
+
+	if re.search(r'bc$',stringdate) is not None:
+		modifier = modifier * -1
+		fudge = fudge + 100
+	elif re.search(r'ac$',stringdate) is None:
+		# 2nd half Antonine
+		numericaldate = convertdate(original, secondpass=True)
+		return numericaldate
+
+	digitfinder = re.findall(ordinalregexfinder, stringdate)
+	# [('8th', '', '', '', '8'), ('9th', '', '', '', '9')]
+
+	try:
+		seconddigit = [x for x in digitfinder[1][1:] if x]
+		seconddigit = int(seconddigit[0])
+		twodigit = True
+	except:
+		twodigit = False
+
+	firstdigit = [x for x in digitfinder[0][1:] if x]
+	firstdigit = int(firstdigit[0])
+
+	if twodigit == True:
+		if re.search(r'bc(.*?)ac$',stringdate) is None:
+			numericaldate = (((firstdigit + seconddigit) / 2) * modifier ) + fudge
+			if modifier > 0:
+				numericaldate += 50
+			else:
+				numericaldate -= 50
+		else:
+			numericaldate = (((firstdigit * -100) + (seconddigit * 100))/2)
+	else:
+		numericaldate = (firstdigit * modifier) + fudge + midcentury + fudge
+
+	if numericaldate == 0:
+		numericaldate = 1
+
+	return numericaldate
+
+
+def romannumeraldate(stringdate):
+	"""
+
+	V -> 450
+
+	:param datestring:
+	:return:
+	"""
+
+	map = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10, 'XI': 11,
+			'XII': 12, 'XIII': 13, 'XIV': 14, 'XV': 15, 'XVI': 16, 'XVII': 17, 'XVIII': 18, 'XIX': 19}
+
+	original = stringdate
+	modifier = 100
+	midcentury = -50
+	fudge = 0
+	numericaldate = -9999
+
+	falsepositive = re.compile(r'(Imp|\d|aet )')
+	fixone = re.compile(r'Í')
+	fixtwo = re.compile(r'á')
+
+	if re.search(falsepositive, stringdate) is not None:
+		numericaldate = convertdate(original, secondpass=True)
+		return numericaldate
+
+	stringdate = re.sub(fixone,r'I/',stringdate)
+	stringdate = re.sub(fixtwo, r'a/', stringdate)
+
+	dontcare = re.compile(r'^(p med |s |p |c.med s |c med |med s |mid- |mid |fere s )|( ut vid| p|p)$')
+	# subtract = re.compile()
+	tinysubtract = re.compile(r'(^(ante med |ante md |beg\. |beg |a med |early |init/med |init |latest )| p prior$|/init )')
+	bigadd = re.compile(r'^(post fin s|post )')
+	add = re.compile(r'(^(ante fin |ant fin|ex s |ex |end |med/fin |late |post med s )|(/postea|/paullo post)$)')
+	splitter = re.compile(r'([IVX]{1,})[-/]([IVX]{1,})')
+
+	stringdate = re.sub(dontcare, '', stringdate)
+	stringdate = re.sub(r'\?', '', stringdate)
+
+	if re.search(tinysubtract, stringdate) is not None:
+		stringdate = re.sub(tinysubtract,'',stringdate)
+		fudge = -25
+
+	if re.search(bigadd, stringdate) is not None:
+		stringdate = re.sub(bigadd,'',stringdate)
+		fudge = 75
+
+	if re.search(add, stringdate) is not None:
+		stringdate = re.sub(add,'',stringdate)
+		fudge = 25
+
+	if re.search(r'( bc$|bc$| a$|a$)',stringdate) is not None:
+		stringdate = re.sub(r'( bc| BC|bc| sac| ac| a|a)$','',stringdate)
+		modifier = modifier * -1
+		fudge = fudge + 100
+
+	if re.search(r'(ac.*?[/-].*?pc|bc.*?[/-].*?ac)$',original) is not None:
+		# I sac - I spc
+		numerals = re.findall(r'[IVX]{1,}',original)
+		digits = [map[n] for n in numerals]
+		digits[0] = digits[0] * -1
+		numericaldate = (((digits[0] + digits[1]) / 2) * modifier) + fudge
+	elif re.search(splitter,stringdate) is not None:
+		# II-III spc
+		centuries = re.search(splitter,stringdate)
+		first = centuries.group(1)
+		second = centuries.group(2)
+		first = map[first]
+		second = map[second]
+		if first > second:
+			modifier = modifier * -1
+		numericaldate = (((first + second) / 2) * modifier) + fudge + midcentury
+	elif re.search(r'[IVX]{1,}',stringdate) is not None:
+		numeral = re.search(r'[IVX]{1,}',stringdate)
+		try:
+			numeral = map[numeral.group(0)]
+			numericaldate = (numeral * modifier) + fudge + midcentury
+		except:
+			# no key
+			numericaldate = convertdate(original, secondpass=True)
+
+	if numericaldate == 0:
+		numericaldate = 1
+
+	print(original,'->',numericaldate)
 
 	return numericaldate
