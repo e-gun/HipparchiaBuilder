@@ -369,6 +369,7 @@ def convertdate(date, secondpass=False):
 	gdate = -9999
 	ncdate = -9999
 	rdate = -9999
+	ddate = -9999
 
 	if re.search(german, date) is not None and secondpass == False:
 		gdate = germandate(date)
@@ -380,6 +381,7 @@ def convertdate(date, secondpass=False):
 		adate = aetatesdates(date)
 	elif re.search(digits, date) is not None and secondpass == False:
 		ddate = numericdate(date)
+
 
 	# at this point a grab bag should remain: 'späthellenistisch', etc.
 
@@ -575,6 +577,8 @@ def convertdate(date, secondpass=False):
 		numericaldate = ncdate
 	elif rdate != -9999:
 		numericaldate = rdate
+	elif ddate != -9999:
+		numericaldate = ddate
 	else:
 		# for debugging
 		#numericaldate = -9999
@@ -849,8 +853,115 @@ def romannumeraldate(stringdate):
 
 
 def aetatesdates(stringdate):
+	"""
 
-	return -9999
+	aet. Aug -> 10
+
+	:param stringdate:
+	:return:
+	"""
+
+	original = stringdate
+	fudge = 0
+	numericaldate = -9999
+
+	map = {
+		'Ant': 150,
+		'August fere': 1,
+		'Ant/Aur': 160,
+		'Aur': 170,
+		'Aur/Commod': 160,
+		'Carac': 205,
+		'Chr': 400,
+		'Claud': 50,
+		'Aug/Claud': 30,
+		'Aug/Tib': 10,
+		'Claud/Nero': 55,
+		'Commod': 185,
+		'Dioc': 290,
+		'Dom': 90,
+		'Flav': 85,
+		'Had': 125,
+		'Hadriani': 125,
+		'Had/Aur': 150,
+		'Hell tard': -1,
+		'Hell': -250,
+		'Imp tard': 400,
+		'imp': 200,
+		'Imp': 200,
+		'inferior': 1200,
+		'Nero': 60,
+		'Nerv': 97,
+		'Nerv/Tra': 100,
+		'TráHad': 115,
+		'Rom tard': 250,
+		'Rom': 50,
+		'tard': 1000,
+		'Tib': 25,
+		'Tib/Gaii': 35,
+		'Gaii': 40,
+		'Tit': 80,
+		'Tra': 105,
+		'Tra/Had': 115,
+		'Ves': 70,
+		'Ves/Dom': 80,
+		'Augusti': 1,
+		'Lycurgi': -350,
+		'Macedon': -275,
+		'Aug': 1,
+		'Rom/Byz': 400,
+		'Byz': 700,
+		'Byzant': 700,
+		'Byzantina': 700,
+		'Just': 550,
+		'Hell.': -250,
+		'Hellen': -250,
+		'Hellenistic': -250,
+		'Hellenist': -250,
+		'fin Tib': 35,
+		'fin Aug': 10,
+		'fin Claud': 50,
+		'fin Dom': 95,
+		'fin Hell': -1,
+		'fin Nero': 65,
+		'fin Rom': 325,
+		'fin Tra': 115,
+		'init Ant': 155,
+		'init Aug': -15,
+		'init Byz': 450,
+		'init Chr': 350,
+		'init Had': 120,
+		'init Hell': -250,
+		'init Rom': -50,
+		'init imp': 50,
+		'init imper': 50,
+		'med Hell': -150,
+	}
+
+	add = re.compile(r'^p ')
+	subtr = re.compile(r'^a ')
+	kill = re.compile(r'(\[.*?\]|\?|^c )')
+
+	stringdate = re.sub(r'(aetate |aetats |aetat |aet )','',stringdate)
+	stringdate = re.sub(kill, '',stringdate)
+	stringdate = re.sub(r'(^\s|\s$)','',stringdate)
+
+	if re.search(add, stringdate) is not None:
+		stringdate = re.sub(add,'',stringdate)
+		fudge = 25
+
+	if re.search(subtr, stringdate) is not None:
+		stringdate = re.sub(subtr,'',stringdate)
+		fudge = -25
+
+	try:
+		numericaldate = map[stringdate] + fudge
+	except:
+		print(stringdate)
+
+	# print('numericaldate',numericaldate)
+
+	return numericaldate
 
 
 def numericdate(stringdate):
@@ -877,8 +988,9 @@ def numericdate(stringdate):
 	# subtract = re.compile()
 	tinysubtract = re.compile(r'^(sh\. bef\. |sh\.bef\. |before |bef\. )')
 	littleadd = re.compile(r'^(sh\. aft\. c\.|sh\. aft\. |sh\.aft\. |sh\.aft\.|sht\. after )')
-	add = re.compile(r'')
-	splitter = re.compile(r'')
+	# add = re.compile(r'')
+	splitter = re.compile(r'(\d{1,})[/-](\d{1,})')
+	bcad = re.compile(r'(\d{1,}) BC-AD (\d{1,})')
 	nearestdecade = re.compile(r'^(post |ante )')
 	fix = re.compile(r'⟪⟫\[\]')
 
@@ -889,11 +1001,43 @@ def numericdate(stringdate):
 	if re.search(r'( bc$|bc$| BC$| a$|a$)', stringdate) is not None:
 		modifier = -1
 
-	if re.search(r'(BC.*?[/-].*?pc|bc.*?[/-].*?ac)$',original) is not None:
-		# I sac - I spc
-		numerals = re.findall(r'[IVX]{1,}',original)
-		digits = [map[n] for n in numerals]
-		digits[0] = digits[0] * -1
-		numericaldate = (((digits[0] + digits[1]) / 2) * modifier) + fudge
+	if re.search(bcad, stringdate) is not None:
+		digits = re.search(bcad, stringdate)
+		one = int(digits.group(1))* -1
+		two = int(digits.group(2))* 1
+		numericaldate = (one + two ) / 2
+		return numericaldate
 
-	return -9999
+	if re.search(splitter, stringdate) is not None:
+		try:
+			digits = re.findall(splitter, stringdate)
+			one = int(digits[0][0])
+			two = int(digits[0][1])
+			numericaldate = (one + two ) / 2 * modifier
+			return numericaldate
+		except:
+			numericaldate = convertdate(original, secondpass=True)
+
+	if re.search(nearestdecade, stringdate) is not None:
+		digits = re.search(r'\d{1,}',stringdate)
+		year = int(digits.group(0))
+		decade = year % 10
+		if ('post' in stringdate and modifier == 1) or ('ante' in stringdate and modifier == -1):
+			numericaldate = (year + (10 - decade))
+		elif ('post' in stringdate and modifier == -1) or ('ante' in stringdate and modifier == 1):
+			numericaldate = year - decade
+		return numericaldate
+
+	if re.search(tinysubtract, stringdate) is not None:
+		stringdate = re.sub(tinysubtract,'',stringdate)
+		fudge = -10
+
+	if re.search(littleadd, stringdate) is not None:
+		stringdate = re.sub(littleadd,'',stringdate)
+		fudge = 10
+
+	digits = re.search(r'\d{1,}', stringdate)
+	year = int(digits.group(0))
+	numericaldate = (year * modifier) + fudge
+
+	return numericaldate
