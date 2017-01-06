@@ -369,6 +369,7 @@ def convertdate(date, secondpass=False):
 	gdate = -9999
 	ncdate = -9999
 	rdate = -9999
+	adate = -9999
 	ddate = -9999
 
 	if re.search(german, date) is not None and secondpass == False:
@@ -579,6 +580,8 @@ def convertdate(date, secondpass=False):
 		numericaldate = rdate
 	elif ddate != -9999:
 		numericaldate = ddate
+	elif adate != -9999:
+		numericaldate = adate
 	else:
 		# for debugging
 		#numericaldate = -9999
