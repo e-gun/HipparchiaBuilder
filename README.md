@@ -46,7 +46,7 @@ Five databases possible:
     Greek [6625 works]
     Latin [836 works]
     Papyri [49235 works]
-    Inscriptions I (ealrier and Greeker) [139970 works]
+    Inscriptions I (earlier and Greeker) [139970 works]
     Inscriptions II (later and more Westerly) [40174 works]
 
 ```
