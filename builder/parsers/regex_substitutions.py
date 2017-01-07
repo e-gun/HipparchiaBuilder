@@ -19,6 +19,8 @@ config.read('config.ini')
 
 if config['buildoptions']['warnings'] == 'y':
 	warnings = True
+else:
+	warnings = False
 
 #
 # hex datafile and betacode cleanup

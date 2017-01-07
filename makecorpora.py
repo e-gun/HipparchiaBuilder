@@ -69,8 +69,8 @@ corpusvars = {
 			'datapath': config['io']['ddp'],
 			'tmpprefix': 'YY',
 			'corpusabbrev': 'dp',
-			'maxfilenumber': 1000,  # maxval is 213; checklist at 9999
-			'minfilenumber': 6,
+			'maxfilenumber': 5000,  # maxval is 213; checklist at 9999
+			'minfilenumber': 0,
 			'exclusionlist': [],
 			'languagevalue': 'B'
 			},
@@ -79,7 +79,7 @@ corpusvars = {
 			'datapath': config['io']['chr'],
 			'tmpprefix': 'ZZ',
 			'corpusabbrev': 'ch',
-			'maxfilenumber': 1000,  # maxval is 140; bibliographies at 9900 and 9910
+			'maxfilenumber': 5000,  # maxval is 140; bibliographies at 9900 and 9910
 			'minfilenumber': 0,
 			'exclusionlist': [21],  # CHR0021 Judaica [Hebrew/Aramaic]; don't know how to read either language
 			'languagevalue': 'B'
