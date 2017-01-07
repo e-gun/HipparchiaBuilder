@@ -39,3 +39,14 @@ you will need:
 
 see also: HipparchiaBSD
     these are starter files for installing hipparchia into a virtualbox (or a non-virtual one) running BSD 10.3
+
+'''
+
+Five databases possible:
+    Greek [6625 works]
+    Latin [836 works]
+    Papyri [49235 works]
+    Inscriptions I (ealrier and Greeker) [139970 works]
+    Inscriptions II (later and more Westerly) [40174 works]
+
+'''
