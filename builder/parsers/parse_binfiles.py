@@ -335,100 +335,69 @@ def buildlabellist(binfilepath):
 	return decodedauthors
 
 
-def bce(stringdate, fudge):
-	abc = re.compile(r'a\. (\d{1,}) B\.C\.')
-	pbc = re.compile(r'p\. (\d{1,}) B\.C\.')
-	bc = re.compile(r'(\d{1,}) B\.C\.')
+def convertbinfiledates(stringdate):
+	"""
+	turn 7/6 B.C. into -600
 
-	if re.search(abc, stringdate) is not None:
-		date = int(re.search(abc, stringdate).group(1)) * 100 * (-1) - 50 + fudge['a.']
-	elif re.search(pbc, stringdate) is not None:
-		date = int(re.search(pbc, stringdate).group(1)) * 100 * (-1) - 50 - fudge['p.']
-	else:
-		date = int(re.search(bc, stringdate).group(1)) * 100 * (-1) - 50
+	:param stringdate:
+	:return:
+	"""
 
-	return date
+	original = stringdate
 
+	bc = re.compile(r'B\.C\.')
+	ad = re.compile(r'A\.D\.')
+	dontcare = re.compile(r'\?')
+	split = re.compile(r'(\d{1,}).*?[–/].*?(\d{1,})')
+	add = re.compile(r'^p\. ')
+	subtract = re.compile(r'^a\. ')
 
-def ce(stringdate, fudge):
-	pad = re.compile(r'p\. A\.D\. (\d{1,}).*?')
-	aad = re.compile(r'a\. A\.D\. (\d{1,}).*?')
-	ada = re.compile(r'A\.D\. (\d{1,})$')
-	adb = re.compile(r'A\.D\. (\d{1,}).*?')
+	modifier = 1
+	fudge = 0
+	midcentury = -50
+	date = 9999
 
-	if re.search(aad, stringdate) is not None:
-		date = int(re.search(aad, stringdate).group(1)) * 100 * (1) - 50 - fudge['a.']
-	elif re.search(pad, stringdate) is not None:
-		date = int(re.search(pad, stringdate).group(1)) * 100 * (1) - 50 + fudge['p.']
-	else:
-		if re.search(ada, stringdate) is not None:
-			# AD 12
-			# 'AD 12' gets assigned to 1150 if you don't make this check
-			date = int(re.search(ada, stringdate).group(1))
+	stringdate = re.sub(dontcare,'',stringdate)
+
+	if re.search(bc,stringdate) is not None:
+		modifier = -1
+		fudge += 100
+
+	if re.search(add,stringdate) is not None:
+		fudge = 75
+
+	if re.search(subtract,stringdate) is not None:
+		fudge = -75
+
+	if re.search(split,stringdate) is not None:
+		digits = re.search(split, stringdate)
+		one = int(digits.group(1))
+		two = int(digits.group(2))
+
+		if re.search(ad,stringdate) is not None and re.search(bc,stringdate) is not None:
+			fudge -= 100
+			one = one * -1
 		else:
-			# AD 12th (vel sim.)
-			date = int(re.search(adb, stringdate).group(1)) * 100 * (1) - 50
-	if '?' in stringdate:
-		date += 1
+			if modifier > 0:
+				fudge += 50
+			else:
+				fudge -= 50
 
-	return date
+		avg = (one + two) / 2
 
-
-def convertdates(stringdate):
-	fudge = {'or': 50, '/': 50, '(?)': 1, 'p.': 66, 'a.': -66}
-
-	ad = re.compile(r'A\.D\. (\d{1,}).*?')
-	bc = re.compile(r'(\d{1,}) B\.C\.')
-	bca = re.compile(r'(\d{1,}) B\.C\.(\?|)/A\.D\. (\d{1,})')
-
-	if len(stringdate.split('/')) and len(stringdate.split('-')) < 2:
-		if re.search(bca, stringdate) is not None:
-			dates = stringdate.split('/')
-			bc = bce(dates[0], fudge)
-			ad = ce(dates[1], fudge)
-			date = (bc + ad) / 2
-		elif re.search(ad, stringdate) is not None:
-			date = ce(stringdate, fudge)
-		elif re.search(bc, stringdate) is not None:
-			date = bce(stringdate, fudge)
+	try:
+		# we were a split
+		date = int((avg * modifier * 100) + fudge + midcentury)
+	except:
+		# we were not a split
+		if stringdate == 'Varia':
+			date = 2000
+		elif stringdate == 'Incertum':
+			date = 2500
 		else:
-			# only 'varia' and 'incerta' should trigger this
-			# handle them?
-			print('puzzled by', stringdate)
-			print('setting to 1500, which is, of course, quite problematic')
-			date = 1500
-	elif len(stringdate.split('/')) > 1:
-		if re.search(bc, stringdate) is not None:
-			dates = stringdate.split('/')
-			e = re.search(r'(\d{1,}).*', dates[0])
-			early = int(e.group(1)) * 100 * (-1) - 50
-			l = re.search(r'(\d{1,}).*', dates[1])
-			late = int(l.group(1)) * 100 * (-1) - 50
-			date = (early + late) / 2
-		elif re.search(ad, stringdate) is not None:
-			dates = stringdate.split('/')
-			e = re.search(r'(\d{1,}).*', dates[0])
-			early = int(e.group(1)) * 100 * (1) - 50
-			l = re.search(r'(\d{1,}).*', dates[1])
-			late = int(l.group(1)) * 100 * (1) - 50
-			date = (early + late) / 2
-	elif len(stringdate.split('-')) > 1:
-		if re.search(bc, stringdate) is not None:
-			dates = stringdate.split('-')
-			e = re.search(r'(\d{1,}).*', dates[0])
-			early = int(e.group(1)) * 100 * (-1) - 50
-			l = re.search(r'(\d{1,}).*', dates[1])
-			late = int(l.group(1)) * 100 * (-1) - 50
-			date = (early + late) / 2
-		elif re.search(ad, stringdate) is not None:
-			dates = stringdate.split('-')
-			e = re.search(r'(\d{1,}).*', dates[0])
-			early = int(e.group(1)) * 100 * (1) - 50
-			l = re.search(r'(\d{1,}).*', dates[1])
-			late = int(l.group(1)) * 100 * (1) - 50
-			date = (early + late) / 2
+			stringdate = re.sub(r'\D','',stringdate)
+			date = (int(stringdate) * modifier * 100) + fudge + midcentury
 
-	# print(stringdate,' --> ',date)
 	return date
 
 
@@ -436,10 +405,10 @@ def convertdatelist(datelist):
 	# do this before sending dates to dbloadlist
 	newdatelist = {}
 	for key in datelist:
-		k = convertdates(key)
+		k = convertbinfiledates(key)
 		newdatelist[k] = []
 	for key in datelist:
-		k = convertdates(key)
+		k = convertbinfiledates(key)
 		newdatelist[k] += datelist[key]
 
 	return newdatelist
@@ -1003,3 +972,103 @@ def mkdbconn(config):
 	# dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
 	return dbconnection
+
+# slated for removal
+
+
+def bce(stringdate, fudge):
+	abc = re.compile(r'a\. (\d{1,}) B\.C\.')
+	pbc = re.compile(r'p\. (\d{1,}) B\.C\.')
+	bc = re.compile(r'(\d{1,}) B\.C\.')
+
+	if re.search(abc, stringdate) is not None:
+		date = int(re.search(abc, stringdate).group(1)) * 100 * (-1) - 50 + fudge['a.']
+	elif re.search(pbc, stringdate) is not None:
+		date = int(re.search(pbc, stringdate).group(1)) * 100 * (-1) - 50 - fudge['p.']
+	else:
+		date = int(re.search(bc, stringdate).group(1)) * 100 * (-1) - 50
+
+	return date
+
+
+def ce(stringdate, fudge):
+	pad = re.compile(r'p\. A\.D\. (\d{1,}).*?')
+	aad = re.compile(r'a\. A\.D\. (\d{1,}).*?')
+	ada = re.compile(r'A\.D\. (\d{1,})$')
+	adb = re.compile(r'A\.D\. (\d{1,}).*?')
+
+	if re.search(aad, stringdate) is not None:
+		date = int(re.search(aad, stringdate).group(1)) * 100 * (1) - 50 - fudge['a.']
+	elif re.search(pad, stringdate) is not None:
+		date = int(re.search(pad, stringdate).group(1)) * 100 * (1) - 50 + fudge['p.']
+	else:
+		if re.search(ada, stringdate) is not None:
+			# AD 12
+			# 'AD 12' gets assigned to 1150 if you don't make this check
+			date = int(re.search(ada, stringdate).group(1))
+		else:
+			# AD 12th (vel sim.)
+			date = int(re.search(adb, stringdate).group(1)) * 100 * (1) - 50
+	if '?' in stringdate:
+		date += 1
+
+	return date
+
+
+def oldconvertbinfiledates(stringdate):
+	fudge = {'or': 50, '/': 50, '(?)': 1, 'p.': 66, 'a.': -66}
+
+	ad = re.compile(r'A\.D\. (\d{1,}).*?')
+	bc = re.compile(r'(\d{1,}) B\.C\.')
+	bca = re.compile(r'(\d{1,}) B\.C\.(\?|)/A\.D\. (\d{1,})')
+
+	if len(stringdate.split('/')) and len(stringdate.split('-')) < 2:
+		if re.search(bca, stringdate) is not None:
+			dates = stringdate.split('/')
+			bc = bce(dates[0], fudge)
+			ad = ce(dates[1], fudge)
+			date = (bc + ad) / 2
+		elif re.search(ad, stringdate) is not None:
+			date = ce(stringdate, fudge)
+		elif re.search(bc, stringdate) is not None:
+			date = bce(stringdate, fudge)
+		else:
+			# only 'varia' and 'incerta' should trigger this
+			# handle them?
+			print('puzzled by', stringdate)
+			print('setting to 1500, which is, of course, quite problematic')
+			date = 1500
+	elif len(stringdate.split('/')) > 1:
+		if re.search(bc, stringdate) is not None:
+			dates = stringdate.split('/')
+			e = re.search(r'(\d{1,}).*', dates[0])
+			early = int(e.group(1)) * 100 * (-1) - 50
+			l = re.search(r'(\d{1,}).*', dates[1])
+			late = int(l.group(1)) * 100 * (-1) - 50
+			date = (early + late) / 2
+		elif re.search(ad, stringdate) is not None:
+			dates = stringdate.split('/')
+			e = re.search(r'(\d{1,}).*', dates[0])
+			early = int(e.group(1)) * 100 * (1) - 50
+			l = re.search(r'(\d{1,}).*', dates[1])
+			late = int(l.group(1)) * 100 * (1) - 50
+			date = (early + late) / 2
+	elif len(stringdate.split('-')) > 1:
+		if re.search(bc, stringdate) is not None:
+			dates = stringdate.split('-')
+			e = re.search(r'(\d{1,}).*', dates[0])
+			early = int(e.group(1)) * 100 * (-1) - 50
+			l = re.search(r'(\d{1,}).*', dates[1])
+			late = int(l.group(1)) * 100 * (-1) - 50
+			date = (early + late) / 2
+		elif re.search(ad, stringdate) is not None:
+			dates = stringdate.split('-')
+			e = re.search(r'(\d{1,}).*', dates[0])
+			early = int(e.group(1)) * 100 * (1) - 50
+			l = re.search(r'(\d{1,}).*', dates[1])
+			late = int(l.group(1)) * 100 * (1) - 50
+			date = (early + late) / 2
+
+	# print(stringdate,' --> ',date)
+	return date
+

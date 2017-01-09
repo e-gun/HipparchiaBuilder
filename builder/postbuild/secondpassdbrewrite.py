@@ -153,7 +153,9 @@ def compilenewauthors(aumapper, wkmapper):
 			newgenres = author.genres
 			newrecdate = author.recorded_date
 			newconvdate = author.converted_date
-			newlocation = author.location
+			# "Aegean Islands [general]", "Mysia and Troas [Munich]", "Varia [Sacred Laws]"
+			aloc = re.sub(r'\[.*?\]','', author.location)
+			newlocation = aloc
 			newauthor = dbAuthor(newuniversalid, newlanguage, newidxname, newakaname, newshortname, newcleanname, newgenres, newrecdate, newconvdate, newlocation)
 			newauthors.append(newauthor)
 
