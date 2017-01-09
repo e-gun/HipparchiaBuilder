@@ -17,6 +17,8 @@ these databases can be read by HipparchiaServer
 
 in order to prepare the build environment you should look at HipparchiaBSD first
 
+there you will find starter files for installing hipparchia onto macOS or into a virtualbox (or a non-virtual one) running BSD 10.3 or 11.0
+
 in addition to the build environment itself, you will need data to insert into it:
 
     the TLG_E and PHI00005 and PHI7 files (presumably from cd-rom disks)
@@ -43,13 +45,13 @@ in addition to the build environment itself, you will need data to insert into i
              83368 latin_lewis_short_a-k.xml
              81768 latin_lewis_short_l-z.xml
 
-    python 3.6
-        pip
-        flask
-        psycopg2
-        bs4
-    postgresql9 [ideally 9.6]
+    minimum software requirements:
+        python 3.6
+            pip
+            flask
+            psycopg2
+            bs4
+        postgresql9 [ideally 9.6]
 
-see also: HipparchiaBSD
-    these are starter files for installing hipparchia into a virtualbox (or a non-virtual one) running BSD 10.3
+
 
