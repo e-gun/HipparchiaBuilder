@@ -196,8 +196,8 @@ def convertdate(date, passvalue=0):
 		'Trajanic': 105,
 		'Vespasian': 70,
 		'vorrömisch': -150,
-		'vörromisch': -150
-
+		'vörromisch': -150,
+		'[unknown]': 2500
 	}
 
 	dontcare = re.compile(r'^(prob. |middle |not bef\. |Zeit des )')
@@ -213,7 +213,7 @@ def convertdate(date, passvalue=0):
 
 
 	# failed all of the tests, right?
-	print(original)
+	# print(original)
 
 	return numericaldate
 
