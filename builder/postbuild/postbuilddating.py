@@ -722,152 +722,46 @@ def numericdate(stringdate):
 
 still clueless re:
 
-(Ende) 1.Jh.v.Chr. / Anf.1.Jh.
-(Ende) 1.Jh.v.Chr. / Anf.1.Jh.
-(Ende) 3.Jh.n.Chr.
-(Ende) 3.Jh.n.Chr.
-(frühes) 3.Jh.v.Chr.
-(frühes) 3.Jh.v.Chr.
 (hohe) Kaiserzeit
 (spät)römisch
-1.Jh,n.Chr.
-1.Jh,n.Chr.
-1.Jh.v.Chr. oder später
-1.Jh.v.Chr. oder später
 1.Jh.v.Chr.-1.Jh.n.Chr.
-108-init Ia
-108-init Ia
-12 v.Chr./3 n.Chr./87 n.Chr.
-12.Jh.n.Chr. od. früher
-12.Jh.n.Chr. od. früher
-15 v.-20 n.Chr.
-15 v.-20 n.Chr.
-179 oder 175 n.Chr.
-179 oder 175 n.Chr.
-1st half Antonine
-1st half Antonine
-1st half Hadrianic
-1st half Hadrianic
-1st half or midddle Antonine
-1st half or midddle Antonine
-2. H. 1. Jhdt. v.Chr.
-2. H. 1. Jhdt. v.Chr.
-2. od. eher 3.Jh.n.Chr.
-2. od. eher 3.Jh.n.Chr.
-2. oder 3.Jh.n.Chr.
-2. oder 3.Jh.n.Chr.
-2. oder eher 3.Jh.n.Chr.
-2. oder eher 3.Jh.n.Chr.
-2.Hālfte 2. Jh.v.Chr.
-2.Hālfte 2. Jh.v.Chr.
-2.Jh.n.Chr. / 2.Jh.v.Chr.
-224/5 ac [II]
-224/5 ac [II]
-250a-IVp
-250a-IVp
-250a-IVp
-250a-IVp
-281-frühe 260er Jahre v.Chr.
-281-frühe 260er Jahre v.Chr.
-2nd half Antonine
-2nd half Antonine
-3. od. 2.Jh.v.Chr.
-3. od. 2.Jh.v.Chr.
-3. oder 2.Jh.v.Chr.
-3. oder 2.Jh.v.Chr.
-3.Jh.n.Chr. od. später
-3.Jh.n.Chr. od. später
-30 v.-284 n.Chr.
-30 v.-284 n.Chr.
-4. od. 3.Jh.v.Chr.
-4. od. 3.Jh.v.Chr.
-4.Jh.v.Chr. (vor 360 v.Chr.)
-4.Jh.v.Chr. (vor 360 v.Chr.)
-411 sub XL domi
-411 sub XL domi
-5. od. 4.Jh.v.Chr.
-5. od. 4.Jh.v.Chr.
-5. od. 6.Jh.n.Chr.
-5. od. 6.Jh.n.Chr.
-6. od. 7.Jh.n.Chr.
-6. od. 7.Jh.n.Chr.
-6./frühes 5.Jh.v.Chr.
-6./frühes 5.Jh.v.Chr.
+12 v.Chr./3 n.Chr./87 n.Chr.?
+2.Jh.n.Chr.? / 2.Jh.v.Chr.?
 62 n.Chr. [75 v.Chr.]
-63 od. 62 v.Chr.
-63 od. 62 v.Chr.
-63 oder 62 v.Chr.
-63 oder 62 v.Chr.
-7. - Beg. 5. Jhdt. v.Chr.
-7. - Beg. 5. Jhdt. v.Chr.
-8.Jh.n.Chr. (vor 730 oder nach 7
-8.Jh.n.Chr. (vor 730 oder nach 7
-
-AD 199/III spc
-AD 199/III spc
-AD 623<hmu_discarded_form>VÍVII spc</hmu_discarded_form>
-AD 623<hmu_discarded_form>VÍVII spc</hmu_discarded_form>
-Anf. 1.Jh.v.Chr./1.Jh.n.Chr.
-Anf. 3.Jh.v.Chr. (um 281 v.Chr.
-Anf. 3.Jh.v.Chr. (um 281 v.Chr.
+?
+Anf. 1.Jh.v.Chr./1.Jh.n.Chr.?
 Ant. Pius
 Ant. Pius  M. Aur.
 Antonine or later
 Antonine or sh.after
-Antoninus Pius
-Arab.
+Antoninus Pius?
+Arab.?
 Augustus-Tiberius
 Augustus/Tiberius
-Augustus/Tiberius
+Augustus/Tiberius?
 Byz./Arab.
 Caligula
-Caracalla
+Caracalla?
 Chr./Byz.
 Christian
 Cladius
-Claudian
-Claudius
+Claudian?
+Claudius?
 Commodus
 Copt.
 Domitian
 Early Chr.
-Early Chr.
+Early Chr.?
 Early Christ.
 Early Christian
 Early Rom.
-Early Rom.
-Early Roman
-Ende 1./Anf. 2. Jh. n.Chr.
-Ende 1./Anf. 2. Jh. n.Chr.
-Ende 1.Jh.v.Chr./Anf.1.Jh.n.Ch
-Ende 1.Jh.v.Chr./Anf.1.Jh.n.Ch
-Ende 2./ Anf.1.Jh.v.Chr.
-Ende 2./ Anf.1.Jh.v.Chr.
-Ende 2./Anf. 3.Jh.n.Chr.
-Ende 2./Anf. 3.Jh.n.Chr.
-Ende 2./Anf.3.Jh.n.Chr.
-Ende 2./Anf.3.Jh.n.Chr.
-Ende 4.-Anf. 3. Jh. v.Chr.
-Ende 4.-Anf. 3. Jh. v.Chr.
-Ende 4.-Anf.3.Jh.v.Chr.
-Ende 4.-Anf.3.Jh.v.Chr.
-Ende 4./Anf. 3.Jh.v.Chr.
-Ende 4./Anf. 3.Jh.v.Chr.
-Ende 4./Anf.3.Jh.v.Chr.
-Ende 4./Anf.3.Jh.v.Chr.
-Ende 4.Jh.v.Chr. od. später
-Ende 4.Jh.v.Chr. od. später
-Ende 5.-Anfang 7.Jh.n.Chr.
-Ende 5.-Anfang 7.Jh.n.Chr.
-Ende 5.-Beginn 6. Jhdt. n.Chr.
-Ende 5.-Beginn 6. Jhdt. n.Chr.
+Early Rom.?
+Early Roman?
 Ende Republik/Beg. Kaiserzeit
-Erste Hälfte 2.Jh.v.Chr.
-Erste Hälfte 2.Jh.v.Chr.
 Erste Kaiserzeit
 Flavian
 Flavian (or earlier)
-Flavian
+Flavian?
 Frankish
 Frühe Kaiserzeit
 Geometric/Sub-Geometric
@@ -881,40 +775,36 @@ Herm
 Herodian
 High Imp.
 High Imp.
-High Imp.
-High Imp.
-I:c 705-707 ac
-I:c 705-707 ac
-IIa-aet Rom
-IIa-aet Rom
-IIp [K.158]
-IIp [K.158]
+High Imp.?
+High Imp.?
+IIa-aet Rom?
+IIa-aet Rom?
+IIa-aet Rom?
+IIÍinit IIa
 IIÍinit IIa
 IIÍinit IIa
 IIÍinit IVp
 IIÍinit IVp
+IIÍinit IVp
 IV/init IIIa
 IV/init IIIa
-Imp. (aft. 212 ac)
-Imp. (aft. 212 ac)
-Imp. (bef. 212 ac)
-Imp. (bef. 212 ac)
+IV/init IIIa
 Imp.-Byz.
 Imp.-Byz.
 Imperial
 Imperial
-IÍIa [K.25]
-IÍIa [K.25]
 IÍinit IIIp
 IÍinit IIIp
 IÍinit IIIp
-IÍinit IIIp
+IÍinit IIIp?
+IÍinit IIIp?
+IÍinit IIIp?
 Iáaet Imp
 Iáaet Imp
 Iáaet Imp
-Iáaet Imp
-Kaiserzeit (nach 212 n.Chr.)
-Kaiserzeit (nach 212 n.Chr.)
+Iáaet Imp?
+Iáaet Imp?
+Iáaet Imp?
 Kopt.
 Late Chr.
 Late Empire
@@ -928,57 +818,46 @@ Late Roman
 Later Chr.
 Later Imp.
 Later Imp.
-M. Aur.
+M. Aur.?
 M. Aurelius, or later
 Marcus Aurelius/Commodus
 Mid Byz
 Mid. Imp.
 Mid. Imp.
 Mid/Late Byz
-Mitte oder spateres 3.Jh.v.Chr.
-Mitte oder spateres 3.Jh.v.Chr.
-Mitte-Ende 4. Jh. v.Chr.
-Mitte-Ende 4. Jh. v.Chr.
 Ptol.-Rom.
-Ptol.-Rom.
+Ptol.-Rom.?
 Ptol./Early Imp.
 Ptol./Early Imp.
 Ptolemaic
-Rom. or Hell.
+Rom. or Hell.?
 Rom.-Byz.
-Seleukos II., um 240 v.Chr.
-Seleukos II., um 240 v.Chr.
 Septimius Severus
 Septimius Severus (or later)
 Severus-Gallienus
-Spätzeit
+Spätzeit?
 Theb
 Trajan, or sh. bef.
 Trajanic or later
 Trajanic-Antonine
-Turkish
+Turkish?
 V/init IVa
 V/init IVa
 V/init IVa
-V/init IVa
+V/init IVa?
+V/init IVa?
+V/init IVa?
+VIÍinit VIa
 VIÍinit VIa
 VIÍinit VIa
 VÍinit Va
 VÍinit Va
+VÍinit Va
 XIV/init XVp
 XIV/init XVp
-Zeit Hadrians / erheblich fru
-Augustus od. Tiberius
-Augustus, vor 2 v.Chr.
-Augustus, vor 2 v.Chr.
-[(17-)14 v.Chr.]
-[(17-)14 v.Chr.]
-[18 n.Chr. od. 1 v.-4 n.Chr.]
-[18 n.Chr. od. 1 v.-4 n.Chr.]
-[18 n.Chr.]
-[18 n.Chr.]
-[29 v.Chr.]
-[29 v.Chr.]
+XIV/init XVp
+Zeit Hadrians? / erheblich fru
+Zeit des Augustus od. Tiberius
 [Wiligelmo]
 [ant.]
 [antique]
@@ -988,15 +867,11 @@ Augustus, vor 2 v.Chr.
 [unknown]
 a IÍinit IIIp
 a IÍinit IIIp
-ab 1.Jh.n.Chr.
-ab 1.Jh.n.Chr.
+a IÍinit IIIp
 ac
-adv. Imp. (aft. 212 ac)
-adv. Imp. (aft. 212 ac)
-adv. Imp. (bef. 212 ac)
-adv. Imp. (bef. 212 ac)
 aet Hell/aet Rom
 aet Hell/aet Rom
+aet Imp/aet Chr
 aet Imp/aet Chr
 aet Imp/aet Chr
 aet Rom antiq
@@ -1005,6 +880,7 @@ aet Romana
 aet Romana
 aet Tráp post
 aet Tráp post
+aet Ves-aet Dom
 aet Ves-aet Dom
 aet Ves-aet Dom
 aet chr
@@ -1023,78 +899,50 @@ aetate Romana
 aetate Romana
 aetatis infimae
 aetatis infimae
-ante Chr nat
-ante Chr
+ante Chr nat?
+ante Chr?
 archaisch
-archaisch
+archaisch?
 archaischer Schriftcharakter
-archaisches
+archaisches?
 augusteisch
 augusteische Zeit
 beg Rom imp
 beg. Antonine
-beg. I bc  46 bc
-beg. I bc  46 bc
 beg. Imp.
 beg. Imp.
 betw. Trajan  Severus
-byzantisch
-c 150-init IIIp
-c 150-init IIIp
-c 212p-med IIIp
-c 212p-med IIIp
 c fin IIÍinit IIa
 c fin IIÍinit IIa
-c.160 ac [II]
-c.160 ac [II]
-c.252/1  IV bc
-c.252/1  IV bc
-c.300-280  beg. II bc
-c.300-280  beg. II bc
-c.400 et I p
-c.400 et I p
-c.989 n.Chr.
-c.989 n.Chr.
-cAD 248 <hmu_discarded_form>III spc</hmu_discarded_form>
-cAD 248 <hmu_discarded_form>III spc</hmu_discarded_form>
-ca. 1. Hälfte 2. Jh. v.Chr.
-ca. 1. Hälfte 2. Jh. v.Chr.
+c fin IIÍinit IIa
 early Antonine
 early Antonine or later
 early Hadrianic
 early medieval
 end Hellenist.
-end Ptol.()
+end Ptol.(?)
 end Ptol./Rom.
 end Ptol./beg. Rom.
 erste Kaiserzeit
-etwa v. Anf. d. 2.Jhdts. n.Chr.
-etwa v. Anf. d. 2.Jhdts. n.Chr.
-fin IIa [K.116(74)]
-fin IIa [K.116(74)]
-fin IVa-c 250a
-fin IVa-c 250a
-fin IVa-c 280a
-fin IVa-c 280a
-fin Ia-c 50p
-fin Ia-c 50p
 fin aet Hell/Imp
 fin aet Hell/Imp
+fin aet Hell/Imp
+fin aet Hell/init aet Imp
 fin aet Hell/init aet Imp
 fin aet Hell/init aet Imp
 fin aet Imp
 fin aet Imp
 fin aet Imp
-fin aet Imp
-forgery
-forgerýmod.
+fin aet Imp?
+fin aet Imp?
+fin aet Imp?
+forgery?
+forgerýmod.?
 fruhe bis mittlere Kaiserzeit
-frühaugusteisch (vor 15 v.Chr.
-frühaugusteisch (vor 15 v.Chr.
 frühbyzantinisch
 frühestens späthellenistisch
 frühhellenistisch
-frühhellenistisch
+frühhellenistisch?
 hellenistisch - spätrömisch
 hellenistisch-frühe Kaiserzeit
 hellenistisch/römisch
@@ -1106,89 +954,61 @@ imp Rom
 imperial
 init IIÍinit IIa
 init IIÍinit IIa
+init IIÍinit IIa
 init principat
-init() aet Imp
-init() aet Imp
+init(?) aet Imp
+init(?) aet Imp
+init(?) aet Imp
 kaiserzeitlich/spätrömisch
 late
 late Attic
-late Class.
-late Class.-Hell.
-late Hadrianic
-late Hadrianic or after
-late Hadrianic or later
-late Hadrianic-Antonine
 late Hadrianic-early Antonine
 late Ptol.
-late Ptol.-early Rom.
+late Ptol.-early Rom.?
 late Rom.
 late Roman
 late Severan
 late Severan or sh.aft.
 late classic
 late period
-later Severan
+later Severan?
 later imperial
-letztes Drittel 3.Jh.v.Chr. (wo
-letztes Drittel 3.Jh.v.Chr. (wo
-med Ia [K.87(14)]
-med Ia [K.87(14)]
 med V/init IVa
 med V/init IVa
-med./mod.
+med V/init IVa
+med./mod.?
 medieval
-medieval
+medieval?
 mid Byz
-mid-III  250-200 bc
-mid-III  250-200 bc
 mittelhellenistisch
-mittlere Kaiserzeit
+mittlere Kaiserzeit?
 mod.
-nach 14 n.Chr
-nach 14 n.Chr
-nach 85 v.Chr. oder Zeit des Au
-nach 85 v.Chr. oder Zeit des Au
-noch Ende der Republik
-noch hellenistisch
+noch Ende der Republik?
+noch hellenistisch?
 non post August
-late Hadrianic
-middle Antonine
+not bef. middle Antonine
 poss. Antonine
 poss. late Hadrianic
 post Hadrian
 post princ Aug
-post-Byz
+post-Byz?
 post-Hadrianic
-1st half Antonine
-1st half Antonine
-2nd half Antonine
-2nd half Antonine
-early Antonine
-late Hadrianic
-middle Antonine
-sh.aft. middle Antonine
+prob. early Antonine
+prob. middle Antonine
+prob. sh.aft. middle Antonine
 relativ spät
 romisch
-römisch (Kaiserzeit)
+römisch (Kaiserzeit?)
 römisch (eher spät)
-römisch (nach 212 n.Chr.)
-römisch (nach 212 n.Chr.)
-römisch, christlich
-römisch (nach 212 n.Chr.)
-römisch (nach 212 n.Chr.)
+römisch, christlich?
+s IV/init III
 s IV/init III
 s IV/init III
 spät
 spätantik
-spätantik
+spätantik?
 späte Republik oder fruhe Kais
 spätere hellenistische Zeit
-spätes 3. - 7. Jh. n. Chr.
-spätes 3. - 7. Jh. n. Chr.
-spätes 9./frühes 10.Jh.n.Chr
-spätes 9./frühes 10.Jh.n.Chr
-spätestens 1.Hälfte 1.Jh.n.Ch
-spätestens 1.Hälfte 1.Jh.n.Ch
 späthell. - frühe Kaiserzeit
 späthellenistisch (od. später
 späthellenistisch od. erste Ka
@@ -1198,32 +1018,19 @@ späthellenistisch oder erste K
 späthellenistisch oder frühe
 spätrömisch
 temp Macedonica
-tiberisch, um 20 n.Chr.
-tiberisch, um 20 n.Chr.
 traianisch-hadrianische Zeit
 ult temp Romano
-um 330 v.Chr. oder früher
-um 330 v.Chr. oder früher
 unter Augustus
 unter NerváHadrian/Trajan
 vermutlich frühe Kaiserzeit
 wohl erste Kaiserzeit
 wohl frühe Kaiserzeit
-wohl frühe Kaiserzeit
+wohl frühe Kaiserzeit?
 wohl hellenistisch
 wohl kaiserzeitlich
-wohl noch 2.Jh.n.
-wohl noch 2.Jh.n.
 wohl noch hellenistisch
 wohl noch römisch
 ziemlich spät
 zw. 1 v.Chr. und 4 n.Chr.
-zw. 129 und 138 n.Chr.
-zw. 129 und 138 n.Chr.
-zw. 14 und 19 n.Chr.
-zw. 14 und 19 n.Chr.
-zw. 293 und 305 n.Chr.
-zw. 293 und 305 n.Chr.
-zw. 49 und 53 n.Chr.
-zw. 49 und 53 n.Chr.
+
 """
