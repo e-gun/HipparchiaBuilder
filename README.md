@@ -2,11 +2,24 @@
 
 convert greek and latin data files into a searchable database
 
-this database can be read by HipparchiaServer
+```
 
-you will need:
+Five databases possible:
+    Greek [6625 works]
+    Latin [836 works]
+    Papyri [49235 works]
+    Inscriptions I (earlier and Greeker) [139970 works]
+    Inscriptions II (later and more Westerly) [40174 works]
 
-    the TLG_E and PHI00005 and PHI7 data (presumably from cd-rom disks)
+```
+
+these databases can be read by HipparchiaServer
+
+in order to prepare the build environment you should look at HipparchiaBSD first
+
+in addition to the build environment itself, you will need data to insert into it:
+
+    the TLG_E and PHI00005 and PHI7 files (presumably from cd-rom disks)
         your config file will need to point to this data properly
 
     the lexical data 
@@ -40,13 +53,3 @@ you will need:
 see also: HipparchiaBSD
     these are starter files for installing hipparchia into a virtualbox (or a non-virtual one) running BSD 10.3
 
-```
-
-Five databases possible:
-    Greek [6625 works]
-    Latin [836 works]
-    Papyri [49235 works]
-    Inscriptions I (earlier and Greeker) [139970 works]
-    Inscriptions II (later and more Westerly) [40174 works]
-
-```

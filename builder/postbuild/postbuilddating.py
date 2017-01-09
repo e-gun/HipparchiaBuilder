@@ -737,7 +737,7 @@ def datemapper(stringdate):
 		numericaldate = datemapper[date]
 	else:
 		# for debugging...
-		print(original)
+		print(original.upper())
 		pass
 
 	return numericaldate
@@ -746,213 +746,214 @@ def datemapper(stringdate):
 """
 
 still clueless re:
-(spät)römisch
-1.Jh.v.Chr.-1.Jh.n.Chr.
-12 v.Chr./3 n.Chr./87 n.Chr.?
-2.Jh.n.Chr.? / 2.Jh.v.Chr.?
-62 n.Chr. [75 v.Chr.]
+
+(SPÄT)RÖMISCH
+1.JH.V.CHR.-1.JH.N.CHR.
+12 V.CHR./3 N.CHR./87 N.CHR.?
+2.JH.N.CHR.? / 2.JH.V.CHR.?
+62 N.CHR. [75 V.CHR.]
 ?
-Anf. 1.Jh.v.Chr./1.Jh.n.Chr.?
-Ant. Pius
-Ant. Pius  M. Aur.
-Antonine or later
-Antonine or sh.after
-Antoninus Pius?
-Arab.?
-Byz./Arab.
-Caligula
-Caracalla?
-Chr./Byz.
-Claudian?
-Claudius?
-Copt.
-Early Byz
-Early Christ.
-Early Christian
-Ende Republik/Beg. Kaiserzeit
-Erste Kaiserzeit
-Flavian (or earlier)
-Frankish
-Geometric/Sub-Geometric
-Hadrian or later
-Hadrian+
-Hadrian, or later
-Hadrianic or Antonine
-Hell. or later
-Hellenist.
-Herm
-Herodian
-High Imp.
-High Imp.
-High Imp.?
-High Imp.?
-IIa-aet Rom?
-IIa-aet Rom?
-IIa-aet Rom?
-Imp.-Byz.
-Imp.-Byz.
-Kopt.
-Late Chr.
-Late Empire
-Late Hell./Early Imp.
-Late Hell./Early Imp.
-Late Hellenist
-Late Imp.-Early Byz.
-Late Imp.-Early Byz.
-Late Ptol./Rom.
-Late Roman
-Later Chr.
-M. Aur.?
-M. Aurelius, or later
-Marcus Aurelius/Commodus
-Mid Byz
-Mid/Late Byz
-Ptol.-Rom.
-Ptol.-Rom.?
-Ptol./Early Imp.
-Ptol./Early Imp.
-Ptolemaic
-Rom. or Hell.?
-Rom.-Byz.
-Septimius Severus
-Septimius Severus (or later)
-Severus-Gallienus
-Spätzeit?
-Theb
-Trajan, or sh. bef.
-Trajanic or later
-Trajanic-Antonine
-Turkish?
-Zeit Hadrians? / erheblich fru
-[Wiligelmo]
-[ant.]
-[antique]
-[forgery]
-[frühe Kaiserzeit]
-[modern forgery]
-ac
-aet Hell/aet Rom
-aet Hell/aet Rom
-aet Imp/aet Chr
-aet Imp/aet Chr
-aet Imp/aet Chr
-aet Rom antiq
-aet Rom antiq
-aet Romana
-aet Romana
-aet Tráp post
-aet Tráp post
-aet Ves-aet Dom
-aet Ves-aet Dom
-aet Ves-aet Dom
-aet chr
-aet chr
-aet imp inf
-aet imp inf
-aet rec
-aet rec
-aet tardae
-aet tardae
-aet. imp. Rom.
-aet. imp. Rom.
-aetate Romana
-aetate Romana
-aetatis infimae
-aetatis infimae
-ante Chr nat?
-ante Chr?
-archaisch
-archaisch?
-archaischer Schriftcharakter
-archaisches?
-augusteisch
-augusteische Zeit
-beg Rom imp
-beg. Antonine
-betw. Trajan  Severus
-early Antonine
-early Antonine or later
-early Byz
-early Hadrianic
-early medieval
-end Hellenist.
-end Ptol.(?)
-end Ptol./Rom.
-end Ptol./beg. Rom.
-erste Kaiserzeit
-forgery?
-forgerýmod.?
-fruhe bis mittlere Kaiserzeit
-frühbyzantinisch
-frühhellenistisch
-frühhellenistisch?
-hellenistisch - spätrömisch
-hellenistisch-frühe Kaiserzeit
-hellenistisch/römisch
-high Imp.
-high Imp.
-hohe Kaiserzeit
-hohe hellenistische Zeit
-imp Rom
-init principat
-init(?) aet Imp
-init(?) aet Imp
-init(?) aet Imp
-kaiserzeitlich/spätrömisch
-late
-late Attic
-late Hadrianic-early Antonine
-late Ptol.-early Rom.?
-late Rom.
-late Roman
-late Severan
-late Severan or sh.aft.
-late classic
-late period
-later Severan?
-later imperial
-med./mod.?
-medieval
-medieval?
-mid Byz
-mittelhellenistisch
-mittlere Kaiserzeit?
-mod.
-noch Ende der Republik?
-noch hellenistisch?
-non post August
-not bef. middle Antonine
-poss. Antonine
-poss. late Hadrianic
-post Hadrian
-post princ Aug
-post-Byz?
-post-Hadrianic
-prob. early Antonine
-prob. middle Antonine
-prob. sh.aft. middle Antonine
-relativ spät
-romisch
-römisch (Kaiserzeit?)
-römisch (eher spät)
-römisch, christlich?
-spät
-spätantik
-spätantik?
-späte Republik oder fruhe Kais
-spätere hellenistische Zeit
-späthell. - frühe Kaiserzeit
-spätrömisch
-temp Macedonica
-traianisch-hadrianische Zeit
-ult temp Romano
-unter Augustus
-unter NerváHadrian/Trajan
-vermutlich frühe Kaiserzeit
-wohl erste Kaiserzeit
-wohl noch hellenistisch
-wohl noch römisch
-ziemlich spät
-zw. 1 v.Chr. und 4 n.Chr.
+ANF. 1.JH.V.CHR./1.JH.N.CHR.?
+ANT. PIUS
+ANT. PIUS  M. AUR.
+ANTONINE OR LATER
+ANTONINE OR SH.AFTER
+ANTONINUS PIUS?
+ARAB.?
+BYZ./ARAB.
+CALIGULA
+CARACALLA?
+CHR./BYZ.
+CLAUDIAN?
+CLAUDIUS?
+COPT.
+EARLY BYZ
+EARLY CHRIST.
+EARLY CHRISTIAN
+ENDE REPUBLIK/BEG. KAISERZEIT
+ERSTE KAISERZEIT
+FLAVIAN (OR EARLIER)
+FRANKISH
+GEOMETRIC/SUB-GEOMETRIC
+HADRIAN OR LATER
+HADRIAN+
+HADRIAN, OR LATER
+HADRIANIC OR ANTONINE
+HELL. OR LATER
+HELLENIST.
+HERM
+HERODIAN
+HIGH IMP.
+HIGH IMP.
+HIGH IMP.?
+HIGH IMP.?
+IIA-AET ROM?
+IIA-AET ROM?
+IIA-AET ROM?
+IMP.-BYZ.
+IMP.-BYZ.
+KOPT.
+LATE CHR.
+LATE EMPIRE
+LATE HELL./EARLY IMP.
+LATE HELL./EARLY IMP.
+LATE HELLENIST
+LATE IMP.-EARLY BYZ.
+LATE IMP.-EARLY BYZ.
+LATE PTOL./ROM.
+LATE ROMAN
+LATER CHR.
+M. AUR.?
+M. AURELIUS, OR LATER
+MARCUS AURELIUS/COMMODUS
+MID BYZ
+MID/LATE BYZ
+PTOL.-ROM.
+PTOL.-ROM.?
+PTOL./EARLY IMP.
+PTOL./EARLY IMP.
+PTOLEMAIC
+ROM. OR HELL.?
+ROM.-BYZ.
+SEPTIMIUS SEVERUS
+SEPTIMIUS SEVERUS (OR LATER)
+SEVERUS-GALLIENUS
+SPÄTZEIT?
+THEB
+TRAJAN, OR SH. BEF.
+TRAJANIC OR LATER
+TRAJANIC-ANTONINE
+TURKISH?
+ZEIT HADRIANS? / ERHEBLICH FRU
+[WILIGELMO]
+[ANT.]
+[ANTIQUE]
+[FORGERY]
+[FRÜHE KAISERZEIT]
+[MODERN FORGERY]
+AC
+AET HELL/AET ROM
+AET HELL/AET ROM
+AET IMP/AET CHR
+AET IMP/AET CHR
+AET IMP/AET CHR
+AET ROM ANTIQ
+AET ROM ANTIQ
+AET ROMANA
+AET ROMANA
+AET TRÁP POST
+AET TRÁP POST
+AET VES-AET DOM
+AET VES-AET DOM
+AET VES-AET DOM
+AET CHR
+AET CHR
+AET IMP INF
+AET IMP INF
+AET REC
+AET REC
+AET TARDAE
+AET TARDAE
+AET. IMP. ROM.
+AET. IMP. ROM.
+AETATE ROMANA
+AETATE ROMANA
+AETATIS INFIMAE
+AETATIS INFIMAE
+ANTE CHR NAT?
+ANTE CHR?
+ARCHAISCH
+ARCHAISCH?
+ARCHAISCHER SCHRIFTCHARAKTER
+ARCHAISCHES?
+AUGUSTEISCH
+AUGUSTEISCHE ZEIT
+BEG ROM IMP
+BEG. ANTONINE
+BETW. TRAJAN  SEVERUS
+EARLY ANTONINE
+EARLY ANTONINE OR LATER
+EARLY BYZ
+EARLY HADRIANIC
+EARLY MEDIEVAL
+END HELLENIST.
+END PTOL.(?)
+END PTOL./ROM.
+END PTOL./BEG. ROM.
+ERSTE KAISERZEIT
+FORGERY?
+FORGERÝMOD.?
+FRUHE BIS MITTLERE KAISERZEIT
+FRÜHBYZANTINISCH
+FRÜHHELLENISTISCH
+FRÜHHELLENISTISCH?
+HELLENISTISCH - SPÄTRÖMISCH
+HELLENISTISCH-FRÜHE KAISERZEIT
+HELLENISTISCH/RÖMISCH
+HIGH IMP.
+HIGH IMP.
+HOHE KAISERZEIT
+HOHE HELLENISTISCHE ZEIT
+IMP ROM
+INIT PRINCIPAT
+INIT(?) AET IMP
+INIT(?) AET IMP
+INIT(?) AET IMP
+KAISERZEITLICH/SPÄTRÖMISCH
+LATE
+LATE ATTIC
+LATE HADRIANIC-EARLY ANTONINE
+LATE PTOL.-EARLY ROM.?
+LATE ROM.
+LATE ROMAN
+LATE SEVERAN
+LATE SEVERAN OR SH.AFT.
+LATE CLASSIC
+LATE PERIOD
+LATER SEVERAN?
+LATER IMPERIAL
+MED./MOD.?
+MEDIEVAL
+MEDIEVAL?
+MID BYZ
+MITTELHELLENISTISCH
+MITTLERE KAISERZEIT?
+MOD.
+NOCH ENDE DER REPUBLIK?
+NOCH HELLENISTISCH?
+NON POST AUGUST
+NOT BEF. MIDDLE ANTONINE
+POSS. ANTONINE
+POSS. LATE HADRIANIC
+POST HADRIAN
+POST PRINC AUG
+POST-BYZ?
+POST-HADRIANIC
+PROB. EARLY ANTONINE
+PROB. MIDDLE ANTONINE
+PROB. SH.AFT. MIDDLE ANTONINE
+RELATIV SPÄT
+ROMISCH
+RÖMISCH (KAISERZEIT?)
+RÖMISCH (EHER SPÄT)
+RÖMISCH, CHRISTLICH?
+SPÄT
+SPÄTANTIK
+SPÄTANTIK?
+SPÄTE REPUBLIK ODER FRUHE KAIS
+SPÄTERE HELLENISTISCHE ZEIT
+SPÄTHELL. - FRÜHE KAISERZEIT
+SPÄTRÖMISCH
+TEMP MACEDONICA
+TRAIANISCH-HADRIANISCHE ZEIT
+ULT TEMP ROMANO
+UNTER AUGUSTUS
+UNTER NERVÁHADRIAN/TRAJAN
+VERMUTLICH FRÜHE KAISERZEIT
+WOHL ERSTE KAISERZEIT
+WOHL NOCH HELLENISTISCH
+WOHL NOCH RÖMISCH
+ZIEMLICH SPÄT
+ZW. 1 V.CHR. UND 4 N.CHR.
 
 """
