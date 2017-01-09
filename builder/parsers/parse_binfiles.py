@@ -365,6 +365,8 @@ def convertbinfiledates(stringdate):
 
 	if re.search(add,stringdate) is not None:
 		fudge = 75
+		if modifier < 0:
+			fudge += 100
 
 	if re.search(subtract,stringdate) is not None:
 		fudge = -75
@@ -375,13 +377,9 @@ def convertbinfiledates(stringdate):
 		two = int(digits.group(2))
 
 		if re.search(ad,stringdate) is not None and re.search(bc,stringdate) is not None:
-			fudge -= 100
+			modifier = 1
+			fudge -= 50
 			one = one * -1
-		else:
-			if modifier > 0:
-				fudge += 50
-			else:
-				fudge -= 50
 
 		avg = (one + two) / 2
 
@@ -397,6 +395,9 @@ def convertbinfiledates(stringdate):
 		else:
 			stringdate = re.sub(r'\D','',stringdate)
 			date = (int(stringdate) * modifier * 100) + fudge + midcentury
+
+	if date == 0:
+		date = 1
 
 	return date
 
