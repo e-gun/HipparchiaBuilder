@@ -14,7 +14,8 @@ from builder.parsers import regex_substitutions
 
 def citationbuilder(hexsequence):
 	"""
-	NOTE: expects a call from re.sub and so you need a match.group()
+	NOTE: this function expects a call from re.sub and so you need a match.group()
+
 	parse the sequence of bytes for instructions on how to build a citatation
 	"0xab 0x82 0xff 0x9f 0xe1 0xff" ==> <set_level_2_to_383>\n<set_level_1_to_a>\n
 
@@ -26,6 +27,14 @@ def citationbuilder(hexsequence):
 	you will be left with the wrong bytesequence going forward and the next 'instruction'
 	is likely to be a piece of the previous set of information; this makes debugging rough
 	since garbage at location B can result from troubles at location A.
+
+	this is perhaps the most important bit of the builder and I never could have coded it if
+	P. J. Heslin had not released the source code to Diogenes:
+
+		https://community.dur.ac.uk/p.j.heslin/Software/Diogenes/
+
+	I shudder to think how long it took him to figure out the way to read the bytes and nybbles
+	properly. Without his efforts Hipparchia would not have been possible.
 
 	:param hexsequence:
 	:return: fullcitation
