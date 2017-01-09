@@ -57,159 +57,7 @@ def convertdate(date, passvalue=0):
 	# if we have not returned yet, then only a grab bag should remain: 'späthellenistisch', etc.
 	# and so we pass through the old convertdate() code in a desperate last attempt
 
-	datemapper = {
-		'1. Hälfte 2. Jh. v.Chr.': -175,
-		'1. Hälfte 4. Jh. v.Chr.': -375,
-		'1. Hälfte 4.Jh. v.Chr.': -375,
-		'adv. Imp.': 400,
-		'aet Christ': 400,
-		'aet Hell tard': -1,
-		'aet Hell': -250,
-		'aet imp Rom': 200,
-		'aet Imp tard': 400,
-		'aet imp': 200,
-		'aet Imp': 200,
-		'aet inferior': 1200,
-		'aet Rom rec': 300,
-		'aet Rom rec/init aet Byz': 350,
-		'aet Rom tard/mediev': 700,
-		'Antonine': 150,
-		'archaic': -700,
-		'Archaic': -700,
-		'Archaic/Classical': -600,
-		'August': 1,
-		'Augustan': 1,
-		'Augustus': 1,
-		'Byz.': 700,
-		'Byz': 700,
-		'Byzantine': 700,
-		'byzantinisch': 700,
-		'byzantisch': 700,
-		'byzantinische Zeit': 700,
-		'Carolingian': 775,
-		'Chr.': 400,
-		'Christ.': 400,
-		'christl.': 400,
-		'christlich': 400,
-		'Classical': -400,
-		'classical': -425,
-		'Constantine': 315,
-		'date': 1500,
-		'early Byz.': 450,
-		'Early Byz.': 450,
-		'Early Byz': 400,
-		'early Byz': 450,
-		'Early Byzantine': 450,
-		'early Chr.': 350,
-		'Early Chr': 200,
-		'early Hell.': -300,
-		'Early Hell.': -300,
-		'early imp.': 25,
-		'early Imp.': 25,
-		'Early Imp.': 100,
-		'early imp': 25,
-		'Early Ptol.': -275,
-		'early Rom.': -50,
-		'early Roman': -50,
-		'Early-Mid. Imp.': 100,
-		'Early-Middle Imp.': 100,
-		'EarlýMid. Imp.': 100,
-		'end 4th-beg. 3rd bc': 300,
-		'end Trajan': 110,
-		'flavisch': 85,
-		'frühe Kaiserzeit (Augustus)': 1,
-		'frühe Kaiserzeit': 25,
-		'fru+hhellenistisch': -300,
-		'frühe römische Zeit': -50,
-		'frühellenistisch': -300,
-		'Hadrian': 125,
-		'Hadrianic-early Antonine': 140,
-		'Hadrianic': 125,
-		'hadrianisch': 125,
-		'hadrianische Zeit': 125,
-		'Hell.-Rom.': -50,
-		'Hell.': -250,
-		'hell./frühe Kaiserzeit': -1,
-		'Hell./Rom.': -50,
-		'Hellenistic': -250,
-		'hellenistisch': -250,
-		'hellenistische Zeit': -250,
-		'Ia-c 50p': 1,
-		'Imp.': 200,
-		'Imp': 200,
-		'init aet Imp': 25,
-		'Julio-Claudian': 25,
-		'Kaiserzeit': 100,
-		'kaiserzeitlich': 100,
-		'late archaic': -600,
-		'Late Archaic': -600,
-		'Late Byz.': 1200,
-		'late Byz': 1200,
-		'Late Byz': 1200,
-		'Late Byzantine': 1200,
-		'late Class.': -415,
-		'late Class.-Hell.': -375,
-		'late Hadrianic': 135,
-		'late Hadrianic or after': 145,
-		'late Hadrianic or later': 145,
-		'late Hadrianic-Antonine': 155,
-		'late Hell.-early Imp.': -1,
-		'Late Hell.-Early Imp.': -15,
-		'late Hell.': -1,
-		'Late Hell.': -1,
-		'late Hell./early Rom.': -1,
-		'late Hell./Rom.': -1,
-		'late Hell': -1,
-		'late Hellen': -1,
-		'late Hellenist.': -1,
-		'late Imp.': 300,
-		'Late Imp.': 300,
-		'late imp': 300,
-		'late imperial': 300,
-		'Late Ptol.': -50,
-		'later Imp.': 300,
-		'letztes Viertel 1. Jh.v.Chr.': -15,
-		'Marcus Aurelius': 170,
-		'med.': 1100,
-		'Merov.': 600,
-		'Middle Byz': 700,
-		'Nero': 60,
-		'pre-Ptol.': -333,
-		'Ptol.': -100,
-		'Ptol./Rom.': -20,
-		'Rom.': 50,
-		'Rom./Byz.': 600,
-		'Rom': 50,
-		'Roman Imp': 200,
-		'Roman': 50,
-		'Romanesque': 1150,
-		'römische Zeit': 50,
-		'römische': 50,
-		'römisch': 50,
-		'späthellenistisch': -1,
-		'späte Kaiserzeit': 300,
-		'spätere Kaiserzeit': 300,
-		'Tiberius': 25,
-		'Titus': 80,
-		'Trajan': 105,
-		'Trajan/Hadrian': 115,
-		'Trajanic': 105,
-		'Vespasian': 70,
-		'vorrömisch': -150,
-		'vörromisch': -150,
-		'[unknown]': 2500
-	}
-
-	dontcare = re.compile(r'^(prob. |middle |not bef\. |Zeit des )')
-
-
-	date = re.sub(r'\?', '', date)
-	#date = re.sub(r'\.$', '', date)
-	date = re.sub(dontcare, '', date)
-
-	if date in datemapper:
-		numericaldate = datemapper[date]
-		return numericaldate
+	numericaldate = datemapper(date)
 
 
 	# failed all of the tests, right?
@@ -493,6 +341,7 @@ def aetatesdates(stringdate):
 		'fin Nero': 65,
 		'fin Rom': 325,
 		'fin Tra': 115,
+		'incert': 2500,
 		'init Ant': 155,
 		'init Aug': -15,
 		'init Byz': 450,
@@ -527,8 +376,6 @@ def aetatesdates(stringdate):
 	except:
 		numericaldate = convertdate(original, passvalue=3)
 
-	# print('numericaldate',numericaldate)
-
 	return numericaldate
 
 
@@ -561,10 +408,10 @@ def romannumeraldate(stringdate):
 	stringdate = re.sub(fixone,r'I/',stringdate)
 	stringdate = re.sub(fixtwo, r'a/', stringdate)
 
-	dontcare = re.compile(r'^(p med |s |p |c.med s |c med |med s |mid- |mid |fere s )|( ut vid| p|p)$')
+	dontcare = re.compile(r'^(p med |s |p |c.med s |c med |med s |mid- |mid |fere s )|( ut vid| p|p\?|p)$')
 	fi = re.compile(r'^fin (.*?)/init (.*?)')
 	# subtract = re.compile()
-	tinysubtract = re.compile(r'(^(ante med |ante md |beg\. |beg |a med |early |init/med |init |latest )| p prior$|/init )')
+	tinysubtract = re.compile(r'(^(ante med |ante md |beg\. |beg |a med |early |init/med |init |latest )| p prior$)')
 	bigadd = re.compile(r'^(post fin s|post )')
 	add = re.compile(r'(^(ante fin |ant fin|ex s |ex |end |med/fin |late |post med s )|(/postea|/paullo post)$)')
 	splitter = re.compile(r'([IVX]{1,})[-/]([IVX]{1,})')
@@ -576,6 +423,10 @@ def romannumeraldate(stringdate):
 
 	if re.search(tinysubtract, stringdate) is not None:
 		stringdate = re.sub(tinysubtract,'',stringdate)
+		fudge = -25
+
+	if re.search(r'/init ', stringdate) is not None:
+		stringdate = re.sub(tinysubtract,'/',stringdate)
 		fudge = -25
 
 	if re.search(bigadd, stringdate) is not None:
@@ -717,12 +568,184 @@ def numericdate(stringdate):
 	return numericaldate
 
 
+def datemapper(stringdate):
+	"""
+
+	calculations have failed, just try to grab the string from a list
+
+	:param stringdate:
+	:return:
+	"""
+
+	original = stringdate
+	numericaldate = 9999
+
+	datemapper = {
+		'1. HÄLFTE 2. JH. V.CHR.': -175,
+		'1. HÄLFTE 4. JH. V.CHR.': -375,
+		'1. HÄLFTE 4.JH. V.CHR.': -375,
+		'ADV. IMP.': 400,
+		'AET CHRIST': 400,
+		'AET HELL TARD': -1,
+		'AET HELL': -250,
+		'AET IMP ROM': 200,
+		'AET IMP TARD': 400,
+		'AET IMP': 200,
+		'AET INFERIOR': 1200,
+		'AET ROM REC': 300,
+		'AET ROM REC/INIT AET BYZ': 350,
+		'AET ROM TARD/MEDIEV': 700,
+		'ANTONINE': 150,
+		'ARCHAIC': -700,
+		'ARCHAIC/CLASSICAL': -600,
+		'AUGUST': 1,
+		'AUGUSTAN': 1,
+		'AUGUSTUS': 1,
+		'AUGUSTUS/TIBERIUS': 10,
+		'AUGUSTUS-TIBERIUS': 10,
+		'BYZ.': 700,
+		'BYZ': 700,
+		'BYZANTINE': 700,
+		'BYZANTINISCH': 700,
+		'BYZANTISCH': 700,
+		'BYZANTINISCHE ZEIT': 700,
+		'CAROLINGIAN': 775,
+		'CHR': 400,
+		'CHR.': 400,
+		'CHRIST.': 400,
+		'CHRISTL.': 400,
+		'CHRISTLICH': 400,
+		'CHRISTIAN': 400,
+		'CLASSICAL': -425,
+		'CLADIUS': 50,
+		'COMMODUS': 185,
+		'CONSTANTINE': 315,
+		'DATE': 1500,
+		'DOMITIAN': 90,
+		'EARLY BYZ.': 450,
+		'EARLY BYZANTINE': 450,
+		'EARLY CHR.': 350,
+		'EARLY CHR': 200,
+		'EARLY HELL.': -300,
+		'BEG. IMP.': 25,
+		'EARLY IMP.': 25,
+		'EARLY IMP': 25,
+		'EARLY PTOL.': -275,
+		'EARLY ROM.': -50,
+		'EARLY ROMAN': -50,
+		'EARLY-MID. IMP.': 100,
+		'EARLY-MIDDLE IMP.': 100,
+		'EARLÝMID. IMP.': 100,
+		'END 4TH-BEG. 3RD BC': 300,
+		'END TRAJAN': 110,
+		'FIN AET HELL/IMP': 1,
+		'FIN AET HELL/INIT AET IMP': 1,
+		'FLAVISCH': 85,
+		'FLAVIAN': 85,
+		'FRÜHE KAISERZEIT (AUGUSTUS)': 1,
+		'FRÜHE KAISERZEIT': 25,
+		'FRU+HHELLENISTISCH': -300,
+		'FRÜHE RÖMISCHE ZEIT': -50,
+		'FRÜHELLENISTISCH': -300,
+		'HADRIAN': 125,
+		'HADRIANIC-EARLY ANTONINE': 140,
+		'HADRIANIC': 125,
+		'HADRIANISCH': 125,
+		'HADRIANISCHE ZEIT': 125,
+		'HELL.-ROM.': -50,
+		'HELL.': -250,
+		'HELL./FRÜHE KAISERZEIT': -1,
+		'HELL./ROM.': -50,
+		'HELLENISTIC': -250,
+		'HELLENISTISCH': -250,
+		'HELLENISTISCHE ZEIT': -250,
+		'IA-C 50P': 1,
+		'IMP.': 200,
+		'IMP': 200,
+		'IMPERIAL': 200,
+		'INIT AET IMP': 25,
+		'IÁAET IMP': 110,
+		'JULIO-CLAUDIAN': 25,
+		'KAISERZEIT': 100,
+		'KAISERZEITLICH': 100,
+		'LATE ARCHAIC': -600,
+		'LATE BYZ.': 1200,
+		'LATE BYZ': 1200,
+		'LATE BYZANTINE': 1200,
+		'LATE CLASS.': -415,
+		'LATE CLASS.-HELL.': -375,
+		'LATE HADRIANIC': 135,
+		'LATE HADRIANIC OR AFTER': 145,
+		'LATE HADRIANIC OR LATER': 145,
+		'LATE HADRIANIC-ANTONINE': 155,
+		'LATE HELL.-EARLY IMP.': -15,
+		'LATE HELL.': -1,
+		'LATE HELL./EARLY ROM.': -1,
+		'LATE HELL./ROM.': -1,
+		'LATE HELL': -1,
+		'LATE HELLEN': -1,
+		'LATE HELLENIST.': -1,
+		'LATE IMP.': 300,
+		'LATE IMP': 300,
+		'LATE IMPERIAL': 300,
+		'LATE PTOL.': -50,
+		'LATER IMP.': 300,
+		'FIN AET IMP': 300,
+		'LETZTES VIERTEL 1. JH.V.CHR.': -15,
+		'MARCUS AURELIUS': 170,
+		'MED.': 1100,
+		'MEROV.': 600,
+		'MID. IMP.': 150,
+		'MIDDLE BYZ': 700,
+		'NERO': 60,
+		'PRE-PTOL.': -333,
+		'PTOL.': -100,
+		'PTOL./ROM.': -20,
+		'ROM.': 50,
+		'ROM./BYZ.': 600,
+		'ROM': 50,
+		'ROMAN IMP': 200,
+		'ROMAN': 50,
+		'ROMANESQUE': 1150,
+		'RÖMISCHE ZEIT': 50,
+		'RÖMISCHE': 50,
+		'RÖMISCH': 50,
+		'SPÄTHELLENISTISCH': -1,
+		'SPÄTE KAISERZEIT': 300,
+		'SPÄTERE KAISERZEIT': 300,
+		'TIBERIUS': 25,
+		'TITUS': 80,
+		'TRAJAN': 105,
+		'TRAJAN/HADRIAN': 115,
+		'TRAJANIC': 105,
+		'VESPASIAN': 70,
+		'VORRÖMISCH': -150,
+		'VÖRROMISCH': -150,
+		'[UNKNOWN]': 2500,
+		'?': 2500
+	}
+
+	dontcare = re.compile(r'^(prob. |middle |not bef\. |Zeit des |wohl |frühestens |\(hohe\) |)|( od\. .*?| oder .*?| \(od\. .*?)$')
+
+	date = re.sub(r'\?', '', stringdate)
+	#date = re.sub(r'\.$', '', date)
+	date = re.sub(dontcare, '', date)
+
+	date = date.upper()
+
+	if date in datemapper:
+		numericaldate = datemapper[date]
+	else:
+		# for debugging...
+		print(original)
+		pass
+
+	return numericaldate
+
 
 """
 
 still clueless re:
-
-(hohe) Kaiserzeit
 (spät)römisch
 1.Jh.v.Chr.-1.Jh.n.Chr.
 12 v.Chr./3 n.Chr./87 n.Chr.?
@@ -736,34 +759,20 @@ Antonine or later
 Antonine or sh.after
 Antoninus Pius?
 Arab.?
-Augustus-Tiberius
-Augustus/Tiberius
-Augustus/Tiberius?
 Byz./Arab.
 Caligula
 Caracalla?
 Chr./Byz.
-Christian
-Cladius
 Claudian?
 Claudius?
-Commodus
 Copt.
-Domitian
-Early Chr.
-Early Chr.?
+Early Byz
 Early Christ.
 Early Christian
-Early Rom.
-Early Rom.?
-Early Roman?
 Ende Republik/Beg. Kaiserzeit
 Erste Kaiserzeit
-Flavian
 Flavian (or earlier)
-Flavian?
 Frankish
-Frühe Kaiserzeit
 Geometric/Sub-Geometric
 Hadrian or later
 Hadrian+
@@ -780,31 +789,8 @@ High Imp.?
 IIa-aet Rom?
 IIa-aet Rom?
 IIa-aet Rom?
-IIÍinit IIa
-IIÍinit IIa
-IIÍinit IIa
-IIÍinit IVp
-IIÍinit IVp
-IIÍinit IVp
-IV/init IIIa
-IV/init IIIa
-IV/init IIIa
 Imp.-Byz.
 Imp.-Byz.
-Imperial
-Imperial
-IÍinit IIIp
-IÍinit IIIp
-IÍinit IIIp
-IÍinit IIIp?
-IÍinit IIIp?
-IÍinit IIIp?
-Iáaet Imp
-Iáaet Imp
-Iáaet Imp
-Iáaet Imp?
-Iáaet Imp?
-Iáaet Imp?
 Kopt.
 Late Chr.
 Late Empire
@@ -816,14 +802,10 @@ Late Imp.-Early Byz.
 Late Ptol./Rom.
 Late Roman
 Later Chr.
-Later Imp.
-Later Imp.
 M. Aur.?
 M. Aurelius, or later
 Marcus Aurelius/Commodus
 Mid Byz
-Mid. Imp.
-Mid. Imp.
 Mid/Late Byz
 Ptol.-Rom.
 Ptol.-Rom.?
@@ -841,33 +823,13 @@ Trajan, or sh. bef.
 Trajanic or later
 Trajanic-Antonine
 Turkish?
-V/init IVa
-V/init IVa
-V/init IVa
-V/init IVa?
-V/init IVa?
-V/init IVa?
-VIÍinit VIa
-VIÍinit VIa
-VIÍinit VIa
-VÍinit Va
-VÍinit Va
-VÍinit Va
-XIV/init XVp
-XIV/init XVp
-XIV/init XVp
 Zeit Hadrians? / erheblich fru
-Zeit des Augustus od. Tiberius
 [Wiligelmo]
 [ant.]
 [antique]
 [forgery]
 [frühe Kaiserzeit]
 [modern forgery]
-[unknown]
-a IÍinit IIIp
-a IÍinit IIIp
-a IÍinit IIIp
 ac
 aet Hell/aet Rom
 aet Hell/aet Rom
@@ -887,8 +849,6 @@ aet chr
 aet chr
 aet imp inf
 aet imp inf
-aet incert
-aet incert
 aet rec
 aet rec
 aet tardae
@@ -909,14 +869,10 @@ augusteisch
 augusteische Zeit
 beg Rom imp
 beg. Antonine
-beg. Imp.
-beg. Imp.
 betw. Trajan  Severus
-c fin IIÍinit IIa
-c fin IIÍinit IIa
-c fin IIÍinit IIa
 early Antonine
 early Antonine or later
+early Byz
 early Hadrianic
 early medieval
 end Hellenist.
@@ -924,23 +880,10 @@ end Ptol.(?)
 end Ptol./Rom.
 end Ptol./beg. Rom.
 erste Kaiserzeit
-fin aet Hell/Imp
-fin aet Hell/Imp
-fin aet Hell/Imp
-fin aet Hell/init aet Imp
-fin aet Hell/init aet Imp
-fin aet Hell/init aet Imp
-fin aet Imp
-fin aet Imp
-fin aet Imp
-fin aet Imp?
-fin aet Imp?
-fin aet Imp?
 forgery?
 forgerýmod.?
 fruhe bis mittlere Kaiserzeit
 frühbyzantinisch
-frühestens späthellenistisch
 frühhellenistisch
 frühhellenistisch?
 hellenistisch - spätrömisch
@@ -951,10 +894,6 @@ high Imp.
 hohe Kaiserzeit
 hohe hellenistische Zeit
 imp Rom
-imperial
-init IIÍinit IIa
-init IIÍinit IIa
-init IIÍinit IIa
 init principat
 init(?) aet Imp
 init(?) aet Imp
@@ -963,7 +902,6 @@ kaiserzeitlich/spätrömisch
 late
 late Attic
 late Hadrianic-early Antonine
-late Ptol.
 late Ptol.-early Rom.?
 late Rom.
 late Roman
@@ -973,9 +911,6 @@ late classic
 late period
 later Severan?
 later imperial
-med V/init IVa
-med V/init IVa
-med V/init IVa
 med./mod.?
 medieval
 medieval?
@@ -1001,21 +936,12 @@ romisch
 römisch (Kaiserzeit?)
 römisch (eher spät)
 römisch, christlich?
-s IV/init III
-s IV/init III
-s IV/init III
 spät
 spätantik
 spätantik?
 späte Republik oder fruhe Kais
 spätere hellenistische Zeit
 späthell. - frühe Kaiserzeit
-späthellenistisch (od. später
-späthellenistisch od. erste Ka
-späthellenistisch od. frührö
-späthellenistisch od. später
-späthellenistisch oder erste K
-späthellenistisch oder frühe
 spätrömisch
 temp Macedonica
 traianisch-hadrianische Zeit
@@ -1024,10 +950,6 @@ unter Augustus
 unter NerváHadrian/Trajan
 vermutlich frühe Kaiserzeit
 wohl erste Kaiserzeit
-wohl frühe Kaiserzeit
-wohl frühe Kaiserzeit?
-wohl hellenistisch
-wohl kaiserzeitlich
 wohl noch hellenistisch
 wohl noch römisch
 ziemlich spät
