@@ -737,7 +737,7 @@ def datemapper(stringdate):
 		numericaldate = datemapper[date]
 	else:
 		# for debugging...
-		print(original.upper())
+		# print(original.upper())
 		pass
 
 	return numericaldate
