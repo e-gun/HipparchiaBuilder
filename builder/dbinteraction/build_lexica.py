@@ -18,57 +18,6 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-
-def formatlewisandshort(dbconnection, cursor, topdir):
-	dictfiles = findlexiconfiles('l', topdir + 'HipparchiaData/lexica/')
-	
-	dictdb = 'latin_dictionary'
-	
-	resetlatindictdb(dictdb, dbconnection, cursor)
-	
-	for df in dictfiles:
-		f = open(df, encoding='utf-8', mode='r')
-		entries = f.readlines()
-		f.close()
-				
-		manager = Manager()
-		entries = manager.list(entries)
-		commitcount = MPCounter()
-		
-		workers = int(config['io']['workers'])
-		jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, commitcount)) for i in range(workers)]
-		for j in jobs: j.start()
-		for j in jobs: j.join()
-		
-	return
-
-
-def formatliddellandscott(dbconnection, cursor, topdir):
-	# n29246 can't be entered because it has no key
-	
-	dictfiles = findlexiconfiles('g', topdir + 'HipparchiaData/lexica/')
-	dictdb = 'greek_dictionary'
-	
-	resetgreekdictdb(dictdb, dbconnection, cursor)
-	
-	for df in dictfiles:
-		f = open(df, encoding='utf-8', mode='r')
-		entries = f.readlines()
-		f.close()
-		
-		manager = Manager()
-		entries = manager.list(entries)
-		commitcount = MPCounter()
-		
-		workers = int(config['io']['workers'])
-		jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, commitcount)) for i in
-		        range(workers)]
-		for j in jobs: j.start()
-		for j in jobs: j.join()
-		
-	return
-
-
 def grammarloader(lemmalanguage, lemmabasedir, dbconnection, cursor):
 	"""
 	pick and language to shove into the grammardb; parse; shove
@@ -163,28 +112,6 @@ def analysisloader(analysisfile, grammardb, l, dbconnection, cursor):
 	return
 
 
-def findlexiconfiles(lexiconlanguage, dictbasedir):
-	"""
-	tell me your language and i will give you a list of dictionaries to load
-	:param lexiconname:
-	:param dictbasedir:
-	:return:
-	"""
-	
-	lexicondict = {
-		'e': ['english_dictionary.txt'],
-		'l': ['latin_lewis_short_a-k.xml', 'latin_lewis_short_l-z.xml'],
-		'g': ['1999.04.0057.xml']
-	}
-	
-	lexlist = lexicondict[lexiconlanguage]
-	newlexlist = []
-	for lex in lexlist:
-		newlexlist.append(dictbasedir + lex)
-	
-	return newlexlist
-
-
 def findlemmafiles(lemmalanguage, lemmabasedir):
 	"""
 	tell me your language and i will give you a list of lemma files to load
@@ -210,54 +137,6 @@ def findlemmafiles(lemmalanguage, lemmabasedir):
 	fileanddb = [lemmabasedir + lemmadict[lemmalanguage], lemmadb[lemmalanguage]]
 	
 	return fileanddb
-
-
-def resetlatindictdb(dictdb, dbconnection, cursor):
-	"""
-	drop if exists and build the framework
-	:param dbconnection:
-	:param cursor:
-	:return:
-	"""
-	
-	q = 'DROP TABLE IF EXISTS public.'+dictdb+';'
-	cursor.execute(q)
-	
-	q = 'CREATE TABLE public.'+dictdb+' ( entry_name character varying(64), metrical_entry character varying(64), id_number character varying(8), entry_type character varying(8), entry_key character varying(64), entry_options "char", entry_body text ) WITH ( OIDS=FALSE );'
-	cursor.execute(q)
-	
-	q = 'GRANT SELECT ON TABLE public.'+dictdb+' TO hippa_rd;'
-	cursor.execute(q)
-	
-	q = 'CREATE INDEX latinentry_idx ON public.'+dictdb+' USING btree (entry_name COLLATE pg_catalog."default");'
-	cursor.execute(q)
-	dbconnection.commit()
-	
-	return
-
-
-def resetgreekdictdb(dictdb, dbconnection, cursor):
-	"""
-	drop if exists and build the framework
-	:param dbconnection:
-	:param cursor:
-	:return:
-	"""
-	
-	q = 'DROP TABLE IF EXISTS public.' + dictdb + ';'
-	cursor.execute(q)
-	
-	q = 'CREATE TABLE public.' + dictdb + ' ( entry_name character varying(64), metrical_entry character varying(64), unaccented_entry character varying(64), id_number character varying(8), entry_type character varying(8), entry_options "char", entry_body text ) WITH ( OIDS=FALSE );'
-	cursor.execute(q)
-	
-	q = 'GRANT SELECT ON TABLE public.' + dictdb + ' TO hippa_rd;'
-	cursor.execute(q)
-	
-	q = 'CREATE INDEX gkentryword_index ON public.' + dictdb + ' USING btree (entry_name COLLATE pg_catalog."default");'
-	cursor.execute(q)
-	dbconnection.commit()
-	
-	return
 
 
 def resetlemmadb(grammardb, dbconnection, cursor):
