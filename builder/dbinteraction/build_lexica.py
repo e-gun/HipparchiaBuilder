@@ -184,7 +184,7 @@ def analysisloader(language):
 	for bundle in formbundles:
 		bundlecount += 1
 		manager = Manager()
-		# need this because all searches are l.c. and so you can't "Διόϲ" via what will be a search for "διόϲ"
+		# need this because all searches are lower case and so you can't find "Διόϲ" via what will be a search for "διόϲ"
 		bundle[:] = [x.lower() for x in bundle]
 		items = manager.list(bundle)
 		commitcount = MPCounter()
@@ -194,7 +194,9 @@ def analysisloader(language):
 		        range(workers)]
 		for j in jobs: j.start()
 		for j in jobs: j.join()
-		print('\t',str(bundlecount*chunksize),'forms inserted')
+		if str(bundlecount*chunksize) < len(forms):
+			# this check prevents saying '950000 forms inserted' at the end when there are only '911871 items to load'
+			print('\t',str(bundlecount*chunksize),'forms inserted')
 	return
 
 
