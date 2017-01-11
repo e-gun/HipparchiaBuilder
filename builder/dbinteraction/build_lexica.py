@@ -194,7 +194,7 @@ def analysisloader(language):
 		        range(workers)]
 		for j in jobs: j.start()
 		for j in jobs: j.join()
-		if str(bundlecount*chunksize) < len(forms):
+		if bundlecount*chunksize < len(forms):
 			# this check prevents saying '950000 forms inserted' at the end when there are only '911871 items to load'
 			print('\t',str(bundlecount*chunksize),'forms inserted')
 	return
