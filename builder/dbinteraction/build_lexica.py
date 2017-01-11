@@ -127,7 +127,7 @@ def grammarloader(language):
 	entries = f.readlines()
 	f.close()
 
-	print('loading', language, 'lemmata.',len(entries),'to parse')
+	print('loading', language, 'lemmata.',len(entries),'items to load')
 
 	manager = Manager()
 	entries = manager.list(entries)
@@ -142,7 +142,7 @@ def grammarloader(language):
 	return
 
 
-def analysisloader(analysisfile, grammardb, l, dbconnection, cursor):
+def analysisloader(language):
 	# a slight shift in the finder should let you do both lemm and anal, but cumbersome to build the switches and triggers
 	# the format is dictionary entry + tab + magic number + a tabbed list of forms with the morph in parens.
 	# lemmata:
@@ -151,22 +151,32 @@ def analysisloader(analysisfile, grammardb, l, dbconnection, cursor):
 	# analyses:
 	# !ane/ntwn	{9619125 9 a)ne/ntwn,a)ni/hmi	send up	aor imperat act 3rd pl}{9619125 9 a)ne/ntwn,a)ni/hmi	send up	aor part act masc/neut gen pl}{37155703 9 e)ne/ntwn,e)ni/hmi	send in	aor imperat act 3rd pl}{37155703 9 e)ne/ntwn,e)ni/hmi	send in	aor part act masc/neut gen pl}
 	
-	if l == 'l':
-		latin = True
+	if language == 'latin':
+		morphfile = config['lexica']['lexicadir'] + config['lexica']['ltanal']
+		table = 'latin_morphology'
+		islatin = True
+	elif language == 'greek':
+		morphfile = config['lexica']['lexicadir'] + config['lexica']['gkanal']
+		table = 'greek_morphology'
+		islatin = False
 	else:
-		latin = False
-	
-	print('loading', grammardb)
-	resetanalysisdb(grammardb, dbconnection, cursor)
-	
-	f = open(analysisfile, encoding='utf-8', mode='r')
+		morphfile = ''
+		table = 'no_such_table'
+		islatin = False
+		print('I do not know',language,'\nBad things are about to happen.')
+
+	sqldict = getlexicaltablestructuredict('lemma')
+
+	resettable(table, sqldict['columns'], sqldict['index'])
+	f = open(morphfile, encoding='utf-8', mode='r')
 	forms = f.readlines()
 	f.close()
 	
 	# rather than manage a list of 100s of MB in size let's get chunky
 	# this also allows us to send updates outside of the commit() moment
 	# http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks#1751478
-	
+	print('loading', language, 'morphology.',len(forms),'items to load')
+
 	chunksize = 50000
 	formbundles = [forms[i:i + chunksize] for i in range(0, len(forms), chunksize)]
 	bundlecount = 0
@@ -180,39 +190,12 @@ def analysisloader(analysisfile, grammardb, l, dbconnection, cursor):
 		commitcount = MPCounter()
 
 		workers = int(config['io']['workers'])
-		jobs = [Process(target=mpanalysisinsert, args=(grammardb, items, latin, commitcount)) for i in
+		jobs = [Process(target=mpanalysisinsert, args=(table, items, islatin, commitcount)) for i in
 		        range(workers)]
 		for j in jobs: j.start()
 		for j in jobs: j.join()
 		print('\t',str(bundlecount*chunksize),'forms inserted')
 	return
-
-
-def findlemmafiles(lemmalanguage, lemmabasedir):
-	"""
-	tell me your language and i will give you a list of lemma files to load
-	and where to load them
-	:param lemmalanguage:
-	:param dictbasedir:
-	:return:
-	"""
-	lemmadict = {
-		'gl': 'greek-lemmata.txt',
-		'ga': 'greek-analyses.txt',
-		'll': 'latin-lemmata.txt',
-		'la': 'latin-analyses.txt'
-	}
-	
-	lemmadb = {
-		'gl': 'greek_lemmata',
-		'ga': 'greek_morphology',
-		'll': 'latin_lemmata',
-		'la': 'latin_morphology'
-	}
-	
-	fileanddb = [lemmabasedir + lemmadict[lemmalanguage], lemmadb[lemmalanguage]]
-	
-	return fileanddb
 
 
 def resettable(tablename, tablestructurelist, indexcolumn):
