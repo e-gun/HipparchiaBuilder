@@ -18,7 +18,77 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def grammarloader(lemmalanguage, lemmabasedir, dbconnection, cursor):
+def formatgklexicon():
+	"""
+
+	parse the XML for Liddell and Scott and insert it into the DB
+
+	:return:
+	"""
+
+	dictfile = config['lexica']['lexicadir'] + config['lexica']['greeklexicon']
+	dictdb = 'greek_dictionary'
+
+	sqldict = getlexicaltablestructuredict(dictdb)
+
+	resettable(dictdb, sqldict['columns'], sqldict['index'])
+
+
+	f = open(dictfile, encoding='utf-8', mode='r')
+	entries = f.readlines()
+	f.close()
+
+	print('formatting Liddell and Scott.',len(entries),'entries to parse')
+
+	manager = Manager()
+	entries = manager.list(entries)
+	commitcount = MPCounter()
+
+	workers = int(config['io']['workers'])
+	jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, commitcount)) for i in
+			range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+	return
+
+
+def formatlatlexicon():
+	"""
+
+	parse the XML for Lewis and Short and insert it into the DB
+
+	:return:
+	"""
+
+	dictfile = config['lexica']['lexicadir'] + config['lexica']['latinlexicon']
+	dictdb = 'latin_dictionary'
+
+	sqldict = getlexicaltablestructuredict(dictdb)
+
+	resettable(dictdb, sqldict['columns'], sqldict['index'])
+
+
+	f = open(dictfile, encoding='utf-8', mode='r')
+	entries = f.readlines()
+	f.close()
+
+	print('formatting Lewis and Short.',len(entries),'entries to parse')
+
+	manager = Manager()
+	entries = manager.list(entries)
+	commitcount = MPCounter()
+
+	workers = int(config['io']['workers'])
+	jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, commitcount)) for i in
+			range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+	return
+
+
+def grammarloader(language):
 	"""
 	pick and language to shove into the grammardb; parse; shove
 
@@ -34,31 +104,37 @@ def grammarloader(lemmalanguage, lemmabasedir, dbconnection, cursor):
 	:param lemmabasedir:
 	:return:
 	"""
-	
-	# send 'gl' or 'll'
-	
-	fileanddb = findlemmafiles(lemmalanguage, lemmabasedir)
-	grammardb = fileanddb[1]
-	lemmafile = fileanddb[0]
-	
-	if lemmalanguage == 'll':
-		latin = True
+
+	if language == 'latin':
+		lemmafile = config['lexica']['lexicadir'] + config['lexica']['ltlemm']
+		table = 'latin_lemmata'
+		islatin = True
+	elif language == 'greek':
+		lemmafile = config['lexica']['lexicadir'] + config['lexica']['gklemm']
+		table = 'greek_lemmata'
+		islatin = False
 	else:
-		latin = False
-	
-	print('loading',grammardb)
-	resetlemmadb(grammardb, dbconnection, cursor)
-	
+		lemmafile = ''
+		table = 'no_such_table'
+		islatin = False
+		print('I do not know',language,'\nBad things are about to happen.')
+
+	sqldict = getlexicaltablestructuredict('lemma')
+
+	resettable(table, sqldict['columns'], sqldict['index'])
+
 	f = open(lemmafile, encoding='utf-8', mode='r')
 	entries = f.readlines()
 	f.close()
-	
+
+	print('loading', language, 'lemmata.',len(entries),'to parse')
+
 	manager = Manager()
 	entries = manager.list(entries)
 	commitcount = MPCounter()
 	
 	workers = int(config['io']['workers'])
-	jobs = [Process(target=mplemmatainsert, args=(grammardb, entries, latin, commitcount)) for i in
+	jobs = [Process(target=mplemmatainsert, args=(table, entries, islatin, commitcount)) for i in
 	        range(workers)]
 	for j in jobs: j.start()
 	for j in jobs: j.join()
@@ -139,55 +215,6 @@ def findlemmafiles(lemmalanguage, lemmabasedir):
 	return fileanddb
 
 
-def resetlemmadb(grammardb, dbconnection, cursor):
-	"""
-	drop if exists and build the framework
-	:param dbconnection:
-	:param cursor:
-	:return:
-	"""
-	
-	q = 'DROP TABLE IF EXISTS public.' + grammardb + '; DROP INDEX IF EXISTS '+grammardb+'_idx;'
-	cursor.execute(q)
-	
-	q = 'CREATE TABLE public.' + grammardb + ' ( dictionary_entry character varying(64), xref_number integer, derivative_forms text ) WITH ( OIDS=FALSE );'
-	cursor.execute(q)
-	
-	q = 'GRANT SELECT ON TABLE public.' + grammardb + ' TO hippa_rd;'
-	cursor.execute(q)
-	
-	q = 'CREATE INDEX '+grammardb+'_idx ON public.' + grammardb + ' USING btree (dictionary_entry COLLATE pg_catalog."default");'
-	cursor.execute(q)
-	dbconnection.commit()
-	
-	return
-
-
-def resetanalysisdb(grammardb, dbconnection, cursor):
-	"""
-	drop if exists and build the framework
-	:param dbconnection:
-	:param cursor:
-	:return:
-	"""
-	
-	q = 'DROP TABLE IF EXISTS public.' + grammardb + '; DROP INDEX IF EXISTS ' + grammardb + '_idx;'
-	cursor.execute(q)
-	
-	q = 'CREATE TABLE public.' + grammardb + ' ( observed_form character varying(64), possible_dictionary_forms text ) WITH ( OIDS=FALSE );'
-	cursor.execute(q)
-	
-	q = 'GRANT SELECT ON TABLE public.' + grammardb + ' TO hippa_rd;'
-	cursor.execute(q)
-	
-	q = 'CREATE INDEX ' + grammardb + '_idx ON public.' + grammardb + ' USING btree (observed_form COLLATE pg_catalog."default");'
-	cursor.execute(q)
-	dbconnection.commit()
-	
-	return
-
-
-
 def resettable(tablename, tablestructurelist, indexcolumn):
 	"""
 
@@ -252,73 +279,3 @@ def getlexicaltablestructuredict(tablename):
 	returndict = options[tablename]
 
 	return returndict
-
-
-def formatgklexicon():
-	"""
-
-	parse the XML for Liddell and Scott and insert it into the DB
-
-	:return:
-	"""
-
-	dictfile = config['io']['lexicadir'] + config['io']['greeklexicon']
-	dictdb = 'greek_dictionary'
-
-	sqldict = getlexicaltablestructuredict(dictdb)
-
-	resettable(dictdb, sqldict['columns'], sqldict['index'])
-
-
-	f = open(dictfile, encoding='utf-8', mode='r')
-	entries = f.readlines()
-	f.close()
-
-	print('formatting Liddell and Scott.',len(entries),'entries to parse')
-
-	manager = Manager()
-	entries = manager.list(entries)
-	commitcount = MPCounter()
-
-	workers = int(config['io']['workers'])
-	jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, commitcount)) for i in
-			range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
-
-	return
-
-
-def formatlatlexicon():
-	"""
-
-	parse the XML for Lewis and Short and insert it into the DB
-
-	:return:
-	"""
-
-	dictfile = config['io']['lexicadir'] + config['io']['latinlexicon']
-	dictdb = 'latin_dictionary'
-
-	sqldict = getlexicaltablestructuredict(dictdb)
-
-	resettable(dictdb, sqldict['columns'], sqldict['index'])
-
-
-	f = open(dictfile, encoding='utf-8', mode='r')
-	entries = f.readlines()
-	f.close()
-
-	print('formatting Lewis and Short.',len(entries),'entries to parse')
-
-	manager = Manager()
-	entries = manager.list(entries)
-	commitcount = MPCounter()
-
-	workers = int(config['io']['workers'])
-	jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, commitcount)) for i in
-			range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
-
-	return

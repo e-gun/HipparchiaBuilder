@@ -126,9 +126,9 @@ if buildlex == 'y':
 
 if buildgram == 'y':
 	print('building grammar dbs')
-	grammarloader('gl', '../HipparchiaData/lexica/', dbconnection, cursor)
+	grammarloader('greek')
 	analysisloader('../HipparchiaData/lexica/greek-analyses.txt', 'greek_morphology', 'g', dbconnection, cursor)
-	grammarloader('ll', '../HipparchiaData/lexica/', dbconnection, cursor)
+	grammarloader('latin')
 	analysisloader('../HipparchiaData/lexica/latin-analyses.txt', 'latin_morphology', 'l', dbconnection, cursor)
 	timestampthebuild('lm', dbconnection, cursor)
 	dbconnection.commit()
