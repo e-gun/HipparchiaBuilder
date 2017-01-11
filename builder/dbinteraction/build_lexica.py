@@ -165,7 +165,7 @@ def analysisloader(language):
 		islatin = False
 		print('I do not know',language,'\nBad things are about to happen.')
 
-	sqldict = getlexicaltablestructuredict('lemma')
+	sqldict = getlexicaltablestructuredict('analysis')
 
 	resettable(table, sqldict['columns'], sqldict['index'])
 	f = open(morphfile, encoding='utf-8', mode='r')
