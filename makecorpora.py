@@ -11,7 +11,7 @@ import configparser
 import time
 
 from builder import corpus_builder
-from builder.dbinteraction.build_lexica import formatliddellandscott, formatlewisandshort, grammarloader, analysisloader
+from builder.dbinteraction.build_lexica import formatgklexicon, formatlatlexicon, grammarloader, analysisloader
 from builder.dbinteraction.db import setconnection
 from builder.dbinteraction.versioning import timestampthebuild
 
@@ -119,8 +119,8 @@ for corpusname in corporatobuild:
 
 if buildlex == 'y':
 	print('building lexical dbs')
-	formatliddellandscott(dbconnection, cursor, '../')
-	formatlewisandshort(dbconnection, cursor, '../')
+	formatgklexicon()
+	formatlatlexicon()
 	timestampthebuild('lx', dbconnection, cursor)
 	dbconnection.commit()
 

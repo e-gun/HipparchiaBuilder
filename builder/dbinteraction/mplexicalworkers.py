@@ -30,6 +30,7 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 	curs = dbc.cursor()
 	
 	bodyfinder = re.compile(r'(<entryFree(.*?)>)(.*?)(</entryFree>)')
+	defectivebody = re.compile(r'(<entryFree(.*?)>)(.*?)')
 	greekfinder = re.compile(r'(<foreign lang="greek">)(.*?)(</foreign>)')
 	
 	while len(entries) > 0:
@@ -44,8 +45,12 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			try:
 				body = segments.group(3)
 			except:
-				print('died at', entry)
-				body = ''
+				segments = re.search(defectivebody, entry)
+				try:
+					body = segments.group(3)
+				except:
+					print('died at', entry)
+					body = ''
 			info = segments.group(2)
 			parsedinfo = re.search('id="(.*?)"\stype="(.*?)"\skey="(.*?)" opt="(.*?)"', info)
 			id = parsedinfo.group(1)
@@ -71,7 +76,7 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
-				print('at',id, entry)
+				print('\tat',id, entry)
 	
 	dbc.commit()
 	curs.close()
@@ -122,15 +127,18 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 				print('died at', id, entry)
 			info = segments.group(2)
 			parsedinfo = re.search('id="(.*?)"\skey=(".*?")\stype="(.*?)"\sopt="(.*?)"', info)
-			id = parsedinfo.group(1)
 			try:
+				id = parsedinfo.group(1)
 				key = parsedinfo.group(2)
+				type = parsedinfo.group(3)
+				opt = parsedinfo.group(4)
 			except:
+				# only one greek dictionary entry will throw an exception: n29246
+				# print('did not find key at', id, entry)
+				id = 'n29246'
 				key = ''
-				print('did not find key at', id, entry)
-			type = parsedinfo.group(3)
-			opt = parsedinfo.group(4)
-			
+				type = ''
+				opt = ''
 			entry = re.sub(r'"(.*?)"', lambda x: greekwithoutvowellengths(x.group(1)), key.upper())
 			entry = re.sub(r'(\d{1,})', r' (\1)', entry)
 			metrical = re.sub(r'(")(.*?)(")', lambda x: greekwithvowellengths(x.group(2)), key.upper())
@@ -146,11 +154,14 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			
 			query = 'INSERT INTO ' + dictdb + ' (entry_name, metrical_entry, unaccented_entry, id_number, entry_type, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s, %s)'
 			data = (entry, metrical, stripped, id, type, opt, body)
-			curs.execute(query, data)
+			try:
+				curs.execute(query, data)
+			except:
+				print('failed insert:',data)
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
-				print('at', id, entry)
+				print('\tat', id, entry)
 			# print('entry',entry)
 	
 	dbc.commit()
@@ -196,7 +207,7 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
-				print('at', dictionaryform)
+				print('\tat', dictionaryform)
 		except:
 			pass
 		
