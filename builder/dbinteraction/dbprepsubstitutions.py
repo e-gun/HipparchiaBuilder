@@ -50,7 +50,7 @@ def dbprepper(dbunreadyversion):
 	dbunreadyversion = dbfindhypens(dbunreadyversion)
 	dbunreadyversion = dbfindannotations(dbunreadyversion)
 	dbunreadyversion = hmutonbsp(dbunreadyversion)
-	dbunreadyversion = notrailingwhitespace(dbunreadyversion)
+	dbunreadyversion = noleadingortrailingwhitespace(dbunreadyversion)
 	dbreadyversion = dbunreadyversion
 	
 	return dbreadyversion
@@ -313,7 +313,7 @@ def quarterspacer(matchgroup):
 	return substitution
 
 
-def notrailingwhitespace(dbunreadyversion):
+def noleadingortrailingwhitespace(dbunreadyversion):
 	"""
 	get rid of whitespace at ends of columns
 	otherwise HipparchiaServer is constantly doing this
@@ -324,7 +324,7 @@ def notrailingwhitespace(dbunreadyversion):
 	
 	for line in dbunreadyversion:
 		for column in [2,3,4]:
-			line[column] = re.sub(r'\s$','',line[column])
+			line[column] = re.sub(r'(^\s|\s$)','',line[column])
 		dbreadyversion.append(line)
 	
 	return dbreadyversion
