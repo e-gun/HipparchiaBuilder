@@ -161,8 +161,11 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
-				print('\tat', id, entry)
-			# print('entry',entry)
+				try:
+					print('\tat', id, entry)
+				except:
+					# UnicodeEncodeError
+					print('\tat', id)
 	
 	dbc.commit()
 	curs.close()
