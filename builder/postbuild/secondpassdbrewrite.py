@@ -408,7 +408,7 @@ def parallelnewworkworker(workpile, newworktuples):
 			except:
 				# it is your shell/terminal who is to blame for this
 				# UnicodeEncodeError: 'ascii' codec can't encode character '\xe1' in position 19: ordinal not in range(128)
-				print(re.sub(r'[A-Za-z]','',a.universalid),a.idxname)
+				print(re.sub(r'^[A-Za-z]','',a.universalid),a.idxname)
 			authortablemaker(a.universalid, cursor)
 			dbc.commit()
 
