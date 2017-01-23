@@ -34,4 +34,4 @@ in addition to the build environment itself, you will need data to insert into i
             flask
             psycopg2
             bs4
-        postgresql9.5
+        postgresql9.6
