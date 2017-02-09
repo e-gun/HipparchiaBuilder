@@ -48,7 +48,7 @@ class Author(object):
 			name = re.sub(search, regex_substitutions.parsegreekinsidelatin, name)
 			name = re.sub(r'<(/|)hmu_greek_in_a_latin_text>', '', name)
 		name = re.sub(r'2', '', name)
-		name = regex_substitutions.latinadiacriticals(name)
+		name = regex_substitutions.latindiacriticals(name)
 		segments = re.search(focus, name)
 		nn = re.search(nick, name)
 		

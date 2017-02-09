@@ -11,8 +11,8 @@ import re
 import configparser
 
 from builder.parsers.swappers import highunicodetohex, hutohxgrouper, hextohighunicode, bitswapchars
-from .betacode_to_unicode import parsegreekinsidelatin
-from .citation_builder import citationbuilder
+from builder.parsers.betacode_to_unicode import parsegreekinsidelatin
+from builder.parsers.citation_builder import citationbuilder
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -32,7 +32,7 @@ def earlybirdsubstitutions(texttoclean):
 	# try to get out in front of some of the trickiest bits
 	# note that you can't use quotation marks in here
 	textualmarkuptuples = []
-	
+
 	betacodetuples = (
 		(r'<(?!\d)',r'‹'),  # '<': this one is super-dangerous: triple-check
 		(r'>(?!\d)', u'›'),  # '>': this one is super-dangerous: triple-check
@@ -54,7 +54,7 @@ def earlybirdsubstitutions(texttoclean):
 		(r'\[\sc\s\?(.*?)\$', r'[ 𝕔 ﹖\1$'), # try to catch '&{10m4}10 [ c ? ]$I' without doing any damage
 		(r'&\?(.*?)\](.*?)\$',r'﹖\1]\2$') # some stray lonely '?' cases remain
 	)
-	
+
 	for i in range(0, len(betacodetuples)):
 		texttoclean = re.sub(betacodetuples[i][0], betacodetuples[i][1], texttoclean)
 
@@ -70,10 +70,10 @@ def replacequotationmarks(texttoclean):
 	quotes = re.compile(r'\"(\d{1,2})')
 	texttoclean = re.sub(quotes, quotesubstitutesa, texttoclean)
 	texttoclean = re.sub(r'\"(.*?)\"', r'“\1”', texttoclean)
-	
+
 	quotes = re.compile(r'QUOTE(\d)(.*?)QUOTE(\d)')
 	texttoclean = re.sub(quotes, quotesubstitutesb, texttoclean)
-	
+
 	return texttoclean
 
 
@@ -86,45 +86,45 @@ def replaceaddnlchars(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
-	
+
 	#hexnearmarkup = re.compile(r'(\d)(0x[0-9a-f][0-9a-f]\s)')
 	#texttoclean = re.sub(hexnearmarkup, r'\1 \2', texttoclean)
-	
+
 	texttoclean = re.sub(r'\^(\d{1,2})+', r'<hmu_blank_quarter_spaces quantity="\1" /> ', texttoclean)
-	
+
 	pounds = re.compile(r'#(\d{1,4})')
 	texttoclean = re.sub(pounds, poundsubstitutes, texttoclean)
 	texttoclean = re.sub(r'#', u'\u0374', texttoclean)
-	
+
 	percents = re.compile(r'%(\d{1,3})')
 	texttoclean = re.sub(percents, percentsubstitutes, texttoclean)
 	texttoclean = re.sub(r'%', u'\u2020', texttoclean)
-	
+
 	ltsqbrackets = re.compile(r'\[(\d{1,2})')
 	texttoclean = re.sub(ltsqbrackets, leftbracketsubstitutions, texttoclean)
-	
+
 	rtsqbrackets = re.compile(r'\](\d{1,2})')
 	texttoclean = re.sub(rtsqbrackets, rightbracketsubstitutions, texttoclean)
-	
+
 	atsigns = re.compile(r'@(\d{1,2})')
 	texttoclean = re.sub(atsigns, atsignsubstitutions, texttoclean)
 	texttoclean = re.sub(r'@', r'<hmu_standalone_tabbedtext />', texttoclean)
-	
+
 	ltcurlybracket = re.compile(r'\{(\d{1,2})')
 	texttoclean = re.sub(ltcurlybracket, ltcurlybracketsubstitutes, texttoclean)
 	texttoclean = re.sub(r'\{', r'<span class="speaker">', texttoclean)
-	
+
 	rtcurlybracket = re.compile(r'\}(\d{1,2})')
 	texttoclean = re.sub(rtcurlybracket, rtcurlybracketsubstitutes, texttoclean)
 	texttoclean = re.sub(r'\}', r'</span>', texttoclean)
-	
+
 	ltanglebracket = re.compile(r'<(\d{1,2})')
 	texttoclean = re.sub(ltanglebracket, ltanglebracketsubstitutes, texttoclean)
-	
+
 	rtanglebracket = re.compile(r'>(\d{1,2})')
 	texttoclean = re.sub(rtanglebracket, rtanglebracketsubstitutes, texttoclean)
-	
-	
+
+
 	return texttoclean
 
 
@@ -136,10 +136,10 @@ def replacegreekmarkup(texttoclean):
 	"""
 	dollars = re.compile(r'\$(\d{1,2})(.*?)(\$\d{0,1})')
 	texttoclean = re.sub(dollars, dollarssubstitutes, texttoclean)
-	
+
 	# these strays are rough
 	#texttoclean = re.sub(r'\$(.*?)\$', '<hmu_shift_greek_font value="regular">\1</hmu_shift_greek_font>', texttoclean)
-	
+
 	return texttoclean
 
 
@@ -151,17 +151,17 @@ def replacelatinmarkup(texttoclean):
 	"""
 	ands = re.compile(r'&(\d{1,2})(.*?)(&\d{0,1})')
 	texttoclean = re.sub(ands, andsubstitutes, texttoclean)
-	
+
 	#texttoclean = re.sub(r'\&(.*?)\&', r'<hmu_shift_latin_font value="regular">\1</hmu_shift_latin_font>', texttoclean)
-	
+
 	anddollars = re.compile(r'&(\d{1,2})(.*?)(\$\d{0,1})')
 	texttoclean = re.sub(anddollars, andsubstitutes, texttoclean)
-	
+
 	# these strays are rough
 	# texttoclean = re.sub(r'\&(.*?)\&', r'<hmu_shift_latin_font value="regular">\1</hmu_shift_latin_font>', texttoclean)
-	
+
 	return texttoclean
-	
+
 
 def lastsecondsubsitutions(texttoclean):
 	"""
@@ -264,9 +264,9 @@ def quotesubstitutesa(match):
 	:param match:
 	:return:
 	"""
-	
+
 	val = int(match.group(1))
-	
+
 	substitutions = {
 		1: u'\u201e',
 		2: 'QUOTE2',
@@ -277,14 +277,14 @@ def quotesubstitutesa(match):
 		7: 'QUOTE7',
 		8: 'QUOTE8'
 	}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_quote_markup value="' + match.group(1) + '" />'
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
@@ -294,10 +294,10 @@ def quotesubstitutesb(match):
 	:param match:
 	:return:
 	"""
-	
+
 	val = int(match.group(1))
 	core = match.group(2)
-	
+
 	substitutions = {
 		2: ['“', '”'],
 		3: ['‘', '’'],
@@ -305,14 +305,14 @@ def quotesubstitutesb(match):
 		7: ['‹', '›'],
 		8: ['“', '„'],
 	}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val][0] + core + substitutions[val][1]
 	else:
 		substitute = '<hmu_unhandled_quote_markup value="' + match.group(1) + '" />' + core
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
@@ -322,13 +322,13 @@ def poundsubstitutes(match):
 	:param match:
 	:return:
 	"""
-	
+
 	val = int(match.group(1))
-	
+
 	substitutions = {
 		# u'\u',
 		# 1326: idiosync magical char
-		
+
 		1: u'\u03df',
 		2: u'\u03da',
 		3: u'\u03d9',
@@ -820,26 +820,26 @@ def poundsubstitutes(match):
 		1510: u'Α\u0338<6\u0304ν\u002f>6' # A%162<6E%26N%3>6 [!]
 	}
 
-	
+
 	if val in substitutions:
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_pound_sign value="'+match.group(1)+'" />▦'
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
 def percentsubstitutes(match):
 	"""
 	turn % into unicode
-	
+
 	:param match:
 	:return:
 	"""
 	val = int(match.group(1))
-	
+
 	substitutions = {
 		# u'\u',
 		1: u'\u003f',
@@ -952,14 +952,14 @@ def percentsubstitutes(match):
 		160: u'\u002d',
 		162: u'\u0338'
 	}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_percent_sign value="' + match.group(1) + '" />▩'
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
@@ -1005,14 +1005,14 @@ def leftbracketsubstitutions(match):
 		# 2: '‹',
 		1: '⦅' # supposed to be parenthesis '('; but can interfere with betacode parsing; either swap here or change order of execution
 		}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_left_bracket value="' + match.group(1) + '" />'
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
@@ -1022,9 +1022,9 @@ def rightbracketsubstitutions(match):
 	:param match:
 	:return:
 	"""
-	
+
 	val = int(match.group(1))
-	
+
 	substitutions = {
 		# u'\u',
 		51: r'</span>', # erasedepiographicaltext
@@ -1057,14 +1057,14 @@ def rightbracketsubstitutions(match):
 		# 2: '›',
 		1: '⦆' # swapped for ')'
 	}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_right_bracket value="' + match.group(1) + '" />'
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
@@ -1074,9 +1074,9 @@ def atsignsubstitutions(match):
 	:param match:
 	:return:
 	"""
-	
+
 	val = int(match.group(1))
-	
+
 	substitutions = {
 		73: r'<span class="poetictext">',
 		74: r'</span>',
@@ -1103,14 +1103,14 @@ def atsignsubstitutions(match):
 		2: r'<hmu_standalone_column_end />',
 		1: r'<hmu_standalone_endofpage />'
 	}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_atsign value="' + match.group(1) + '" />'
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
@@ -1120,9 +1120,9 @@ def ltcurlybracketsubstitutes(match):
 	:param match:
 	:return:
 	"""
-	
+
 	val = int(match.group(1))
-	
+
 	substitutions = {
 		43: r'<span class="serviusformatting">',
 		41: r'<span class="stagedirection">',
@@ -1155,14 +1155,14 @@ def ltcurlybracketsubstitutes(match):
 		2: r'<span class="marginaltext">',
 		1: r'<span class="title">'
 	}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_ltcurlybracket value="' + match.group(1) + '" />'
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
@@ -1172,9 +1172,9 @@ def rtcurlybracketsubstitutes(match):
 	:param match:
 	:return:
 	"""
-	
+
 	val = int(match.group(1))
-	
+
 	substitutions = {
 		43: r'</span>',  # hmu_servius_bracket
 		41: r'</span>',  # hmu_stage_direction
@@ -1197,14 +1197,14 @@ def rtcurlybracketsubstitutes(match):
 		2: r'</span>',  # hmu_marginal_text
 		1: r'</span>' # hmu_title
 	}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_rtcurlybracket value="' + match.group(1) + '" />'
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
@@ -1214,9 +1214,9 @@ def ltanglebracketsubstitutes(match):
 	:param match:
 	:return:
 	"""
-	
+
 	val = int(match.group(1))
-	
+
 	substitutions = {
 		# 1: '',
 		1: '⟪', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
@@ -1259,14 +1259,14 @@ def ltanglebracketsubstitutes(match):
 		73: r'<span class="diagramlvl03">',
 		74: r'<span class="diagramlvl04">'
 	}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_ltangle value="' + match.group(1) + '" />'
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
@@ -1276,9 +1276,9 @@ def rtanglebracketsubstitutes(match):
 	:param match:
 	:return:
 	"""
-	
+
 	val = int(match.group(1))
-	
+
 	substitutions = {
 		#1: u'\u0332',
 		1: r'⟫', # see note in ltanglebracketsubstitutes()
@@ -1321,14 +1321,14 @@ def rtanglebracketsubstitutes(match):
 		73: r'</span>',  #<span class="diagramlvl03">',
 		74: r'</span>'  #<span class="diagramlvl04">'
 	}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val]
 	else:
 		substitute = '<hmu_unhandled_rtangle value="' + match.group(1) + '" />'
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
@@ -1338,10 +1338,10 @@ def dollarssubstitutes(match):
 	:param match:
 	:return:
 	"""
-	
+
 	val = int(match.group(1))
 	core = match.group(2)
-	
+
 	substitutions = {
 		70: [r'<span class="uncial">', r'</span>'],
 		53: [r'<span class="hebrew">', r'</span>'],
@@ -1367,14 +1367,14 @@ def dollarssubstitutes(match):
 		2: [r'<span class="bolditalic">', r'</span>'],
 		1: [r'<span class="bold">', r'</span>']
 	}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val][0] + core + substitutions[val][1]
 	else:
 		substitute = '<hmu_unhandled_greek_font_shift value="' + match.group(1) + '" />' + core
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 
@@ -1384,10 +1384,10 @@ def andsubstitutes(match):
 	:param match:
 	:return:
 	"""
-	
+
 	val = int(match.group(1))
 	core = match.group(2)
-	
+
 	substitutions = {
 		20: [r'<span class="largerthannormal">',r'</span>'],
 		14: [r'<span class="smallerthannormalsuperscript">',r'</span>'],
@@ -1403,14 +1403,14 @@ def andsubstitutes(match):
 		2: [r'<span class="bolditalic">', r'</span>'],
 		1: [r'<span class="bold">', r'</span>'],
 	}
-	
+
 	if val in substitutions:
 		substitute = substitutions[val][0] + core + substitutions[val][1]
 	else:
 		substitute = '<hmu_unhandled_latin_font_shift value="' + match.group(1) + '" />' + core
 		if warnings == True:
 			print('\t',substitute)
-	
+
 	return substitute
 
 #
@@ -1422,7 +1422,7 @@ def replacelatinbetacode(texttoclean):
 	"""
 	first look for greek inside of a latin text
 	the add in latin accents
-	
+
 	:param texttoclean:
 	:return:
 	"""
@@ -1430,15 +1430,15 @@ def replacelatinbetacode(texttoclean):
 	# a line should turn things off; but what if it does not?
 	# so we do this in two parts: first grab the whole line, then make sure there is not a section with a $ in it
 	# if there is: turn off roman at the $; if there is not turn of roman at line end
-	
+
 	search = re.compile(r'(\$\d{0,2})(.*?)(\s{0,1}█)')
 	texttoclean = re.sub(search, doublecheckgreekwithinlatin, texttoclean)
-	
+
 	search = r'<hmu_greek_in_a_latin_text>.*?</hmu_greek_in_a_latin_text>'
 	texttoclean = re.sub(search, parsegreekinsidelatin, texttoclean)
-	
-	texttoclean = latinadiacriticals(texttoclean)
-	
+
+	texttoclean = latindiacriticals(texttoclean)
+
 	return texttoclean
 
 
@@ -1448,7 +1448,7 @@ def doublecheckgreekwithinlatin(match):
 	:param match:
 	:return:
 	"""
-	
+
 	linetermination = re.compile(r'(\$\d{0,2})(.*?)(\s{0,1}$)')
 	internaltermination = re.compile(r'(\$\d{0,2})(.*?)\&(\d{0,2})')
 	if re.search(internaltermination, match.group(1) + match.group(2)) is not None:
@@ -1458,15 +1458,15 @@ def doublecheckgreekwithinlatin(match):
 		substitution = re.sub(linetermination, r'<hmu_greek_in_a_latin_text>\2</hmu_greek_in_a_latin_text>\3', substitution)
 	else:
 		substitution = r'<hmu_greek_in_a_latin_text>' + match.group(2) + r'</hmu_greek_in_a_latin_text>'
-	
+
 	substitution += match.group(3)
 	# print(match.group(1) + match.group(2),'\n\t',substitution)
-	
+
 	return substitution
 
 
-def latinadiacriticals(texttoclean):
-	
+def latindiacriticals(texttoclean):
+
 	textualmarkuptuples = []
 
 	# accented latin in authors like plautus: only safe after you have taken care of greek
@@ -1519,7 +1519,7 @@ def latinadiacriticals(texttoclean):
 
 	for reg in textualmarkuptuples:
 		texttoclean = re.sub(reg[0], reg[1], texttoclean)
-		
+
 	return texttoclean
 
 
@@ -1529,15 +1529,15 @@ def findromanwithingreek(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
-	
+
 	# &1Catenae &(Novum Testamentum): on but not off
 	# a line should turn things off; but what if it does not?
 	# so we do this in two parts: first grab the whole line, then make sure there is not a section with a $ in it
 	# if there is: turn off roman at the $; if there is not turn of roman at line end
-	
+
 	search = re.compile(r'(&\d{0,2})(.*?)(\s{0,1}█)')
 	texttoclean = re.sub(search, doublecheckromanwithingreek, texttoclean)
-	
+
 	return texttoclean
 
 
@@ -1556,7 +1556,7 @@ def doublecheckromanwithingreek(match):
 		                      substitution)
 	else:
 		substitution = r'<hmu_roman_in_a_greek_text>' + match.group(2) + r'</hmu_roman_in_a_greek_text>'
-	
+
 	substitution += match.group(3)
 	# print(match.group(1) + match.group(2),'\n\t',substitution)
 
@@ -1568,7 +1568,7 @@ def doublecheckromanwithingreek(match):
 	substitution = re.sub(r'<hmu_roman_in_a_greek_text> \[',' [<hmu_roman_in_a_greek_text>',substitution)
 	substitution = re.sub(r']</hmu_roman_in_a_greek_text>', '</hmu_roman_in_a_greek_text>]', substitution)
 
-	substitution = latinadiacriticals(substitution)
+	# substitution = latinadiacriticals(substitution)
 
 	return substitution
 
@@ -1686,7 +1686,7 @@ def modifiedtotallemmatization(parsedtextfile, authorobject):
 			work = int(gotwork.group(1))
 			for l in range(0, 6):
 				levelmapper[l] = 1
-				
+
 		gotsetting = re.search(setter, line)
 		if gotsetting != None:
 			level = int(gotsetting.group(1))
@@ -1698,7 +1698,7 @@ def modifiedtotallemmatization(parsedtextfile, authorobject):
 				setting = str(gotsetting.group(2))
 			else:
 				setting = gotsetting.group(2)
-			
+
 			if authorobject.universalid[0:2] in ['in', 'dp'] and level == 1:
 				# don't let level 1 be set because this is where hipparchia stores the document number
 				# the original data does sets that number in 5 and/or 6 (but does not necessarily agree between 5 & 6!)
@@ -1757,7 +1757,7 @@ def modifiedtotallemmatization(parsedtextfile, authorobject):
 			gotdoc = re.search(doca, line)
 			if gotdoc != None:
 				levelmapper[1] = gotdoc.group(1)
-			
+
 			if levelmapper[3] is not 1:
 				try:
 					# if you already have 10a, don't generate 10aa, 10aaa, 10aaaa, ...
@@ -1767,7 +1767,7 @@ def modifiedtotallemmatization(parsedtextfile, authorobject):
 			# gotdoc = re.search(docb, line)
 			# if gotdoc != None:
 			# 	levelmapper[1] = gotdoc.group(1)
-						
+
 		# db version: list of tuples + the line
 		tups = [('0',str(levelmapper[0])),('1',str(levelmapper[1])),('2',str(levelmapper[2])),('3',str(levelmapper[3])),('4',str(levelmapper[4])), ('5',str(levelmapper[4]))]
 		dbready.append([str(work), tups, line])
@@ -1793,7 +1793,7 @@ def addcdlabels(texttoclean, authornumber):
 
 	# cd blocks end 0xf3 + 0x0
 	# the newline lets you reset levels right?
-	
+
 	search = r'(█ⓕⓔ\s(█⓪\s){1,})'
 	replace = '\n<hmu_end_of_cd_block_re-initialize_key_variables />'
 	texttoclean = re.sub(search, replace, texttoclean)
@@ -1812,7 +1812,7 @@ def addcdlabels(texttoclean, authornumber):
 	search = r'(█ⓔⓕ █⑧① █ⓑ(.) █ⓑ(.) █ⓑ(.) █ⓕⓕ )'
 	replace = r'\n<hmu_cd_assert_work_number value="\2\3\4"/>'
 	texttoclean = re.sub(search, replace, texttoclean)
-	
+
 	# 'secondary level (82)' info stored in a run of bytes whose length varies: add 127 to them and you get an ascii value
 	# compare geasciistring() in idt file reader: '& int('7f',16))'
 	# 0xef 0x82 0xc1 0xf0 0xef 0xec 0xff
@@ -1820,18 +1820,18 @@ def addcdlabels(texttoclean, authornumber):
 	search = r'(█ⓔⓕ\s█⑧②\s((█..\s){1,}?)█ⓕⓕ) '
 	replace = r'<hmu_cd_assert_work_abbreviation value="\2"/>'
 	texttoclean = re.sub(search, replace, texttoclean)
-	
+
 	# 'tertiray level (83)' info stored in a run of bytes whose length varies: add 127 to them and you get an ascii value
 	# 0xef 0x83 0xc1 0xf0 0xf5 0xec 0xff
 	search = r'(█ⓔⓕ\s█⑧③\s((█..\s){1,}?)█ⓕⓕ) '
 	replace = r'<hmu_cd_assert_author_abbrev value="\2"/>'
 	texttoclean = re.sub(search, replace, texttoclean)
-	
+
 	# now reparse
-	
+
 	search = r'<hmu_cd_assert_work_number value="..."/>'
 	texttoclean = re.sub(search, hutohxgrouper, texttoclean)
-	
+
 	search = r'(<hmu_cd_assert_work_abbreviation value=")(.*?)\s("/>)'
 	texttoclean = re.sub(search, converthextoascii, texttoclean)
 
@@ -1844,8 +1844,8 @@ def addcdlabels(texttoclean, authornumber):
 	texttoclean = re.sub(search, citationbuilder, texttoclean)
 
 	return texttoclean
-	
-	
+
+
 def hexrunner(texttoclean):
 	"""
 	First you find the hex runs.
@@ -1888,7 +1888,7 @@ def converthextoascii(hextoasciimatch):
 	del hexvals[0]
 	asciilevel = bitswapchars(hexvals)
 	a = hextoasciimatch.group(1) + asciilevel + hextoasciimatch.group(3)
-	
+
 	return a
 
 
@@ -1898,12 +1898,12 @@ def cleanworkname(betacodeworkname):
 	:param betacodeworkname:
 	:return:
 	"""
-	
+
 	if '*' in betacodeworkname and '$' not in betacodeworkname:
 		re.sub(r'\*',r'$*',betacodeworkname)
-	
+
 	workname = replacelatinbetacode(betacodeworkname)
-	
+
 	percents = re.compile(r'%(\d{1,3})')
 	workname = re.sub(percents, percentsubstitutes, workname)
 	workname = re.sub(r'\[2(.*?)]2', r'⟪\1⟫',workname)

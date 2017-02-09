@@ -1,0 +1,11 @@
+# python
+__pycache__/
+z_debugging/
+debug.py
+
+*.pyc
+config.py
+config.ini
+
+# IDE
+.idea/

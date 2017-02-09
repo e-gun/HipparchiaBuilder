@@ -13,7 +13,7 @@ from multiprocessing import Manager, Process
 
 from builder.builder_classes import dbAuthor, MPCounter
 from builder.dbinteraction.db import setconnection, dbauthorandworkloader, authortablemaker
-from builder.parsers.regex_substitutions import latinadiacriticals
+from builder.parsers.regex_substitutions import latindiacriticals
 from builder.postbuild.postbuilddating import convertdate
 
 """
@@ -549,9 +549,9 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			if len(pr) > 64:
 				pr = pr[0:63]
 
-			pi = latinadiacriticals(pi)
-			pr = latinadiacriticals(pr)
-			dt = latinadiacriticals(dt)
+			pi = latindiacriticals(pi)
+			pr = latindiacriticals(pr)
+			dt = latindiacriticals(dt)
 
 			if db[0:2] in ['in', 'ch']:
 				tr = 'inscription'
