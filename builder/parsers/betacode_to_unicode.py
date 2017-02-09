@@ -9,7 +9,6 @@
 import re
 from builder.parsers.betacodecapitals import capitalletters
 from builder.parsers.betacodelowercase import lowercaseletters
-# from builder.parsers.regex_substitutions import latindiacriticals
 
 def replacegreekbetacode(texttoclean):
 	"""
@@ -55,6 +54,7 @@ def parsegreekinsidelatin(texttoclean):
 def restoreromanwithingreek(texttoclean):
 	search = r'<hmu_roman_in_a_greek_text>(.*?)</hmu_roman_in_a_greek_text>'
 	texttoclean = re.sub(search, parseromaninsidegreek, texttoclean)
+	texttoclean = re.sub(search, ldc, texttoclean)
 
 	return texttoclean
 
@@ -232,3 +232,70 @@ def unpunctuated(matchgroup):
 	return transformed
 
 
+# bleh: circular import if you try to load from regex_substitutions
+# kludge for the moment
+
+def ldc(matchgroup):
+	"""
+
+	a matchgroup clone of latindiacriticals() in regex_substitutions
+	should refactor to consolidate, but the the circular import note above
+
+	:param matchgroup:
+	:return:
+	"""
+	texttoclean = matchgroup.group(0)
+	textualmarkuptuples = []
+
+	# accented latin in authors like plautus: only safe after you have taken care of greek
+	betacodetuples = (
+		(r'a\/', u'\u00e1'),
+		(r'e\/', u'\u00e9'),
+		(r'i\/', u'\u00ed'),
+		(r'o\/', u'\u00f3'),
+		(r'u\/', u'\u00fa'),
+		(r'y\/', u'\u00fd'),
+		(r'A\/', u'\u00c1'),
+		(r'E\/', u'\u00c9'),
+		(r'I\/', u'\u00cd'),
+		(r'O\/', u'\u00d3'),
+		(r'U\/', u'\u00da'),
+		(r'a\+',r'ä'),
+		(r'A\+', r'Ä'),
+		(r'e\+', r'ë'),
+		(r'E\+', r'Ë'),
+		(r'i\+', r'ï'),
+		(r'I\+', r'Ï'),
+		(r'o\+', r'ö'),
+		(r'O\+', r'Ö'),
+		(r'u\+', r'ü'),
+		(r'U\+', r'Ü'),
+		(r'a\=', r'â'),
+		(r'A\=', r'Â'),
+		(r'e\=', r'ê'),
+		(r'E\=', r'Ê'),
+		(r'i\=', r'î'),
+		(r'I\=', r'Î'),
+		(r'o\=', r'ô'),
+		(r'O\=', r'Ô'),
+		(r'u\=', r'û'),
+		(r'U\=', r'Û'),
+		(r'a\\', r'à'),
+		(r'A\\', r'À'),
+		(r'e\\', r'è'),
+		(r'E\\', r'È'),
+		(r'i\\', r'ì'),
+		(r'I\\', r'Ì'),
+		(r'o\\', r'ò'),
+		(r'O\\', r'Ò'),
+		(r'u\\', r'ù'),
+		(r'U\\', r'Ù'),
+	)
+
+	for i in range(0, len(betacodetuples)):
+		textualmarkuptuples.append((betacodetuples[i][0], betacodetuples[i][1]))
+
+	for reg in textualmarkuptuples:
+		texttoclean = re.sub(reg[0], reg[1], texttoclean)
+
+	return texttoclean

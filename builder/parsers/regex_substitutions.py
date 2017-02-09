@@ -1568,7 +1568,8 @@ def doublecheckromanwithingreek(match):
 	substitution = re.sub(r'<hmu_roman_in_a_greek_text> \[',' [<hmu_roman_in_a_greek_text>',substitution)
 	substitution = re.sub(r']</hmu_roman_in_a_greek_text>', '</hmu_roman_in_a_greek_text>]', substitution)
 
-	# substitution = latinadiacriticals(substitution)
+	# the next will ruin the greek betacode:
+	# substitution = latindiacriticals(substitution)
 
 	return substitution
 
