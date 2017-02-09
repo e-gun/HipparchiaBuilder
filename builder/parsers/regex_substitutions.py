@@ -711,7 +711,7 @@ def poundsubstitutes(match):
 		841: u'\u007c\u007c\u007c',
 		842: u'\u00b7',
 		843: r'𐅛',
-		844: u'\205d',
+		844: u'\u205d',
 		845: r'𐅘',
 		846: r'𐄐',
 		847: r'𐅞',
@@ -1559,7 +1559,9 @@ def doublecheckromanwithingreek(match):
 	
 	substitution += match.group(3)
 	# print(match.group(1) + match.group(2),'\n\t',substitution)
-	
+
+	substitution = latinadiacriticals(substitution)
+
 	return substitution
 
 #

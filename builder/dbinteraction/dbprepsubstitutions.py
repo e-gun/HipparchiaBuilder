@@ -170,7 +170,7 @@ def dbstrippedliner(dbunreadyversion):
 	# squarebrackets = re.compile(r'\[.*?\]')
 	straydigits = re.compile(r'\d')
 	# sadly can't nuke :punct: as a class because we need hyphens
-	straypunct = re.compile('[\<\>\{\}⟪⟫⦅⦆\.\?﹖𝕔\!;:,’“”·\[\]\(\)]')
+	straypunct = re.compile('[\<\>\{\}⟪⟫⦅⦆❴❵\.\?﹖𝕔\!;:,’“”·\[\]\(\)]')
 	
 	dbreadyversion = []
 	workingcolumn = 2
