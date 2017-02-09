@@ -1560,6 +1560,14 @@ def doublecheckromanwithingreek(match):
 	substitution += match.group(3)
 	# print(match.group(1) + match.group(2),'\n\t',substitution)
 
+	# it is all to common to see a punctuation issue where one side falls outside the span:
+	#   <hmu_roman_in_a_greek_text> [582/1</hmu_roman_in_a_greek_text>]
+	#   [<hmu_roman_in_a_greek_text>FGrHist. 76 F 74 II 155]</hmu_roman_in_a_greek_text>
+	# patch that up here and now...
+
+	substitution = re.sub(r'<hmu_roman_in_a_greek_text> \[',' [<hmu_roman_in_a_greek_text>',substitution)
+	substitution = re.sub(r']</hmu_roman_in_a_greek_text>', '</hmu_roman_in_a_greek_text>]', substitution)
+
 	substitution = latinadiacriticals(substitution)
 
 	return substitution
