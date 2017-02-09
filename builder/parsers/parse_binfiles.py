@@ -895,7 +895,7 @@ def latinloadcanon(canonfile, cursor):
 		except:
 			c = ''
 		c = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, c)
-		c = parsers.regex_substitutions.latinadiacriticals(c)
+		c = parsers.regex_substitutions.latindiacriticals(c)
 		c = re.sub(r'`', r'', c)
 		try:
 			canoninfo[prefix + author.group(1) + 'w' + work.group(1)] = c

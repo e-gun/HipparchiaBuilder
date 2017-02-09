@@ -1465,64 +1465,6 @@ def doublecheckgreekwithinlatin(match):
 	return substitution
 
 
-def latindiacriticals(texttoclean):
-
-	textualmarkuptuples = []
-
-	# accented latin in authors like plautus: only safe after you have taken care of greek
-	betacodetuples = (
-		(r'a\/', u'\u00e1'),
-		(r'e\/', u'\u00e9'),
-		(r'i\/', u'\u00ed'),
-		(r'o\/', u'\u00f3'),
-		(r'u\/', u'\u00fa'),
-		(r'y\/', u'\u00fd'),
-		(r'A\/', u'\u00c1'),
-		(r'E\/', u'\u00c9'),
-		(r'I\/', u'\u00cd'),
-		(r'O\/', u'\u00d3'),
-		(r'U\/', u'\u00da'),
-		(r'a\+',r'ä'),
-		(r'A\+', r'Ä'),
-		(r'e\+', r'ë'),
-		(r'E\+', r'Ë'),
-		(r'i\+', r'ï'),
-		(r'I\+', r'Ï'),
-		(r'o\+', r'ö'),
-		(r'O\+', r'Ö'),
-		(r'u\+', r'ü'),
-		(r'U\+', r'Ü'),
-		(r'a\=', r'â'),
-		(r'A\=', r'Â'),
-		(r'e\=', r'ê'),
-		(r'E\=', r'Ê'),
-		(r'i\=', r'î'),
-		(r'I\=', r'Î'),
-		(r'o\=', r'ô'),
-		(r'O\=', r'Ô'),
-		(r'u\=', r'û'),
-		(r'U\=', r'Û'),
-		(r'a\\', r'à'),
-		(r'A\\', r'À'),
-		(r'e\\', r'è'),
-		(r'E\\', r'È'),
-		(r'i\\', r'ì'),
-		(r'I\\', r'Ì'),
-		(r'o\\', r'ò'),
-		(r'O\\', r'Ò'),
-		(r'u\\', r'ù'),
-		(r'U\\', r'Ù'),
-	)
-
-	for i in range(0, len(betacodetuples)):
-		textualmarkuptuples.append((betacodetuples[i][0], betacodetuples[i][1]))
-
-	for reg in textualmarkuptuples:
-		texttoclean = re.sub(reg[0], reg[1], texttoclean)
-
-	return texttoclean
-
-
 def findromanwithingreek(texttoclean):
 	"""
 	need to flag this so you can undo the transformation of capital letters into greek characters
@@ -1914,3 +1856,135 @@ def cleanworkname(betacodeworkname):
 	workname = re.sub(r'`', '', workname)
 
 	return workname
+
+
+def latindiacriticals(texttoclean):
+	"""
+
+	find text with latin diacritical marks
+	then send it to the cleaners
+
+	:param texttoclean:
+	:return:
+	"""
+
+	finder = re.compile(r'[aeiouyAEIOU][\+\\=/]')
+
+	texttoclean = re.sub(finder, latinsubstitutes, texttoclean)
+
+
+	return texttoclean
+
+
+def latinsubstitutes(matchgroup):
+
+	val = matchgroup.group(0)
+
+	substitues = {
+		'a/': u'\u00e1',
+		'e/': u'\u00e9',
+		'i/': u'\u00ed',
+		'o/': u'\u00f3',
+		'u/': u'\u00fa',
+		'y/': u'\u00fd',
+		'A/': u'\u00c1',
+		'E/': u'\u00c9',
+		'I/': u'\u00cd',
+		'O/': u'\u00d3',
+		'U/': u'\u00da',
+		'a+': 'ä',
+		'A+': 'Ä',
+		'e+': 'ë',
+		'E+': 'Ë',
+		'i+': 'ï',
+		'I+': 'Ï',
+		'o+': 'ö',
+		'O+': 'Ö',
+		'u+': 'ü',
+		'U+': 'Ü',
+		'a=': 'â',
+		'A=': 'Â',
+		'e=': 'ê',
+		'E=': 'Ê',
+		'i=': 'î',
+		'I=': 'Î',
+		'o=': 'ô',
+		'O=': 'Ô',
+		'u=': 'û',
+		'U=': 'Û',
+		'a\\': 'à',
+		'A\\': 'À',
+		'e\\': 'è',
+		'E\\': 'È',
+		'i\\': 'ì',
+		'I\\': 'Ì',
+		'o\\': 'ò',
+		'O\\': 'Ò',
+		'u\\': 'ù',
+		'U\\': 'Ù',
+	}
+
+	if val in substitues:
+		substitute = substitues[val]
+	else:
+		substitute = ''
+
+	return substitute
+
+## slated for removal
+def oldlatindiacriticals(texttoclean):
+
+	textualmarkuptuples = []
+
+	# accented latin in authors like plautus: only safe after you have taken care of greek
+	betacodetuples = (
+		(r'a\/', u'\u00e1'),
+		(r'e\/', u'\u00e9'),
+		(r'i\/', u'\u00ed'),
+		(r'o\/', u'\u00f3'),
+		(r'u\/', u'\u00fa'),
+		(r'y\/', u'\u00fd'),
+		(r'A\/', u'\u00c1'),
+		(r'E\/', u'\u00c9'),
+		(r'I\/', u'\u00cd'),
+		(r'O\/', u'\u00d3'),
+		(r'U\/', u'\u00da'),
+		(r'a\+',r'ä'),
+		(r'A\+', r'Ä'),
+		(r'e\+', r'ë'),
+		(r'E\+', r'Ë'),
+		(r'i\+', r'ï'),
+		(r'I\+', r'Ï'),
+		(r'o\+', r'ö'),
+		(r'O\+', r'Ö'),
+		(r'u\+', r'ü'),
+		(r'U\+', r'Ü'),
+		(r'a\=', r'â'),
+		(r'A\=', r'Â'),
+		(r'e\=', r'ê'),
+		(r'E\=', r'Ê'),
+		(r'i\=', r'î'),
+		(r'I\=', r'Î'),
+		(r'o\=', r'ô'),
+		(r'O\=', r'Ô'),
+		(r'u\=', r'û'),
+		(r'U\=', r'Û'),
+		(r'a\\', r'à'),
+		(r'A\\', r'À'),
+		(r'e\\', r'è'),
+		(r'E\\', r'È'),
+		(r'i\\', r'ì'),
+		(r'I\\', r'Ì'),
+		(r'o\\', r'ò'),
+		(r'O\\', r'Ò'),
+		(r'u\\', r'ù'),
+		(r'U\\', r'Ù'),
+	)
+
+	for i in range(0, len(betacodetuples)):
+		textualmarkuptuples.append((betacodetuples[i][0], betacodetuples[i][1]))
+
+	for reg in textualmarkuptuples:
+		texttoclean = re.sub(reg[0], reg[1], texttoclean)
+
+	return texttoclean
