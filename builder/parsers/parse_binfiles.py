@@ -586,7 +586,7 @@ def gkcanoncleaner(txt):
 	txt = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, txt)
 	txt = re.sub(r'`', r'', txt)
 	
-	txt = parsers.regex_substitutions.latinadiacriticals(txt)
+	txt = parsers.regex_substitutions.latindiacriticals(txt)
 	txt = txt.split('\n')
 	# txt = txt[:-1]
 
@@ -627,7 +627,7 @@ def worknamecleaner(matchgroup):
 	
 	percents = re.compile(r'\%(\d{1,3})')
 	cleanedname = re.sub(percents,parsers.regex_substitutions.percentsubstitutes,cleanedname)
-	cleanedname = parsers.regex_substitutions.latinadiacriticals(cleanedname)
+	cleanedname = parsers.regex_substitutions.latindiacriticals(cleanedname)
 	cleanedname = re.sub(r'&\d{0,2}(.*?)&\d{0,1}',r'\1',cleanedname)
 	cleanedname = re.sub(r'&',r'',cleanedname)
 	cleanedname = re.sub(r'\$\d{0,1}', r'', cleanedname)

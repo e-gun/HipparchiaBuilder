@@ -163,6 +163,80 @@ def replacelatinmarkup(texttoclean):
 	return texttoclean
 
 
+def latindiacriticals(texttoclean):
+	"""
+
+	find text with latin diacritical marks
+	then send it to the cleaners
+
+	:param texttoclean:
+	:return:
+	"""
+
+	finder = re.compile(r'[aeiouyAEIOU][\+\\=/]')
+
+	texttoclean = re.sub(finder, latinsubstitutes, texttoclean)
+
+
+	return texttoclean
+
+
+def latinsubstitutes(matchgroup):
+
+	val = matchgroup.group(0)
+
+	substitues = {
+		'a/': u'\u00e1',
+		'e/': u'\u00e9',
+		'i/': u'\u00ed',
+		'o/': u'\u00f3',
+		'u/': u'\u00fa',
+		'y/': u'\u00fd',
+		'A/': u'\u00c1',
+		'E/': u'\u00c9',
+		'I/': u'\u00cd',
+		'O/': u'\u00d3',
+		'U/': u'\u00da',
+		'a+': 'ä',
+		'A+': 'Ä',
+		'e+': 'ë',
+		'E+': 'Ë',
+		'i+': 'ï',
+		'I+': 'Ï',
+		'o+': 'ö',
+		'O+': 'Ö',
+		'u+': 'ü',
+		'U+': 'Ü',
+		'a=': 'â',
+		'A=': 'Â',
+		'e=': 'ê',
+		'E=': 'Ê',
+		'i=': 'î',
+		'I=': 'Î',
+		'o=': 'ô',
+		'O=': 'Ô',
+		'u=': 'û',
+		'U=': 'Û',
+		'a\\': 'à',
+		'A\\': 'À',
+		'e\\': 'è',
+		'E\\': 'È',
+		'i\\': 'ì',
+		'I\\': 'Ì',
+		'o\\': 'ò',
+		'O\\': 'Ò',
+		'u\\': 'ù',
+		'U\\': 'Ù',
+	}
+
+	if val in substitues:
+		substitute = substitues[val]
+	else:
+		substitute = ''
+
+	return substitute
+
+
 def lastsecondsubsitutions(texttoclean):
 	"""
 	regex work that for some reason or other needs to be put off until the very last second
@@ -1593,131 +1667,6 @@ def totallemmatization(parsedtextfile, authorobject):
 	return dbready
 
 
-def modifiedtotallemmatization(parsedtextfile, authorobject):
-	"""
-	will use decoded hex commands to build a citation value for every line in the text file
-	can produce a formatted line+citation, but really priming us for the move to the db
-
-	note the potential gotcha: some authors have a first work that is not 001 but instead 002+
-
-	:param parsedtextfile:
-	:return: tuples that levelmap+the line
-	"""
-	levelmapper = {
-		# be careful about re returning '1' and not 1
-		0: 1,
-		1: 1,
-		2: 1,
-		3: 1,
-		4: 1,
-		5: 1
-	}
-	lemmatized = []
-	dbready = []
-
-	work = 1
-
-	setter = re.compile(r'<hmu_set_level_(\d)_to_([A-Za-z0-9]{1,})')
-	adder = re.compile(r'<hmu_increment_level_(\d)_by_1\s')
-	wnv = re.compile(r'<hmu_cd_assert_work_number value="(\d{1,3})')
-	doca = re.compile(r'<hmu_metadata_documentnumber value="(\d{1,3})')
-
-	for line in parsedtextfile:
-
-		gotwork = re.search(wnv, line)
-		if gotwork != None:
-			work = int(gotwork.group(1))
-			for l in range(0, 6):
-				levelmapper[l] = 1
-
-		gotsetting = re.search(setter, line)
-		if gotsetting != None:
-			level = int(gotsetting.group(1))
-			# level5 info seems less reliable than watching the notes at level6...
-			# if authorobject.universalid[0:2] in ['in', 'dp'] and level == 5:
-			# 	level = 1
-			# sometimes something like 't' is returned
-			if type(gotsetting.group(2)) is int:
-				setting = str(gotsetting.group(2))
-			else:
-				setting = gotsetting.group(2)
-
-			if authorobject.universalid[0:2] in ['in', 'dp'] and level == 1:
-				# don't let level 1 be set because this is where hipparchia stores the document number
-				# the original data does sets that number in 5 and/or 6 (but does not necessarily agree between 5 & 6!)
-				# not quite sure what is being set at one, but it is not the document number...
-				pass
-			elif authorobject.universalid[0:2] in ['in', 'dp'] and level == 3:
-				# you can set 3, but don't reset 0
-				# '3' is where things like 'a', 'b', 'c' are marked: pieces of reassembled inscriptions, I think.
-				levelmapper[3] = setting
-				levelmapper[1] = str(levelmapper[1]) + levelmapper[3]
-			else:
-				levelmapper[level] = setting
-				if level > 0:
-					for l in range(0, level):
-						levelmapper[l] = 1
-
-		gotincrement = re.search(adder, line)
-		# if you don't reset the lower counters, then you will get something like 'line 10' when you first initialize a new section
-
-		if gotincrement != None:
-			level = int(gotincrement.group(1))
-
-			if authorobject.universalid[0:2] in ['in', 'dp'] and level == 1:
-				# don't let level 1 be incremented because this is where hipparchia stores the document number
-				# the original data does sets that number in 5 and/or 6 (but does not necessarily agree between 5 & 6!)
-				# not quite sure what is being set at one, but it is not the document number...
-				pass
-			else:
-				setting = 1
-				# awkward avoidance of type problems
-				try:
-					# are we adding integers?
-					levelmapper[level] = str(int(setting) + int(levelmapper[level]))
-				except ValueError:
-					# ok, we are incrementing a letter; hope it's not z+1
-					# can handle multicharacter strings, but how often is it not "a --> b"?
-					lastchar = levelmapper[level][-1]
-					newlastchar = chr(ord(lastchar) + setting)
-					levelmapper[level] = levelmapper[level][:-1] + newlastchar
-				# if you increment lvl 1, you need to reset lvl 0
-				# this is a bit scary because sometimes you get an 0x81 and sometimes you don't
-				if level > 0:
-					for l in range(0, level):
-						levelmapper[l] = 1
-
-		# special treatment for inscriptions and documentary papyri
-		# needs to come last since it rewrites earlier work
-		if authorobject.universalid[0:2] in ['in', 'dp']:
-			# the structure of these works is always the same: 0: line; 1: document_number
-			# the document numbers do not increment by adding 1 to level 1 but by asserting a number at level 6
-			# level 5 also sees some action: but note how that leaves you with blank levels lower than 5.
-			# in fact, the original data tires to claim that there are no lines, just documents (i.e., level 0 = 'document')
-			# it's a bit of a mess
-			#   level 5 is way off on some inscriptions from level 6
-			#   level 1 is storing 'face' information in inscriptions
-			gotdoc = re.search(doca, line)
-			if gotdoc != None:
-				levelmapper[1] = gotdoc.group(1)
-
-			if levelmapper[3] is not 1:
-				try:
-					# if you already have 10a, don't generate 10aa, 10aaa, 10aaaa, ...
-					tail = levelmapper[1][-1]
-				except:
-					levelmapper[1] = str(levelmapper[1]) + levelmapper[3]
-			# gotdoc = re.search(docb, line)
-			# if gotdoc != None:
-			# 	levelmapper[1] = gotdoc.group(1)
-
-		# db version: list of tuples + the line
-		tups = [('0',str(levelmapper[0])),('1',str(levelmapper[1])),('2',str(levelmapper[2])),('3',str(levelmapper[3])),('4',str(levelmapper[4])), ('5',str(levelmapper[4]))]
-		dbready.append([str(work), tups, line])
-
-	return dbready
-
-
 def addcdlabels(texttoclean, authornumber):
 	"""
 	not totally necessary and a potential source of problems
@@ -1858,133 +1807,3 @@ def cleanworkname(betacodeworkname):
 	return workname
 
 
-def latindiacriticals(texttoclean):
-	"""
-
-	find text with latin diacritical marks
-	then send it to the cleaners
-
-	:param texttoclean:
-	:return:
-	"""
-
-	finder = re.compile(r'[aeiouyAEIOU][\+\\=/]')
-
-	texttoclean = re.sub(finder, latinsubstitutes, texttoclean)
-
-
-	return texttoclean
-
-
-def latinsubstitutes(matchgroup):
-
-	val = matchgroup.group(0)
-
-	substitues = {
-		'a/': u'\u00e1',
-		'e/': u'\u00e9',
-		'i/': u'\u00ed',
-		'o/': u'\u00f3',
-		'u/': u'\u00fa',
-		'y/': u'\u00fd',
-		'A/': u'\u00c1',
-		'E/': u'\u00c9',
-		'I/': u'\u00cd',
-		'O/': u'\u00d3',
-		'U/': u'\u00da',
-		'a+': 'ä',
-		'A+': 'Ä',
-		'e+': 'ë',
-		'E+': 'Ë',
-		'i+': 'ï',
-		'I+': 'Ï',
-		'o+': 'ö',
-		'O+': 'Ö',
-		'u+': 'ü',
-		'U+': 'Ü',
-		'a=': 'â',
-		'A=': 'Â',
-		'e=': 'ê',
-		'E=': 'Ê',
-		'i=': 'î',
-		'I=': 'Î',
-		'o=': 'ô',
-		'O=': 'Ô',
-		'u=': 'û',
-		'U=': 'Û',
-		'a\\': 'à',
-		'A\\': 'À',
-		'e\\': 'è',
-		'E\\': 'È',
-		'i\\': 'ì',
-		'I\\': 'Ì',
-		'o\\': 'ò',
-		'O\\': 'Ò',
-		'u\\': 'ù',
-		'U\\': 'Ù',
-	}
-
-	if val in substitues:
-		substitute = substitues[val]
-	else:
-		substitute = ''
-
-	return substitute
-
-## slated for removal
-def oldlatindiacriticals(texttoclean):
-
-	textualmarkuptuples = []
-
-	# accented latin in authors like plautus: only safe after you have taken care of greek
-	betacodetuples = (
-		(r'a\/', u'\u00e1'),
-		(r'e\/', u'\u00e9'),
-		(r'i\/', u'\u00ed'),
-		(r'o\/', u'\u00f3'),
-		(r'u\/', u'\u00fa'),
-		(r'y\/', u'\u00fd'),
-		(r'A\/', u'\u00c1'),
-		(r'E\/', u'\u00c9'),
-		(r'I\/', u'\u00cd'),
-		(r'O\/', u'\u00d3'),
-		(r'U\/', u'\u00da'),
-		(r'a\+',r'ä'),
-		(r'A\+', r'Ä'),
-		(r'e\+', r'ë'),
-		(r'E\+', r'Ë'),
-		(r'i\+', r'ï'),
-		(r'I\+', r'Ï'),
-		(r'o\+', r'ö'),
-		(r'O\+', r'Ö'),
-		(r'u\+', r'ü'),
-		(r'U\+', r'Ü'),
-		(r'a\=', r'â'),
-		(r'A\=', r'Â'),
-		(r'e\=', r'ê'),
-		(r'E\=', r'Ê'),
-		(r'i\=', r'î'),
-		(r'I\=', r'Î'),
-		(r'o\=', r'ô'),
-		(r'O\=', r'Ô'),
-		(r'u\=', r'û'),
-		(r'U\=', r'Û'),
-		(r'a\\', r'à'),
-		(r'A\\', r'À'),
-		(r'e\\', r'è'),
-		(r'E\\', r'È'),
-		(r'i\\', r'ì'),
-		(r'I\\', r'Ì'),
-		(r'o\\', r'ò'),
-		(r'O\\', r'Ò'),
-		(r'u\\', r'ù'),
-		(r'U\\', r'Ù'),
-	)
-
-	for i in range(0, len(betacodetuples)):
-		textualmarkuptuples.append((betacodetuples[i][0], betacodetuples[i][1]))
-
-	for reg in textualmarkuptuples:
-		texttoclean = re.sub(reg[0], reg[1], texttoclean)
-
-	return texttoclean
