@@ -17,6 +17,13 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 	"""
 	read and IDT file's contents and extract author and work info for it
 	this is done via a byte-by-byte walk
+
+	this is messy and there are some holes in the logic, but not anywhere that matters?
+	specifically, we shifted away from relying on the IDT data all that much
+
+	note, for example the calls to idthexparser() which never get made because, if they did,
+	you would soon find out that that function is broken...
+
 	:param idtfiledatastream:
 	:param language
 	:return: authorobject
@@ -114,9 +121,10 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 					# coded but inactive in the perl
 					print("I made it to level 2: sub-works. Will need some more coding.")
 			else:
+				# not clear that we care at all about this / it's consequences
+				# work names that get 'shortened' by one bye because you turn E/ into 'é' seem to kick this up
 				print(authornumber,authorname,'\n\twarning: I see a new author or a new work but it is not followed after 5 bytes by EF. bytecount is: ',
 				      bytecount)
-				# but getting into blockcode cleanly is not interesting to us?
 				pass
 		elif (idtfiledatastream[bytecount] == 3):
 			# starting blocks for top-level subsections

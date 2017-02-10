@@ -97,7 +97,7 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 
 				tups = line[1]
 
-				if authorobject.universalid[0:2] in ['ZZ', 'XX', 'YY', 'in', 'dp']:
+				if authorobject.universalid[0:2] in ['ZZ', 'XX', 'YY', 'in', 'dp', 'ch']:
 					# level 5 contains useful information for the inscriptions: don't nuke it
 					# level00 = line; level01 = face; [gap in levels]; level05 = documentID
 					# all of this gets taken care of in secondpassdbrewrite.py
