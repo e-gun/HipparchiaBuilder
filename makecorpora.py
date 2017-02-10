@@ -14,6 +14,7 @@ from builder import corpus_builder
 from builder.dbinteraction.build_lexica import formatgklexicon, formatlatlexicon, grammarloader, analysisloader
 from builder.dbinteraction.db import setconnection
 from builder.dbinteraction.versioning import timestampthebuild
+from builder.postbuild.databasewordcounts import wordcounter
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -25,7 +26,7 @@ buildpapyri = config['corporatobuild']['buildpapyri']
 buildchristians = config['corporatobuild']['buildchristians']
 buildlex = config['corporatobuild']['buildlex']
 buildgram = config['corporatobuild']['buildgram']
-
+buildcounts = config['corporatobuild']['buildwordcounts']
 
 dbconnection = setconnection(config)
 cursor = dbconnection.cursor()
@@ -132,6 +133,11 @@ if buildgram == 'y':
 	analysisloader('latin')
 	timestampthebuild('lm', dbconnection, cursor)
 	dbconnection.commit()
+
+if buildcounts == 'y':
+	print('building wordcounts across all available dbs: this will take a while')
+	# first draft speed: 2061919 distinct words found; Build took 58.17 minutes
+	wordcounter()
 
 stop = time.time()
 took = round((stop-start)/60, 2)
