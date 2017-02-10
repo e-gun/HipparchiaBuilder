@@ -177,7 +177,7 @@ def compilenewworks(newauthors, wkmapper):
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	remapper = {}
+	remapper = { }
 	for key in wkmapper:
 		remapper[wkmapper[key]] = key
 
@@ -322,7 +322,9 @@ def findnewtitles(newworktuples):
 	for wk in newworkdict.keys():
 		# oldwkdb = newworkdict[wk][0]
 		newauid = wk[0:6]
-		thetitle = newauthornames[newauid] + ' - ' + newworkdict[wk][1]
+		# prolix titles are not helpful?
+		# thetitle = newauthornames[newauid] + ' - ' + newworkdict[wk][1]
+		thetitle = newworkdict[wk][1]
 		workandtitletuplelist.append((wk,thetitle))
 
 	return workandtitletuplelist

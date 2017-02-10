@@ -45,9 +45,7 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 	cursor.execute(query, data)
 	results = cursor.fetchall()
 
-	uids = []
-	for r in results:
-		uids.append(r[0])
+	uids = [r[0] for r in results]
 
 	boundaries = boundaryfinder(uids)
 	insertboundaries(boundaries)
@@ -180,9 +178,7 @@ def findwordcounts(cursor, dbconnection):
 	results = cursor.fetchall()
 	dbconnection.commit()
 
-	uids = []
-	for r in results:
-		uids.append(r[0])
+	uids = [r[0] for r in results]
 
 	counts = calculatewordcounts(uids)
 	insertcounts(counts)
