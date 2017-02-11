@@ -30,11 +30,12 @@ def wordcounter():
 
 	dbs = [r[0] for r in results]
 
-	# could probably speed this up by running several dbs in parallel and then merging the dicts
-	# [faster than a single managed dict?]
+	# at the moment this is slow and single-threaded
+	# could speed this up by running several dbs in parallel and then merging the dicts?
+	# [faster than a single managed dict of dicts, which ought to get pretty hairy]
 	concordance = multidbconcordance(dbs, cursor)
 
-	letters= 'abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+	letters= '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
 	for l in letters:
 		createwordcounttable(wordcounttable+'_'+l)
 
@@ -44,6 +45,9 @@ def wordcounter():
 		wordkeys = sorted(wordkeys)
 		for word in wordkeys:
 			ciw = concordance[initialletter][word]
+			lettertable = stripaccents(initialletter)
+			if lettertable not in letters:
+				lettertable = '0'
 			count += 1
 			for db in ['gr', 'lt', 'in', 'dp', 'ch']:
 				try:
@@ -51,7 +55,7 @@ def wordcounter():
 				except:
 					ciw[db] = 0
 			if word != '':
-				q = 'INSERT INTO '+wordcounttable+'_'+initialletter+' (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) ' \
+				q = 'INSERT INTO '+wordcounttable+'_'+lettertable+' (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) ' \
 						' VALUES (%s, %s, %s, %s, %s, %s, %s)'
 				d = (word, ciw['total'], ciw['gr'], ciw['lt'], ciw['dp'], ciw['in'], ciw['ch'])
 				try:
@@ -77,11 +81,11 @@ def multidbconcordance(dblist, cursor):
 	"""
 
 	concordance = {}
-	letters= 'abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
-	for l in letters:
-		concordance[l] = {}
+	# letters= 'abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+	# for l in letters:
+	# 	concordance[l] = {}
 
-	# this is significantly slower than a unified dict: stripaccents(w[0]) too costly?
+	# this is significantly slower than a unified dict: stripaccents(w[0]) too costly? [Build took 147.91 minutes vs c. 55min]
 	# nevertheless the data that hits HipparchiaServer in a version that makes for much speedier searching
 
 	print(len(dblist),'tables to check')
@@ -97,23 +101,25 @@ def multidbconcordance(dblist, cursor):
 			prefix = line.universalid[0:2]
 			for w in words:
 				try:
-					initialletter = stripaccents(w[0])
+					# initialletter = stripaccents(w[0])
+					initialletter = w[0]
 				except:
 					# IndexError: string index out of range
 					pass
-				if initialletter in letters:
-					try:
-						concordance[initialletter][w]['total'] += 1
-					except:
-						concordance[initialletter][w] = {}
-						concordance[initialletter][w]['total'] = 1
-					try:
-						concordance[initialletter][w][prefix] += 1
-					except:
-						concordance[initialletter][w][prefix] = 1
-				else:
-					# KeyError: '◦'
-					pass
+				try:
+					checkexistence = concordance[initialletter]
+				except:
+					concordance[initialletter] = {}
+				try:
+					concordance[initialletter][w]['total'] += 1
+				except:
+					concordance[initialletter][w] = {}
+					concordance[initialletter][w]['total'] = 1
+				try:
+					concordance[initialletter][w][prefix] += 1
+				except:
+					concordance[initialletter][w][prefix] = 1
+
 		if count % 250 == 0:
 			print('\t',count,'tables checked.')
 
