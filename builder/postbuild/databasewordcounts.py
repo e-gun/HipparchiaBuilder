@@ -11,6 +11,7 @@ import configparser
 from string import punctuation
 from builder.builder_classes import dbWorkLine
 from builder.dbinteraction.db import setconnection
+from builder.parsers.betacode_to_unicode import stripaccents
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -33,31 +34,37 @@ def wordcounter():
 	# [faster than a single managed dict?]
 	concordance = multidbconcordance(dbs, cursor)
 
-	createwordcounttable(wordcounttable)
+	letters= 'abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+	for l in letters:
+		createwordcounttable(wordcounttable+'_'+l)
 
 	count = 0
-	print(str(len(concordance)),'distinct words found')
-	for word in concordance:
-		count += 1
-		for db in ['gr', 'lt', 'in', 'dp', 'ch']:
-			try:
-				testforexistence = concordance[word][db]
-			except:
-				concordance[word][db] = 0
-		q = 'INSERT INTO '+wordcounttable+' (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) ' \
-				' VALUES (%s, %s, %s, %s, %s, %s, %s)'
-		d = (word, concordance[word]['total'], concordance[word]['gr'], concordance[word]['lt'],
-		     concordance[word]['dp'], concordance[word]['in'], concordance[word]['ch'])
+	for initialletter in concordance:
+		wordkeys = concordance[initialletter].keys()
+		wordkeys = sorted(wordkeys)
+		for word in wordkeys:
+			ciw = concordance[initialletter][word]
+			count += 1
+			for db in ['gr', 'lt', 'in', 'dp', 'ch']:
+				try:
+					testforexistence = ciw[db]
+				except:
+					ciw[db] = 0
+			if word != '':
+				q = 'INSERT INTO '+wordcounttable+'_'+initialletter+' (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) ' \
+						' VALUES (%s, %s, %s, %s, %s, %s, %s)'
+				d = (word, ciw['total'], ciw['gr'], ciw['lt'], ciw['dp'], ciw['in'], ciw['ch'])
+				try:
+					cursor.execute(q,d)
+				except:
+					print('failed to insert',word)
 
-		try:
-			cursor.execute(q,d)
-		except:
-			print('failed to insert',word)
+			if count % 2500 == 0:
+				dbc.commit()
+			if count % 50000 == 0:
+				print('\t',str(count),'words inserted into the wordcount tables')
 
-		if count % 2500 == 0:
-			dbc.commit()
-		if count % 50000 == 0:
-			print('\t',str(count),'words inserted into the wordcount table')
+	dbc.commit()
 
 	return
 
@@ -70,6 +77,13 @@ def multidbconcordance(dblist, cursor):
 	"""
 
 	concordance = {}
+	letters= 'abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+	for l in letters:
+		concordance[l] = {}
+
+	# this is significantly slower than a unified dict: stripaccents(w[0]) too costly?
+	# nevertheless the data that hits HipparchiaServer in a version that makes for much speedier searching
+
 	print(len(dblist),'tables to check')
 	count = 0
 	for db in dblist:
@@ -83,16 +97,25 @@ def multidbconcordance(dblist, cursor):
 			prefix = line.universalid[0:2]
 			for w in words:
 				try:
-					concordance[w]['total'] += 1
+					initialletter = stripaccents(w[0])
 				except:
-					concordance[w] = {}
-					concordance[w]['total'] = 1
-				try:
-					concordance[w][prefix] += 1
-				except:
-					concordance[w][prefix] = 1
+					# IndexError: string index out of range
+					pass
+				if initialletter in letters:
+					try:
+						concordance[initialletter][w]['total'] += 1
+					except:
+						concordance[initialletter][w] = {}
+						concordance[initialletter][w]['total'] = 1
+					try:
+						concordance[initialletter][w][prefix] += 1
+					except:
+						concordance[initialletter][w][prefix] = 1
+				else:
+					# KeyError: '◦'
+					pass
 		if count % 250 == 0:
-			print('\t',count,'tables checked. Currently aware of',len(concordance),'distinct words (and parts of words, symbols, etc.)')
+			print('\t',count,'tables checked.')
 
 	return concordance
 
@@ -143,6 +166,11 @@ def createwordcounttable(tablename):
 
 	query = 'GRANT SELECT ON TABLE ' + tablename + ' TO hippa_rd;'
 	cursor.execute(query)
+
+	tableletter = tablename[-2:]
+
+	q = 'CREATE UNIQUE INDEX wcindex'+tableletter+' ON '+tablename+' (entry_name)'
+	cursor.execute(q)
 
 	dbc.commit()
 

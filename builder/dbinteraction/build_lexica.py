@@ -197,6 +197,16 @@ def analysisloader(language):
 		if bundlecount*chunksize < len(forms):
 			# this check prevents saying '950000 forms inserted' at the end when there are only '911871 items to load'
 			print('\t',str(bundlecount*chunksize),'forms inserted')
+
+	# we will be doing some searches inside of possible_dictionary_forms: need the right kind of index for it
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	q = 'CREATE INDEX ' + language + '_analysis_trgm_idx ON ' + language + '_morphology USING GIN ( possible_dictionary_forms gin_trgm_ops)'
+	cursor.execute(q)
+
+	dbc.commit()
+
 	return
 
 

@@ -368,8 +368,8 @@ def mpindexbuilder(universalids, commitcount):
 					print('failed to drop index for', universalid)
 					pass
 
-				query = 'CREATE INDEX ' + universalid + column[0] + '_trgm_idx ON ' + universalid + ' USING GIN (' + column[
-					1] + ' gin_trgm_ops)'
+				query = 'CREATE INDEX ' + universalid + column[0] + '_trgm_idx ON ' + universalid + ' USING GIN (' \
+				        + column[1] + ' gin_trgm_ops)'
 				try:
 					curs.execute(query)
 				except:
