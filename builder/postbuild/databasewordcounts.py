@@ -35,6 +35,9 @@ def wordcounter():
 	dictofdblists = {dset:[db for db in dbs if db[0:2] == dset] for dset in datasets}
 	listofworklists = [dictofdblists[key] for key in dictofdblists]
 
+	# test on a subset
+	# listofworklists = [dictofdblists[key] for key in ['lt']]
+
 	# parallelize by sending each db to its own worker: 291 ch tables to check; 463 in tables to check; 1823 gr tables to check; 362 lt tables to check; 516 dp tables to check
 	# 'gr' is much bigger than the others, though let's split that one up:
 	chunksize = 250
@@ -74,23 +77,28 @@ def wordcounter():
 				masterconcorcdance[word][db] = 0
 		masterconcorcdance[word]['total'] = sum([masterconcorcdance[word][x] for x in masterconcorcdance[word]])
 
-	letters= '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
-	for l in letters:
-		createwordcounttable(wordcounttable+'_'+l)
 
-	wordkeys = list(masterconcorcdance.keys())
-	wordkeys = sorted(wordkeys)
-	print(len(wordkeys),'unique words to catalog')
+	testing = False
+	if testing == False:
+		# then it is safe to reset the database...
 
-	chunksize = 100000
-	chunkedkeys = [wordkeys[i:i + chunksize] for i in range(0, len(wordkeys), chunksize)]
-	argmap = [(c, masterconcorcdance, wordcounttable) for c in chunkedkeys]
+		letters= '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+		for l in letters:
+			createwordcounttable(wordcounttable+'_'+l)
 
-	# lots of swapping if you go high
-	notsobigpool = int(config['io']['workers'])
-	with Pool(processes=int(notsobigpool)) as pool:
-		# starmap: Like map() except that the elements of the iterable are expected to be iterables that are unpacked as arguments.
-		pool.starmap(dbchunkloader, argmap)
+		wordkeys = list(masterconcorcdance.keys())
+		wordkeys = sorted(wordkeys)
+		print(len(wordkeys),'unique words to catalog')
+
+		chunksize = 100000
+		chunkedkeys = [wordkeys[i:i + chunksize] for i in range(0, len(wordkeys), chunksize)]
+		argmap = [(c, masterconcorcdance, wordcounttable) for c in chunkedkeys]
+
+		# lots of swapping if you go high
+		notsobigpool = int(config['io']['workers'])
+		with Pool(processes=int(notsobigpool)) as pool:
+			# starmap: Like map() except that the elements of the iterable are expected to be iterables that are unpacked as arguments.
+			pool.starmap(dbchunkloader, argmap)
 
 	return
 
@@ -142,6 +150,9 @@ def concordancechunk(dblist):
 			words[:] = [x.lower() for x in words]
 			prefix = line.universalid[0:2]
 			for w in words:
+				# uncomment to watch individual words enter the dict
+				# if w == 'docilem':
+				# 	print(line.universalid,line.unformattedline())
 				try:
 					concordance[w][prefix] += 1
 				except:
