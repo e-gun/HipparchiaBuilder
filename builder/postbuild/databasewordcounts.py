@@ -40,7 +40,7 @@ def wordcounter():
 
 	# parallelize by sending each db to its own worker: 291 ch tables to check; 463 in tables to check; 1823 gr tables to check; 362 lt tables to check; 516 dp tables to check
 	# 'gr' is much bigger than the others, though let's split that one up:
-	chunksize = 250
+	chunksize = 200
 	chunkedlists = []
 
 	for l in listofworklists:
@@ -76,7 +76,6 @@ def wordcounter():
 			if db not in masterconcorcdance[word]:
 				masterconcorcdance[word][db] = 0
 		masterconcorcdance[word]['total'] = sum([masterconcorcdance[word][x] for x in masterconcorcdance[word]])
-
 
 	testing = False
 	if testing == False:
@@ -153,6 +152,9 @@ def concordancechunk(dblist):
 				# uncomment to watch individual words enter the dict
 				# if w == 'docilem':
 				# 	print(line.universalid,line.unformattedline())
+				if 'v' in w:
+					# 'vivere' --> 'uiuere'
+					w = re.sub('v','u',w)
 				try:
 					concordance[w][prefix] += 1
 				except:
@@ -180,6 +182,8 @@ def dbchunkloader(chunkedkeys, masterconcorcdance, wordcounttable):
 		skip = False
 		try:
 			lettertable = stripaccents(key[0])
+			# fine, but this just put any 'v' words inside of 'u' where they can never be found
+			# so v issue has to be off the table by now
 		except:
 			# IndexError: string index out of range
 			lettertable = '0'
