@@ -104,7 +104,10 @@ def dictmerger(masterdict, targetdict, label):
 
 	for item in targetdict:
 		if item in masterdict:
-			masterdict[item][label] = targetdict[item][label]
+			try:
+				masterdict[item][label] += targetdict[item][label]
+			except:
+				masterdict[item][label] = targetdict[item][label]
 		else:
 			masterdict[item] = {}
 			masterdict[item][label] = targetdict[item][label]
