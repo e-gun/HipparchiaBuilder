@@ -86,8 +86,9 @@ def wordcounter():
 	chunkedkeys = [wordkeys[i:i + chunksize] for i in range(0, len(wordkeys), chunksize)]
 	argmap = [(c, masterconcorcdance, wordcounttable) for c in chunkedkeys]
 
-	bigpool = int(config['io']['workers']) + (int(config['io']['workers']) / 2)
-	with Pool(processes=int(bigpool)) as pool:
+	# lots of swapping if you go high
+	notsobigpool = int(config['io']['workers'])
+	with Pool(processes=int(notsobigpool)) as pool:
 		# starmap: Like map() except that the elements of the iterable are expected to be iterables that are unpacked as arguments.
 		pool.starmap(dbchunkloader, argmap)
 

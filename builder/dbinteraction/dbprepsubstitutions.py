@@ -170,10 +170,9 @@ def dbstrippedliner(dbunreadyversion):
 	# squarebrackets = re.compile(r'\[.*?\]')
 	straydigits = re.compile(r'\d')
 	# sadly can't nuke :punct: as a class because we need hyphens
-	straypunct = re.compile('[\<\>\{\}⎜͙✳※¶§｟｠《⟪⟫⦅⦆❴❵\.\?﹖→◦𐄂𝕔☩\!;:,͵ʹ’“”·\[\]\(\)]')
+	straypunct = re.compile('[\<\>\{\}⎜͙ˈͻ✳※¶§⸨⸩｟｠《⟪⟫⦅⦆❴❵\.\?﹖→◦⊚𐄂𝕔☩\!;:,͵ʹ’“”·∣\[\]\(\)]')
 	dbreadyversion = []
 	workingcolumn = 2
-
 	# tempting to strip delenda here, but that presupposes you caught all the number-brackets before
 	# '[delenda]' vs '[2 formatted_text...'
 
