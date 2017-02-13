@@ -135,10 +135,11 @@ if buildgram == 'y':
 	dbconnection.commit()
 
 if buildcounts == 'y':
-	print('building wordcounts across all available dbs: this will take about as long as all of the other builds combined')
+	print('building wordcounts by examining every line of every text in all available dbs: this might take a minute or two...')
 	# first draft speed: 2061919 distinct words found; Build took 58.17 minutes
 	# second draft 147m
 	# third draft: Build took 68.77 minutes
+	# mp: Build took 23.17 minutes
 	wordcounter()
 
 stop = time.time()

@@ -8,6 +8,8 @@
 """
 import re
 import configparser
+import asyncio
+from multiprocessing import Pool
 from string import punctuation
 from builder.builder_classes import dbWorkLine
 from builder.dbinteraction.db import setconnection
@@ -18,7 +20,6 @@ config.read('config.ini')
 
 
 def wordcounter():
-
 	wordcounttable = 'wordcounts'
 
 	dbc = setconnection(config)
@@ -30,69 +31,106 @@ def wordcounter():
 
 	dbs = [r[0] for r in results]
 
-	# at the moment this is slow and single-threaded
-	# could speed this up by running several dbs in parallel and then merging the dicts?
-	# [faster than a single managed dict of dicts, which ought to get pretty hairy]
-	concordance = multidbconcordance(dbs, cursor)
+	datasets = set([db[0:2] for db in dbs])
+	dictofdblists = {dset:[db for db in dbs if db[0:2] == dset] for dset in datasets}
+	listofworklists = [dictofdblists[key] for key in dictofdblists]
+
+	# parallelize by sending each db to its own worker: 291 ch tables to check; 463 in tables to check; 1823 gr tables to check; 362 lt tables to check; 516 dp tables to check
+	# 'gr' is much bigger than the others, though let's split that one up:
+	chunksize = 250
+	chunkedlists = []
+
+	for l in listofworklists:
+		chunks = [l[i:i + chunksize] for i in range(0, len(l), chunksize)]
+		for c in chunks:
+			chunkedlists.append(c)
+
+	print('breaking up the lists and parallelizing:', len(chunkedlists),'chunks to analyze')
+	# safe to almost hit number of cores here since we are not doing both db and regex simultaneously in each thread
+	# here's hoping that the workers number was not over-ambitious to begin with
+
+	# trim for testing
+	# chunkedlists = chunkedlists[0:3]
+
+	bigpool = int(config['io']['workers'])+(int(config['io']['workers'])/2)
+	with Pool(processes=int(bigpool)) as pool:
+		listofconcordancedicts = pool.map(concordancechunk, chunkedlists)
+
+	# merge the results
+	print('merging the partial results')
+	masterconcorcdance = listofconcordancedicts.pop()
+	for cd in listofconcordancedicts:
+		# find the 'gr' in something like {'τότοιν': {'gr': 1}}
+		tdk = list(cd.keys())
+		tdl = list(cd[tdk[0]].keys())
+		label = tdl[0]
+		masterconcorcdance = dictmerger(masterconcorcdance, cd, label)
+
+	# add the zeros and do the sums
+	print('summing the finds')
+	for word in masterconcorcdance:
+		for db in ['gr', 'lt', 'in', 'dp', 'ch']:
+			if db not in masterconcorcdance[word]:
+				masterconcorcdance[word][db] = 0
+		masterconcorcdance[word]['total'] = sum([masterconcorcdance[word][x] for x in masterconcorcdance[word]])
 
 	letters= '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
 	for l in letters:
 		createwordcounttable(wordcounttable+'_'+l)
 
-	count = 0
-	for initialletter in concordance:
-		wordkeys = concordance[initialletter].keys()
-		wordkeys = sorted(wordkeys)
-		for word in wordkeys:
-			ciw = concordance[initialletter][word]
-			lettertable = stripaccents(initialletter)
-			if lettertable not in letters:
-				lettertable = '0'
-			count += 1
-			for db in ['gr', 'lt', 'in', 'dp', 'ch']:
-				try:
-					testforexistence = ciw[db]
-				except:
-					ciw[db] = 0
-			if word != '':
-				q = 'INSERT INTO '+wordcounttable+'_'+lettertable+' (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) ' \
-						' VALUES (%s, %s, %s, %s, %s, %s, %s)'
-				d = (word, ciw['total'], ciw['gr'], ciw['lt'], ciw['dp'], ciw['in'], ciw['ch'])
-				try:
-					cursor.execute(q,d)
-				except:
-					print('failed to insert',word)
+	wordkeys = list(masterconcorcdance.keys())
+	wordkeys = sorted(wordkeys)
+	print(len(wordkeys),'unique words to catalog')
 
-			if count % 2500 == 0:
-				dbc.commit()
-			if count % 50000 == 0:
-				print('\t',str(count),'words inserted into the wordcount tables')
+	chunksize = 100000
+	chunkedkeys = [wordkeys[i:i + chunksize] for i in range(0, len(wordkeys), chunksize)]
+	argmap = [(c, masterconcorcdance, wordcounttable) for c in chunkedkeys]
 
-	dbc.commit()
+	bigpool = int(config['io']['workers']) + (int(config['io']['workers']) / 2)
+	with Pool(processes=int(bigpool)) as pool:
+		# starmap: Like map() except that the elements of the iterable are expected to be iterables that are unpacked as arguments.
+		pool.starmap(dbchunkloader, argmap)
 
 	return
 
 
-def multidbconcordance(dblist, cursor):
+def dictmerger(masterdict, targetdict, label):
+	"""
+
+	:param masterdict:
+	:param targetdict:
+	:return:
+	"""
+
+	for item in targetdict:
+		if item in masterdict:
+			masterdict[item][label] = targetdict[item][label]
+		else:
+			masterdict[item] = {}
+			masterdict[item][label] = targetdict[item][label]
+
+	return masterdict
+
+
+def concordancechunk(dblist):
 	"""
 
 	:param dblist:
 	:return:
 	"""
 
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	prefix = dblist[0][0:2]
+	print('\treceived a chunk of',len(dblist), prefix, 'tables to check')
+
 	concordance = {}
-	# letters= 'abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
-	# for l in letters:
-	# 	concordance[l] = {}
-
-	# this is significantly slower than a unified dict: stripaccents(w[0]) too costly? [Build took 147.91 minutes vs c. 55min]
-	# nevertheless the data that hits HipparchiaServer in a version that makes for much speedier searching
-
-	print(len(dblist),'tables to check')
 	count = 0
 	for db in dblist:
 		count += 1
 		lineobjects = graballlinesasobjects(db, cursor)
+		dbc.commit()
 		for line in lineobjects:
 			words = line.wordlist('polytonic')
 			words = [cleanwords(w) for w in words]
@@ -101,29 +139,55 @@ def multidbconcordance(dblist, cursor):
 			prefix = line.universalid[0:2]
 			for w in words:
 				try:
-					# initialletter = stripaccents(w[0])
-					initialletter = w[0]
+					concordance[w][prefix] += 1
 				except:
-					# IndexError: string index out of range
-					pass
-				try:
-					checkexistence = concordance[initialletter]
-				except:
-					concordance[initialletter] = {}
-				try:
-					concordance[initialletter][w]['total'] += 1
-				except:
-					concordance[initialletter][w] = {}
-					concordance[initialletter][w]['total'] = 1
-				try:
-					concordance[initialletter][w][prefix] += 1
-				except:
-					concordance[initialletter][w][prefix] = 1
-
-		if count % 250 == 0:
-			print('\t',count,'tables checked.')
+					concordance[w] = {}
+					concordance[w][prefix] = 1
 
 	return concordance
+
+
+def dbchunkloader(chunkedkeys, masterconcorcdance, wordcounttable):
+	"""
+
+	:param resultbundle:
+	:return:
+	"""
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+
+	count = 0
+	for key in chunkedkeys:
+		count += 1
+		cw = masterconcorcdance[key]
+		skip = False
+		try:
+			lettertable = stripaccents(key[0])
+		except:
+			# IndexError: string index out of range
+			lettertable = '0'
+			skip = True
+
+		if lettertable not in letters:
+			lettertable = '0'
+
+		if skip is not True:
+			q = 'INSERT INTO ' + wordcounttable + '_' + lettertable + \
+			    ' (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) VALUES (%s, %s, %s, %s, %s, %s, %s)'
+			d = (key, cw['total'], cw['gr'], cw['lt'], cw['dp'], cw['in'], cw['ch'])
+			try:
+				cursor.execute(q, d)
+			except:
+				print('failed to insert', key)
+
+		if count % 2500 == 0:
+			dbc.commit()
+
+	print('\t', str(len(chunkedkeys)), 'words inserted into the wordcount tables')
+	dbc.commit()
+	return
 
 
 def graballlinesasobjects(db,cursor):
@@ -239,4 +303,3 @@ def makeablankline(work, fakelinenumber):
 	lineobject = dbWorkLine(work, fakelinenumber, '-1', '-1', '-1', '-1', '-1', '-1', '', '', '', '', '')
 
 	return lineobject
-
