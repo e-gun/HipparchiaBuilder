@@ -58,7 +58,7 @@ def wordcounter():
 
 	bigpool = int(config['io']['workers'])+(int(config['io']['workers'])/2)
 	with Pool(processes=int(bigpool)) as pool:
-		listofconcordancedicts = pool.map(concordancechunk, chunkedlists)
+		listofconcordancedicts = pool.map(concordancechunk, enumerate(chunkedlists))
 
 	# merge the results
 	print('merging the partial results')
@@ -92,9 +92,10 @@ def wordcounter():
 
 		chunksize = 100000
 		chunkedkeys = [wordkeys[i:i + chunksize] for i in range(0, len(wordkeys), chunksize)]
-		argmap = [(c, masterconcorcdance, wordcounttable) for c in chunkedkeys]
+		argmap = [(c, masterconcorcdance, wordcounttable) for c in enumerate(chunkedkeys)]
+		print('breaking up the lists and parallelizing:', len(chunkedkeys), 'chunks to insert')
 
-		# lots of swapping if you go high
+		# lots of swapping if you go high: wordcounttable is huge and you are making multiple copies of it
 		notsobigpool = int(config['io']['workers'])
 		with Pool(processes=int(notsobigpool)) as pool:
 			# starmap: Like map() except that the elements of the iterable are expected to be iterables that are unpacked as arguments.
@@ -124,7 +125,7 @@ def dictmerger(masterdict, targetdict, label):
 	return masterdict
 
 
-def concordancechunk(dblist):
+def concordancechunk(enumerateddblist):
 	"""
 
 	:param dblist:
@@ -134,12 +135,17 @@ def concordancechunk(dblist):
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
+	chunknumber = enumerateddblist[0]
+	dblist = enumerateddblist[1]
+
 	prefix = dblist[0][0:2]
-	print('\treceived a chunk of',len(dblist), prefix, 'tables to check')
+	# print('\treceived a chunk of',len(dblist), prefix, 'tables to check')
 
 	graves = 'ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ'
 	terminalgravea = re.compile(r'([ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ])$')
 	terminalgraveb = re.compile(r'([ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ])(.)$')
+	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
+	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
 
 	concordance = {}
 	count = 0
@@ -149,7 +155,7 @@ def concordancechunk(dblist):
 		dbc.commit()
 		for line in lineobjects:
 			words = line.wordlist('polytonic')
-			words = [cleanwords(w) for w in words]
+			words = [cleanwords(w, punct) for w in words]
 			words = list(set(words))
 			words[:] = [x.lower() for x in words]
 			prefix = line.universalid[0:2]
@@ -178,6 +184,7 @@ def concordancechunk(dblist):
 					concordance[w] = {}
 					concordance[w][prefix] = 1
 
+	print('\tfinished chunk',chunknumber+1)
 	return concordance
 
 
@@ -224,7 +231,7 @@ def forceterminalacute(matchgroup):
 	return substitute
 
 
-def dbchunkloader(chunkedkeys, masterconcorcdance, wordcounttable):
+def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 	"""
 
 	:param resultbundle:
@@ -234,6 +241,9 @@ def dbchunkloader(chunkedkeys, masterconcorcdance, wordcounttable):
 	cursor = dbc.cursor()
 
 	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+
+	chunknumber = enumeratedchunkedkeys[0]
+	chunkedkeys = enumeratedchunkedkeys[1]
 
 	count = 0
 	for key in chunkedkeys:
@@ -264,7 +274,8 @@ def dbchunkloader(chunkedkeys, masterconcorcdance, wordcounttable):
 		if count % 2500 == 0:
 			dbc.commit()
 
-	print('\t', str(len(chunkedkeys)), 'words inserted into the wordcount tables')
+	#print('\t', str(len(chunkedkeys)), 'words inserted into the wordcount tables')
+	print('\finished chunk',chunknumber+1)
 	dbc.commit()
 	return
 
@@ -349,19 +360,19 @@ def dblineintolineobject(dbline):
 	return lineobject
 
 
-def cleanwords(word):
+def cleanwords(word, punct):
 	"""
 	remove gunk that should not be in a concordance
 	:param word:
 	:return:
 	"""
-	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
 	# hard to know whether or not to do the editorial insertions stuff: ⟫⟪⌈⌋⌊
 	# word = re.sub(r'\[.*?\]','', word) # '[o]missa' should be 'missa'
 	word = re.sub(r'[0-9]', '', word)
 	word = re.sub(punct, '', word)
 	# strip all non-greek if we are doing greek
 	# best do punct before this next one...
+
 	try:
 		if re.search(r'[a-zA-z]', word[0]) is None:
 			word = re.sub(r'[a-zA-z]', '', word)
