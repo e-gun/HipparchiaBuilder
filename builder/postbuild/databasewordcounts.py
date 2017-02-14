@@ -39,7 +39,8 @@ def wordcounter():
 	# listofworklists = [dictofdblists[key] for key in ['lt']]
 
 	# parallelize by sending each db to its own worker: 291 ch tables to check; 463 in tables to check; 1823 gr tables to check; 362 lt tables to check; 516 dp tables to check
-	# 'gr' is much bigger than the others, though let's split that one up:
+	# 'gr' is much bigger than the others, though let's split that one up
+	# nb: many of the tables are very small and the longest ones cluster in related numerical zones; there is a tendency to drop down to a wait for 1 or 2 final threads
 	chunksize = 200
 	chunkedlists = []
 
@@ -48,12 +49,12 @@ def wordcounter():
 		for c in chunks:
 			chunkedlists.append(c)
 
+	# trim for testing
+	# chunkedlists = chunkedlists[0:3]
+
 	print('breaking up the lists and parallelizing:', len(chunkedlists),'chunks to analyze')
 	# safe to almost hit number of cores here since we are not doing both db and regex simultaneously in each thread
 	# here's hoping that the workers number was not over-ambitious to begin with
-
-	# trim for testing
-	# chunkedlists = chunkedlists[0:3]
 
 	bigpool = int(config['io']['workers'])+(int(config['io']['workers'])/2)
 	with Pool(processes=int(bigpool)) as pool:
@@ -87,7 +88,7 @@ def wordcounter():
 
 		wordkeys = list(masterconcorcdance.keys())
 		wordkeys = sorted(wordkeys)
-		print(len(wordkeys),'unique words to catalog')
+		print(len(wordkeys),'unique items to catalog (nb: plenty of these are word fragments and not whole words)')
 
 		chunksize = 100000
 		chunkedkeys = [wordkeys[i:i + chunksize] for i in range(0, len(wordkeys), chunksize)]
@@ -136,6 +137,9 @@ def concordancechunk(dblist):
 	prefix = dblist[0][0:2]
 	print('\treceived a chunk of',len(dblist), prefix, 'tables to check')
 
+	terminalgravea = re.compile(r'([ὰὲὶὸὺὴὼ])$')
+	terminalgraveb = re.compile(r'([ὰὲὶὸὺὴὼ])(.)$')
+
 	concordance = {}
 	count = 0
 	for db in dblist:
@@ -156,12 +160,54 @@ def concordancechunk(dblist):
 					# 'vivere' --> 'uiuere'
 					w = re.sub('v','u',w)
 				try:
+					if w[-1] in 'ὰὲὶὸὺὴὼ':
+						w = re.sub(terminalgravea,forceterminalacute, w)
+				except:
+					# the word was not >0 char long
+					pass
+				try:
+					if w[-2] in 'ὰὲὶὸὺὴὼ':
+						w = re.sub(terminalgraveb,forceterminalacute, w)
+				except:
+					# the word was not >1 char long
+					pass
+				try:
 					concordance[w][prefix] += 1
 				except:
 					concordance[w] = {}
 					concordance[w][prefix] = 1
 
 	return concordance
+
+
+def forceterminalacute(matchgroup):
+	"""
+	θαμά and θαμὰ need to be stored in the same place
+
+	otherwise you will click on θαμὰ, search for θαμά and get prevalence data that is not what you really wanted
+
+	:param match:
+	:return:
+	"""
+
+	map = { 'ὰ': 'ά',
+	        'ὲ': 'έ',
+	        'ὶ': 'ί',
+	        'ὸ': 'ό',
+	        'ὺ': 'ύ',
+	        'ὴ': 'ή',
+	        'ὼ': 'ώ',
+		}
+
+	substitute = map[matchgroup[1]]
+	try:
+		# the word did not end with a vowel
+		substitute += matchgroup[2]
+	except:
+		# the word ended with a vowel
+		pass
+
+	return substitute
 
 
 def dbchunkloader(chunkedkeys, masterconcorcdance, wordcounttable):

@@ -259,6 +259,14 @@ def lastsecondsubsitutions(texttoclean):
 	# combining breve is misplaced
 	texttoclean = re.sub(r'(.)(\u035c)', r'\2\1', texttoclean)
 
+	# misbalanced punctuation in something like ’αὐλῶνεϲ‘: a trivial issue that will add a lot of time to builds if you do all of the variants
+	# easy enough to turn this off
+
+	texttoclean = re.sub(r'(\W)’(\w)', r'\1‘\2', texttoclean)
+	texttoclean = re.sub(r'([\w\.,])‘([\W])', r'\1’\2', texttoclean)
+	texttoclean = re.sub(r'(\W)”(\w)', r'\1“\2', texttoclean)
+	texttoclean = re.sub(r'([\w\.,])“([\W])', r'\1”\2', texttoclean)
+
 	return texttoclean
 
 
