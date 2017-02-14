@@ -137,8 +137,8 @@ def concordancechunk(dblist):
 	prefix = dblist[0][0:2]
 	print('\treceived a chunk of',len(dblist), prefix, 'tables to check')
 
-	terminalgravea = re.compile(r'([ὰὲὶὸὺὴὼ])$')
-	terminalgraveb = re.compile(r'([ὰὲὶὸὺὴὼ])(.)$')
+	terminalgravea = re.compile(r'([ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ])$')
+	terminalgraveb = re.compile(r'([ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ])(.)$')
 
 	concordance = {}
 	count = 0
@@ -160,13 +160,13 @@ def concordancechunk(dblist):
 					# 'vivere' --> 'uiuere'
 					w = re.sub('v','u',w)
 				try:
-					if w[-1] in 'ὰὲὶὸὺὴὼ':
+					if w[-1] in 'ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ':
 						w = re.sub(terminalgravea,forceterminalacute, w)
 				except:
 					# the word was not >0 char long
 					pass
 				try:
-					if w[-2] in 'ὰὲὶὸὺὴὼ':
+					if w[-2] in 'ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ':
 						w = re.sub(terminalgraveb,forceterminalacute, w)
 				except:
 					# the word was not >1 char long
@@ -197,6 +197,19 @@ def forceterminalacute(matchgroup):
 	        'ὺ': 'ύ',
 	        'ὴ': 'ή',
 	        'ὼ': 'ώ',
+			'ἂ': 'ἄ',
+			'ἒ': 'ἔ',
+			'ἲ': 'ἴ',
+			'ὂ': 'ὄ',
+			'ὒ': 'ὔ',
+			'ἢ': 'ἤ',
+			'ὢ': 'ὤ',
+			'ᾃ': 'ᾅ',
+			'ᾓ': 'ᾕ',
+			'ᾣ': 'ᾥ',
+			'ᾂ': 'ᾄ',
+			'ᾒ': 'ᾔ',
+			'ᾢ': 'ᾤ',
 		}
 
 	substitute = map[matchgroup[1]]
