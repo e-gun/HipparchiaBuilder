@@ -256,6 +256,9 @@ def lastsecondsubsitutions(texttoclean):
 	for i in range(0, len(betacodetuples)):
 		texttoclean = re.sub(betacodetuples[i][0], betacodetuples[i][1], texttoclean)
 
+	# combining breve is misplaced
+	texttoclean = re.sub(r'(.)(\u035c)', r'\2\1', texttoclean)
+
 	return texttoclean
 
 
