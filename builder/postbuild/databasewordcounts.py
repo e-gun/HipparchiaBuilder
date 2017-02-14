@@ -137,6 +137,7 @@ def concordancechunk(dblist):
 	prefix = dblist[0][0:2]
 	print('\treceived a chunk of',len(dblist), prefix, 'tables to check')
 
+	graves = 'ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ'
 	terminalgravea = re.compile(r'([ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ])$')
 	terminalgraveb = re.compile(r'([ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ])(.)$')
 
@@ -160,13 +161,13 @@ def concordancechunk(dblist):
 					# 'vivere' --> 'uiuere'
 					w = re.sub('v','u',w)
 				try:
-					if w[-1] in 'ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ':
+					if w[-1] in graves:
 						w = re.sub(terminalgravea,forceterminalacute, w)
 				except:
 					# the word was not >0 char long
 					pass
 				try:
-					if w[-2] in 'ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ':
+					if w[-2] in graves:
 						w = re.sub(terminalgraveb,forceterminalacute, w)
 				except:
 					# the word was not >1 char long
@@ -354,11 +355,12 @@ def cleanwords(word):
 	:param word:
 	:return:
 	"""
-	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊⟫⟪❵❴⟧⟦(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
+	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
 	# hard to know whether or not to do the editorial insertions stuff: ⟫⟪⌈⌋⌊
 	# word = re.sub(r'\[.*?\]','', word) # '[o]missa' should be 'missa'
 	word = re.sub(r'[0-9]', '', word)
 	word = re.sub(punct, '', word)
+	# strip all non-greek if we are doing greek
 	# best do punct before this next one...
 	try:
 		if re.search(r'[a-zA-z]', word[0]) is None:
