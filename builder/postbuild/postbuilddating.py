@@ -247,7 +247,7 @@ def numberedcenturydate(stringdate, ordinalregexfinder):
 	firstdigit = [x for x in digitfinder[0][1:] if x]
 	firstdigit = int(firstdigit[0])
 
-	if twodigit == True:
+	if twodigit:
 		if re.search(r'bc(.*?)ac$',stringdate) is None:
 			numericaldate = (((firstdigit + seconddigit) / 2) * modifier ) + fudge
 			if modifier > 0:

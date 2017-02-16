@@ -8,10 +8,9 @@
 """
 import re
 import configparser
-import asyncio
 from multiprocessing import Pool
 from string import punctuation
-from builder.builder_classes import dbWorkLine
+from builder.builder_classes import dbWorkLine, dbWordCountObject, dbLemmaObject
 from builder.dbinteraction.db import setconnection
 from builder.parsers.betacode_to_unicode import stripaccents
 
@@ -142,6 +141,8 @@ def concordancechunk(enumerateddblist):
 	# print('\treceived a chunk of',len(dblist), prefix, 'tables to check')
 
 	graves = 'ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ'
+	graves = {graves[g] for g in range(0, len(graves))}
+
 	terminalgravea = re.compile(r'([ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ])$')
 	terminalgraveb = re.compile(r'([ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ])(.)$')
 	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
@@ -240,7 +241,9 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
+	# 'v' should be empty, though; ϙ will go to 0
 	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+	letters = {letters[l] for l in range(0,len(letters))}
 
 	chunknumber = enumeratedchunkedkeys[0]
 	chunkedkeys = enumeratedchunkedkeys[1]
@@ -275,8 +278,75 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 			dbc.commit()
 
 	#print('\t', str(len(chunkedkeys)), 'words inserted into the wordcount tables')
-	print('\finished chunk',chunknumber+1)
+	print('\tfinished chunk',chunknumber+1)
+
 	dbc.commit()
+	return
+
+
+def formcounter():
+	"""
+
+	count morphological forms using the wordcount data
+
+	[a] grab all possible forms of all dictionary words
+	[b] count all hits of all forms of those words
+	[c1] record the hits
+	[c2] record statistics about those hits
+
+	:return:
+	"""
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	lemmatalist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
+
+	# 'v' should be empty, though; ϙ will go to 0
+	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+	letters = {letters[l] for l in range(0, len(letters))}
+	countlists = []
+	for l in letters:
+		countlists += graballcountsasobjects('wordcounts_' + l, cursor)
+	countdict = {word.entryname: word for word in countlists}
+	del countlists
+
+	dictionarycounts = {}
+	for lem in lemmatalist:
+		thewordtolookfor = lem.dictionaryentry
+		# should probably prevent the dictionary from having 'v' or 'j' in it in the first place...
+		thewordtolookfor = re.sub(r'v', 'u', thewordtolookfor.lower())
+		# comprehensions would be nice, but they fail because of exceptions
+		dictionarycounts[thewordtolookfor] = {}
+		for item in ['total', 'gr', 'lt', 'dp', 'in', 'ch']:
+			sum = 0
+			for form in lem.formlist:
+				try:
+					sum += countdict[form].getelement(item)
+				except KeyError:
+					# word not found
+					pass
+			dictionarycounts[thewordtolookfor][item] = sum
+		# 	print('dictionarycounts[lem.dictionaryentry]: ',lem.dictionaryentry,dictionarycounts[lem.dictionaryentry])
+
+	testing = False
+	if testing == False:
+		thetable = 'dictionary_headword_wordcounts'
+		createwordcounttable(thetable)
+
+		commitcount = 0
+		keys = dictionarycounts.keys()
+		keys = sorted(keys)
+		for word in keys:
+			commitcount += 1
+			q = 'INSERT INTO '+thetable+' (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) ' \
+			                            'VALUES (%s, %s, %s, %s, %s, %s, %s)'
+			d = (word, dictionarycounts[word]['total'], dictionarycounts[word]['gr'], dictionarycounts[word]['lt'],
+			     dictionarycounts[word]['dp'], dictionarycounts[word]['in'], dictionarycounts[word]['ch'])
+			cursor.execute(q,d)
+			if commitcount % 2500 == 0:
+				dbc.commit()
+	dbc.commit()
+
 	return
 
 
@@ -297,11 +367,43 @@ def graballlinesasobjects(db,cursor):
 	return lineobjects
 
 
-def createwordcounttable(tablename):
+def graballcountsasobjects(db,cursor):
 	"""
 
-	the SQL to generate the wordcount table
+	:param db:
+	:param cursor:
+	:return:
+	"""
 
+	query = 'SELECT * FROM ' + db
+	cursor.execute(query)
+	lines = cursor.fetchall()
+
+	countobjects = [dbWordCountObject(l[0], l[1], l[2], l[3], l[4], l[5], l[6]) for l in lines]
+
+	return countobjects
+
+
+def grablemmataasobjects(db, cursor):
+	"""
+
+	:param db:
+	:param cursor:
+	:return:
+	"""
+
+	query = 'SELECT * FROM ' + db
+	cursor.execute(query)
+	lines = cursor.fetchall()
+
+	lemmaobjects = [dbLemmaObject(l[0], l[1], l[2]) for l in lines]
+
+	return lemmaobjects
+
+
+def createwordcounttable(tablename):
+	"""
+	the SQL to generate the wordcount table
 	:param tablename:
 	:return:
 	"""
@@ -335,6 +437,7 @@ def createwordcounttable(tablename):
 	dbc.commit()
 
 	return
+
 
 """
 

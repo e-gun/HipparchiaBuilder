@@ -14,7 +14,7 @@ from builder import corpus_builder
 from builder.dbinteraction.build_lexica import formatgklexicon, formatlatlexicon, grammarloader, analysisloader
 from builder.dbinteraction.db import setconnection
 from builder.dbinteraction.versioning import timestampthebuild
-from builder.postbuild.databasewordcounts import wordcounter
+from builder.postbuild.databasewordcounts import wordcounter, formcounter
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -140,7 +140,8 @@ if buildcounts == 'y':
 	# second draft 147m
 	# third draft: Build took 68.77 minutes
 	# mp: Build took 23.17 minutes
-	wordcounter()
+	# wordcounter()
+	formcounter()
 
 stop = time.time()
 took = round((stop-start)/60, 2)

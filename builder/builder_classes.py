@@ -8,6 +8,7 @@
 
 
 import re
+from collections import namedtuple
 from multiprocessing import Value
 from builder.parsers import regex_substitutions
 
@@ -241,209 +242,6 @@ class dbOpus(object):
 		
 		return cit
 	
-	
-class OLDdbWorkLine(object):
-	"""
-	an object that corresponds to a db line
-	"""
-
-	def __init__(self, wkuinversalid, index, level_05_value, level_04_value, level_03_value, level_02_value,
-				 level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words,
-				 annotations):
-		self.wkuinversalid = wkuinversalid[:10]
-		self.index = index
-		self.l5 = level_05_value
-		self.l4 = level_04_value
-		self.l3 = level_03_value
-		self.l2 = level_02_value
-		self.l1 = level_01_value
-		self.l0 = level_00_value
-		# can remove the regex soon
-		# self.accented = re.sub(r'\s$', '', marked_up_line)
-		# self.polytonic = re.sub(r'\s$', '', accented_line)
-		# self.stripped = re.sub(r'\s$', '', stripped_line)
-		self.accented = marked_up_line
-		self.polytonic = accented_line
-		self.stripped = stripped_line
-		self.annotations = annotations
-		self.universalid = self.wkuinversalid + '_LN_' + str(index)
-		self.hyphenated = hyphenated_words
-		if len(self.hyphenated) > 1:
-			self.hashyphenated = True
-		else:
-			self.hashyphenated = False
-
-		if self.accented is None:
-			self.accented = ''
-			self.stripped = ''
-
-	def locus(self):
-		"""
-		call me to get a formatted citation
-		:param self:
-		:return:
-		"""
-		loc = []
-		for lvl in [self.l0, self.l1, self.l2, self.l3, self.l4, self.l5]:
-			if str(lvl) != '-1':
-				loc.append(lvl)
-		loc.reverse()
-		citation = '.'.join(loc)
-
-		return citation
-
-	def shortlocus(self):
-		"""
-		try to get a short citation that drops the lvl0 info
-		useful for tagging level shifts without constantly seeling 'line 1'
-		:return:
-		"""
-		loc = []
-		for lvl in [self.l1, self.l2, self.l3, self.l4, self.l5]:
-			if str(lvl) != '-1':
-				loc.append(lvl)
-		loc.reverse()
-		if loc == []:
-			citation = self.locus()
-		else:
-			citation = '.'.join(loc)
-
-		return citation
-
-	def locustuple(self):
-		"""
-		call me to get a citation tuple in 0-to-5 order
-		:return:
-		"""
-		cit = []
-		for lvl in [self.l0, self.l1, self.l2, self.l3, self.l4, self.l5]:
-			if str(lvl) != '-1':
-				cit.append(lvl)
-		citationtuple = tuple(cit)
-
-		return citationtuple
-
-	def samelevelas(self, other):
-		"""
-		are two loci at the same level or have we shifted books, sections, etc?
-		the two loci have to be from the same work
-		:param self:
-		:param other:
-		:return:
-		"""
-		if self.wkuinversalid == other.wkuinversalid and self.l5 == other.l5 and self.l4 == other.l4 and self.l3 == other.l3 and self.l2 == other.l2 and self.l1 == other.l1:
-			return True
-		else:
-			return False
-
-	def equivalentlevelas(self, other):
-		"""
-		are two loci at the same level or have we shifted books, sections, etc?
-		the two loci do not have to be from the same work
-		:param self:
-		:param other:
-		:return:
-		"""
-		if self.l5 == other.l5 and self.l4 == other.l4 and self.l3 == other.l3 and self.l2 == other.l2 and self.l1 == other.l1:
-			return True
-		else:
-			return False
-
-	def toplevel(self):
-		top = 0
-		for lvl in [self.l0, self.l1, self.l2, self.l3, self.l4, self.l5]:
-			if str(lvl) != '-1':
-				top += 1
-			else:
-				return top
-
-		# should not need this, but...
-		return top
-
-	def unformattedline(self):
-		"""
-		remove markup from contents
-		:return:
-		"""
-
-		markup = re.compile(r'(\<.*?\>)')
-		nbsp = re.compile(r'&nbsp;')
-
-		unformatted = re.sub(markup, r'', self.accented)
-		unformatted = re.sub(nbsp, r'', unformatted)
-
-		return unformatted
-
-	def wordcount(self):
-		"""
-		return a wordcount
-		"""
-
-		line = self.stripped
-		words = line.split(' ')
-
-		return len(words)
-
-	def wordlist(self, version):
-		"""
-		return a list of words in the line; will include the full version of a hyphenated last word
-		:param version:
-		:return:
-		"""
-		wordlist = []
-
-		if version in ['polytonic', 'stripped']:
-			line = getattr(self, version)
-			wordlist = line.split(' ')
-			wordlist = [w for w in wordlist if w]
-
-		return wordlist
-
-	def allbutlastword(self, version):
-		"""
-		return the line less its final word
-		"""
-		allbutlastword = ''
-		if version in ['accented', 'stripped']:
-			line = getattr(self, version)
-			line = line.split(' ')
-			allbutlast = line[:-1]
-			allbutlastword = ' '.join(allbutlast)
-
-		return allbutlastword
-
-	def allbutfirstword(self, version):
-		"""
-		return the line less its first word
-		"""
-		allbutfirstword = ''
-		if version in ['accented', 'stripped']:
-			line = getattr(self, version)
-			if version == 'accented':
-				line = re.sub(r'(\<.*?\>)', r'', line)
-			line = line.split(' ')
-			allbutfirst = line[1:]
-			allbutfirstword = ' '.join(allbutfirst)
-
-		return allbutfirstword
-
-	def allbutfirstandlastword(self, version):
-		"""
-		terun the line lest the first and last words (presumably both are hypenated)
-		:param version:
-		:return:
-		"""
-		allbutfirstandlastword = ''
-		if version in ['accented', 'stripped']:
-			line = getattr(self, version)
-			if version == 'accented':
-				line = re.sub(r'(\<.*?\>)', r'', line)
-			line = line.split(' ')
-			middle = line[1:-1]
-			allbutfirstandlastword = ' '.join(middle)
-
-		return allbutfirstandlastword
-
 
 class dbWorkLine(object):
 	"""
@@ -670,6 +468,51 @@ class dbWorkLine(object):
 			allbutfirstandlastword = ' '.join(middle)
 
 		return allbutfirstandlastword
+
+
+class dbWordCountObject(object):
+	"""
+	an object that corresponds to a db line
+	"""
+
+	def __init__(self, entryname, totalcount, greekcount, latincount, docpapcount, inscriptioncount, christiancount):
+		self.entryname = entryname
+		self.t = totalcount
+		self.g = greekcount
+		self.l = latincount
+		self.d = docpapcount
+		self.i = inscriptioncount
+		self.c = christiancount
+
+	def getelement(self, element):
+		elements = {
+			'total': self.t, 'gr': self.g, 'lt': self.l, 'dp': self.d, 'in': self.i, 'ch': self.c
+			}
+		try:
+			return elements[element]
+		except:
+			return 0
+
+
+class dbLemmaObject(object):
+	"""
+	an object that corresponds to a db line
+	"""
+
+	def __init__(self, dictionaryentry, xref, derivativeforms):
+		self.dictionaryentry = dictionaryentry
+		self.xref = xref
+		self.formandidentificationlist = [f for f in derivativeforms.split('\t') if f]
+		self.formlist = [f.split(' ')[0] for f in self.formandidentificationlist]
+		self.formlist = [re.sub(r'\'','',f) for f in self.formlist]
+
+	def getformdict(self):
+		fd = {}
+		for f in self.formandidentificationlist:
+			key = f.split(' ')[0]
+			body = f[len(key)+1:]
+			fd[key] = body
+		return fd
 
 
 class Opus(object):
