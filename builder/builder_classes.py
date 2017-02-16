@@ -191,8 +191,8 @@ class dbOpus(object):
 	"""
 
 	def __init__(self, universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02,
-				 levellabels_03, levellabels_04, levellabels_05, workgenre, transmission, worktype, provenance,
-				 recorded_date, converted_date, wordcount, firstline, lastline, authentic):
+	             levellabels_03, levellabels_04, levellabels_05, workgenre, transmission, worktype, provenance,
+	             recorded_date, converted_date, wordcount, firstline, lastline, authentic):
 		self.universalid = universalid
 		self.title = title
 		self.language = language
@@ -218,30 +218,43 @@ class dbOpus(object):
 			self.length = lastline - firstline
 		except:
 			self.length = -1
-		self.worknumber = int(universalid[7:])
+		# self.worknumber = int(universalid[7:])
+		# con't use int() any longer because ins and ddp numbers count via hex
+		self.worknumber = universalid[7:]
 		self.structure = {}
 		idx = -1
 		for label in [levellabels_00, levellabels_01, levellabels_02, levellabels_03, levellabels_04, levellabels_05]:
 			idx += 1
-			if label != '':
+			if label != '' and label != None:
 				self.structure[idx] = label
-		
+
 		availablelevels = 1
-		for level in [self.levellabels_01, self.levellabels_02, self.levellabels_03, self.levellabels_04, self.levellabels_05]:
+		for level in [self.levellabels_01, self.levellabels_02, self.levellabels_03, self.levellabels_04,
+		              self.levellabels_05]:
 			if level != '' and level is not None:
 				availablelevels += 1
 		self.availablelevels = availablelevels
-		
+
 	def citation(self):
-		cit = []
-		levels = [self.levellabels_00, self.levellabels_01, self.levellabels_02, self.levellabels_03, self.levellabels_04, self.levellabels_05]
-		for l in range(0,self.availablelevels):
-			cit.append(levels[l])
-		cit.reverse()
-		cit = ', '.join(cit)
-		
+		if self.universalid[0:2] not in ['in', 'dp', 'ch']:
+			cit = []
+			levels = [self.levellabels_00, self.levellabels_01, self.levellabels_02, self.levellabels_03,
+			          self.levellabels_04, self.levellabels_05]
+			for l in range(0, self.availablelevels):
+				cit.append(levels[l])
+			cit.reverse()
+			cit = ', '.join(cit)
+		else:
+			cit = '(face,) line'
+
 		return cit
-	
+
+	def earlier(self, other):
+		return float(self.converted_date) < other
+
+	def later(self, other):
+		return float(self.converted_date) > other
+
 
 class dbWorkLine(object):
 	"""

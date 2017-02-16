@@ -8,56 +8,95 @@
 """
 import re
 import configparser
+
 from multiprocessing import Pool
 from string import punctuation
+from statistics import mean, median
 from builder.builder_classes import dbWorkLine, dbWordCountObject, dbLemmaObject
-from builder.dbinteraction.db import setconnection
+from builder.dbinteraction.db import setconnection, loadallauthorsasobjects, loadallworksasobjects
 from builder.parsers.betacode_to_unicode import stripaccents
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def wordcounter():
+def wordcounter(timerestriction=None):
+	"""
+
+	count all of the words in all of the dbs or a subset thereof
+
+
+
+	:param timerestriction:
+	:return:
+	"""
 	wordcounttable = 'wordcounts'
 
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	authordict = loadallauthorsasobjects()
 
-	q = 'SELECT universalid FROM authors'
-	cursor.execute(q)
-	results = cursor.fetchall()
+	if timerestriction:
+		# restriction should be a date range tuple (-850,300), e.g.
+		workdict = loadallworksasobjects()
+		dbs = [key for key in authordict.keys() if authordict[key].converted_date and timerestriction[0] < int(authordict[key].converted_date) < timerestriction[1]]
+		dbs += [key for key in workdict.keys() if workdict[key].converted_date and timerestriction[0] < int(workdict[key].converted_date) < timerestriction[1]]
+	else:
+		dbs = list(authordict.keys())
 
-	dbs = [r[0] for r in results]
+	# limit to NN for testing purposes
+	# dbs = dbs[0:20]
 
 	datasets = set([db[0:2] for db in dbs])
-	dictofdblists = {dset:[db for db in dbs if db[0:2] == dset] for dset in datasets}
-	listofworklists = [dictofdblists[key] for key in dictofdblists]
+	dbswithranges = {}
+	for db in dbs:
+		if len(db) == 6:
+			# we are reading a full author
+			dbswithranges[db] = (-1,-1)
+		else:
+			# we are reading an individual work
+			dbswithranges[db] = (workdict[db].starts, workdict[db].ends)
+
+	dictofdbdicts = {dset:{db: dbswithranges[db] for db in dbswithranges if db[0:2] == dset} for dset in datasets}
+	listofworkdicts = [dictofdbdicts[key] for key in dictofdbdicts]
 
 	# test on a subset
-	# listofworklists = [dictofdblists[key] for key in ['lt']]
+	#listofworklists = [dictofdblists[key] for key in ['lt']]
 
 	# parallelize by sending each db to its own worker: 291 ch tables to check; 463 in tables to check; 1823 gr tables to check; 362 lt tables to check; 516 dp tables to check
 	# 'gr' is much bigger than the others, though let's split that one up
 	# nb: many of the tables are very small and the longest ones cluster in related numerical zones; there is a tendency to drop down to a wait for 1 or 2 final threads
+	# when we run through again with the time restriction there will be a massive number of chunks
+
 	chunksize = 200
-	chunkedlists = []
+	chunked = []
 
-	for l in listofworklists:
-		chunks = [l[i:i + chunksize] for i in range(0, len(l), chunksize)]
-		for c in chunks:
-			chunkedlists.append(c)
+	for l in listofworkdicts:
+		keys = list(l.keys())
+		count = 0
+		while keys:
+			count += 1
+			chunk = {}
+			for p in range(0,chunksize):
+				try:
+					k = keys.pop()
+					chunk[k] = l[k]
+				except:
+					pass
+			try:
+				chunked += [chunk]
+			except:
+				# you hit the pop exception on the first try
+				pass
 
-	# trim for testing
-	# chunkedlists = chunkedlists[0:3]
+	# a chunk will look like:
+	# {'in0010w0be': (173145, 173145), 'in0010w0bd': (173144, 173144), 'in0010w0bf': (173146, 173146), 'in0010w0bg': (173147, 173147), 'in0010w0bi': (173149, 173149), 'in0010w0bh': (173148, 173148)}
 
-	print('breaking up the lists and parallelizing:', len(chunkedlists),'chunks to analyze')
+	print('breaking up the lists and parallelizing:', len(chunked),'chunks to analyze')
 	# safe to almost hit number of cores here since we are not doing both db and regex simultaneously in each thread
 	# here's hoping that the workers number was not over-ambitious to begin with
 
 	bigpool = int(config['io']['workers'])+(int(config['io']['workers'])/2)
 	with Pool(processes=int(bigpool)) as pool:
-		listofconcordancedicts = pool.map(concordancechunk, enumerate(chunkedlists))
+		listofconcordancedicts = pool.map(concordancechunk, enumerate(chunked))
 
 	# merge the results
 	print('merging the partial results')
@@ -78,8 +117,10 @@ def wordcounter():
 		masterconcorcdance[word]['total'] = sum([masterconcorcdance[word][x] for x in masterconcorcdance[word]])
 
 	testing = False
-	if testing == False:
-		# then it is safe to reset the database...
+	if testing == False and timerestriction == None:
+		# not testing: then it is safe to reset the database...
+		# no timerestriction: then this is our first pass and we should write the results to the master counts
+		# timerestriction implies subsequent passes that are for metadata derived from unrestricted data and should not overwrite it
 
 		letters= '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
 		for l in letters:
@@ -100,7 +141,7 @@ def wordcounter():
 			# starmap: Like map() except that the elements of the iterable are expected to be iterables that are unpacked as arguments.
 			pool.starmap(dbchunkloader, argmap)
 
-	return
+	return masterconcorcdance
 
 
 def dictmerger(masterdict, targetdict, label):
@@ -124,8 +165,13 @@ def dictmerger(masterdict, targetdict, label):
 	return masterdict
 
 
-def concordancechunk(enumerateddblist):
+def concordancechunk(enumerateddbdict):
 	"""
+
+	dbdict looks like:
+		{'in0010w0be': (173145, 173145), 'in0010w0bd': (173144, 173144), 'in0010w0bf': (173146, 173146), 'in0010w0bg': (173147, 173147), 'in0010w0bi': (173149, 173149), 'in0010w0bh': (173148, 173148)}
+
+	it would be possible to do a where clause via the univesalid, but it should be (a lot) faster to do it by index
 
 	:param dblist:
 	:return:
@@ -134,11 +180,10 @@ def concordancechunk(enumerateddblist):
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	chunknumber = enumerateddblist[0]
-	dblist = enumerateddblist[1]
+	chunknumber = enumerateddbdict[0]
+	dbdict = enumerateddbdict[1]
 
-	prefix = dblist[0][0:2]
-	# print('\treceived a chunk of',len(dblist), prefix, 'tables to check')
+	dblist = list(dbdict.keys())
 
 	graves = 'ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ'
 	graves = {graves[g] for g in range(0, len(graves))}
@@ -152,7 +197,8 @@ def concordancechunk(enumerateddblist):
 	count = 0
 	for db in dblist:
 		count += 1
-		lineobjects = graballlinesasobjects(db, cursor)
+		rng = dbdict[db]
+		lineobjects = graballlinesasobjects(db[0:6], rng, cursor)
 		dbc.commit()
 		for line in lineobjects:
 			words = line.wordlist('polytonic')
@@ -186,6 +232,7 @@ def concordancechunk(enumerateddblist):
 					concordance[w][prefix] = 1
 
 	print('\tfinished chunk',chunknumber+1)
+
 	return concordance
 
 
@@ -200,12 +247,12 @@ def forceterminalacute(matchgroup):
 	"""
 
 	map = { 'ὰ': 'ά',
-	        'ὲ': 'έ',
-	        'ὶ': 'ί',
-	        'ὸ': 'ό',
-	        'ὺ': 'ύ',
-	        'ὴ': 'ή',
-	        'ὼ': 'ώ',
+			'ὲ': 'έ',
+			'ὶ': 'ί',
+			'ὸ': 'ό',
+			'ὺ': 'ύ',
+			'ὴ': 'ή',
+			'ὼ': 'ώ',
 			'ἂ': 'ἄ',
 			'ἒ': 'ἔ',
 			'ἲ': 'ἴ',
@@ -299,39 +346,23 @@ def formcounter():
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	lemmatalist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
+	skipping = True
+	if skipping != True:
+		lemmatalist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
 
-	# 'v' should be empty, though; ϙ will go to 0
-	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
-	letters = {letters[l] for l in range(0, len(letters))}
-	countlists = []
-	for l in letters:
-		countlists += graballcountsasobjects('wordcounts_' + l, cursor)
-	countdict = {word.entryname: word for word in countlists}
-	del countlists
+		# 'v' should be empty, though; ϙ will go to 0
+		letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+		letters = {letters[l] for l in range(0, len(letters))}
+		countobjectlist = []
+		for l in letters:
+			countobjectlist += graballcountsasobjects('wordcounts_' + l, cursor)
+		countdict = {word.entryname: word for word in countobjectlist}
+		del countobjectlist
 
-	dictionarycounts = {}
-	for lem in lemmatalist:
-		thewordtolookfor = lem.dictionaryentry
-		# should probably prevent the dictionary from having 'v' or 'j' in it in the first place...
-		thewordtolookfor = re.sub(r'v', 'u', thewordtolookfor.lower())
-		# comprehensions would be nice, but they fail because of exceptions
-		dictionarycounts[thewordtolookfor] = {}
-		for item in ['total', 'gr', 'lt', 'dp', 'in', 'ch']:
-			sum = 0
-			for form in lem.formlist:
-				try:
-					sum += countdict[form].getelement(item)
-				except KeyError:
-					# word not found
-					pass
-			dictionarycounts[thewordtolookfor][item] = sum
-		# 	print('dictionarycounts[lem.dictionaryentry]: ',lem.dictionaryentry,dictionarycounts[lem.dictionaryentry])
+		dictionarycounts = buildcountsfromlemmalist(lemmatalist, countdict)
 
-	testing = False
-	if testing == False:
 		thetable = 'dictionary_headword_wordcounts'
-		createwordcounttable(thetable)
+		createwordcounttable(thetable, extracolumns=True)
 
 		commitcount = 0
 		keys = dictionarycounts.keys()
@@ -345,12 +376,263 @@ def formcounter():
 			cursor.execute(q,d)
 			if commitcount % 2500 == 0:
 				dbc.commit()
-	dbc.commit()
+		dbc.commit()
+
+	# now figure out and record the percentiles
+
+	thetable = 'dictionary_headword_wordcounts'
+	metadata = derivedictionaryentrymetadata(thetable, cursor)
+	print('ἅρπαξ',metadata['ἅρπαξ'])
+
+	insertmetadata(metadata, thetable)
+
+	return metadata
+
+
+def buildcountsfromlemmalist(lemmatalist, wordcountdict):
+	"""
+
+	given a list of lemmata objects, build a dictionary of statistics
+	about how often the verious forms under that dictionary heading are used
+
+	check each item on the list of possible forms against a master dict of observed forms
+
+	return a dictionary of lexicon entry keywords and the associated totals of all observed forms
+
+	:param lemmatalist:
+	:return:
+	"""
+
+	lexiconentrycounts = {}
+
+	for lem in lemmatalist:
+		thewordtolookfor = lem.dictionaryentry
+		# should probably prevent the dictionary from having 'v' or 'j' in it in the first place...
+		thewordtolookfor = re.sub(r'v', 'u', thewordtolookfor.lower())
+		# comprehensions would be nice, but they fail because of exceptions
+		lexiconentrycounts[thewordtolookfor] = {}
+		for item in ['total', 'gr', 'lt', 'dp', 'in', 'ch']:
+			sum = 0
+			for form in lem.formlist:
+				try:
+					sum += wordcountdict[form].getelement(item)
+				except KeyError:
+					# word not found
+					pass
+			lexiconentrycounts[thewordtolookfor][item] = sum
+
+	return lexiconentrycounts
+
+
+def derivedictionaryentrymetadata(headwordtable, cursor):
+	"""
+
+	now that you know how many times a word occurs, put that number into perspective
+	sort the words into 20 chunks (i.e. blocks of 5%)
+	then figure out what the profile of each chunk is: max, min, avg number of words in that chunk
+
+	:param cursor:
+	:return:
+	"""
+
+	metadata = {}
+
+	extrasql = ' ORDER BY total_count DESC'
+	greekvowel = re.compile(r'[άέίόύήώἄἔἴὄὔἤὤᾅᾕᾥᾄᾔᾤαειουηω]')
+
+	headwordobjects = graballcountsasobjects(headwordtable,cursor,extrasql)
+
+	# the number of words with 0 as its total reflects parsing problems that need fixing elsewhere
+	greek = [w for w in headwordobjects if re.search(greekvowel, w.entryname) and w.t > 0]
+	latin = [w for w in headwordobjects if re.search(r'[a-z]', w.entryname) and w.t > 0]
+
+	for dataset in [(greek, 'greek'), (latin, 'latin')]:
+		d = dataset[0]
+		label = dataset[1]
+		mostcommon = d[:25]
+		remainder = d[25:]
+		veryrare = [x for x in remainder if x.t < 5]
+		rare = [x for x in remainder if x.t < 51 and x.t > 5]
+		core = [x for x in remainder if x.t > 50]
+		explorecore = False
+		if explorecore:
+			# slice it into 10 bundles
+			chunksize = int(len(core) / 10)
+			chunks = [core[i:i + chunksize] for i in range(0, len(core), chunksize)]
+			chunkstats = {}
+			for chunkid, chunk in enumerate(chunks):
+				chunkstats[chunkid] = cohortstats(chunk)
+
+		printstats = False
+		for item in [
+			('full set', d),
+			('top twenty five', mostcommon),
+			('core vocabulary (more than 50)',core),
+			('rare (between 50 and 5)', rare),
+			('very rare (less than 5)', veryrare),
+			]:
+			if printstats:
+				if item == ('full set', d):
+					print('\n',label)
+				prettyprintcohortdata(item[0], cohortstats(item[1]))
+			if item[0] != 'full set':
+				for entry in item[1]:
+					metadata[entry.entryname] = {'frequency_classification': item[0]}
+
+		if label == 'greek':
+			metadata = derivechronologicalmetadata(metadata, cursor)
+
+	return metadata
+
+
+def derivechronologicalmetadata(metadata, cursor):
+	"""
+
+	find frequencies by eras:
+		-850 to -300
+		-299 to 300
+		301 to 1500
+
+	attach this data to our existing metadata which is keyed to dictionary entry
+
+	:param metadata:
+	:return:
+	"""
+
+	eras = { 'early': (-850, -300), 'middle': (-299, 300), 'late': (301,1500)}
+	lemmatalist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
+
+	for era in eras:
+		print('calculating use by era:',era)
+		eraconcordance = wordcounter(timerestriction=eras[era])
+		# close, but we need to match the template above:
+		# countdict = {word.entryname: word for word in countobjectlist}
+		countobjectlist = [dbWordCountObject(w, eraconcordance[w]['total'], eraconcordance[w]['gr'], eraconcordance[w]['lt'],
+		                   eraconcordance[w]['dp'], eraconcordance[w]['in'], eraconcordance[w]['ch']) for w in eraconcordance]
+		countdict = {word.entryname: word for word in countobjectlist}
+		lexiconentrycounts = buildcountsfromlemmalist(lemmatalist, countdict)
+		for entry in lexiconentrycounts:
+			try:
+				metadata[entry]
+			except:
+				metadata[entry] = {}
+			metadata[entry][era] = lexiconentrycounts[entry]['total']
+
+	return metadata
+
+
+def cohortstats(wordobjects):
+	"""
+
+	take a cluster and generate stats for it
+
+	:param wordobjects:
+	:return:
+	"""
+
+	totals = [word.t for word in wordobjects]
+	high = max(totals)
+	low = min(totals)
+	avg = mean(totals)
+	med = median(totals)
+	returndict = {'h': high, 'l': low, 'a': avg, 'm': med, '#': len(wordobjects)}
+
+	return returndict
+
+
+def prettyprintcohortdata(label, cohortresultsdict):
+	"""
+	take some results and print them (for use in one of HipparchiaServer's info pages)
+
+	:return:
+	"""
+
+	titles = {'h': 'high', 'l': 'low', 'a': 'average', 'm': 'median', '#': 'count'}
+
+	print()
+	print(label)
+	for item in ['#', 'h', 'l', 'a', 'm']:
+		print('\t'+titles[item]+'\t'+str(int(cohortresultsdict[item])))
 
 	return
 
+"""
+greek
 
-def graballlinesasobjects(db,cursor):
+full set
+	count	113010
+	high	3649037
+	low	1
+	average	794
+	median	7
+
+top twenty five
+	count	25
+	high	3649037
+	low	429120
+	average	1177696
+	median	949783
+
+core vocabulary (more than 50)
+	count	28376
+	high	425747
+	low	51
+	average	2099
+	median	229
+
+rare (between 50 and 5)
+	count	32614
+	high	50
+	low	6
+	average	18
+	median	15
+
+very rare (less than 5)
+	count	48003
+	high	4
+	low	1
+	average	1
+	median	2
+latin
+
+full set
+	count	27960
+	high	244812
+	low	1
+	average	348
+	median	11
+
+top twenty five
+	count	25
+	high	244812
+	low	40371
+	average	86260
+	median	64356
+
+core vocabulary (more than 50)
+	count	8624
+	high	40256
+	low	51
+	average	859
+	median	219
+
+rare (between 50 and 5)
+	count	8095
+	high	50
+	low	6
+	average	19
+	median	16
+
+very rare (less than 5)
+	count	10404
+	high	4
+	low	1
+	average	1
+	median	2
+"""
+
+
+def graballlinesasobjects(db, linerangetuple, cursor):
 	"""
 
 	:param db:
@@ -358,8 +640,19 @@ def graballlinesasobjects(db,cursor):
 	:return:
 	"""
 
-	query = 'SELECT * FROM ' + db
-	cursor.execute(query)
+	if linerangetuple == (-1,-1):
+		whereclause = ''
+	else:
+		whereclause = ' WHERE index >= %s and index <= %s'
+		data = (linerangetuple[0], linerangetuple[1])
+
+	query = 'SELECT * FROM ' + db + whereclause
+
+	if whereclause != '':
+		cursor.execute(query, data)
+	else:
+		cursor.execute(query)
+
 	lines = cursor.fetchall()
 
 	lineobjects = [dblineintolineobject(l) for l in lines]
@@ -367,7 +660,7 @@ def graballlinesasobjects(db,cursor):
 	return lineobjects
 
 
-def graballcountsasobjects(db,cursor):
+def graballcountsasobjects(db,cursor, extrasql=''):
 	"""
 
 	:param db:
@@ -375,7 +668,7 @@ def graballcountsasobjects(db,cursor):
 	:return:
 	"""
 
-	query = 'SELECT * FROM ' + db
+	query = 'SELECT * FROM ' + db + extrasql
 	cursor.execute(query)
 	lines = cursor.fetchall()
 
@@ -401,7 +694,7 @@ def grablemmataasobjects(db, cursor):
 	return lemmaobjects
 
 
-def createwordcounttable(tablename):
+def createwordcounttable(tablename, extracolumns=False):
 	"""
 	the SQL to generate the wordcount table
 	:param tablename:
@@ -422,6 +715,11 @@ def createwordcounttable(tablename):
 	query += ' dp_count integer,'
 	query += ' in_count integer,'
 	query += ' ch_count integer'
+	if extracolumns:
+		query += 'frequency_classification character varying(64),'
+		query += 'early_occurrences integer,'
+		query += 'middle_occurrences integer,'
+		query += 'late_occurrences integer,'
 	query += ') WITH ( OIDS=FALSE );'
 
 	cursor.execute(query)
@@ -438,6 +736,51 @@ def createwordcounttable(tablename):
 
 	return
 
+
+def insertmetadata(metadatadict, thetable):
+	"""
+
+	avoid a long run of UPDATE statements: use a tmp table
+
+	metadatadict:
+		ἅρπαξ: {'frequency_classification': 'core vocabulary (more than 50)', 'early': 2, 'middle': 6, 'late': 0}
+
+	:param countdict:
+	:return:
+	"""
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	q = 'CREATE TEMP TABLE tmp_metadata AS SELECT * FROM '+thetable+' LIMIT 0'
+	cursor.execute(q)
+
+	count = 0
+	for entry in metadatadict.keys():
+		count += 1
+		q = 'INSERT INTO tmp_metadata (entry_name, frequency_classification, early_occurrences, middle_occurrences, late_occurrences) ' \
+		    'VALUES ( %s, %s, %s, %s, %s)'
+		d = (entry, metadatadict[entry]['frequency_classification'], metadatadict[entry]['early'],
+		     metadatadict[entry]['middle'], metadatadict[entry]['late'])
+		cursor.execute(q, d)
+		if count % 2500 == 0:
+			dbc.commit()
+
+	dbc.commit()
+	q = 'UPDATE '+thetable+' SET frequency_classification = tmp_metadata.frequency_classification,' \
+			'early_occurrences = tmp_metadata.early_occurrences,' \
+			'middle_occurrences = tmp_metadata.middle_occurrences,' \
+			'late_occurrences = tmp_metadata.late_occurrences,' \
+			' FROM tmp_metadata ' \
+			'WHERE '+thetable+'.entry_name = tmp_metadata.entry_name'
+	cursor.execute(q)
+	dbc.commit()
+
+	q = 'DROP TABLE tmp_metadata'
+	cursor.execute(q)
+	dbc.commit()
+
+	return
 
 """
 

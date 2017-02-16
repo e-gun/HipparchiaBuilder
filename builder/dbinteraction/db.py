@@ -386,3 +386,68 @@ def resetauthorsandworksdbs(tmpprefix, prefix):
 	dbc.commit()
 	return
 
+
+"""
+
+cloned from HipparchiaServer
+
+"""
+
+def loadallauthorsasobjects():
+	"""
+
+	return a dict of all possible author objects
+
+	:return:
+	"""
+
+
+	dbconnection = setconnection(config)
+	curs = dbconnection.cursor()
+
+	authorsdict = {}
+
+	q = 'SELECT * FROM authors'
+
+	curs.execute(q)
+	results = curs.fetchall()
+
+
+	for r in results:
+		# (universalid, language, idxname, akaname, shortname, cleanname, genres, recorded_date, converted_date, location)
+		newauthor = dbAuthor(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9])
+		authorsdict[newauthor.universalid] = newauthor
+
+	return authorsdict
+
+
+def loadallworksasobjects():
+	"""
+
+	return a dict of all possible work objects
+
+	:return:
+	"""
+
+
+	dbconnection = setconnection(config)
+	curs = dbconnection.cursor()
+
+	worksdict = {}
+
+	q = 'SELECT universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02, levellabels_03, ' \
+	        'levellabels_04, levellabels_05, workgenre, transmission, worktype, provenance, recorded_date, converted_date, wordcount, ' \
+			'firstline, lastline, authentic FROM works'
+	curs.execute(q)
+	results = curs.fetchall()
+
+	for r in results:
+		newwork = dbOpus(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8],
+						 r[9], r[10], r[11], r[12], r[13], r[14], r[15], r[16],
+						 r[17], r[18], r[19])
+		worksdict[newwork.universalid] = newwork
+
+	dbconnection.commit()
+	curs.close()
+
+	return worksdict
