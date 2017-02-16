@@ -39,11 +39,14 @@ def wordcounter(timerestriction=None):
 		workdict = loadallworksasobjects()
 		dbs = [key for key in authordict.keys() if authordict[key].converted_date and timerestriction[0] < int(authordict[key].converted_date) < timerestriction[1]]
 		dbs += [key for key in workdict.keys() if workdict[key].converted_date and timerestriction[0] < int(workdict[key].converted_date) < timerestriction[1]]
+		# mostly lots of little dicts: notifications get spammy
+		chunksize = 350
 	else:
+		chunksize = 200
 		dbs = list(authordict.keys())
 
 	# limit to NN for testing purposes
-	# dbs = dbs[0:20]
+	# dbs = dbs[0:2]
 
 	datasets = set([db[0:2] for db in dbs])
 	dbswithranges = {}
@@ -66,7 +69,7 @@ def wordcounter(timerestriction=None):
 	# nb: many of the tables are very small and the longest ones cluster in related numerical zones; there is a tendency to drop down to a wait for 1 or 2 final threads
 	# when we run through again with the time restriction there will be a massive number of chunks
 
-	chunksize = 200
+	# chunksize = 200
 	chunked = []
 
 	for l in listofworkdicts:
@@ -116,11 +119,10 @@ def wordcounter(timerestriction=None):
 				masterconcorcdance[word][db] = 0
 		masterconcorcdance[word]['total'] = sum([masterconcorcdance[word][x] for x in masterconcorcdance[word]])
 
-	testing = False
-	if testing == False and timerestriction == None:
-		# not testing: then it is safe to reset the database...
+	if timerestriction == None:
 		# no timerestriction: then this is our first pass and we should write the results to the master counts
-		# timerestriction implies subsequent passes that are for metadata derived from unrestricted data and should not overwrite it
+		# timerestriction implies subsequent passes that are for metadata derived from unrestricted data;
+		# these passes should not overwrite that data
 
 		letters= '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
 		for l in letters:
@@ -346,43 +348,44 @@ def formcounter():
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	skipping = True
-	if skipping != True:
-		lemmatalist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
+	# loading is slow: avoid doing in 2x
+	lemmatalist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
 
-		# 'v' should be empty, though; ϙ will go to 0
-		letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
-		letters = {letters[l] for l in range(0, len(letters))}
-		countobjectlist = []
-		for l in letters:
-			countobjectlist += graballcountsasobjects('wordcounts_' + l, cursor)
-		countdict = {word.entryname: word for word in countobjectlist}
-		del countobjectlist
+	# 'v' should be empty, though; ϙ will go to 0
+	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+	letters = {letters[l] for l in range(0, len(letters))}
+	countobjectlist = []
+	for l in letters:
+		countobjectlist += graballcountsasobjects('wordcounts_' + l, cursor)
+	countdict = {word.entryname: word for word in countobjectlist}
+	del countobjectlist
 
-		dictionarycounts = buildcountsfromlemmalist(lemmatalist, countdict)
+	dictionarycounts = buildcountsfromlemmalist(lemmatalist, countdict)
 
-		thetable = 'dictionary_headword_wordcounts'
-		createwordcounttable(thetable, extracolumns=True)
+	thetable = 'dictionary_headword_wordcounts'
+	createwordcounttable(thetable, extracolumns=True)
 
-		commitcount = 0
-		keys = dictionarycounts.keys()
-		keys = sorted(keys)
-		for word in keys:
-			commitcount += 1
-			q = 'INSERT INTO '+thetable+' (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) ' \
-			                            'VALUES (%s, %s, %s, %s, %s, %s, %s)'
-			d = (word, dictionarycounts[word]['total'], dictionarycounts[word]['gr'], dictionarycounts[word]['lt'],
-			     dictionarycounts[word]['dp'], dictionarycounts[word]['in'], dictionarycounts[word]['ch'])
-			cursor.execute(q,d)
-			if commitcount % 2500 == 0:
-				dbc.commit()
-		dbc.commit()
+	commitcount = 0
+	keys = dictionarycounts.keys()
+	keys = sorted(keys)
+	for word in keys:
+		commitcount += 1
+		q = 'INSERT INTO '+thetable+' (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) ' \
+		                            'VALUES (%s, %s, %s, %s, %s, %s, %s)'
+		d = (word, dictionarycounts[word]['total'], dictionarycounts[word]['gr'], dictionarycounts[word]['lt'],
+		     dictionarycounts[word]['dp'], dictionarycounts[word]['in'], dictionarycounts[word]['ch'])
+		cursor.execute(q,d)
+		if commitcount % 2500 == 0:
+			dbc.commit()
+	dbc.commit()
 
 	# now figure out and record the percentiles
 
 	thetable = 'dictionary_headword_wordcounts'
 	metadata = derivedictionaryentrymetadata(thetable, cursor)
-	print('ἅρπαξ',metadata['ἅρπαξ'])
+
+	# print('ἅρπαξ',metadata['ἅρπαξ'])
+	# ἅρπαξ {'frequency_classification': 'core vocabulary (more than 50)', 'early': 42, 'middle': 113, 'late': 468}
 
 	insertmetadata(metadata, thetable)
 
@@ -716,10 +719,10 @@ def createwordcounttable(tablename, extracolumns=False):
 	query += ' in_count integer,'
 	query += ' ch_count integer'
 	if extracolumns:
-		query += 'frequency_classification character varying(64),'
-		query += 'early_occurrences integer,'
-		query += 'middle_occurrences integer,'
-		query += 'late_occurrences integer,'
+		query += ', frequency_classification character varying(64),'
+		query += ' early_occurrences integer,'
+		query += ' middle_occurrences integer,'
+		query += ' late_occurrences integer'
 	query += ') WITH ( OIDS=FALSE );'
 
 	cursor.execute(query)
@@ -760,9 +763,16 @@ def insertmetadata(metadatadict, thetable):
 		count += 1
 		q = 'INSERT INTO tmp_metadata (entry_name, frequency_classification, early_occurrences, middle_occurrences, late_occurrences) ' \
 		    'VALUES ( %s, %s, %s, %s, %s)'
-		d = (entry, metadatadict[entry]['frequency_classification'], metadatadict[entry]['early'],
+		try:
+			d = (entry, metadatadict[entry]['frequency_classification'], metadatadict[entry]['early'],
 		     metadatadict[entry]['middle'], metadatadict[entry]['late'])
-		cursor.execute(q, d)
+		except KeyError:
+			# there is no date data because the word is not found in a dateable text
+			pass
+
+		if d:
+			cursor.execute(q, d)
+
 		if count % 2500 == 0:
 			dbc.commit()
 
@@ -770,7 +780,7 @@ def insertmetadata(metadatadict, thetable):
 	q = 'UPDATE '+thetable+' SET frequency_classification = tmp_metadata.frequency_classification,' \
 			'early_occurrences = tmp_metadata.early_occurrences,' \
 			'middle_occurrences = tmp_metadata.middle_occurrences,' \
-			'late_occurrences = tmp_metadata.late_occurrences,' \
+			'late_occurrences = tmp_metadata.late_occurrences' \
 			' FROM tmp_metadata ' \
 			'WHERE '+thetable+'.entry_name = tmp_metadata.entry_name'
 	cursor.execute(q)
