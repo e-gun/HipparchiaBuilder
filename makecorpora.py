@@ -140,7 +140,7 @@ if buildcounts == 'y':
 	# second draft 147m
 	# third draft: Build took 68.77 minutes
 	# mp: Build took 23.17 minutes
-	# wordcounter()
+	wordcounter()
 	formcounter()
 
 stop = time.time()
