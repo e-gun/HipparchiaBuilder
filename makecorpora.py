@@ -127,9 +127,9 @@ if buildlex == 'y':
 
 if buildgram == 'y':
 	print('building grammar dbs')
-	grammarloader('greek')
+	#grammarloader('greek')
 	analysisloader('greek')
-	grammarloader('latin')
+	#grammarloader('latin')
 	analysisloader('latin')
 	timestampthebuild('lm', dbconnection, cursor)
 	dbconnection.commit()
@@ -145,8 +145,4 @@ if buildcounts == 'y':
 stop = time.time()
 took = round((stop-start)/60, 2)
 print('\nBuild took',str(took),'minutes')
-
-
-# 4 Workers on G&L authors:
-# Build took 40.32 minutes
 

@@ -452,11 +452,12 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 	for dataset in [(greek, 'greek'), (latin, 'latin')]:
 		d = dataset[0]
 		label = dataset[1]
-		mostcommon = d[:25]
-		remainder = d[25:]
+		mostcommon = d[:250]
+		common = d[250:2500]
+		remainder = d[2500:]
 		veryrare = [x for x in remainder if x.t < 5]
 		rare = [x for x in remainder if x.t < 51 and x.t > 5]
-		core = [x for x in remainder if x.t > 50]
+		core = [x for x in remainder if x.t > 50 and (x not in common or x not in mostcommon)]
 		explorecore = False
 		if explorecore:
 			# slice it into 10 bundles
@@ -469,10 +470,11 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 		printstats = False
 		for item in [
 			('full set', d),
-			('top twenty five', mostcommon),
-			('core vocabulary (more than 50)',core),
-			('rare (between 50 and 5)', rare),
-			('very rare (less than 5)', veryrare),
+			('top 250', mostcommon),
+			('top 2500',common),
+			('core (not in top 2500; >50 occurrences', core),
+			('rare (between 50 and 5 occurrences)', rare),
+			('very rare (fewer than 5 occurrences)', veryrare),
 			]:
 			if printstats:
 				if item == ('full set', d):
@@ -560,7 +562,7 @@ def prettyprintcohortdata(label, cohortresultsdict):
 	return
 
 """
-greek
+ greek
 
 full set
 	count	113010
@@ -569,33 +571,35 @@ full set
 	average	794
 	median	7
 
-top twenty five
-	count	25
+top 250
+	count	250
 	high	3649037
-	low	429120
-	average	1177696
-	median	949783
+	low	39356
+	average	218482
+	median	78551
 
-core vocabulary (more than 50)
-	count	28376
-	high	425747
+core vocabulary (more than 50 occurrences)
+	count	28151
+	high	38891
 	low	51
-	average	2099
-	median	229
+	average	1221
+	median	226
 
-rare (between 50 and 5)
+rare (between 50 and 5 occurrences)
 	count	32614
 	high	50
 	low	6
 	average	18
 	median	15
 
-very rare (less than 5)
+very rare (fewer than 5 occurrences)
 	count	48003
 	high	4
 	low	1
 	average	1
-	median	2
+	media	2
+
+
 latin
 
 full set
@@ -605,28 +609,28 @@ full set
 	average	348
 	median	11
 
-top twenty five
-	count	25
+top 250
+	count	250
 	high	244812
-	low	40371
-	average	86260
-	median	64356
+	low	5859
+	average	19725
+	median	10358
 
-core vocabulary (more than 50)
-	count	8624
-	high	40256
+core vocabulary (more than 50 occurrences)
+	count	8399
+	high	5843
 	low	51
-	average	859
-	median	219
+	average	552
+	median	209
 
-rare (between 50 and 5)
+rare (between 50 and 5 occurrences)
 	count	8095
 	high	50
 	low	6
 	average	19
 	median	16
 
-very rare (less than 5)
+very rare (fewer than 5 occurrences)
 	count	10404
 	high	4
 	low	1

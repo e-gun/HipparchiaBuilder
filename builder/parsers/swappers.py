@@ -49,3 +49,39 @@ def bitswapchars(valuelist):
 	for hv in valuelist:
 		ascii += chr(int(hv, 16) & int('7f', 16))
 	return ascii
+
+
+def superscripterone(digitmatch):
+	"""
+
+	turn 1 into ¹ and 2 into ²
+
+	:param digit:
+	:return:
+	"""
+
+	digit = digitmatch[1]
+
+	invals = u'0123456789'
+	outvals = u'⁰¹²³⁴⁵⁶⁷⁸⁹'
+	transformed = digit.translate(str.maketrans(invals, outvals))
+
+	return transformed
+
+
+def superscripterzero(digitmatch):
+	"""
+
+	turn 1 into ¹ and 2 into ²
+
+	:param digit:
+	:return:
+	"""
+
+	digit = digitmatch[0]
+
+	invals = u'0123456789'
+	outvals = u'⁰¹²³⁴⁵⁶⁷⁸⁹'
+	transformed = digit.translate(str.maketrans(invals, outvals))
+
+	return transformed

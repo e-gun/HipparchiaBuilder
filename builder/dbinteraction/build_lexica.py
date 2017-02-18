@@ -143,14 +143,32 @@ def grammarloader(language):
 
 
 def analysisloader(language):
+	"""
+
+	turn 'greek-analyses.txt' into a db table
+
+	an analysis line looks like this:
+		!a/sdwn {32430564 9 e)/sdwn,ei)sdi/dwmi flow into       aor ind act 3rd pl (epic doric aeolic)}{32430564 9 e)/sdwn,ei)sdi/dwmi  flow into       aor ind act 1st sg (epic)}
+
+		word + {analysis 1}{analysis 2}{...}
+
+	each inset analysis is:
+		{xrefnumber digit ancientform1,ancientform2 translation parsinginfo}
+
+	the real parsing work is done by mpanalysisinsert
+
+	:param language:
+	:return:
+	"""
+
 	# a slight shift in the finder should let you do both lemm and anal, but cumbersome to build the switches and triggers
 	# the format is dictionary entry + tab + magic number + a tabbed list of forms with the morph in parens.
 	# lemmata:
 	# a(/dhn	1750487	a(/ddhn (indeclform (adverb))	a(/dhn (indeclform (adverb))	a)/ddhn (indeclform (adverb))	a)/dhn (indeclform (adverb))
-	
+
 	# analyses:
 	# !ane/ntwn	{9619125 9 a)ne/ntwn,a)ni/hmi	send up	aor imperat act 3rd pl}{9619125 9 a)ne/ntwn,a)ni/hmi	send up	aor part act masc/neut gen pl}{37155703 9 e)ne/ntwn,e)ni/hmi	send in	aor imperat act 3rd pl}{37155703 9 e)ne/ntwn,e)ni/hmi	send in	aor part act masc/neut gen pl}
-	
+
 	if language == 'latin':
 		morphfile = config['lexica']['lexicadir'] + config['lexica']['ltanal']
 		table = 'latin_morphology'
@@ -163,7 +181,7 @@ def analysisloader(language):
 		morphfile = ''
 		table = 'no_such_table'
 		islatin = False
-		print('I do not know',language,'\nBad things are about to happen.')
+		print('I do not know', language, '\nBad things are about to happen.')
 
 	sqldict = getlexicaltablestructuredict('analysis')
 
@@ -171,16 +189,16 @@ def analysisloader(language):
 	f = open(morphfile, encoding='utf-8', mode='r')
 	forms = f.readlines()
 	f.close()
-	
+
 	# rather than manage a list of 100s of MB in size let's get chunky
 	# this also allows us to send updates outside of the commit() moment
 	# http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks#1751478
-	print('loading', language, 'morphology.',len(forms),'items to load')
+	print('loading', language, 'morphology.', len(forms), 'items to load')
 
 	chunksize = 50000
 	formbundles = [forms[i:i + chunksize] for i in range(0, len(forms), chunksize)]
 	bundlecount = 0
-	
+
 	for bundle in formbundles:
 		bundlecount += 1
 		manager = Manager()
@@ -194,9 +212,9 @@ def analysisloader(language):
 		        range(workers)]
 		for j in jobs: j.start()
 		for j in jobs: j.join()
-		if bundlecount*chunksize < len(forms):
+		if bundlecount * chunksize < len(forms):
 			# this check prevents saying '950000 forms inserted' at the end when there are only '911871 items to load'
-			print('\t',str(bundlecount*chunksize),'forms inserted')
+			print('\t', str(bundlecount * chunksize), 'forms inserted')
 
 	# we will be doing some searches inside of possible_dictionary_forms: need the right kind of index for it
 	dbc = setconnection(config)
@@ -259,7 +277,7 @@ def getlexicaltablestructuredict(tablename):
 			'columns': ['dictionary_entry character varying(64)', 'xref_number integer', 'derivative_forms text'],
 			'index': 'dictionary_entry' },
 		'analysis': {
-			'columns': ['observed_form character varying(64)', 'possible_dictionary_forms text'],
+			'columns': ['observed_form character varying(64)', 'xrefs character varying(128)', 'prefixrefs character varying(128)', 'possible_dictionary_forms text'],
 			'index': 'observed_form'},
 		'latin_dictionary': {
 			'columns': [ 'entry_name character varying(64)', 'metrical_entry character varying(64)', 'id_number character varying(8)',

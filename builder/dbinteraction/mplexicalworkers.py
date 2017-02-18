@@ -13,6 +13,7 @@ from builder.dbinteraction.db import setconnection
 from builder.parsers.betacode_to_unicode import stripaccents
 from builder.parsers.lexica import latinvowellengths, greekwithvowellengths, betaconvertandsave, greekwithoutvowellengths, \
 	lsjgreekswapper
+from builder.parsers.swappers import superscripterzero, superscripterone
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -61,10 +62,12 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			# handle words like abactus which have key... n... opt... where n is the variant number
 			# this pattern interrupts the std parsedinfo flow
 			metricalentry = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
+			metricalentry = re.sub(r' \((\d)\)',superscripterone, metricalentry)
 			entry = re.sub('(_|\^)', '', metricalentry)
 			metricalentry = latinvowellengths(metricalentry)
 			
 			key = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
+			key = re.sub(r' \((\d)\)', superscripterone, key)
 			key = latinvowellengths(key)
 			
 			# do some quickie greek replacements
@@ -140,9 +143,9 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 				type = ''
 				opt = ''
 			entry = re.sub(r'"(.*?)"', lambda x: greekwithoutvowellengths(x.group(1)), key.upper())
-			entry = re.sub(r'(\d{1,})', r' (\1)', entry)
+			entry = re.sub(r'(\d{1,})', superscripterone, entry)
 			metrical = re.sub(r'(")(.*?)(")', lambda x: greekwithvowellengths(x.group(2)), key.upper())
-			metrical = re.sub(r'(\d{1,})', r'', metrical)
+			metrical = re.sub(r'(\d{1,})', superscripterone, metrical)
 			metrical = re.sub(r'"', r'', metrical)
 			
 			body = re.sub(greekfinder, lsjgreekswapper, body)
@@ -192,18 +195,23 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 	while len(entries) > 0:
 		try:
 			entry = entries.pop()
+		except:
+			entry = None
+		if entry:
 			segments = re.search(keywordfinder, entry)
 			dictionaryform = segments.group(1)
 			if islatin is True:
 				dictionaryform = re.sub(r'\t', '', dictionaryform)
 			else:
 				dictionaryform = re.sub(r'(.*?)\t', lambda x: greekwithoutvowellengths(x.group(1)), dictionaryform.upper())
+			dictionaryform = re.sub(r'\d',superscripterzero,dictionaryform)
+			dictionaryform = re.sub(r'%', '', dictionaryform)
 			otherforms = segments.group(3)
 			if islatin is not True:
 				otherforms = re.sub(greekfinder, betaconvertandsave, otherforms)
 			xref = int(segments.group(2))
 			# be careful: the corresponding xref is a str inside a text field
-			
+
 			query = 'INSERT INTO ' + grammardb + ' (dictionary_entry, xref_number, derivative_forms) VALUES (%s, %s, %s)'
 			data = (dictionaryform, xref, otherforms)
 			curs.execute(query, data)
@@ -211,8 +219,6 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
 				print('\tat', dictionaryform)
-		except:
-			pass
 		
 	dbc.commit()
 	curs.close()
@@ -226,6 +232,122 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 	work on grammardb entries
 	assignable to an mp worker
 	insert into db at end
+
+	an analysis line looks like this:
+		!a/sdwn {32430564 9 e)/sdwn,ei)sdi/dwmi flow into       aor ind act 3rd pl (epic doric aeolic)}{32430564 9 e)/sdwn,ei)sdi/dwmi  flow into       aor ind act 1st sg (epic)}
+
+		beluasque	{8991758 9 be_lua_s,belua	a beast	fem acc pl}{9006674 9 be_lua_s,beluus	 	fem acc pl}
+
+		word(TAB){analysis 1}{analysis 2}{...}
+
+	each inset analysis is:
+		{xrefnumber digit ancientform1,ancientform2(TAB)translation(TAB)parsinginfo}
+
+
+	:param entry:
+	:return:
+	"""
+
+	dbc = setconnection(config)
+	curs = dbc.cursor()
+
+	# most end with '}', but some end with a bracketed number or numbers
+	# w)ph/sasqai	{49798258 9 a)ph/sasqai,a)po/-h(/domai	swād-	aor inf mid (ionic)}[12711488]
+	# a)mfiperih|w/rhntai	{3398393 9 a)mfiperi+h|w/rhntai,a)mfi/,peri/-ai)wre/w	lift up	perf ind mp 3rd pl}[6238652][88377399]
+
+	# hunting down the bracketrefs will get you to things like: ἀπό and ἀμφί
+	# that is, these mark words that have a prefix and THAT information can be used as part of the solution to the comma conundrum
+	# namely, ὑπό,ἀνά,ἀπό-νέω needs to be recomposed
+
+	bracketrefs = re.compile(r'\[\d\d{1,}\]')
+	formfinder = re.compile(r'(.*?\t){(.*?)}$')
+	analysisfinder = re.compile(r'(\d{1,})\s(\d)\s(.*?)\t(.*?)\t(.*?$)')
+
+	while len(items) > 0:
+		try:
+			entry = items.pop()
+		except:
+			entry = None
+		if entry:
+			bracketed = ''
+			if re.search(bracketrefs,entry) is not None:
+				bracketed = re.findall(bracketrefs,entry)
+				bracketed = list(set(bracketed))
+				bracketed = (', ').join(bracketed)
+				bracketed = re.sub(r'[\[\]]','',bracketed)
+				entry = re.sub(bracketrefs, '', entry)
+			segments = re.search(formfinder, entry)
+			try:
+				observedform = segments[1]
+			except TypeError:
+				print('\tfailed to find the observed form for',entry)
+				observedform = None
+			if observedform:
+				if islatin is True:
+					observedform = re.sub(r'[\t\s]', '', observedform)
+					observedform = latinvowellengths(observedform)
+				else:
+					observedform = re.sub(r'(.*?)\t', lambda x: greekwithoutvowellengths(x[1]), observedform.upper())
+				analysislist = segments.group(2).split('}{')
+				# analysislist πολυγώνοιϲ ['92933543 9 polu/gwnon\tpolygonal\tneut dat pl', '92933543 9 polu/gwnos\tpolygonal\tmasc/fem/neut dat pl']
+				xrefs = set([str(x.split(' ')[0]) for x in analysislist])
+				xrefs = (', ').join(xrefs)
+				# pass an item through analysisfinder and you will get this:
+				# i[1] = '92933543'
+				# i[2] = '9'
+				# i[3] = 'polu/gwnon'
+				# i[4] = 'polygonal'
+				# i[5] = 'neut dat pl'
+
+				possibilities = ''
+				number = 0
+				for found in analysislist:
+					elements = re.search(analysisfinder,found)
+					number += 1
+					if islatin is True:
+						wd = latinvowellengths(elements.group(3))
+						wd = re.sub(r'#(\d)', superscripterone, wd)
+					else:
+						wd = greekwithoutvowellengths(elements.group(3).upper())
+						wd = re.sub(r'\d', superscripterzero, wd)
+					wd = re.sub(r',', r', ', wd)
+					possibilities += '<possibility_' + str(number) + '>' + wd + '<xref_value>' + elements.group(1) + \
+					                 '</xref_value><xref_kind>'+ elements.group(2) +'</xref_kind><transl>' + elements.group(4) + \
+					                 '</transl>' + '<analysis>' + elements.group(5) + \
+					                 '</analysis></possibility_' + str(number) + '>\n'
+				query = 'INSERT INTO ' + grammardb + ' (observed_form, xrefs, prefixrefs, possible_dictionary_forms) ' \
+				                                     'VALUES (%s, %s, %s, %s)'
+				data = (observedform, xrefs, bracketed, possibilities)
+				# print(entry,'\n',observedform,xrefs,bracketed,'\n\t',possibilities)
+				curs.execute(query, data)
+				commitcount.increment()
+				if commitcount.value % 2500 == 0:
+					dbc.commit()
+
+	dbc.commit()
+	curs.close()
+	del dbc
+
+	return
+
+
+def oldmpanalysisinsert(grammardb, items, islatin, commitcount):
+	"""
+	work on grammardb entries
+	assignable to an mp worker
+	insert into db at end
+
+	an analysis line looks like this:
+		!a/sdwn {32430564 9 e)/sdwn,ei)sdi/dwmi flow into       aor ind act 3rd pl (epic doric aeolic)}{32430564 9 e)/sdwn,ei)sdi/dwmi  flow into       aor ind act 1st sg (epic)}
+
+		beluasque	{8991758 9 be_lua_s,belua	a beast	fem acc pl}{9006674 9 be_lua_s,beluus	 	fem acc pl}
+
+		word(TAB){analysis 1}{analysis 2}{...}
+
+	each inset analysis is:
+		{xrefnumber digit ancientform1,ancientform2(TAB)translation(TAB)parsinginfo}
+
+
 	:param entry:
 	:return:
 	"""
@@ -239,6 +361,9 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 	while len(items) > 0:
 		try:
 			entry = items.pop()
+		except:
+			entry = None
+		if entry:
 			segments = re.search(keywordfinder, entry)
 			dictionaryform = segments.group(1)
 			if islatin is True:
@@ -257,8 +382,11 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 				if islatin is True:
 					wd = re.sub(r'\t', '', found[2])
 					wd = latinvowellengths(wd)
+					wd = re.sub(r'#(\d)', superscripterone, wd)
 				else:
 					wd = re.sub(r'(.*?)\t', lambda x: greekwithoutvowellengths(x.group(1)), found[2].upper())
+					wd = re.sub(r'\d', superscripterzero, wd)
+				wd = re.sub(r',',r', ',wd)
 				possibilities += '<possibility_' + str(number) + '>' + wd + '<xref_value>' + found[1] + \
 				                 '</xref_value><transl>' + found[3] + '</transl>' + '<analysis>' + found[4] + \
 				                 '</analysis></possibility_' + str(number) + '>\n'
@@ -269,8 +397,6 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
-		except:
-			pass
 
 	dbc.commit()
 	curs.close()
