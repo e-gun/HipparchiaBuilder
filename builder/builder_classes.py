@@ -16,6 +16,21 @@ class Author(object):
 	"""
 	Created out of the DB info, not the IDT or the AUTHTAB
 	Initialized straight out of a DB read
+
+	CREATE TABLE public.authors
+	(
+    universalid character(6) COLLATE pg_catalog."default",
+    language character varying(10) COLLATE pg_catalog."default",
+    idxname character varying(128) COLLATE pg_catalog."default",
+    akaname character varying(128) COLLATE pg_catalog."default",
+    shortname character varying(128) COLLATE pg_catalog."default",
+    cleanname character varying(128) COLLATE pg_catalog."default",
+    genres character varying(512) COLLATE pg_catalog."default",
+    recorded_date character varying(64) COLLATE pg_catalog."default",
+    converted_date character varying(8) COLLATE pg_catalog."default",
+    location character varying(128) COLLATE pg_catalog."default"
+	)
+
 	"""
 
 	def __init__(self, number,language, uidprefix, dataprefix):
@@ -188,6 +203,31 @@ class dbOpus(object):
 	Initialized straight out of a DB read
 	note the efforts to match a simple Opus, but the fit is potentially untidy
 	it is always going to be important to know exactly what kind of object you are handling
+
+	CREATE TABLE public.works
+	(
+    universalid character(10) COLLATE pg_catalog."default",
+    title character varying(512) COLLATE pg_catalog."default",
+    language character varying(10) COLLATE pg_catalog."default",
+    publication_info text COLLATE pg_catalog."default",
+    levellabels_00 character varying(64) COLLATE pg_catalog."default",
+    levellabels_01 character varying(64) COLLATE pg_catalog."default",
+    levellabels_02 character varying(64) COLLATE pg_catalog."default",
+    levellabels_03 character varying(64) COLLATE pg_catalog."default",
+    levellabels_04 character varying(64) COLLATE pg_catalog."default",
+    levellabels_05 character varying(64) COLLATE pg_catalog."default",
+    workgenre character varying(32) COLLATE pg_catalog."default",
+    transmission character varying(32) COLLATE pg_catalog."default",
+    worktype character varying(32) COLLATE pg_catalog."default",
+    provenance character varying(64) COLLATE pg_catalog."default",
+    recorded_date character varying(64) COLLATE pg_catalog."default",
+    converted_date character varying(8) COLLATE pg_catalog."default",
+    wordcount integer,
+    firstline integer,
+    lastline integer,
+    authentic boolean
+	)
+
 	"""
 
 	def __init__(self, universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02,
@@ -259,6 +299,24 @@ class dbOpus(object):
 class dbWorkLine(object):
 	"""
 	an object that corresponds to a db line
+
+	CREATE TABLE public.in0207
+	(
+    index integer NOT NULL DEFAULT nextval('in0207'::regclass),
+    wkuniversalid character varying(10) COLLATE pg_catalog."default",
+    level_05_value character varying(64) COLLATE pg_catalog."default",
+    level_04_value character varying(64) COLLATE pg_catalog."default",
+    level_03_value character varying(64) COLLATE pg_catalog."default",
+    level_02_value character varying(64) COLLATE pg_catalog."default",
+    level_01_value character varying(64) COLLATE pg_catalog."default",
+    level_00_value character varying(64) COLLATE pg_catalog."default",
+    marked_up_line text COLLATE pg_catalog."default",
+    accented_line text COLLATE pg_catalog."default",
+    stripped_line text COLLATE pg_catalog."default",
+    hyphenated_words character varying(128) COLLATE pg_catalog."default",
+    annotations character varying(256) COLLATE pg_catalog."default"
+	)
+
 	"""
 
 	def __init__(self, wkuinversalid, index, level_05_value, level_04_value, level_03_value, level_02_value,
@@ -486,6 +544,18 @@ class dbWorkLine(object):
 class dbWordCountObject(object):
 	"""
 	an object that corresponds to a db line
+
+	CREATE TABLE public."wordcounts_ω"
+	(
+    entry_name character varying(64) COLLATE pg_catalog."default",
+    total_count integer,
+    gr_count integer,
+    lt_count integer,
+    dp_count integer,
+    in_count integer,
+    ch_count integer
+	)
+
 	"""
 
 	def __init__(self, entryname, totalcount, greekcount, latincount, docpapcount, inscriptioncount, christiancount):
@@ -510,6 +580,14 @@ class dbWordCountObject(object):
 class dbLemmaObject(object):
 	"""
 	an object that corresponds to a db line
+
+	CREATE TABLE public.greek_lemmata
+	(
+	dictionary_entry character varying(64) COLLATE pg_catalog."default",
+	xref_number integer,
+	derivative_forms text COLLATE pg_catalog."default"
+	)
+
 	"""
 
 	def __init__(self, dictionaryentry, xref, derivativeforms):
