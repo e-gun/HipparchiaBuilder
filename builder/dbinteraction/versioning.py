@@ -10,7 +10,8 @@ import configparser
 from datetime import datetime
 
 
-sqltemplateversion = 12272016
+#sqltemplateversion = 12272016
+sqltemplateversion = 2182017
 
 
 config = configparser.ConfigParser()

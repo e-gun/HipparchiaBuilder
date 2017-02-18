@@ -472,7 +472,7 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 			('full set', d),
 			('top 250', mostcommon),
 			('top 2500',common),
-			('core (not in top 2500; >50 occurrences)', core),
+			('core (>50 occurrences; not in top 2500)', core),
 			('rare (between 50 and 5 occurrences)', rare),
 			('very rare (fewer than 5 occurrences)', veryrare),
 			]:
@@ -786,7 +786,7 @@ def insertmetadata(metadatadict, thetable):
 		     metadatadict[entry]['middle'], metadatadict[entry]['late'])
 		except KeyError:
 			# there is no date data because the word is not found in a dateable text
-			pass
+			d = (entry, metadatadict[entry]['frequency_classification'], '', '', '')
 
 		if d:
 			cursor.execute(q, d)
