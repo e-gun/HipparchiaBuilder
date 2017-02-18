@@ -472,7 +472,7 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 			('full set', d),
 			('top 250', mostcommon),
 			('top 2500',common),
-			('core (not in top 2500; >50 occurrences', core),
+			('core (not in top 2500; >50 occurrences)', core),
 			('rare (between 50 and 5 occurrences)', rare),
 			('very rare (fewer than 5 occurrences)', veryrare),
 			]:
@@ -562,7 +562,7 @@ def prettyprintcohortdata(label, cohortresultsdict):
 	return
 
 """
- greek
+greek
 
 full set
 	count	113010
@@ -578,12 +578,19 @@ top 250
 	average	218482
 	median	78551
 
-core vocabulary (more than 50 occurrences)
-	count	28151
+top 2500
+	count	2250
 	high	38891
+	low	3486
+	average	9912
+	median	7026
+
+core (not in top 2500; >50 occurrences)
+	count	25901
+	high	3479
 	low	51
-	average	1221
-	median	226
+	average	466
+	median	196
 
 rare (between 50 and 5 occurrences)
 	count	32614
@@ -597,7 +604,7 @@ very rare (fewer than 5 occurrences)
 	high	4
 	low	1
 	average	1
-	media	2
+	median	2
 
 
 latin
@@ -616,12 +623,19 @@ top 250
 	average	19725
 	median	10358
 
-core vocabulary (more than 50 occurrences)
-	count	8399
+top 2500
+	count	2250
 	high	5843
+	low	541
+	average	1565
+	median	1120
+
+core (not in top 2500; >50 occurrences)
+	count	6149
+	high	541
 	low	51
-	average	552
-	median	209
+	average	181
+	median	139
 
 rare (between 50 and 5 occurrences)
 	count	8095

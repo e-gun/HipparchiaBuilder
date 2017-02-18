@@ -257,7 +257,10 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 
 	# hunting down the bracketrefs will get you to things like: ἀπό and ἀμφί
 	# that is, these mark words that have a prefix and THAT information can be used as part of the solution to the comma conundrum
-	# namely, ὑπό,ἀνά,ἀπό-νέω needs to be recomposed
+	# namely, ὑπό,ἀνά,ἀπό-νέω needs to be recomposed by attending to the commas, but the commas are not only associated with prefixes
+	# cf. ἠχήϲαϲα: <possibility_1>ἠχθόμαν, ἄχθομαι<xref_value>19480186</xref_value>
+
+	# the number of items in bracketrefs corresponds to the number of prefix checks you will need to make to recompose the verb
 
 	bracketrefs = re.compile(r'\[\d\d{1,}\]')
 	formfinder = re.compile(r'(.*?\t){(.*?)}$')
