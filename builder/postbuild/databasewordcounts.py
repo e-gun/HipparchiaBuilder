@@ -61,8 +61,6 @@ def wordcounter(timerestriction=None):
 	dictofdbdicts = {dset:{db: dbswithranges[db] for db in dbswithranges if db[0:2] == dset} for dset in datasets}
 	listofworkdicts = [dictofdbdicts[key] for key in dictofdbdicts]
 
-	# test on a subset
-	#listofworklists = [dictofdblists[key] for key in ['lt']]
 
 	# parallelize by sending each db to its own worker: 291 ch tables to check; 463 in tables to check; 1823 gr tables to check; 362 lt tables to check; 516 dp tables to check
 	# 'gr' is much bigger than the others, though let's split that one up
@@ -386,7 +384,7 @@ def formcounter():
 
 	# print('ἅρπαξ',metadata['ἅρπαξ'])
 	# ἅρπαξ {'frequency_classification': 'core vocabulary (more than 50)', 'early': 42, 'middle': 113, 'late': 468}
-
+	# print('stuprum',metadata['stuprum'])
 	insertmetadata(metadata, thetable)
 
 	return metadata
@@ -484,8 +482,7 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 				for entry in item[1]:
 					metadata[entry.entryname] = {'frequency_classification': item[0]}
 
-		if label == 'greek':
-			metadata = derivechronologicalmetadata(metadata, cursor)
+	metadata = derivechronologicalmetadata(metadata, cursor)
 
 	return metadata
 
@@ -786,8 +783,8 @@ def insertmetadata(metadatadict, thetable):
 		     metadatadict[entry]['middle'], metadatadict[entry]['late'])
 		except KeyError:
 			# there is no date data because the word is not found in a dateable text
-			d = (entry, metadatadict[entry]['frequency_classification'], '', '', '')
-
+			# d = (entry, metadatadict[entry]['frequency_classification'], '', '', '')
+			d = None
 		if d:
 			cursor.execute(q, d)
 
