@@ -25,8 +25,6 @@ def wordcounter(timerestriction=None):
 
 	count all of the words in all of the dbs or a subset thereof
 
-
-
 	:param timerestriction:
 	:return:
 	"""
@@ -346,7 +344,7 @@ def formcounter():
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	# loading is slow: avoid doing in 2x
+	# loading is slow: avoid doing it 2x
 	lemmatalist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
 
 	# 'v' should be empty, though; ϙ will go to 0
@@ -362,6 +360,8 @@ def formcounter():
 
 	thetable = 'dictionary_headword_wordcounts'
 	createwordcounttable(thetable, extracolumns=True)
+
+	# note that entries are stored under their 'analysis name' ('ἀμφί-λαμβάνω', etc.) and not their LSJ name
 
 	commitcount = 0
 	keys = dictionarycounts.keys()

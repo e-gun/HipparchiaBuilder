@@ -495,6 +495,7 @@ def poundsubstitutes(match):
 		112: r'𐆈',  # 𐆈- GREEK GRAMMA SIGN; Unicode: U+10188, UTF-8: F0 90 86 88
 		113: r'𐅼',
 		114: r'𐅀',
+		115: r'𐆉',
 		116: u'\u2053',
 		117: r'𐆃',  # 𐆃GREEK LITRA SIGN; Unicode: U+10183, UTF-8: F0 90 86 83
 		118: u'\u03bb\u0338',
@@ -568,10 +569,12 @@ def poundsubstitutes(match):
 		244: u'\u264c',
 		246: r'<hmu_idiosyncratic_char value="246">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		247: r'<hmu_idiosyncratic_char value="247">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		300: u'\u2e0e',  # but supposed to be just upper half of a coronis
 		302: r'<hmu_idiosyncratic_char value="302">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		303: u'›',
 		304: u'\u2e0e',  # but supposed to be just part of a coronis
 		305: u'\u2e0e',
+		306: u'\u2e0f', # but supposed to be a double paragraphos
 		307: u'\u2e0e',  # but supposed to be just part of a coronis
 		308: u'\u2e0e', # but supposed to be just part of a coronis
 		310: u'\u2e0e',
@@ -618,11 +621,15 @@ def poundsubstitutes(match):
 		500: r'<hmu_undocumented_poundsign value="500">⊚</hmu_undocumented_poundsign>',
 		501: r'π<6ιθ6>',  # abbreviation for πιθανόν: added own betacode - <6...6>
 		502: r'🜚',  # listed as idiosyncratic; but looks like 'alchemical symbol for gold': U+1F71A
+		503: r'ΡΠ', # but supposed to be on top of one another
 		504: u'\u2e0e',
 		505: u'\u205c',
+		506: u'\u2e15',
 		507: u'\u2e14',
 		508: u'\u203b',
 		509: u'\u0305\u0311',
+		510: r'ε/π',  # but supposed to be stacked
+		511: r'ι/κ', # but supposed to be stacked
 		512: u'\u03fd',
 		513: r'<hmu_idiosyncratic_char value="513">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		514: r'<hmu_idiosyncratic_char value="514">◦</hmu_idiosyncratic_char>',  # idiosyncratic
@@ -633,7 +640,7 @@ def poundsubstitutes(match):
 		519: u'\u2191',
 		520: u'\u2629',
 		521: r'<hmu_idiosyncratic_char value="521">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		# 522: u'\u',  # markup <rotate> 0397
+		522: r'<span class="90degreerotate>Η</span>',  # markup <rotate> 0397
 		523: u'\u2e13',
 		524: u'\u2297',
 		526: u'\u2190',
@@ -657,6 +664,7 @@ def poundsubstitutes(match):
 		545: r'<hmu_idiosyncratic_char value="545">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		546: r'<hmu_idiosyncratic_char value="546">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		547: r'<hmu_idiosyncratic_char value="547">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		548: r'<span class="superscript">‖̴</span>', # 2016+0334
 		549: r'<hmu_idiosyncratic_char value="549">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		550: u'\u003a\u003a\u2e2e',
 		551: u'\u25cc',
@@ -679,6 +687,7 @@ def poundsubstitutes(match):
 		568: r'𝈳',
 		569: r'𝈶',  # 40
 		570: u'\u03f9',
+		571: r'𐅃',
 		572: r'𝈩',  # 𝈩GREEK INSTRUMENTAL NOTATION SYMBOL-19; Unicode: U+1D229, UTF-8: F0 9D 88 A9
 		573: r'𝈒',
 		574: u'\u0393',
@@ -728,6 +737,19 @@ def poundsubstitutes(match):
 		662: u'\u03a5',
 		665: r'𝈴',  # 𝈴GREEK INSTRUMENTAL NOTATION SYMBOL-38; Unicode: U+1D234, UTF-8: F0 9D 88 B4
 		666: r'𝈯',  # 𝈯GREEK INSTRUMENTAL NOTATION SYMBOL-29; Unicode: U+1D22F, UTF-8: F0 9D 88 AF
+		667: r'𝈭',
+		668: r'𝈐',
+		669: r'𝈊',
+		670: r'𝈇',
+		671: r'𝈛',
+		672: r'𝈘',
+		673: r'𝈣',
+		674: r'𝈢',
+		675: r'𝉀',
+		676: r'𝈽',
+		677: r'μ',
+		678: r'𝈠',
+		679: r'𝈄',
 		681: r'<hmu_idiosyncratic_char value="681">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		682: r'<hmu_idiosyncratic_char value="682">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		688: u'\u03bc\u030a',
@@ -833,6 +855,7 @@ def poundsubstitutes(match):
 		1002: r'𐅾',
 		1003: r'𐅿',
 		1004: r'𐆀',
+		# a huge run of undocumented poundsigns in the inscriptions: this only scratches the surface
 		1053: r'<hmu_undocumented_poundsign value="1053">⊚</hmu_undocumented_poundsign>',
 		1059: r'<hmu_undocumented_poundsign value="1059">⊚</hmu_undocumented_poundsign>',
 		1068: r'<hmu_undocumented_poundsign value="1068">⊚</hmu_undocumented_poundsign>',
@@ -880,6 +903,7 @@ def poundsubstitutes(match):
 		1221: u'\u0131',
 		1222: u'\u0130',
 		1314: u'\u006e\u030a',
+		1315: r'ΜΡ', # but supposed to be on top of one another
 		1316: u'\u0292',
 		1317: u'\u02d9\002f\u002f\u002e',
 		1318: u'\u223b',
@@ -894,6 +918,7 @@ def poundsubstitutes(match):
 		1334: r'<hmu_idiosyncratic_char value="1334">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1335: r'／／', # fulwidth solidus instead
 		1336: r'<hmu_unsupported_hebrew_character>□</hmu_unsupported_hebrew_character>',
+		1337: r'﹥', # supposed to be 003e, ie simple angle bracket ; this is fe65
 		1338: r'𐅾',
 		1341: r'<hmu_idiosyncratic_char value="1341">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1500: u'\u03b3\u030a',
@@ -901,8 +926,11 @@ def poundsubstitutes(match):
 		1502: u'\u03a7\u0374',
 		1503: r'<hmu_idiosyncratic_char value="1503">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1504: r'<hmu_idiosyncratic_char value="1504">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1505: r'<hmu_unknown_abbreviation value="1505">◦</hmu_unknown_abbreviation>',
 		1506: u'\u0300\u0306',
-		1510: u'Α\u0338<6\u0304ν\u002f>6' # A%162<6E%26N%3>6 [!]
+		1509: r'πληθ', # supposed to be a symbol
+		1510: u'Α\u0338<6\u0304ν\u002f>6', # A%162<6E%26N%3>6 [!]
+		1511: r'π<span class="superscript">ε:`</span>'
 	}
 
 
@@ -1021,6 +1049,7 @@ def percentsubstitutes(match):
 		128: u'\u0302',
 		129: u'\u2020',
 		130: u'\u0307',
+		132: r'΅',
 		133: u'\u1fcd',
 		134: u'\u1fcf',
 		140: r'𐄒',
@@ -1319,11 +1348,13 @@ def ltanglebracketsubstitutes(match):
 		10: r'<span class="stackedlower">',  # hmu_stacked_text_lower
 		11: r'<span class="stackedupper">',  # hmu_stacked_text_upper
 		12: r'<span class="nonstandarddirection">',
+		13: r'<hmu_standalone_singlelinespacing_in_doublespacedtext />',
 		14: r'<span class="interlineartext">',
 		15: r'<span class="interlinearmarginalia">',  # hmu_interlinear_marginalia
 		17: '',  # Combining Double Underline
 		20: r'<span class="expanded">',  # hmu_expanded_text
 		21: r'<span class="expanded">',  # hmu_latin_expanded_text
+		22: r'<hmu_undocumented_anglebracketspan22>',
 		30: r'<span class="overline">',  # Combining Overline and Dependent Vertical Bars
 		31: r'<span class="strikethrough">',
 		32: r'<span class="overunder">',  # hmu_overline_and_underline
@@ -1386,6 +1417,7 @@ def rtanglebracketsubstitutes(match):
 		17: u'u\0333',
 		20: r'</span>',  # hmu_expanded_text
 		21: r'</span>',  # hmu_expanded_text
+		22: r'</hmu_undocumented_anglebracketspan22>',
 		30: r'</span>',  # Combining Overline and Dependent Vertical Bars
 		31: r'</span>',  # strikethrough
 		32: r'</span>',  # hmu_overline_and_underline
