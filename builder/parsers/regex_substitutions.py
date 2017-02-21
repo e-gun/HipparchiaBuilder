@@ -1355,10 +1355,12 @@ def ltanglebracketsubstitutes(match):
 		20: r'<span class="expanded">',  # hmu_expanded_text
 		21: r'<span class="expanded">',  # hmu_latin_expanded_text
 		22: r'<hmu_undocumented_anglebracketspan22>',
+		24: r'<hmu_undocumented_anglebracketspan24>',
 		30: r'<span class="overline">',  # Combining Overline and Dependent Vertical Bars
 		31: r'<span class="strikethrough">',
 		32: r'<span class="overunder">',  # hmu_overline_and_underline
 		34: r'⁄',  # fractions (which have balanced sets of markup...)
+		48: r'<hmu_undocumented_anglebracketspan48>',
 		60: r'<hmu_preferred_epigraphical_text_used>',
 		61: r'<hmu_epigraphical_text_inserted_after_erasure>',
 		62: r'<span class="lineover">',
@@ -1418,10 +1420,12 @@ def rtanglebracketsubstitutes(match):
 		20: r'</span>',  # hmu_expanded_text
 		21: r'</span>',  # hmu_expanded_text
 		22: r'</hmu_undocumented_anglebracketspan22>',
+		24: r'<hmu_undocumented_anglebracketspan24>',
 		30: r'</span>',  # Combining Overline and Dependent Vertical Bars
 		31: r'</span>',  # strikethrough
 		32: r'</span>',  # hmu_overline_and_underline
 		34: '',  # fractions
+		48: r'<hmu_undocumented_anglebracketspan48>',
 		60: r'</hmu_preferred_epigraphical_text_used>',
 		61: r'</hmu_epigraphical_text_inserted_after_erasure>',
 		62: r'</span>', # epigraphical line over letters
