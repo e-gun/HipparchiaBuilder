@@ -1726,10 +1726,6 @@ def addcdlabels(texttoclean, authornumber):
 	:return:
 	"""
 
-
-	# recording the blockinfo
-	# the info at the very top block seems like it would be worth figuring out
-
 	# cd blocks end 0xf3 + 0x0
 	# the newline lets you reset levels right?
 
@@ -1797,10 +1793,7 @@ def hexrunner(texttoclean):
 	:return: texttoclean
 	"""
 
-	textualmarkuptuples = []
-
 	# re.sub documentation: if repl is a function, it is called for every non-overlapping occurrence of pattern. The function takes a single match object argument, and returns the replacement string
-	#search = r'((0x[0-9a-f]{1,2}\s){1,})'
 	search = r'((█[⓪①②③④⑤⑥⑦⑧⑨ⓐⓑⓒⓓⓔⓕ]{1,2}\s){1,})'
 	texttoclean = re.sub(search, citationbuilder, texttoclean)
 
