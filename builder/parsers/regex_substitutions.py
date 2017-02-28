@@ -1510,6 +1510,10 @@ def andsubstitutes(match):
 	core = match.group(2)
 
 	substitutions = {
+		91: [r'<hmu_undocumented_font_shift_AND91>',r'</hmu_undocumented_font_shift_AND91>'],
+		90: [r'<hmu_undocumented_font_shift_AND90>', r'</hmu_undocumented_font_shift_AND90>'],
+		82: [r'<hmu_undocumented_font_shift_AND82>', r'</hmu_undocumented_font_shift_AND82>'],
+		81: [r'<hmu_undocumented_font_shift_AND81>', r'</hmu_undocumented_font_shift_AND81>'],
 		20: [r'<span class="largerthannormal">',r'</span>'],
 		14: [r'<span class="smallerthannormalsuperscript">',r'</span>'],
 		13: [r'<span class="smallerthannormalitalic">', r'</span>'],
