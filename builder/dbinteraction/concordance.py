@@ -9,7 +9,7 @@
 
 import re
 from string import punctuation
-from builder.parsers.betacode_to_unicode import stripaccents
+from builder.parsers.betacode_to_unicode import cleanaccentsandvj
 
 
 def findwordsinaline(line):
@@ -109,7 +109,7 @@ def dbsubmitconcordance(concordance, workuniversalid, dbconnection, cursor):
 			if concdbname[0] == 'g' and re.search(r'[a-zA-Z]', term[0]) is not None:
 				pass
 			else:
-				strippedterm = stripaccents(term)
+				strippedterm = cleanaccentsandvj(term)
 				query = 'INSERT INTO '+concdbname+' (word, stripped_word, loci) ' \
 				        'VALUES (%s, %s, %s)'
 				data = (term, strippedterm, concordance[term])
@@ -177,7 +177,7 @@ def polytonicsort(unsortedwords):
 	stripped = []
 	for word in unsortedwords:
 		if len(word)>0:
-			strippedword = stripaccents(word)
+			strippedword = cleanaccentsandvj(word)
 			# one modification to stripaccents(): σ for ϲ in order to get the right values
 			strippedword = re.sub(r'ϲ',r'σ',strippedword)
 			stripped.append(strippedword + '-snip-' + word)

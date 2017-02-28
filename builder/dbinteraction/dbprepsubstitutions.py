@@ -9,7 +9,7 @@
 import re
 import time
 from collections import deque
-from builder.parsers.betacode_to_unicode import stripaccents
+from builder.parsers.betacode_to_unicode import cleanaccentsandvj
 
 
 def dbprepper(dbunreadyversion):
@@ -200,7 +200,7 @@ def dbstrippedliner(dbunreadyversion):
 	# it seems like you will seldom wish you had caps and that remembering to handle them as a casual user is not so hot
 
 	for line in dbunreadyversion:
-		unaccented = stripaccents(line[workingcolumn])
+		unaccented = cleanaccentsandvj(line[workingcolumn])
 		line = line + [unaccented]
 		dbreadyversion.append(line)
 		
@@ -360,7 +360,7 @@ def consolidatecontiguouslines(previousline, thisline, hypenatedword):
 	p = pc.split(' ')
 	t = thisline[column].split(' ')
 	
-	p = p[:-1] + [stripaccents(hypenatedword)]
+	p = p[:-1] + [cleanaccentsandvj(hypenatedword)]
 	t = t[1:]
 	
 	p = ' '.join(p)

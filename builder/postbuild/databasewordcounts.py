@@ -14,7 +14,7 @@ from string import punctuation
 from statistics import mean, median
 from builder.builder_classes import dbWorkLine, dbWordCountObject, dbLemmaObject
 from builder.dbinteraction.db import setconnection, loadallauthorsasobjects, loadallworksasobjects
-from builder.parsers.betacode_to_unicode import stripaccents
+from builder.parsers.betacode_to_unicode import cleanaccentsandvj
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -299,7 +299,7 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 		cw = masterconcorcdance[key]
 		skip = False
 		try:
-			lettertable = stripaccents(key[0])
+			lettertable = cleanaccentsandvj(key[0])
 			# fine, but this just put any 'v' words inside of 'u' where they can never be found
 			# so v issue has to be off the table by now
 		except:

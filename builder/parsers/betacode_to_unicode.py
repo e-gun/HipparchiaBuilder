@@ -59,7 +59,7 @@ def restoreromanwithingreek(texttoclean):
 	return texttoclean
 
 
-def stripaccents(texttostrip):
+def cleanaccentsandvj(texttostrip):
 	"""
 	turn ᾶ into α, etc
 	a non-function that makes this set of substitutes available to more than one function
@@ -68,6 +68,7 @@ def stripaccents(texttostrip):
 	substitutes = (
 		('v', 'u'),
 		('U', 'V'),
+		('(J|j)', 'i'),
 		('(Á|Ä)', 'A'),
 		('(á|ä)', 'a'),
 		('(É|Ë)', 'E'),

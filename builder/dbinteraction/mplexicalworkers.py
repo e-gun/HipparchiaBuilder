@@ -10,7 +10,7 @@ import configparser
 import re
 
 from builder.dbinteraction.db import setconnection
-from builder.parsers.betacode_to_unicode import stripaccents
+from builder.parsers.betacode_to_unicode import cleanaccentsandvj
 from builder.parsers.lexica import latinvowellengths, greekwithvowellengths, betaconvertandsave, greekwithoutvowellengths, \
 	lsjgreekswapper
 from builder.parsers.swappers import superscripterzero, superscripterone
@@ -153,7 +153,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			body = re.sub(restoreb, r'<pron extent="full">\1\2', body)
 			body = re.sub(restorec, r'<itype lang="greek" opt="n">\1\2', body)
 			
-			stripped = stripaccents(entry)
+			stripped = cleanaccentsandvj(entry)
 			
 			query = 'INSERT INTO ' + dictdb + ' (entry_name, metrical_entry, unaccented_entry, id_number, entry_type, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s, %s)'
 			data = (entry, metrical, stripped, id, type, opt, body)
