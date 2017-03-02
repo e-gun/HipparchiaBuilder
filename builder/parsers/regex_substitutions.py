@@ -507,7 +507,7 @@ def poundsubstitutes(match):
 		125: u'𐆂<6\u03c56>',  # the upsilon is supposed to be superscript too: add betacode for that <6...6>
 		126: r'<hmu_idiosyncratic_char value="126">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		127: u'\u039b\u0325',
-		128: u'u\03b',
+		128: u'\u03fc',
 		129: u'\u039b\u0325',
 		130: r'𐆊',
 		131: r'𐅷',
@@ -703,7 +703,7 @@ def poundsubstitutes(match):
 		584: u'\u2127',
 		585: u'\u0396',
 		586: r'𝈸',  # 43
-		587: u'\0395',
+		587: u'\u0395',
 		588: u'𝈈',  # Vocal #9' Instrum #44
 		589: r'𝈿',  # 𝈿GREEK INSTRUMENTAL NOTATION SYMBOL-52; Unicode: U+1D23F, UTF-8: F0 9D 88 BF
 		590: r'𝈿',
