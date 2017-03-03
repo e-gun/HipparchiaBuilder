@@ -6,24 +6,28 @@
 	License: GNU GENERAL PUBLIC LICENSE 3
 		(see LICENSE in the top level directory of the distribution)
 """
-import re
 import configparser
-
+import re
 from multiprocessing import Pool
-from string import punctuation
 from statistics import mean, median
-from builder.builder_classes import dbWorkLine, dbWordCountObject, dbLemmaObject
+from string import punctuation
+
+from builder.builder_classes import dbWordCountObject
 from builder.dbinteraction.db import setconnection, loadallauthorsasobjects, loadallworksasobjects
 from builder.parsers.betacode_to_unicode import cleanaccentsandvj
+from builder.postbuild.postbuildhelperfunctions import forceterminalacute, graballlinesasobjects, \
+	graballcountsasobjects, grablemmataasobjects, createwordcounttable, cleanwords, prettyprintcohortdata, dictmerger
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def wordcounter(timerestriction=None):
+def wordcounter(restriction=None):
 	"""
 
-	count all of the words in all of the dbs or a subset thereof
+	count all of the words in all of the dbs or a subset thereof: 'restriction' will do subsets
+
+	restriction is either a list of time tuples or a list of genre names associated with a dict key
 
 	:param timerestriction:
 	:return:
@@ -32,19 +36,32 @@ def wordcounter(timerestriction=None):
 
 	authordict = loadallauthorsasobjects()
 
-	if timerestriction:
-		# restriction should be a date range tuple (-850,300), e.g.
+	if restriction:
 		workdict = loadallworksasobjects()
-		dbs = [key for key in authordict.keys() if authordict[key].converted_date and timerestriction[0] < int(authordict[key].converted_date) < timerestriction[1]]
-		dbs += [key for key in workdict.keys() if workdict[key].converted_date and timerestriction[0] < int(workdict[key].converted_date) < timerestriction[1]]
-		# mostly lots of little dicts: notifications get spammy
-		chunksize = 350
+		try:
+			tr = restriction['time']
+			# restriction should be a date range tuple (-850,300), e.g.
+			dbs = [key for key in authordict.keys() if authordict[key].converted_date and tr[0] < int(authordict[key].converted_date) < tr[1]]
+			dbs += [key for key in workdict.keys() if workdict[key].converted_date and tr[0] < int(workdict[key].converted_date) < tr[1]]
+			# mostly lots of little dicts: notifications get spammy
+			chunksize = 350
+		except KeyError:
+			# no such restriction
+			pass
+		try:
+			restriction['genre']
+			# restriction will be an item from the list of known genres
+			dbs = [key for key in workdict.keys() if workdict[key].workgenre == restriction['genre']]
+			chunksize = 20
+		except KeyError:
+			# no such restriction
+			pass
 	else:
 		chunksize = 200
 		dbs = list(authordict.keys())
 
 	# limit to NN for testing purposes
-	# dbs = dbs[0:2]
+	# dbs = dbs[101:102]
 
 	datasets = set([db[0:2] for db in dbs])
 	dbswithranges = {}
@@ -89,6 +106,10 @@ def wordcounter(timerestriction=None):
 	# a chunk will look like:
 	# {'in0010w0be': (173145, 173145), 'in0010w0bd': (173144, 173144), 'in0010w0bf': (173146, 173146), 'in0010w0bg': (173147, 173147), 'in0010w0bi': (173149, 173149), 'in0010w0bh': (173148, 173148)}
 
+	# a genre chunk:
+	# Invectiv.
+	# [{'gr2022w019': (22221, 23299), 'gr2022w018': (19678, 22220), 'gr0062w049': (28525, 29068), 'gr0062w038': (20977, 22028), 'gr0062w042': (23956, 24575), 'gr0062w028': (14516, 15055)}]
+
 	print('breaking up the lists and parallelizing:', len(chunked),'chunks to analyze')
 	# safe to almost hit number of cores here since we are not doing both db and regex simultaneously in each thread
 	# here's hoping that the workers number was not over-ambitious to begin with
@@ -115,14 +136,14 @@ def wordcounter(timerestriction=None):
 				masterconcorcdance[word][db] = 0
 		masterconcorcdance[word]['total'] = sum([masterconcorcdance[word][x] for x in masterconcorcdance[word]])
 
-	if timerestriction == None:
-		# no timerestriction: then this is our first pass and we should write the results to the master counts
-		# timerestriction implies subsequent passes that are for metadata derived from unrestricted data;
+	if restriction == None:
+		# no restriction: then this is our first pass and we should write the results to the master counts
+		# restriction implies subsequent passes that are for metadata derived from unrestricted data;
 		# these passes should not overwrite that data
 
 		letters= '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
 		for l in letters:
-			createwordcounttable(wordcounttable+'_'+l)
+			createwordcounttable(wordcounttable + '_' + l)
 
 		wordkeys = list(masterconcorcdance.keys())
 		wordkeys = sorted(wordkeys)
@@ -140,27 +161,6 @@ def wordcounter(timerestriction=None):
 			pool.starmap(dbchunkloader, argmap)
 
 	return masterconcorcdance
-
-
-def dictmerger(masterdict, targetdict, label):
-	"""
-
-	:param masterdict:
-	:param targetdict:
-	:return:
-	"""
-
-	for item in targetdict:
-		if item in masterdict:
-			try:
-				masterdict[item][label] += targetdict[item][label]
-			except:
-				masterdict[item][label] = targetdict[item][label]
-		else:
-			masterdict[item] = {}
-			masterdict[item][label] = targetdict[item][label]
-
-	return masterdict
 
 
 def concordancechunk(enumerateddbdict):
@@ -213,13 +213,13 @@ def concordancechunk(enumerateddbdict):
 					w = re.sub('v','u',w)
 				try:
 					if w[-1] in graves:
-						w = re.sub(terminalgravea,forceterminalacute, w)
+						w = re.sub(terminalgravea, forceterminalacute, w)
 				except:
 					# the word was not >0 char long
 					pass
 				try:
 					if w[-2] in graves:
-						w = re.sub(terminalgraveb,forceterminalacute, w)
+						w = re.sub(terminalgraveb, forceterminalacute, w)
 				except:
 					# the word was not >1 char long
 					pass
@@ -232,49 +232,6 @@ def concordancechunk(enumerateddbdict):
 	print('\tfinished chunk',chunknumber+1)
 
 	return concordance
-
-
-def forceterminalacute(matchgroup):
-	"""
-	θαμά and θαμὰ need to be stored in the same place
-
-	otherwise you will click on θαμὰ, search for θαμά and get prevalence data that is not what you really wanted
-
-	:param match:
-	:return:
-	"""
-
-	map = { 'ὰ': 'ά',
-			'ὲ': 'έ',
-			'ὶ': 'ί',
-			'ὸ': 'ό',
-			'ὺ': 'ύ',
-			'ὴ': 'ή',
-			'ὼ': 'ώ',
-			'ἂ': 'ἄ',
-			'ἒ': 'ἔ',
-			'ἲ': 'ἴ',
-			'ὂ': 'ὄ',
-			'ὒ': 'ὔ',
-			'ἢ': 'ἤ',
-			'ὢ': 'ὤ',
-			'ᾃ': 'ᾅ',
-			'ᾓ': 'ᾕ',
-			'ᾣ': 'ᾥ',
-			'ᾂ': 'ᾄ',
-			'ᾒ': 'ᾔ',
-			'ᾢ': 'ᾤ',
-		}
-
-	substitute = map[matchgroup[1]]
-	try:
-		# the word did not end with a vowel
-		substitute += matchgroup[2]
-	except:
-		# the word ended with a vowel
-		pass
-
-	return substitute
 
 
 def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
@@ -329,7 +286,7 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 	return
 
 
-def formcounter():
+def headwordcounts():
 	"""
 
 	count morphological forms using the wordcount data
@@ -341,6 +298,7 @@ def formcounter():
 
 	:return:
 	"""
+
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
@@ -358,8 +316,93 @@ def formcounter():
 
 	dictionarycounts = buildcountsfromlemmalist(lemmatalist, countdict)
 
+	"""
+	36 items return from:
+		select * from works where workgenre IS NULL and universalid like 'gr%'
+	"""
+
+	knownworkgenres = [
+		'Acta',
+		'Alchem.',
+		'Anthol.',
+		'Apocalyp.',
+		'Apocryph.',
+		'Apol.',
+		'Astrol.',
+		'Astron.',
+		'Biogr.',
+		'Bucol.',
+		'Caten.',
+		'Chronogr.',
+		'Comic.',
+		'Comm.',
+		'Concil.',
+		'Coq.',
+		'Dialog.',
+		'Doxogr.',
+		'Eccl.',
+		'Eleg.',
+		'Encom.',
+		'Epic.',
+		'Epigr.',
+		'Epist.',
+		'Evangel.',
+		'Exeget.',
+		'Fab.',
+		'Geogr.',
+		'Gnom.',
+		'Gramm.',
+		'Hagiogr.',
+		'Hexametr.',
+		'Hist.',
+		'Homilet.',
+		'Hymn.',
+		'Hypoth.',
+		'Iamb.',
+		'Ignotum',
+		'Inscr.',
+		'Invectiv.',
+		'Jurisprud.',
+		'Lexicogr.',
+		'Liturg.',
+		'Lyr.',
+		'Magica',
+		'Math.',
+		'Mech.',
+		'Med.',
+		'Metrolog.',
+		'Mim.',
+		'Mus.',
+		'Myth.',
+		'Narr. Fict.',
+		'Nat. Hist.',
+		'Onir.',
+		'Orac.',
+		'Orat.',
+		'Paradox.',
+		'Parod.',
+		'Paroem.',
+		'Perieg.',
+		'Phil.',
+		'Physiognom.',
+		'Poem.',
+		'Polyhist.',
+		'Prophet.',
+		'Pseudepigr.',
+		'Rhet.',
+		'Satura',
+		'Satyr.',
+		'Schol.',
+		'Tact.',
+		'Test.',
+		'Theol.',
+		'Trag.'
+	]
+	cleanedknownworkgenres = [g.lower() for g in knownworkgenres]
+	cleanedknownworkgenres = [re.sub(r'[\.\s]','',g) for g in cleanedknownworkgenres]
+
 	thetable = 'dictionary_headword_wordcounts'
-	createwordcounttable(thetable, extracolumns=True)
+	createwordcounttable(thetable, extracolumns=cleanedknownworkgenres)
 
 	# note that entries are stored under their 'analysis name' ('ἀμφί-λαμβάνω', etc.) and not their LSJ name
 
@@ -378,14 +421,21 @@ def formcounter():
 	dbc.commit()
 
 	# now figure out and record the percentiles
+	# derivedictionaryentrymetadata() will generate one set of numbers
+	# then it will call derivechronologicalmetadata() to supplement those numbers
+	# then you can call derivegenremetadata() to add still more information
 
 	thetable = 'dictionary_headword_wordcounts'
 	metadata = derivedictionaryentrymetadata(thetable, cursor)
+	lemmatalist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
+	metadata = derivechronologicalmetadata(metadata, lemmatalist, cursor)
+	metadata = insertchronologicalmetadata(metadata, thetable)
+	metadata = derivegenremetadata(metadata, lemmatalist, thetable, knownworkgenres, cursor)
 
 	# print('ἅρπαξ',metadata['ἅρπαξ'])
 	# ἅρπαξ {'frequency_classification': 'core vocabulary (more than 50)', 'early': 42, 'middle': 113, 'late': 468}
 	# print('stuprum',metadata['stuprum'])
-	insertmetadata(metadata, thetable)
+
 
 	return metadata
 
@@ -429,8 +479,6 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 	"""
 
 	now that you know how many times a word occurs, put that number into perspective
-	sort the words into 20 chunks (i.e. blocks of 5%)
-	then figure out what the profile of each chunk is: max, min, avg number of words in that chunk
 
 	:param cursor:
 	:return:
@@ -441,7 +489,7 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 	extrasql = ' ORDER BY total_count DESC'
 	greekvowel = re.compile(r'[άέίόύήώἄἔἴὄὔἤὤᾅᾕᾥᾄᾔᾤαειουηω]')
 
-	headwordobjects = graballcountsasobjects(headwordtable,cursor,extrasql)
+	headwordobjects = graballcountsasobjects(headwordtable, cursor, extrasql)
 
 	# the number of words with 0 as its total reflects parsing problems that need fixing elsewhere
 	greek = [w for w in headwordobjects if re.search(greekvowel, w.entryname) and w.t > 0]
@@ -482,12 +530,10 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 				for entry in item[1]:
 					metadata[entry.entryname] = {'frequency_classification': item[0]}
 
-	metadata = derivechronologicalmetadata(metadata, cursor)
-
 	return metadata
 
 
-def derivechronologicalmetadata(metadata, cursor):
+def derivechronologicalmetadata(metadata, lemmataobjectlist, cursor):
 	"""
 
 	find frequencies by eras:
@@ -502,23 +548,51 @@ def derivechronologicalmetadata(metadata, cursor):
 	"""
 
 	eras = { 'early': (-850, -300), 'middle': (-299, 300), 'late': (301,1500)}
-	lemmatalist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
 
 	for era in eras:
 		print('calculating use by era:',era)
-		eraconcordance = wordcounter(timerestriction=eras[era])
+		eraconcordance = wordcounter(restriction={'time': eras[era]})
 		# close, but we need to match the template above:
 		# countdict = {word.entryname: word for word in countobjectlist}
 		countobjectlist = [dbWordCountObject(w, eraconcordance[w]['total'], eraconcordance[w]['gr'], eraconcordance[w]['lt'],
 		                   eraconcordance[w]['dp'], eraconcordance[w]['in'], eraconcordance[w]['ch']) for w in eraconcordance]
 		countdict = {word.entryname: word for word in countobjectlist}
-		lexiconentrycounts = buildcountsfromlemmalist(lemmatalist, countdict)
+		lexiconentrycounts = buildcountsfromlemmalist(lemmataobjectlist, countdict)
 		for entry in lexiconentrycounts:
 			try:
 				metadata[entry]
 			except:
 				metadata[entry] = {}
 			metadata[entry][era] = lexiconentrycounts[entry]['total']
+
+	return metadata
+
+
+def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres, cursor):
+	"""
+
+	can/should do 'Inscr.' separately? It's just the sum of 'in' + 'ch'
+
+	:param metadata:
+	:param cursor:
+	:return:
+	"""
+
+	for genre in knownworkgenres:
+		print('compiling metadata for',genre)
+		genrecordance = wordcounter(restriction={'genre': genre})
+		countobjectlist = [dbWordCountObject(w, genrecordance[w]['total'], genrecordance[w]['gr'], genrecordance[w]['lt'],
+							genrecordance[w]['dp'], genrecordance[w]['in'], genrecordance[w]['ch']) for w in genrecordance]
+		countdict = {word.entryname: word for word in countobjectlist}
+		lexiconentrycounts = buildcountsfromlemmalist(lemmataobjectlist, countdict)
+		for entry in lexiconentrycounts:
+			try:
+				metadata[entry]
+			except:
+				metadata[entry] = {}
+			metadata[entry][genre] = lexiconentrycounts[entry]['total']
+		print('inserting metadata for', genre)
+		insertgenremetadata(metadata, genre, thetable)
 
 	return metadata
 
@@ -542,220 +616,7 @@ def cohortstats(wordobjects):
 	return returndict
 
 
-def prettyprintcohortdata(label, cohortresultsdict):
-	"""
-	take some results and print them (for use in one of HipparchiaServer's info pages)
-
-	:return:
-	"""
-
-	titles = {'h': 'high', 'l': 'low', 'a': 'average', 'm': 'median', '#': 'count'}
-
-	print()
-	print(label)
-	for item in ['#', 'h', 'l', 'a', 'm']:
-		print('\t'+titles[item]+'\t'+str(int(cohortresultsdict[item])))
-
-	return
-
-"""
-greek
-
-full set
-	count	113010
-	high	3649037
-	low	1
-	average	794
-	median	7
-
-top 250
-	count	250
-	high	3649037
-	low	39356
-	average	218482
-	median	78551
-
-top 2500
-	count	2250
-	high	38891
-	low	3486
-	average	9912
-	median	7026
-
-core (not in top 2500; >50 occurrences)
-	count	25901
-	high	3479
-	low	51
-	average	466
-	median	196
-
-rare (between 50 and 5 occurrences)
-	count	32614
-	high	50
-	low	6
-	average	18
-	median	15
-
-very rare (fewer than 5 occurrences)
-	count	48003
-	high	4
-	low	1
-	average	1
-	median	2
-
-
-latin
-
-full set
-	count	27960
-	high	244812
-	low	1
-	average	348
-	median	11
-
-top 250
-	count	250
-	high	244812
-	low	5859
-	average	19725
-	median	10358
-
-top 2500
-	count	2250
-	high	5843
-	low	541
-	average	1565
-	median	1120
-
-core (not in top 2500; >50 occurrences)
-	count	6149
-	high	541
-	low	51
-	average	181
-	median	139
-
-rare (between 50 and 5 occurrences)
-	count	8095
-	high	50
-	low	6
-	average	19
-	median	16
-
-very rare (fewer than 5 occurrences)
-	count	10404
-	high	4
-	low	1
-	average	1
-	median	2
-"""
-
-
-def graballlinesasobjects(db, linerangetuple, cursor):
-	"""
-
-	:param db:
-	:param cursor:
-	:return:
-	"""
-
-	if linerangetuple == (-1,-1):
-		whereclause = ''
-	else:
-		whereclause = ' WHERE index >= %s and index <= %s'
-		data = (linerangetuple[0], linerangetuple[1])
-
-	query = 'SELECT * FROM ' + db + whereclause
-
-	if whereclause != '':
-		cursor.execute(query, data)
-	else:
-		cursor.execute(query)
-
-	lines = cursor.fetchall()
-
-	lineobjects = [dblineintolineobject(l) for l in lines]
-
-	return lineobjects
-
-
-def graballcountsasobjects(db,cursor, extrasql=''):
-	"""
-
-	:param db:
-	:param cursor:
-	:return:
-	"""
-
-	query = 'SELECT * FROM ' + db + extrasql
-	cursor.execute(query)
-	lines = cursor.fetchall()
-
-	countobjects = [dbWordCountObject(l[0], l[1], l[2], l[3], l[4], l[5], l[6]) for l in lines]
-
-	return countobjects
-
-
-def grablemmataasobjects(db, cursor):
-	"""
-
-	:param db:
-	:param cursor:
-	:return:
-	"""
-
-	query = 'SELECT * FROM ' + db
-	cursor.execute(query)
-	lines = cursor.fetchall()
-
-	lemmaobjects = [dbLemmaObject(l[0], l[1], l[2]) for l in lines]
-
-	return lemmaobjects
-
-
-def createwordcounttable(tablename, extracolumns=False):
-	"""
-	the SQL to generate the wordcount table
-	:param tablename:
-	:return:
-	"""
-
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
-
-	query = 'DROP TABLE IF EXISTS public.' + tablename
-	cursor.execute(query)
-
-	query = 'CREATE TABLE public.' + tablename
-	query += '( entry_name character varying(64),'
-	query += ' total_count integer,'
-	query += ' gr_count integer,'
-	query += ' lt_count integer,'
-	query += ' dp_count integer,'
-	query += ' in_count integer,'
-	query += ' ch_count integer'
-	if extracolumns:
-		query += ', frequency_classification character varying(64),'
-		query += ' early_occurrences integer,'
-		query += ' middle_occurrences integer,'
-		query += ' late_occurrences integer'
-	query += ') WITH ( OIDS=FALSE );'
-
-	cursor.execute(query)
-
-	query = 'GRANT SELECT ON TABLE ' + tablename + ' TO hippa_rd;'
-	cursor.execute(query)
-
-	tableletter = tablename[-2:]
-
-	q = 'CREATE UNIQUE INDEX wcindex'+tableletter+' ON '+tablename+' (entry_name)'
-	cursor.execute(q)
-
-	dbc.commit()
-
-	return
-
-
-def insertmetadata(metadatadict, thetable):
+def insertchronologicalmetadata(metadatadict, thetable):
 	"""
 
 	avoid a long run of UPDATE statements: use a tmp table
@@ -805,63 +666,123 @@ def insertmetadata(metadatadict, thetable):
 	cursor.execute(q)
 	dbc.commit()
 
-	return
+	# return the dict so you can reuse the data
+	return metadatadict
+
+
+def insertgenremetadata(metadatadict, genrename, thetable):
+	"""
+
+	avoid a long run of UPDATE statements: use a tmp table
+
+	metadatadict:
+		ἅρπαξ: {'frequency_classification': 'core vocabulary (more than 50)', 'early': 2, 'middle': 6, 'late': 0}
+
+	:param countdict:
+	:return:
+	"""
+
+	# a clash between the stored genre names 'Alchem.' and names that are used for columns (which can't include period or whitespace)
+	thecolumn = re.sub(r'[\.\s]','',genrename).lower()
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	q = 'CREATE TEMP TABLE tmp_metadata AS SELECT * FROM '+thetable+' LIMIT 0'
+	cursor.execute(q)
+
+	count = 0
+	for entry in metadatadict.keys():
+		count += 1
+		q = 'INSERT INTO tmp_metadata (entry_name, '+thecolumn+') ' \
+		    'VALUES ( %s, %s)'
+		try:
+			d = (entry, metadatadict[entry][genrename])
+		except KeyError:
+			# there is no date data because the word is not found in a dateable text
+			# d = (entry, metadatadict[entry]['frequency_classification'], '', '', '')
+			d = None
+		if d:
+			cursor.execute(q, d)
+
+		if count % 2500 == 0:
+			dbc.commit()
+
+	dbc.commit()
+	q = 'UPDATE '+thetable+' SET '+thecolumn+' = tmp_metadata.'+thecolumn+' FROM tmp_metadata ' \
+			'WHERE '+thetable+'.entry_name = tmp_metadata.entry_name'
+	cursor.execute(q)
+	dbc.commit()
+
+	q = 'DROP TABLE tmp_metadata'
+	cursor.execute(q)
+	dbc.commit()
+
+	# return the dict so you can reuse the data
+	return metadatadict
+
 
 """
-
-these functions are lifted/adapted from HipparchiaServer
-
+you get 334 rows if you:
+	select * from authors where genres IS NULL and universalid like 'gr%'
 """
 
-def dblineintolineobject(dbline):
-	"""
-	convert a db result into a db object
+knownauthorgenres = [
+	'Alchemistae',
+	'Apologetici',
+	'Astrologici',
+	'Astronomici',
+	'Atticistae',
+	'Biographi',
+	'Bucolici',
+	'Choliambographi',
+	'Chronographi',
+	'Comici',
+	'Doxographi',
+	'Elegiaci',
+	'Epici',
+	'Epigrammatici',
+	'Epistolographi',
+	'Geographi',
+	'Geometri',
+	'Gnomici',
+	'Gnostici',
+	'Grammatici',
+	'Hagiographi',
+	'Historici',
+	'Hymnographi',
+	'Iambici',
+	'Lexicographi',
+	'Lyrici',
+	'Mathematici',
+	'Mechanici',
+	'Medici',
+	'Mimographi',
+	'Musici',
+	'Mythographi',
+	'Nomographi',
+	'Onirocritici',
+	'Oratores',
+	'Paradoxographi',
+	'Parodii',
+	'Paroemiographi',
+	'Periegetae',
+	'Philologi',
+	'Philosophici',
+	'Poetae',
+	'Poetae Didactici',
+	'Poetae Medici',
+	'Poetae Philosophi',
+	'Polyhistorici',
+	'Rhetorici',
+	'Scriptores Ecclesiastici',
+	'Scriptores Erotici',
+	'Scriptores Fabularum',
+	'Scriptores Rerum Naturalium',
+	'Sophistae',
+	'Tactici',
+	'Theologici',
+	'Tragici'
+	]
 
-	basically all columns pushed straight into the object with one twist: 1, 0, 2, 3, ...
 
-	:param dbline:
-	:return:
-	"""
-
-	# note the [1], [0], [2], order: wkuinversalid, index, level_05_value, ...
-
-	lineobject = dbWorkLine(dbline[1], dbline[0], dbline[2], dbline[3], dbline[4], dbline[5], dbline[6], dbline[7],
-	                        dbline[8], dbline[9], dbline[10], dbline[11], dbline[12])
-
-	return lineobject
-
-
-def cleanwords(word, punct):
-	"""
-	remove gunk that should not be in a concordance
-	:param word:
-	:return:
-	"""
-	# hard to know whether or not to do the editorial insertions stuff: ⟫⟪⌈⌋⌊
-	# word = re.sub(r'\[.*?\]','', word) # '[o]missa' should be 'missa'
-	word = re.sub(r'[0-9]', '', word)
-	word = re.sub(punct, '', word)
-	# strip all non-greek if we are doing greek
-	# best do punct before this next one...
-
-	try:
-		if re.search(r'[a-zA-z]', word[0]) is None:
-			word = re.sub(r'[a-zA-z]', '', word)
-	except:
-		# must have been ''
-		pass
-
-	return word
-
-
-def makeablankline(work, fakelinenumber):
-	"""
-	sometimes (like in lookoutsidetheline()) you need a dummy line
-	this will build one
-	:param work:
-	:return:
-	"""
-
-	lineobject = dbWorkLine(work, fakelinenumber, '-1', '-1', '-1', '-1', '-1', '-1', '', '', '', '', '')
-
-	return lineobject

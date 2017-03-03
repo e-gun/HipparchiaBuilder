@@ -446,6 +446,7 @@ def poundsubstitutes(match):
 		29: u'\u00b7',
 		30: r'<hmu_idiosyncratic_char value="30">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		31: r'<hmu_idiosyncratic_char value="31">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		48: r'<hmu_undocumented_poundsign value="48">⊚</hmu_undocumented_poundsign>',
 		50: r'<hmu_undocumented_poundsign value="50">⊚</hmu_undocumented_poundsign>',
 		51: u'\u00b7',
 		52: u'\u205a',
@@ -615,9 +616,11 @@ def poundsubstitutes(match):
 		460: u'\u2014',
 		461: u'\u007c',
 		465: u'\u2627',
+		466: r'<hmu_idiosyncratic_char value="466">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		467: u'\u2192',
 		468: u'\u2e0e',
 		476: u'\u0283',
+		486: r'<hmu_undocumented_poundsign value="486">⊚</hmu_undocumented_poundsign>',
 		500: r'<hmu_undocumented_poundsign value="500">⊚</hmu_undocumented_poundsign>',
 		501: r'π<6ιθ6>',  # abbreviation for πιθανόν: added own betacode - <6...6>
 		502: r'🜚',  # listed as idiosyncratic; but looks like 'alchemical symbol for gold': U+1F71A
@@ -830,6 +833,7 @@ def poundsubstitutes(match):
 		866: u'\u03a7',
 		867: r'𐅆',
 		870: r'<hmu_undocumented_poundsign value="870">⊚</hmu_undocumented_poundsign>',
+		880: r'<hmu_undocumented_poundsign value="880">⊚</hmu_undocumented_poundsign>',
 		899: r'<hmu_unknown_numeral>',
 		900: r'<hmu_undocumented_poundsign value="900">⊚</hmu_undocumented_poundsign>',
 		901: r'<hmu_undocumented_poundsign value="901">⊚</hmu_undocumented_poundsign>',
@@ -850,6 +854,7 @@ def poundsubstitutes(match):
 		949: r'<hmu_undocumented_poundsign value="949">⊚</hmu_undocumented_poundsign>',
 		961: r'<hmu_line_on_stone_stops_but_edition_continues_line />',
 		973: r'<hmu_undocumented_poundsign value="973">⊚</hmu_undocumented_poundsign>',
+		990: r'<hmu_undocumented_poundsign value="990">⊚</hmu_undocumented_poundsign>',
 		1000: r'𐅼',
 		1001: r'𐅽',
 		1002: r'𐅾',

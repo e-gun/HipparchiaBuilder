@@ -19,9 +19,8 @@ from builder.parsers import idtfiles, regex_substitutions, betacode_to_unicode, 
 from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
 from builder.dbinteraction.versioning import timestampthebuild
-from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, deletetemporarydbs, \
-	registernewworks
-
+from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
+from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
 
 config = configparser.ConfigParser()
 config.read('config.ini')

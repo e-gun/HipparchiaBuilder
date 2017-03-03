@@ -6,7 +6,6 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-
 import configparser
 import re
 from multiprocessing import Manager, Process
@@ -15,6 +14,7 @@ from builder.builder_classes import dbAuthor, MPCounter
 from builder.dbinteraction.db import setconnection, dbauthorandworkloader, authortablemaker
 from builder.parsers.regex_substitutions import latindiacriticals
 from builder.postbuild.postbuilddating import convertdate
+from builder.postbuild.postbuildhelperfunctions import rebasedcounter
 
 """
 
@@ -237,6 +237,11 @@ def registernewworks(newworktuples):
 		columns = ['universalid', 'levellabels_00', 'levellabels_01']
 		vals = [w, 'line', ' '] # the whitesapce matters for levellabels_01
 		valstring = ['%s', '%s', '%s']
+		# set genres: not elegant, but...
+		if w[0:2] in ['in', 'ch']:
+			columns.append('workgenre')
+			vals.append('Inscr.')
+			valstring.append('%s')
 		for key in workinfodict[w].keys():
 			if key != 'annotationsatindexvalue':
 				columns.append(key)
@@ -595,94 +600,6 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 	dbc.commit()
 
 	return metadatalist
-
-
-def deletetemporarydbs(temprefix):
-	"""
-
-	kill off the first pass info now that you have made the second pass
-
-	:param temprefix:
-	:return:
-	"""
-
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
-
-	q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
-	d = (temprefix+'%',)
-	cursor.execute(q, d)
-	results = cursor.fetchall()
-
-	authors = []
-	for r in results:
-		a = r[0]
-		authors.append(a[0:6])
-	authors = list(set(authors))
-
-	for a in authors:
-		dropdb = a
-		q = 'DROP TABLE public.'+dropdb
-		cursor.execute(q)
-
-	q = 'DELETE FROM authors WHERE universalid LIKE %s'
-	d = (temprefix + '%',)
-	cursor.execute(q, d)
-
-	q = 'DELETE FROM works WHERE universalid LIKE %s'
-	d = (temprefix + '%',)
-	cursor.execute(q, d)
-
-	dbc.commit()
-
-	return
-
-
-def rebasedcounter(decimalvalue, base):
-	"""
-
-	return a three character encoding of a decimal number in 'base N'
-	designed to allow work names to fit into a three 'digit' space
-
-	:param decimalvalue:
-	:return:
-	"""
-
-	# base = 36
-
-	if base < 11:
-		iterable = range(0, base)
-		remap = {i: str(i) for i in iterable}
-	elif base < 37:
-		partone = {i: str(i) for i in range(0, 10)}
-		parttwo = {i: chr(87 + i) for i in range(10, base)}
-		remap = {**partone, **parttwo}
-	else:
-		print('unsupported base value', base, '- opting for base10')
-		remap = {i: str(i) for i in range(0, 10)}
-
-	# base = 36
-	# {0: '0', 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
-	# 10: 'a', 11: 'b', 12: 'c', 13: 'd', 14: 'e', 15: 'f', 16: 'g', 17: 'h', 18: 'i', 19: 'j',
-	# 20: 'k', 21: 'l', 22: 'm', 23: 'n', 24: 'o', 25: 'p', 26: 'q', 27: 'r', 28: 's', 29: 't',
-	# 30: 'u', 31: 'v', 32: 'w', 33: 'x', 34: 'y', 35: 'z'}
-
-	lastdigit = remap[decimalvalue % base]
-	remainder = int(decimalvalue / base)
-	if remainder > 0:
-		seconddigit = remap[remainder % base]
-		remainder = int(remainder / base)
-		if remainder > 0:
-			thirddigit = remap[remainder % base]
-		else:
-			thirddigit = '0'
-	else:
-		seconddigit = '0'
-		thirddigit = '0'
-
-	rebased = thirddigit + seconddigit + lastdigit
-
-	return rebased
 
 
 def modifyauthorsdb(newentryname, worktitle, cursor):

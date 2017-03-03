@@ -11,10 +11,10 @@ import configparser
 import time
 
 from builder import corpus_builder
-from builder.dbinteraction.build_lexica import formatgklexicon, formatlatlexicon, grammarloader, analysisloader
+from builder.dbinteraction.build_lexica import formatgklexicon, formatlatlexicon, analysisloader
 from builder.dbinteraction.db import setconnection
 from builder.dbinteraction.versioning import timestampthebuild
-from builder.postbuild.databasewordcounts import wordcounter, formcounter
+from builder.postbuild.databasewordcounts import headwordcounts, wordcounter
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -140,7 +140,8 @@ if buildcounts == 'y':
 	# mp: Build took 23.17 minutes
 	wordcounter()
 	# Build took 17.54 minutes
-	formcounter()
+	headwordcounts()
+	# if you do genres, brace yourself: Build took 84.11 minutes
 
 stop = time.time()
 took = round((stop-start)/60, 2)

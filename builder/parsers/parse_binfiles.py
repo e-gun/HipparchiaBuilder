@@ -802,6 +802,8 @@ def modifygkworksdb(newworkinfo, cursor):
 		
 	g = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, g)
 	g = re.sub(r' $', '', g)
+	# *Epic., *Hist., ...
+	g = re.sub(r'\*', '', g)
 	
 	try:
 		t = trans.group(1)
