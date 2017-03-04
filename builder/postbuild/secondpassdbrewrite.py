@@ -240,7 +240,11 @@ def registernewworks(newworktuples):
 		# set genres: not elegant, but...
 		if w[0:2] in ['in', 'ch']:
 			columns.append('workgenre')
-			vals.append('Inscr.')
+			vals.append('Epigr.')
+			valstring.append('%s')
+		if w[0:2] in ['dp']:
+			columns.append('workgenre')
+			vals.append('Docu.')
 			valstring.append('%s')
 		for key in workinfodict[w].keys():
 			if key != 'annotationsatindexvalue':

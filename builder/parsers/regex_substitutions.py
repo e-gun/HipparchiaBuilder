@@ -451,9 +451,11 @@ def poundsubstitutes(match):
 		51: u'\u00b7',
 		52: u'\u205a',
 		53: u'\u205d',
+		54: r'<hmu_undocumented_poundsign value="54">⊚</hmu_undocumented_poundsign>',
 		55: u'\u2059',
 		56: r'∣', # 'dividers of other forms'; not a helpful description: trying u2223 for now
 		57: r'<hmu_undocumented_poundsign value="57">⊚</hmu_undocumented_poundsign>',
+		58: r'<hmu_undocumented_poundsign value="58">⊚</hmu_undocumented_poundsign>',
 		59: u'\u03fd',
 		60: u'\u0399',
 		61: r'𐅂',
