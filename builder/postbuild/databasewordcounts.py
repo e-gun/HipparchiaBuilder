@@ -362,6 +362,7 @@ def headwordcounts():
 		'Iamb.',
 		'Ignotum',
 		'Invectiv.',
+		'Inscr.',
 		'Jurisprud.',
 		'Lexicogr.',
 		'Liturg.',
@@ -571,7 +572,7 @@ def derivechronologicalmetadata(metadata, lemmataobjectlist, cursor):
 def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres, cursor):
 	"""
 
-	can/should do 'Epigr.' separately? It's just the sum of 'in' + 'ch'
+	can/should do 'Inscr.' separately? It's just the sum of 'in' + 'ch'
 
 	:param metadata:
 	:param cursor:

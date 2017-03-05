@@ -240,7 +240,7 @@ def registernewworks(newworktuples):
 		# set genres: not elegant, but...
 		if w[0:2] in ['in', 'ch']:
 			columns.append('workgenre')
-			vals.append('Epigr.')
+			vals.append('Inscr.')
 			valstring.append('%s')
 		if w[0:2] in ['dp']:
 			columns.append('workgenre')
