@@ -150,7 +150,7 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 			# ignored exceptions
 			bytecount += 2
 
-	# a kudge to force the inscriptions and payri to conform to our model
+	# a kudge to force the inscriptions and papyri to conform to our model
 	if authorobject.universalid[0:2] in ['in', 'dp']:
 		for w in authorobject.works:
 			w.structure = {0: 'line', 1: 'document'}

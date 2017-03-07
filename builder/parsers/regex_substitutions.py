@@ -793,6 +793,7 @@ def poundsubstitutes(match):
 		805: u'\u03a4',
 		807: r'𐅦',
 		808: r'𐅈',
+		809: r'<hmu_undocumented_poundsign value="809">⊚</hmu_undocumented_poundsign>',
 		811: u'\u03a4',
 		812: r'𐅈',
 		813: r'𐅉',
@@ -836,6 +837,7 @@ def poundsubstitutes(match):
 		867: r'𐅆',
 		870: r'<hmu_undocumented_poundsign value="870">⊚</hmu_undocumented_poundsign>',
 		880: r'<hmu_undocumented_poundsign value="880">⊚</hmu_undocumented_poundsign>',
+		898: r'<hmu_undocumented_poundsign value="898">⊚</hmu_undocumented_poundsign>',
 		899: r'<hmu_unknown_numeral>',
 		900: r'<hmu_undocumented_poundsign value="900">⊚</hmu_undocumented_poundsign>',
 		901: r'<hmu_undocumented_poundsign value="901">⊚</hmu_undocumented_poundsign>',
@@ -846,6 +848,8 @@ def poundsubstitutes(match):
 		925: r'𝈗',
 		926: r'𝈫',
 		927: r'W',
+		928: r'𝈋',
+		929: r'𝈔',
 		930: r'<hmu_idiosyncratic_char value="930">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		932: u'\u2733',
 		933: r'<hmu_idiosyncratic_char value="933">◦</hmu_idiosyncratic_char>',  # idiosyncratic
@@ -1368,6 +1372,10 @@ def ltanglebracketsubstitutes(match):
 		32: r'<span class="overunder">',  # hmu_overline_and_underline
 		34: r'⁄',  # fractions (which have balanced sets of markup...)
 		48: r'<hmu_undocumented_anglebracketspan48>',
+		50: r'<hmu_undocumented_anglebracketspan50>',
+		51: r'<hmu_undocumented_anglebracketspan51>',
+		52: r'<hmu_undocumented_anglebracketspan52>',
+		53: r'<hmu_undocumented_anglebracketspan53>',
 		60: r'<hmu_preferred_epigraphical_text_used>',
 		61: r'<hmu_epigraphical_text_inserted_after_erasure>',
 		62: r'<span class="lineover">',
@@ -1382,7 +1390,8 @@ def ltanglebracketsubstitutes(match):
 		71: r'<span class="diagramsection">',  # hmu_inset_diagram
 		72: r'<span class="diagramrelation">',  # hmu_logical_relationship_in_diagram
 		73: r'<span class="diagramlvl03">',
-		74: r'<span class="diagramlvl04">'
+		74: r'<span class="diagramlvl04">',
+		96: r'<hmu_undocumented_anglebracketspan96>',
 	}
 
 	if val in substitutions:
@@ -1433,6 +1442,10 @@ def rtanglebracketsubstitutes(match):
 		32: r'</span>',  # hmu_overline_and_underline
 		34: '',  # fractions
 		48: r'<hmu_undocumented_anglebracketspan48>',
+		50: r'</hmu_undocumented_anglebracketspan50>',
+		51: r'</hmu_undocumented_anglebracketspan51>',
+		52: r'</hmu_undocumented_anglebracketspan52>',
+		53: r'</hmu_undocumented_anglebracketspan53>',
 		60: r'</hmu_preferred_epigraphical_text_used>',
 		61: r'</hmu_epigraphical_text_inserted_after_erasure>',
 		62: r'</span>', # epigraphical line over letters
@@ -1447,7 +1460,8 @@ def rtanglebracketsubstitutes(match):
 		71: r'</span>',  # hmu_discrete_section_of_diagram
 		72: r'</span>',  # hmu_logical_relationship_in_diagram
 		73: r'</span>',  #<span class="diagramlvl03">',
-		74: r'</span>'  #<span class="diagramlvl04">'
+		74: r'</span>',  #<span class="diagramlvl04">'
+		96: r'</hmu_undocumented_anglebracketspan96>',
 	}
 
 	if val in substitutions:

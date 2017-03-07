@@ -133,6 +133,7 @@ def buildcorpusmetadata(corpusname, corpusvars):
 	# is there metadata contained in a binfile? if so, load it
 	if corpusname == 'latin':
 		parse_binfiles.latinloadcanon(corpusvars[corpusname]['datapath'] + corpusvars[corpusname]['dataprefix'] + '9999.TXT', cursor)
+		parse_binfiles.insertlatingenres(cursor, dbconnection)
 		dbconnection.commit()
 	if corpusname == 'greek':
 		parse_binfiles.resetbininfo(corpusvars[corpusname]['datapath'], cursor, dbconnection)
@@ -189,12 +190,12 @@ def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnec
 
 	starttime = time.time()
 	(number,name), = authordict.items()
-	author = buildauthor(number, language, datapath, uidprefix, dataprefix)
-	author.addauthtabname(name)
-	author.language = language
-	thecollectedworksof(author, language, datapath,  dbconnection, cursor)
+	authorobj = buildauthor(number, language, datapath, uidprefix, dataprefix)
+	authorobj.addauthtabname(name)
+	authorobj.language = language
+	thecollectedworksof(authorobj, language, datapath,  dbconnection, cursor)
 	buildtime =  round(time.time() - starttime,2)
-	success = number+' '+author.cleanname+' '+str(buildtime)+'s'
+	success = number+' '+authorobj.cleanname+' '+str(buildtime)+'s'
 	
 	return success
 
@@ -211,7 +212,6 @@ def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor)
 	txt = initialworkparsing(authorobject, language, datapath)
 	txt = secondaryworkparsing(authorobject, txt)
 	databaseloading(txt, authorobject,  dbconnection, cursor)
-	# concordance.buildconcordances(authorobject.universalid, dbconnection, cursor)
 
 	return
 

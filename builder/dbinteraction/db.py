@@ -51,7 +51,7 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 
 	for indexedat in range(len(authorobject.works)):
 		# warning: '002' might be the value at work[0]
-		workmaker(authorobject, authorobject.works[indexedat].worknumber, indexedat, cursor)
+		workmaker(authorobject, indexedat, cursor)
 
 	index = 0
 	for line in dbreadyversion:
@@ -296,7 +296,7 @@ def dbauthorandworkloader(authoruid, cursor):
 	return author
 
 
-def workmaker(authorobject, worknumber, indexedat, cursor):
+def workmaker(authorobject, indexedat, cursor):
 	uid = tablenamer(authorobject, indexedat)
 	wk = authorobject.works[indexedat]
 

@@ -17,113 +17,6 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 tlg = config['io']['tlg']
 
-"""
-labels: H-pack
-	[1 2 3 4]
-	read #4:
-		0 --> 'last'
-		N --> len of python string
-
-authors: h-pack
-	[1 2] --> (& hex 7fff) --> author number in 4-place decimal
-	[3 4] --> works
-	read #4
-		test-for-last, etc
-
-works:
-	TBD:
-"""
-
-"""
-0x0 0x0 0x8 0x0 0x0 0x0 0x0 0x0 0x5 Acta 0x0 0x0 0x0 %0x9 Alchemica0x0 0x0 0x0 0x92 0xb Antholo
-giae0x0 0x0 0x0 0xac 0xb Apocalypses0x0 0x0 0x0 0xdd 0x9 Apocrypha0x0 0x0 0x1 90xb A
-pologetica0x0 0x0 0x1 0xab 0xb Astrologica0x0 0x0 0x1 0xfb 0xb Astronomi
-ca0x0 0x0 0x2 \0x9 Biographa0x0 0x0 0x2 0xf6 0x9 Bucolica 0x0 0x0 0x3 0xa 0x7 Caten
-
-                5  A c t a
-00000800000000000541637461200000002509416c6368656d696361000000920b416e74686f6c6f67696165000000
-ac0b41706f63616c7970736573000000dd0941706f637279706861000001390b41706f6c6f676574696361000001ab
-0b417374726f6c6f67696361000001fb0b417374726f6e6f6d6963610000025c0942696f677261706861000002f6094275636f6c69
-
-"""
-
-"""
-the bytes that come before the labels look like this:
->>> print(heads)
-[0, 0, 0, 0]
- [0, 0, 0, 56]
- [0, 0, 0, 78]
- [0, 0, 0, 110]
- [0, 0, 0, 142]
- [0, 0, 0, 154]
- [0, 0, 0, 178]
- [0, 0, 0, 188]
- [0, 0, 0, 194]
- [0, 0, 0, 210]
- [0, 0, 2, 2]
- [0, 0, 2, 10]
- [0, 0, 2, 80]
- [0, 0, 2, 218]
- [0, 0, 3, 12]
- [0, 0, 3, 36]
- [0, 0, 3, 66]
- [0, 0, 3, 78]
- [0, 0, 3, 90]
- [0, 0, 3, 98]
- [0, 0, 3, 250]
- [0, 0, 4, 2]
- [0, 0, 6, 174]
- [0, 0, 6, 180]
-...
-a means of counting: each higher than the last
-
-here is the top of the bytes when we get to the authors
-[131, 248, 135, 227, 136, 92, 136, 133, 138, 29, 138, 72, 143, 246, 144, 223, 144, 227, 144,
-228, 144, 229, 144, 230, 144, 231, 144, 232, 144, 233, 144, 234, 144, 235, 144, 236, 144, 237,
-144, 238, 144, 239, 144, 241, 144, 242, 144, 243, 144, 244, 163, 61, 0, 0, 0, 0, 130, 19, 130,
-133, 132, 139, 132, 160, 132, 181, 133, 215, 134, 189, 134, 230, 135, 200, 0, 0, 0, 0, 131, 236]
-
-
->>> print(info[50:60])
-[163, 61, 0, 0, 0, 0, 130, 19, 130, 133]
-
-so at 56 we find the first byte of the next label: Apologetici
-
->>> print(info[70:80])
-[134, 230, 135, 200, 0, 0, 0, 0, 131, 236]
-
-at 78 we find the first byte of the next label: Astrologici
-
-the value of the second digit is obvious once you see it...
-there are no zero-runs from 210 until around 505: [514 + 522]
-
->>> print(authinfo[505:550])
-[1, 135, 2, 135, 3, 0, 0, 0, 0, 130, 16, 130, 17, 0, 0, 0, 0, 128, 2, 128, 212, 128, 213,
-128, 214, 128, 217, 128, 232, 128, 236, 128, 239, 128, 242, 128, 243, 128, 245, 128, 246,
-128, 247, 128, 249]
-
-and indeed we expected a short run:
- [0, 0, 2, 2]
- [0, 0, 2, 10]
-
-therefore each '1' is worth 256: 2*256 + 2 --> 514
-
->>> print(labels[10])
-Doxographi
->>> print(heads[10])
-[0, 0, 2, 2]
-
-there should be two and only two of them:
-[130, 16]
-[130, 17]
-Diogenes knows of only two Doxograph.
-	Arius Didymus Doxogr., Physica (fragmenta) (0529: 001)
-	Aëtius Doxogr., De placitis reliquiae (Stobaei excerpta) (0528: 001)
-
-and they *should* have sequential ids: 0528 = 130, 16; 0529 = 130, 17
-
-"""
-
 
 def resetbininfo(relativepath, cursor, dbconnection):
 	bininfo = {
@@ -913,6 +806,102 @@ def latinloadcanon(canonfile, cursor):
 	return
 
 
+def insertlatingenres(cursor, dbc):
+	"""
+
+	we have no pre-rolled association between works and genres
+
+	guess some
+
+	manually insert other [later...]
+
+	:param cursor:
+	:return:
+	"""
+
+	# First pass
+
+	q = 'SELECT universalid,title FROM works WHERE universalid LIKE %s ORDER BY universalid '
+	d = ('lt%',)
+	cursor.execute(q,d)
+	works = cursor.fetchall()
+
+	titletranslator = [
+		(r'^Ad.*?Epist', 'Epist.'),
+		(r'^Atell', 'Comic.'),
+		(r'^De Bello', 'Hist.'),
+		(r'^De Metris', 'Gramm.'),
+		(r'^De Ortho', 'Gramm.'),
+		(r'^Declam', 'Orat.'),
+		(r'^Pro', 'Orat.'),
+		(r'^Vita', 'Biog.'),
+		(r'^como', 'Comic.'),
+		(r'^Commentar.', 'Hist.'),
+		(r'^Commentum', 'Comm.'),
+		(r'^Controv', 'Orat.'),
+		(r'^[Ee]leg', 'Eleg.'),
+		(r'^epigr', 'Epigr.'),
+		(r'^epist', 'Epist.'),
+		(r'^Epistulae ad', 'Epist.'),
+		(r'grammat', 'Gramm.'),
+		(r'^[Hh]istor', 'Hist.'),
+		(r'^In Verg', 'Comm.'),
+		(r'^iurisp', 'Jurisprud.'),
+		(r'^[Mm]im', 'Mim.'),
+		(r'^orat', 'Orat.'),
+		(r'^pallia', 'Comic.'),
+		(r'^praet', 'Trag.'),
+		(r'^[Tt]rago', 'Trag.'),
+		(r'^togat', 'Comic.'),
+	]
+
+	genres = []
+	for t in titletranslator:
+		for w in works:
+			if re.search(t[0], w[1]) is not None:
+				genres.append((w[0],t[1]))
+
+	for g in genres:
+		q = 'UPDATE works SET workgenre=%s WHERE universalid=%s'
+		d = (g[1], g[0])
+		cursor.execute(q, d)
+
+	# SELECT * FROM works WHERE universalid LIKE 'lt%' AND workgenre IS NULL ORDER BY title
+	# 241 of the 836 will be assigned
+	dbc.commit()
+
+	# Second pass
+	q = 'SELECT universalid FROM works WHERE universalid LIKE %s AND workgenre IS NULL'
+	d = ('lt%',)
+	cursor.execute(q,d)
+	works = cursor.fetchall()
+	works = [w[0] for w in works]
+
+	authortranslator = {
+		'lt0119': 'Comic.',
+		'lt0134': 'Comic.',
+		'lt1234': 'Comm.',
+		'lt1235': 'Comm.',
+		'lt2331': 'Biogr.',
+		'lt0914': 'Hist.',
+		'lt0631': 'Hist.',
+		'lt1215': 'Jurisprud.',
+	}
+
+	genres = []
+	for w in works:
+		if w[0:6] in authortranslator:
+			genres.append((w,authortranslator[w[0:6]]))
+
+	for g in genres:
+		q = 'UPDATE works SET workgenre=%s WHERE universalid=%s'
+		d = (g[1], g[0])
+		cursor.execute(q, d)
+
+	dbc.commit()
+
+	return
+
 def citationreformatter(matchgroups):
 	"""
 	avoid Volumépagéline if you let Volume%3page%3line run through the percentsubstitutes
@@ -968,12 +957,122 @@ def streamout(txt,outfile):
 
 # to avoid circular imports from db
 
-def mkdbconn(config):
-	dbconnection = psycopg2.connect(user=config['db']['DBUSER'], host=config['db']['DBHOST'],
-									port=config['db']['DBPORT'], database=config['db']['DBNAME'],
-									password=config['db']['DBPASS'])
-	# dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+if __name__ == '__main__':
+	def mkdbconn(config):
+		dbconnection = psycopg2.connect(user=config['db']['DBUSER'], host=config['db']['DBHOST'],
+										port=config['db']['DBPORT'], database=config['db']['DBNAME'],
+										password=config['db']['DBPASS'])
+		# dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
-	return dbconnection
+		return dbconnection
 
+
+# notes..
+
+"""
+labels: H-pack
+	[1 2 3 4]
+	read #4:
+		0 --> 'last'
+		N --> len of python string
+
+authors: h-pack
+	[1 2] --> (& hex 7fff) --> author number in 4-place decimal
+	[3 4] --> works
+	read #4
+		test-for-last, etc
+
+works:
+	TBD:
+"""
+
+"""
+0x0 0x0 0x8 0x0 0x0 0x0 0x0 0x0 0x5 Acta 0x0 0x0 0x0 %0x9 Alchemica0x0 0x0 0x0 0x92 0xb Antholo
+giae0x0 0x0 0x0 0xac 0xb Apocalypses0x0 0x0 0x0 0xdd 0x9 Apocrypha0x0 0x0 0x1 90xb A
+pologetica0x0 0x0 0x1 0xab 0xb Astrologica0x0 0x0 0x1 0xfb 0xb Astronomi
+ca0x0 0x0 0x2 \0x9 Biographa0x0 0x0 0x2 0xf6 0x9 Bucolica 0x0 0x0 0x3 0xa 0x7 Caten
+
+                5  A c t a
+00000800000000000541637461200000002509416c6368656d696361000000920b416e74686f6c6f67696165000000
+ac0b41706f63616c7970736573000000dd0941706f637279706861000001390b41706f6c6f676574696361000001ab
+0b417374726f6c6f67696361000001fb0b417374726f6e6f6d6963610000025c0942696f677261706861000002f6094275636f6c69
+
+"""
+
+"""
+the bytes that come before the labels look like this:
+>>> print(heads)
+[0, 0, 0, 0]
+ [0, 0, 0, 56]
+ [0, 0, 0, 78]
+ [0, 0, 0, 110]
+ [0, 0, 0, 142]
+ [0, 0, 0, 154]
+ [0, 0, 0, 178]
+ [0, 0, 0, 188]
+ [0, 0, 0, 194]
+ [0, 0, 0, 210]
+ [0, 0, 2, 2]
+ [0, 0, 2, 10]
+ [0, 0, 2, 80]
+ [0, 0, 2, 218]
+ [0, 0, 3, 12]
+ [0, 0, 3, 36]
+ [0, 0, 3, 66]
+ [0, 0, 3, 78]
+ [0, 0, 3, 90]
+ [0, 0, 3, 98]
+ [0, 0, 3, 250]
+ [0, 0, 4, 2]
+ [0, 0, 6, 174]
+ [0, 0, 6, 180]
+...
+a means of counting: each higher than the last
+
+here is the top of the bytes when we get to the authors
+[131, 248, 135, 227, 136, 92, 136, 133, 138, 29, 138, 72, 143, 246, 144, 223, 144, 227, 144,
+228, 144, 229, 144, 230, 144, 231, 144, 232, 144, 233, 144, 234, 144, 235, 144, 236, 144, 237,
+144, 238, 144, 239, 144, 241, 144, 242, 144, 243, 144, 244, 163, 61, 0, 0, 0, 0, 130, 19, 130,
+133, 132, 139, 132, 160, 132, 181, 133, 215, 134, 189, 134, 230, 135, 200, 0, 0, 0, 0, 131, 236]
+
+
+>>> print(info[50:60])
+[163, 61, 0, 0, 0, 0, 130, 19, 130, 133]
+
+so at 56 we find the first byte of the next label: Apologetici
+
+>>> print(info[70:80])
+[134, 230, 135, 200, 0, 0, 0, 0, 131, 236]
+
+at 78 we find the first byte of the next label: Astrologici
+
+the value of the second digit is obvious once you see it...
+there are no zero-runs from 210 until around 505: [514 + 522]
+
+>>> print(authinfo[505:550])
+[1, 135, 2, 135, 3, 0, 0, 0, 0, 130, 16, 130, 17, 0, 0, 0, 0, 128, 2, 128, 212, 128, 213,
+128, 214, 128, 217, 128, 232, 128, 236, 128, 239, 128, 242, 128, 243, 128, 245, 128, 246,
+128, 247, 128, 249]
+
+and indeed we expected a short run:
+ [0, 0, 2, 2]
+ [0, 0, 2, 10]
+
+therefore each '1' is worth 256: 2*256 + 2 --> 514
+
+>>> print(labels[10])
+Doxographi
+>>> print(heads[10])
+[0, 0, 2, 2]
+
+there should be two and only two of them:
+[130, 16]
+[130, 17]
+Diogenes knows of only two Doxograph.
+	Arius Didymus Doxogr., Physica (fragmenta) (0529: 001)
+	Aëtius Doxogr., De placitis reliquiae (Stobaei excerpta) (0528: 001)
+
+and they *should* have sequential ids: 0528 = 130, 16; 0529 = 130, 17
+
+"""
 
