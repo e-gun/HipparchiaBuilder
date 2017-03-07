@@ -828,6 +828,7 @@ def insertlatingenres(cursor, dbc):
 
 	titletranslator = [
 		(r'^Ad.*?Epist', 'Epist.'),
+		(r'^Epist.*?ad ', 'Epist.'),
 		(r'^Atell', 'Comic.'),
 		(r'^De Bello', 'Hist.'),
 		(r'^De Metris', 'Gramm.'),
@@ -838,6 +839,7 @@ def insertlatingenres(cursor, dbc):
 		(r'^como', 'Comic.'),
 		(r'^Commentar.', 'Hist.'),
 		(r'^Commentum', 'Comm.'),
+		(r'^Comment\. in', 'Comm.'),
 		(r'^Controv', 'Orat.'),
 		(r'^[Ee]leg', 'Eleg.'),
 		(r'^epigr', 'Epigr.'),
@@ -847,12 +849,16 @@ def insertlatingenres(cursor, dbc):
 		(r'^[Hh]istor', 'Hist.'),
 		(r'^In Verg', 'Comm.'),
 		(r'^iurisp', 'Jurisprud.'),
+		(r'Metr', 'Gramm.'),
+		(r'Medic', 'Med.'),
 		(r'^[Mm]im', 'Mim.'),
+		(r'^Natur', 'Nat. Hist.'),
 		(r'^orat', 'Orat.'),
-		(r'^pallia', 'Comic.'),
+		(r'^[Pp]allia', 'Comic.'),
+		(r'^Paneg', 'Orat.'),
 		(r'^praet', 'Trag.'),
 		(r'^[Tt]rago', 'Trag.'),
-		(r'^togat', 'Comic.'),
+		(r'^[Tt]ogat', 'Comic.'),
 	]
 
 	genres = []
@@ -886,6 +892,8 @@ def insertlatingenres(cursor, dbc):
 		'lt0914': 'Hist.',
 		'lt0631': 'Hist.',
 		'lt1215': 'Jurisprud.',
+		'lt1377': 'Gramm.',
+		'lt3211': 'Gramm.',
 	}
 
 	genres = []
