@@ -323,6 +323,7 @@ def headwordcounts():
 
 	knownworkgenres = [
 		'Acta',
+		'Agric.',
 		'Alchem.',
 		'Anthol.',
 		'Apocalyp.',

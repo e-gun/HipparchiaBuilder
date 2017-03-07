@@ -5,7 +5,7 @@
 	License: GPL 3 (see LICENSE in the top level directory of the distribution)
 """
 
-
+import csv
 import re
 import psycopg2
 import configparser
@@ -819,7 +819,7 @@ def insertlatingenres(cursor, dbc):
 	:return:
 	"""
 
-	# First pass
+	# First pass: use regex
 
 	q = 'SELECT universalid,title FROM works WHERE universalid LIKE %s ORDER BY universalid '
 	d = ('lt%',)
@@ -876,7 +876,7 @@ def insertlatingenres(cursor, dbc):
 	# 241 of the 836 will be assigned
 	dbc.commit()
 
-	# Second pass
+	# Second pass: use authorID
 	q = 'SELECT universalid FROM works WHERE universalid LIKE %s AND workgenre IS NULL'
 	d = ('lt%',)
 	cursor.execute(q,d)
@@ -908,7 +908,20 @@ def insertlatingenres(cursor, dbc):
 
 	dbc.commit()
 
+	# third pass: brute force assignment
+	with open('manual_latin_genre_assignment.csv') as csvfile:
+		genrereader = csv.DictReader(csvfile)
+		newgenres = [(row['universalid'], row['genre']) for row in genrereader if row['genre']]
+
+	for g in newgenres:
+		q = 'UPDATE works SET workgenre=%s WHERE universalid=%s'
+		d = (g[1], g[0])
+		cursor.execute(q, d)
+
+	dbc.commit()
+
 	return
+
 
 def citationreformatter(matchgroups):
 	"""
