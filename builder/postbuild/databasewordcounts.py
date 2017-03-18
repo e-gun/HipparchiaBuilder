@@ -120,7 +120,10 @@ def wordcounter(restriction=None):
 
 	# merge the results
 	print('merging the partial results')
-	masterconcorcdance = listofconcordancedicts.pop()
+	try:
+		masterconcorcdance = listofconcordancedicts.pop()
+	except IndexError:
+		masterconcorcdance = {}
 	for cd in listofconcordancedicts:
 		# find the 'gr' in something like {'τότοιν': {'gr': 1}}
 		tdk = list(cd.keys())
