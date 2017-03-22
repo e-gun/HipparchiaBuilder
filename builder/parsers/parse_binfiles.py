@@ -175,7 +175,7 @@ def cleanlabels(labellist):
 		l = re.sub('^ ', '', l)
 		l = re.sub(' $','',l)
 		l = re.sub('\*', '', l)
-		l = re.sub('\s', '_', l) # 'Scriptores Erotici' causes problems for HipparchiaServer
+		# l = re.sub('\s', '_', l) # 'Scriptores Erotici' causes problems for HipparchiaServer
 		clean.append(l)
 
 	return clean
