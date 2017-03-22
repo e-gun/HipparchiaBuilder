@@ -124,6 +124,7 @@ def wordcounter(restriction=None):
 		masterconcorcdance = listofconcordancedicts.pop()
 	except IndexError:
 		masterconcorcdance = {}
+
 	for cd in listofconcordancedicts:
 		# find the 'gr' in something like {'τότοιν': {'gr': 1}}
 		tdk = list(cd.keys())
@@ -320,8 +321,12 @@ def headwordcounts():
 	dictionarycounts = buildcountsfromlemmalist(lemmatalist, countdict)
 
 	"""
-	36 items return from:
+	75 items return from:
 		select * from works where workgenre IS NULL and universalid like 'gr%'
+
+	will model the other DBs after this
+	will also add Agric. as a genre for LAT
+
 	"""
 
 	knownworkgenres = [
@@ -416,8 +421,8 @@ def headwordcounts():
 	keys = sorted(keys)
 	for word in keys:
 		commitcount += 1
-		q = 'INSERT INTO '+thetable+' (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) ' \
-		                            'VALUES (%s, %s, %s, %s, %s, %s, %s)'
+		q = 'INSERT INTO {tb} (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) ' \
+		                            'VALUES (%s, %s, %s, %s, %s, %s, %s)'.format(tb=thetable)
 		d = (word, dictionarycounts[word]['total'], dictionarycounts[word]['gr'], dictionarycounts[word]['lt'],
 		     dictionarycounts[word]['dp'], dictionarycounts[word]['in'], dictionarycounts[word]['ch'])
 		cursor.execute(q,d)
@@ -636,7 +641,7 @@ def insertchronologicalmetadata(metadatadict, thetable):
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	q = 'CREATE TEMP TABLE tmp_metadata AS SELECT * FROM '+thetable+' LIMIT 0'
+	q = 'CREATE TEMP TABLE tmp_metadata AS SELECT * FROM {tb} LIMIT 0'.format(tb=thetable)
 	cursor.execute(q)
 
 	count = 0
@@ -658,12 +663,16 @@ def insertchronologicalmetadata(metadatadict, thetable):
 			dbc.commit()
 
 	dbc.commit()
-	q = 'UPDATE '+thetable+' SET frequency_classification = tmp_metadata.frequency_classification,' \
-			'early_occurrences = tmp_metadata.early_occurrences,' \
-			'middle_occurrences = tmp_metadata.middle_occurrences,' \
-			'late_occurrences = tmp_metadata.late_occurrences' \
-			' FROM tmp_metadata ' \
-			'WHERE '+thetable+'.entry_name = tmp_metadata.entry_name'
+	qtemplate = """
+		UPDATE {tb} SET
+			frequency_classification = tmp_metadata.frequency_classification,
+			early_occurrences = tmp_metadata.early_occurrences,
+			middle_occurrences = tmp_metadata.middle_occurrences,
+			late_occurrences = tmp_metadata.late_occurrences
+		FROM tmp_metadata
+		WHERE {tb}.entry_name = tmp_metadata.entry_name
+	"""
+	q = qtemplate.format(tb=thetable)
 	cursor.execute(q)
 	dbc.commit()
 
@@ -693,14 +702,13 @@ def insertgenremetadata(metadatadict, genrename, thetable):
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	q = 'CREATE TEMP TABLE tmp_metadata AS SELECT * FROM '+thetable+' LIMIT 0'
+	q = 'CREATE TEMP TABLE tmp_metadata AS SELECT * FROM {tb} LIMIT 0'.format(tb=thetable)
 	cursor.execute(q)
 
 	count = 0
 	for entry in metadatadict.keys():
 		count += 1
-		q = 'INSERT INTO tmp_metadata (entry_name, '+thecolumn+') ' \
-		    'VALUES ( %s, %s)'
+		q = 'INSERT INTO tmp_metadata (entry_name, {tc}) VALUES ( %s, %s)'.format(tc=thecolumn)
 		try:
 			d = (entry, metadatadict[entry][genrename])
 		except KeyError:
@@ -714,8 +722,7 @@ def insertgenremetadata(metadatadict, genrename, thetable):
 			dbc.commit()
 
 	dbc.commit()
-	q = 'UPDATE '+thetable+' SET '+thecolumn+' = tmp_metadata.'+thecolumn+' FROM tmp_metadata ' \
-			'WHERE '+thetable+'.entry_name = tmp_metadata.entry_name'
+	q = 'UPDATE {tb} SET {tc} = tmp_metadata.{tc} FROM tmp_metadata WHERE {tb}.entry_name = tmp_metadata.entry_name'.format(tb=thetable, tc=thecolumn)
 	cursor.execute(q)
 	dbc.commit()
 

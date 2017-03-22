@@ -174,6 +174,8 @@ def cleanlabels(labellist):
 		l = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, l)
 		l = re.sub('^ ', '', l)
 		l = re.sub(' $','',l)
+		l = re.sub('\*', '', l)
+		l = re.sub('\s', '_', l) # 'Scriptores Erotici' causes problems for HipparchiaServer
 		clean.append(l)
 
 	return clean

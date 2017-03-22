@@ -192,6 +192,11 @@ def idthexparser(filearray, offset, code):
 		a new bytecount position
 	   the newLeftvalue
 	at the moment we return a tuple with these, but more things are afoot than that?
+
+	*plenty* of this code is actually broken, but you never hit the parts that call unimported libraries and uninitialized variables
+
+	this function should be deleted; but if loadauthor() ever called it, you would want to see the error messages
+
 	:param filearray:
 	:param offset:
 	:param code:
