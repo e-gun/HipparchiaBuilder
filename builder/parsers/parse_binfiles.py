@@ -913,7 +913,7 @@ def insertlatingenres(cursor, dbc):
 	dbc.commit()
 
 	# third pass: brute force assignment
-	with open('./builder/parsers/manual_latin_genre_assignment.csv') as csvfile:
+	with open('./builder/parsers/manual_latin_genre_assignment.csv', encoding='utf-8') as csvfile:
 		genrereader = csv.DictReader(csvfile)
 		newgenres = [(row['universalid'], row['genre']) for row in genrereader if row['genre']]
 
