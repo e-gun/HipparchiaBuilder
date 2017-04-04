@@ -173,12 +173,15 @@ def createwordcounttable(tablename, extracolumns=False):
 
 	cursor.execute(query)
 
-	query = 'GRANT SELECT ON TABLE ' + tablename + ' TO hippa_rd;'
+	query = 'GRANT SELECT ON TABLE {tn} TO hippa_rd;'.format(tn=tablename)
 	cursor.execute(query)
 
 	tableletter = tablename[-2:]
 
-	q = 'CREATE UNIQUE INDEX wcindex'+tableletter+' ON '+tablename+' (entry_name)'
+	q = 'DROP INDEX IF EXISTS public.wcindex{tl}'.format(tl=tableletter, tn=tablename)
+	cursor.execute(q)
+
+	q = 'CREATE UNIQUE INDEX wcindex{tl} ON {tn} (entry_name)'.format(tl=tableletter, tn=tablename)
 	cursor.execute(q)
 
 	dbc.commit()
