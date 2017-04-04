@@ -307,7 +307,7 @@ def headwordcounts():
 	cursor = dbc.cursor()
 
 	# loading is slow: avoid doing it 2x
-	lemmatalist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
+	lemmataobjectslist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
 
 	# 'v' should be empty, though; ϙ will go to 0
 	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
@@ -318,7 +318,7 @@ def headwordcounts():
 	countdict = {word.entryname: word for word in countobjectlist}
 	del countobjectlist
 
-	dictionarycounts = buildcountsfromlemmalist(lemmatalist, countdict)
+	dictionarycounts = buildcountsfromlemmalist(lemmataobjectslist, countdict)
 
 	"""
 	75 items return from:
@@ -437,10 +437,10 @@ def headwordcounts():
 
 	thetable = 'dictionary_headword_wordcounts'
 	metadata = derivedictionaryentrymetadata(thetable, cursor)
-	lemmatalist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
-	metadata = derivechronologicalmetadata(metadata, lemmatalist, cursor)
+	lemmataobjectslist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
+	metadata = derivechronologicalmetadata(metadata, lemmataobjectslist, cursor)
 	metadata = insertchronologicalmetadata(metadata, thetable)
-	metadata = derivegenremetadata(metadata, lemmatalist, thetable, knownworkgenres, cursor)
+	metadata = derivegenremetadata(metadata, lemmataobjectslist, thetable, knownworkgenres, cursor)
 
 	# print('ἅρπαξ',metadata['ἅρπαξ'])
 	# ἅρπαξ {'frequency_classification': 'core vocabulary (more than 50)', 'early': 42, 'middle': 113, 'late': 468}
@@ -450,31 +450,38 @@ def headwordcounts():
 	return metadata
 
 
-def buildcountsfromlemmalist(lemmatalist, wordcountdict):
+def buildcountsfromlemmalist(lemmataobjectslist, wordcountdict):
 	"""
 
 	given a list of lemmata objects, build a dictionary of statistics
-	about how often the verious forms under that dictionary heading are used
+	about how often the various forms under that dictionary heading are used
 
 	check each item on the list of possible forms against a master dict of observed forms
 
 	return a dictionary of lexicon entry keywords and the associated totals of all observed forms
 
-	:param lemmatalist:
+	countdict['euulgato']
+	<builder.builder_classes.dbWordCountObject object at 0x1364d61d0>
+	countdict['euulgato'].t
+	1
+
+
+	:param lemmataobjectslist:
 	:return:
 	"""
 
 	lexiconentrycounts = {}
 
-	for lem in lemmatalist:
+	for lem in lemmataobjectslist:
 		thewordtolookfor = lem.dictionaryentry
-		# should probably prevent the dictionary from having 'v' or 'j' in it in the first place...
-		thewordtolookfor = re.sub(r'v', 'u', thewordtolookfor.lower())
 		# comprehensions would be nice, but they fail because of exceptions
 		lexiconentrycounts[thewordtolookfor] = {}
 		for item in ['total', 'gr', 'lt', 'dp', 'in', 'ch']:
 			sum = 0
 			for form in lem.formlist:
+				# need to make sure that u/v and apostrophes, etc. have all been addressed
+				# that is, the forms in the formlist need to match what is found in the texts
+				# but the formlists were generated with differently processed data
 				try:
 					sum += wordcountdict[form].getelement(item)
 				except KeyError:

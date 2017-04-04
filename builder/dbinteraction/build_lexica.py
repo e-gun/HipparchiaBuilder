@@ -220,7 +220,7 @@ def analysisloader(language):
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	q = 'CREATE INDEX ' + language + '_analysis_trgm_idx ON ' + language + '_morphology USING GIN ( possible_dictionary_forms gin_trgm_ops)'
+	q = 'CREATE INDEX {l}_analysis_trgm_idx ON {l}_morphology USING GIN ( possible_dictionary_forms gin_trgm_ops)'.format(l=language)
 	cursor.execute(q)
 
 	dbc.commit()
@@ -247,16 +247,16 @@ def resettable(tablename, tablestructurelist, indexcolumn):
 
 	columns = ', '.join(tablestructurelist)
 
-	q = 'DROP TABLE IF EXISTS public.' + tablename + '; DROP INDEX IF EXISTS ' + tablename + '_idx;'
+	q = 'DROP TABLE IF EXISTS public.{tn}; DROP INDEX IF EXISTS {tn}_idx;'.format(tn=tablename)
 	cursor.execute(q)
 
-	q = 'CREATE TABLE public.' + tablename + ' ( '+columns+' ) WITH ( OIDS=FALSE );'
+	q = 'CREATE TABLE public.{tn} ( {c} ) WITH ( OIDS=FALSE );'.format(tn=tablename, c=columns)
 	cursor.execute(q)
 
-	q = 'GRANT SELECT ON TABLE public.' + tablename + ' TO hippa_rd;'
+	q = 'GRANT SELECT ON TABLE public.{tn} TO hippa_rd;'.format(tn=tablename)
 	cursor.execute(q)
 
-	q = 'CREATE INDEX ' + tablename + '_idx ON public.' + tablename + ' USING btree ('+indexcolumn+' COLLATE pg_catalog."default");'
+	q = 'CREATE INDEX {tn}_idx ON public.{tn} USING btree ({ic} COLLATE pg_catalog."default");'.format(tn=tablename, ic=indexcolumn)
 	cursor.execute(q)
 
 	dbc.commit()

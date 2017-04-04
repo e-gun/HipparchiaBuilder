@@ -588,6 +588,13 @@ class dbLemmaObject(object):
 	derivative_forms text COLLATE pg_catalog."default"
 	)
 
+	u/v problem: 'derivative_forms' in latin_lemmata contains a hybrid of u and v; contrast the following
+
+	"evulgo";27913617;"	evulgaret (imperf subj act 3rd sg)	evulgari (pres inf pass)	evulgato (fut imperat act 3rd sg) (fut imperat act 2nd sg) (perf part pass neut abl sg) (perf part pass masc abl sg) (perf part pass neut dat sg) (perf part pass masc dat sg)	evulgatus (perf part (...)"
+	"divulgo";24959067;"	diuulgarent (imperf subj act 3rd pl)	diuulgarentur (imperf subj pass 3rd pl)	diuulgaret (imperf subj act 3rd sg)	diuulgata (perf part pass neut nom/voc/acc pl) (perf part pass fem abl sg) (perf part pass fem nom/voc sg)	diuulgati (perf part pass masc nom/ (...)"
+
+	and 'evulgaret' will never be seen by the counter since the word seen in the db is 'euulgaret'
+
 	"""
 
 	def __init__(self, dictionaryentry, xref, derivativeforms):
@@ -596,6 +603,7 @@ class dbLemmaObject(object):
 		self.formandidentificationlist = [f for f in derivativeforms.split('\t') if f]
 		self.formlist = [f.split(' ')[0] for f in self.formandidentificationlist]
 		self.formlist = [re.sub(r'\'','',f) for f in self.formlist]
+		self.formlist = [re.sub(r'v', 'u', f) for f in self.formlist]
 
 	def getformdict(self):
 		fd = {}
