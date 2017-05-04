@@ -288,6 +288,7 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 			if observedform:
 				if islatin is True:
 					observedform = re.sub(r'[\t\s]', '', observedform)
+					observedform = re.sub(r'v', 'u', observedform)
 					observedform = latinvowellengths(observedform)
 				else:
 					observedform = re.sub(r'(.*?)\t', lambda x: greekwithoutvowellengths(x[1]), observedform.upper())
