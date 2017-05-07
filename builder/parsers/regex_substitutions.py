@@ -356,8 +356,8 @@ def quotesubstitutesa(match):
 		1: u'\u201e',
 		2: 'QUOTE2',
 		3: 'QUOTE3',
-		4: 'u\u201a',
-		5: 'u\u201b',
+		4: u'\u201a',
+		5: u'\u201b',
 		6: 'QUOTE6',
 		7: 'QUOTE7',
 		8: 'QUOTE8'
