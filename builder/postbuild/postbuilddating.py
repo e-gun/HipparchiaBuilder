@@ -620,7 +620,7 @@ def datemapper(stringdate):
 		'CLADIUS': 50,
 		'COMMODUS': 185,
 		'CONSTANTINE': 315,
-		'DATE': 1500,
+		'DATE': 2500,
 		'DOMITIAN': 90,
 		'EARLY BYZ.': 450,
 		'EARLY BYZANTINE': 450,
