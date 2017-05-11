@@ -233,7 +233,7 @@ def dbauthoradder(authorobject, cursor):
 	query = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, genres, recorded_date, converted_date, location) ' \
 			'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 	data = (uid, lang, authorobject.idxname, authorobject.aka, authorobject.shortname, authorobject.cleanname,
-			authorobject.genre, '', '', '')
+			authorobject.genre, '', None, '')
 	try:
 		cursor.execute(query, data)
 	except Exception as e:

@@ -41,7 +41,7 @@ CREATE TABLE public.authors
   cleanname character varying(128),
   genres character varying(512),
   recorded_date character varying(64),
-  converted_date character varying(8),
+  converted_date integer,
   location character varying(128)
 )
 WITH (
@@ -73,7 +73,7 @@ CREATE TABLE public.works
   worktype character varying(32),
   provenance character varying(64),
   recorded_date character varying(64),
-  converted_date character varying(8),
+  converted_date integer,
   wordcount integer,
   firstline integer,
   lastline integer,

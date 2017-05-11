@@ -41,7 +41,7 @@ class Author(object):
 		self.cleanname = ''
 		self.genre = ''
 		self.recorded_date = ''
-		self.converted_date = ''
+		self.converted_date = None
 		self.location = ''
 		self.works = []
 		# sadly we need this to decode what work number is stored where
