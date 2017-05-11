@@ -14,7 +14,7 @@ from string import punctuation
 
 from builder.builder_classes import dbWordCountObject
 from builder.dbinteraction.db import setconnection, loadallauthorsasobjects, loadallworksasobjects
-from builder.parsers.betacode_to_unicode import cleanaccentsandvj
+from builder.parsers.betacode_to_unicode import cleanaccentsandvj, buildhipparchiatranstable
 from builder.postbuild.postbuildhelperfunctions import forceterminalacute, graballlinesasobjects, \
 	graballcountsasobjects, grablemmataasobjects, createwordcounttable, cleanwords, prettyprintcohortdata, dictmerger
 
@@ -247,6 +247,8 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
+	transtable = buildhipparchiatranstable()
+
 	# 'v' should be empty, though; ϙ will go to 0
 	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
 	letters = {letters[l] for l in range(0,len(letters))}
@@ -260,7 +262,7 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 		cw = masterconcorcdance[key]
 		skip = False
 		try:
-			lettertable = cleanaccentsandvj(key[0])
+			lettertable = cleanaccentsandvj(key[0], transtable)
 			# fine, but this just put any 'v' words inside of 'u' where they can never be found
 			# so v issue has to be off the table by now
 		except:

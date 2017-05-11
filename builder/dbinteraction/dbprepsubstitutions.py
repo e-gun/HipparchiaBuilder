@@ -7,7 +7,7 @@
 """
 
 import re
-from builder.parsers.betacode_to_unicode import cleanaccentsandvj
+from builder.parsers.betacode_to_unicode import cleanaccentsandvj, buildhipparchiatranstable
 
 
 def dbprepper(dbunreadyversion):
@@ -197,8 +197,10 @@ def dbstrippedliner(dbunreadyversion):
 	# you won't get the first word of the iliad right unless you search for capital Mu
 	# it seems like you will seldom wish you had caps and that remembering to handle them as a casual user is not so hot
 
+	transtable = buildhipparchiatranstable()
+
 	for line in dbunreadyversion:
-		unaccented = cleanaccentsandvj(line[workingcolumn])
+		unaccented = cleanaccentsandvj(line[workingcolumn], transtable)
 		line = line + [unaccented]
 		dbreadyversion.append(line)
 		
@@ -220,6 +222,8 @@ def dbfindhypens(dbunreadyversion):
 	workingcolumn = 3
 	previous = dbunreadyversion[0]
 
+	transtable = buildhipparchiatranstable()
+
 	for line in dbunreadyversion[1:]:
 		try:
 			# a problem if the line is empty: nothing to split
@@ -229,7 +233,7 @@ def dbfindhypens(dbunreadyversion):
 				thisstart = line[workingcolumn].split(None, 1)[0]
 				hyphenated = prevend[:-1] + thisstart
 				if len(hyphenated) > 0:
-					newlines = consolidatecontiguouslines(previous, line, hyphenated)
+					newlines = consolidatecontiguouslines(previous, line, hyphenated, transtable)
 					previous = newlines['p']
 					line = newlines['l']
 				previous.append(hyphenated)
@@ -326,7 +330,7 @@ def noleadingortrailingwhitespace(dbunreadyversion):
 	return dbreadyversion
 
 
-def consolidatecontiguouslines(previousline, thisline, hypenatedword):
+def consolidatecontiguouslines(previousline, thisline, hypenatedword, transtable):
 	"""
 	helper function for the stripped line column: if a previousline ends with a hypenated word:
 		put the whole word at line end
@@ -358,7 +362,7 @@ def consolidatecontiguouslines(previousline, thisline, hypenatedword):
 	p = pc.split(' ')
 	t = thisline[column].split(' ')
 	
-	p = p[:-1] + [cleanaccentsandvj(hypenatedword)]
+	p = p[:-1] + [cleanaccentsandvj(hypenatedword, transtable)]
 	t = t[1:]
 	
 	p = ' '.join(p)
