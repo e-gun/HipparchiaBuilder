@@ -7,8 +7,6 @@
 """
 
 import re
-import time
-from collections import deque
 from builder.parsers.betacode_to_unicode import cleanaccentsandvj
 
 
