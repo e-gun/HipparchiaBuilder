@@ -148,27 +148,32 @@ def authortablemaker(authordbname, cursor):
 	:param cursor:
 	:return:
 	"""
-	query = 'DROP TABLE IF EXISTS public.' + authordbname
+	query = 'DROP TABLE IF EXISTS public.{adb}'.format(adb=authordbname)
 	cursor.execute(query)
 
-	query = 'CREATE TABLE public.' + authordbname
-	query += '( index integer NOT NULL DEFAULT nextval(\'' + authordbname + '\'::regclass), '
-	query += 'wkuniversalid character varying(10),'
-	query += 'level_05_value character varying(64),'
-	query += 'level_04_value character varying(64),'
-	query += 'level_03_value character varying(64),'
-	query += 'level_02_value character varying(64),'
-	query += 'level_01_value character varying(64),'
-	query += 'level_00_value character varying(64),'
-	query += 'marked_up_line text,'
-	query += 'accented_line text,'
-	query += 'stripped_line text,'
-	query += 'hyphenated_words character varying(128),'
-	query += 'annotations character varying(256) ) WITH ( OIDS=FALSE );'
+	template = """
+		CREATE TABLE public.{adb} (
+			index integer NOT NULL UNIQUE DEFAULT nextval('{adb}'::regclass),
+            wkuniversalid character varying(10) COLLATE pg_catalog."default",
+            level_05_value character varying(64) COLLATE pg_catalog."default",
+            level_04_value character varying(64) COLLATE pg_catalog."default",
+            level_03_value character varying(64) COLLATE pg_catalog."default",
+            level_02_value character varying(64) COLLATE pg_catalog."default",
+            level_01_value character varying(64) COLLATE pg_catalog."default",
+            level_00_value character varying(64) COLLATE pg_catalog."default",
+            marked_up_line text COLLATE pg_catalog."default",
+            accented_line text COLLATE pg_catalog."default",
+            stripped_line text COLLATE pg_catalog."default",
+            hyphenated_words character varying(128) COLLATE pg_catalog."default",
+            annotations character varying(256) COLLATE pg_catalog."default"
+        ) WITH ( OIDS=FALSE );
+	"""
+
+	query = template.format(adb=authordbname)
 
 	cursor.execute(query)
 
-	query = 'GRANT SELECT ON TABLE ' + authordbname + ' TO hippa_rd;'
+	query = 'GRANT SELECT ON TABLE {adb} TO hippa_rd;'.format(adb=authordbname)
 	cursor.execute(query)
 
 	# print('failed to create',workdbname)

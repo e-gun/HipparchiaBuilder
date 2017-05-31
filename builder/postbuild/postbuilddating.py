@@ -455,7 +455,7 @@ def romannumeraldate(stringdate):
 		second = centuries.group(2)
 		first = map[first]
 		second = map[second]
-		if first > second:
+		if first > second and modifier > 0:
 			modifier = modifier * -1
 		numericaldate = (((first + second) / 2) * modifier) + fudge + midcentury
 	elif re.search(r'[IVX]{1,}',stringdate) is not None:
