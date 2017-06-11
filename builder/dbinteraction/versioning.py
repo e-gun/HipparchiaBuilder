@@ -30,11 +30,13 @@ def versiontablemaker(dbconnection, cursor):
 	query = 'DROP TABLE IF EXISTS public.builderversion'
 	cursor.execute(query)
 
-	query = 'CREATE TABLE public.builderversion '
-	query += ' ( templateversion integer,'
-	query += 'corpusname character varying(2),'
-	query += 'corpusbuilddate character varying(20)'
-	query += ') WITH ( OIDS=FALSE );'
+	query = """
+		CREATE TABLE public.builderversion 
+			(templateversion integer,
+			corpusname character varying(2),
+			corpusbuilddate character varying(20)) 
+			WITH ( OIDS=FALSE );
+		"""
 
 	cursor.execute(query)
 

@@ -9,6 +9,7 @@
 import re
 
 
+
 def lowercaseletters(betacode):
 	"""
 	swap betacode for unicode values
@@ -28,10 +29,10 @@ def lowercaseletters(betacode):
 	"""
 	# needs to be done in order of length of regex string
 	# otherwise 4-element items will disappear in the wake of doing all of the 3s, etc.
-	
+
 	# roman numeral problem: (XI) will wind up as (Xἰ
 	# very had to fix because a lookahead of (?!\s) will ruin εἰ
-	
+
 	# lowercase + breathing + accent + subscript
 	lsga = re.compile(r'([AHW])\)\\\|')
 	lrga = re.compile(r'([AHW])\(\\\|')
@@ -39,14 +40,14 @@ def lowercaseletters(betacode):
 	lraa = re.compile(r'([AHW])\(\/\|')
 	lsca = re.compile(r'([AHW])\)\=\|')
 	lrca = re.compile(r'([AHW])\(\=\|')
-	
+
 	unicode = re.sub(lsga, lowercasesmoothgravesubscript, betacode)
 	unicode = re.sub(lrga, lowercaseroughgravesubscript, unicode)
 	unicode = re.sub(lsaa, lowercasesmoothacutesubscript, unicode)
 	unicode = re.sub(lraa, lowercaseroughacutesubscript, unicode)
 	unicode = re.sub(lsca, lowercasesmoothcircumflexsubscript, unicode)
 	unicode = re.sub(lrca, lowercaseroughcircumflexsubscript, unicode)
-	
+
 	# lowercase + breathing + accent
 	lsg = re.compile(r'([AEIOUHW])\)\\')
 	lrg = re.compile(r'([AEIOUHW])\(\\')
@@ -54,85 +55,85 @@ def lowercaseletters(betacode):
 	lra = re.compile(r'([AEIOUHW])\(\/')
 	lsc = re.compile(r'([AEIOUHW])\)\=')
 	lrc = re.compile(r'([AEIOUHW])\(\=')
-	
+
 	unicode = re.sub(lsg, lowercasesmoothgrave, unicode)
 	unicode = re.sub(lrg, lowercaseroughgrave, unicode)
 	unicode = re.sub(lsa, lowercasesmoothacute, unicode)
 	unicode = re.sub(lra, lowercaseroughacute, unicode)
 	unicode = re.sub(lsc, lowercasesmoothcircumflex, unicode)
 	unicode = re.sub(lrc, lowercaseroughcircumflex, unicode)
-	
+
 	# lowercase + accent + subscript
 	lga = re.compile(r'([AHW])\\\|')
 	laa = re.compile(r'([AHW])\/\|')
 	lca = re.compile(r'([AHW])\=\|')
-	
+
 	unicode = re.sub(lga, lowercasegravesub, unicode)
 	unicode = re.sub(laa, lowercaseacutedsub, unicode)
 	unicode = re.sub(lca, lowercasesircumflexsub, unicode)
-	
+
 	# lowercase + breathing + subscript
 	lss = re.compile(r'([AHW])\)\|')
 	lrs = re.compile(r'([AHW])\(\|')
-	
+
 	unicode = re.sub(lss, lowercasesmoothsub, unicode)
 	unicode = re.sub(lrs, lowercaseroughsub, unicode)
-	
+
 	# lowercase + accent + diaresis
 	lgd = re.compile(r'([IU])\\\+')
 	lad = re.compile(r'([IU])\/\+')
 	lcd = re.compile(r'([U])\=\+')
-	
+
 	unicode = re.sub(lgd, lowercasegravediaresis, unicode)
 	unicode = re.sub(lad, lowercaseacutediaresis, unicode)
 	unicode = re.sub(lcd, lowercasesircumflexdiaresis, unicode)
-	
+
 	# lowercase + breathing
 	ls = re.compile(r'([AEIOUHWR])\)')
 	lr = re.compile(r'([AEIOUHWR])\(')
-	
+
 	unicode = re.sub(ls, lowercasesmooth, unicode)
 	unicode = re.sub(lr, lowercaserough, unicode)
-	
+
 	# lowercase + accent
 	lg = re.compile(r'([AEIOUHW])\\')
 	la = re.compile(r'([AEIOUHW])\/')
 	lc = re.compile(r'([AEIOUHW])\=')
-	
+
 	unicode = re.sub(lg, lowercasegrave, unicode)
 	unicode = re.sub(la, lowercaseacute, unicode)
 	unicode = re.sub(lc, lowercascircumflex, unicode)
-	
+
 	# lowercase + diaresis
 	ld = re.compile(r'([IU])\+')
-	
+
 	unicode = re.sub(ld, lowercasediaresis, unicode)
-	
+
 	# lowercase + subscript
 	lad = re.compile(r'([AHW])\|')
-	
+
 	unicode = re.sub(lad, lowercasesubscript, unicode)
-	
+
 	# lowercase + vowel length
 	# perseus' LSJ: vowel+_ for long-vowel and vowel+^ for short
 	# short = re.compile(r'[AIU]\^')
 	# long = re.compile(r'[AIU]_')
-	
+
 	# sigmas: all lunates
 	sig = re.compile(r'S[1-3]{0,1}')
 	unicode = re.sub(sig, u'ϲ', unicode)
-	
+
 	# lowercases
 	lap = re.compile(r'([A-Z])')
 	unicode = re.sub(lap, lowercases, unicode)
-	
+
 	return unicode
 
 
 # lowercase + breathing + accent + subscript
-def lowercasesmoothgravesubscript(match):
-	val = match.group(1)
-	
+def lowercasesmoothgravesubscript(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾂ',
 		'E': u'',
@@ -142,15 +143,15 @@ def lowercasesmoothgravesubscript(match):
 		'H': u'ᾒ',
 		'W': u'ᾢ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercaseroughgravesubscript(match):
-	val = match.group(1)
-	
+def lowercaseroughgravesubscript(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾃ',
 		'E': u'',
@@ -160,15 +161,15 @@ def lowercaseroughgravesubscript(match):
 		'H': u'ᾓ',
 		'W': u'ᾣ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercasesmoothacutesubscript(match):
-	val = match.group(1)
-	
+def lowercasesmoothacutesubscript(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾄ',
 		'E': u'',
@@ -178,15 +179,15 @@ def lowercasesmoothacutesubscript(match):
 		'H': u'ᾔ',
 		'W': u'ᾤ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercaseroughacutesubscript(match):
-	val = match.group(1)
-	
+def lowercaseroughacutesubscript(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾅ',
 		'E': u'',
@@ -196,15 +197,15 @@ def lowercaseroughacutesubscript(match):
 		'H': u'ᾕ',
 		'W': u'ᾥ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercasesmoothcircumflexsubscript(match):
-	val = match.group(1)
-	
+def lowercasesmoothcircumflexsubscript(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾆ',
 		'E': u'',
@@ -214,15 +215,15 @@ def lowercasesmoothcircumflexsubscript(match):
 		'H': u'ᾖ',
 		'W': u'ᾦ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercaseroughcircumflexsubscript(match):
-	val = match.group(1)
-	
+def lowercaseroughcircumflexsubscript(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾇ',
 		'E': u'',
@@ -232,16 +233,16 @@ def lowercaseroughcircumflexsubscript(match):
 		'H': u'ᾗ',
 		'W': u'ᾧ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
 # lowercase + breathing + accent
-def lowercasesmoothgrave(match):
-	val = match.group(1)
-	
+def lowercasesmoothgrave(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ἂ',
 		'E': u'ἒ',
@@ -251,15 +252,15 @@ def lowercasesmoothgrave(match):
 		'H': u'ἢ',
 		'W': u'ὢ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercaseroughgrave(match):
-	val = match.group(1)
-	
+def lowercaseroughgrave(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ἃ',
 		'E': u'ἓ',
@@ -269,15 +270,15 @@ def lowercaseroughgrave(match):
 		'H': u'ἣ',
 		'W': u'ὣ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercasesmoothacute(match):
-	val = match.group(1)
-	
+def lowercasesmoothacute(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ἄ',
 		'E': u'ἔ',
@@ -287,15 +288,15 @@ def lowercasesmoothacute(match):
 		'H': u'ἤ',
 		'W': u'ὤ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercaseroughacute(match):
-	val = match.group(1)
-	
+def lowercaseroughacute(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ἅ',
 		'E': u'ἕ',
@@ -305,15 +306,15 @@ def lowercaseroughacute(match):
 		'H': u'ἥ',
 		'W': u'ὥ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercasesmoothcircumflex(match):
-	val = match.group(1)
-	
+def lowercasesmoothcircumflex(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ἆ',
 		'E': u'',
@@ -323,15 +324,15 @@ def lowercasesmoothcircumflex(match):
 		'H': u'ἦ',
 		'W': u'ὦ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercaseroughcircumflex(match):
-	val = match.group(1)
-	
+def lowercaseroughcircumflex(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ἇ',
 		'E': u'',
@@ -341,88 +342,89 @@ def lowercaseroughcircumflex(match):
 		'H': u'ἧ',
 		'W': u'ὧ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
 # lowercase + accent + subscript
-def lowercasegravesub(match):
-	val = match.group(1)
-	
+def lowercasegravesub(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾲ',
 		'H': u'ῂ',
 		'W': u'ῲ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercaseacutedsub(match):
-	val = match.group(1)
-	
+def lowercaseacutedsub(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾴ',
 		'H': u'ῄ',
 		'W': u'ῴ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercasesircumflexsub(match):
-	val = match.group(1)
-	
+def lowercasesircumflexsub(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾷ',
 		'H': u'ῇ',
 		'W': u'ῷ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
+
 
 # lowercase + breathing + subscript
 
-def lowercasesmoothsub(match):
-	val = match.group(1)
-	
+def lowercasesmoothsub(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾀ',
 		'H': u'ᾐ',
 		'W': u'ᾠ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercaseroughsub(match):
-	val = match.group(1)
-	
+def lowercaseroughsub(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾁ',
 		'H': u'ᾑ',
 		'W': u'ᾡ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
 # lowercase + accent + diaresis
-def lowercasegravediaresis(match):
-	val = match.group(1)
-	
+def lowercasegravediaresis(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'',
 		'E': u'',
@@ -432,15 +434,15 @@ def lowercasegravediaresis(match):
 		'H': u'',
 		'W': u'',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercaseacutediaresis(match):
-	val = match.group(1)
-	
+def lowercaseacutediaresis(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'',
 		'E': u'',
@@ -450,15 +452,15 @@ def lowercaseacutediaresis(match):
 		'H': u'ΰ',
 		'W': u'',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercasesircumflexdiaresis(match):
-	val = match.group(1)
-	
+def lowercasesircumflexdiaresis(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'',
 		'E': u'',
@@ -468,15 +470,16 @@ def lowercasesircumflexdiaresis(match):
 		'H': u'',
 		'W': u'',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
+
 # lowercase + breathing
-def lowercasesmooth(match):
-	val = match.group(1)
-	
+def lowercasesmooth(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ἀ',
 		'E': u'ἐ',
@@ -487,15 +490,15 @@ def lowercasesmooth(match):
 		'W': u'ὠ',
 		'R': u'ῤ'
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercaserough(match):
-	val = match.group(1)
-	
+def lowercaserough(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ἁ',
 		'E': u'ἑ',
@@ -506,16 +509,16 @@ def lowercaserough(match):
 		'W': u'ὡ',
 		'R': u'ῥ'
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
 # lowercase + accent
-def lowercasegrave(match):
-	val = match.group(1)
-	
+def lowercasegrave(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ὰ',
 		'E': u'ὲ',
@@ -525,15 +528,15 @@ def lowercasegrave(match):
 		'H': u'ὴ',
 		'W': u'ὼ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercaseacute(match):
-	val = match.group(1)
-	
+def lowercaseacute(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ά',
 		'E': u'έ',
@@ -543,34 +546,36 @@ def lowercaseacute(match):
 		'H': u'ή',
 		'W': u'ώ',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
-def lowercascircumflex(match):
-	val = match.group(1)
-	
+def lowercascircumflex(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾶ',
-		'E': u'\u03b5\u0342', # epsilon-for-eta; see something like 1-500 501-1517, Attica (IG I3 1-2 [1-500 501-1517]) - 370: fr d-f, line 75
+		'E': u'\u03b5\u0342',
+		# epsilon-for-eta; see something like 1-500 501-1517, Attica (IG I3 1-2 [1-500 501-1517]) - 370: fr d-f, line 75
 		'I': u'ῖ',
-		'O': u'\u03bf\u0342', # to avoid blanking in a case of omicron-for-omega;  Attica (IG I3 1-2 [1-500 501-1517]) - 342: line 12; χρυϲο͂ν
+		'O': u'\u03bf\u0342',
+		# to avoid blanking in a case of omicron-for-omega;  Attica (IG I3 1-2 [1-500 501-1517]) - 342: line 12; χρυϲο͂ν
 		'U': u'ῦ',
 		'H': u'ῆ',
 		'W': u'ῶ',
 	}
 
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
 # lowercase + diaresis
-def lowercasediaresis(match):
-	val = match.group(1)
-	
+def lowercasediaresis(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'',
 		'E': u'',
@@ -580,15 +585,16 @@ def lowercasediaresis(match):
 		'H': u'',
 		'W': u'',
 	}
-	
+
 	substitute = substitutions[val]
-	
+
 	return substitute
 
+
 # lowercase + subscript
-def lowercasesubscript(match):
-	val = match.group(1)
-	
+def lowercasesubscript(match, g=1):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'ᾳ',
 		'E': u'',
@@ -600,14 +606,14 @@ def lowercasesubscript(match):
 	}
 
 	substitute = substitutions[val]
-	
+
 	return substitute
 
 
 # lowercases
-def lowercases(match):
-	val = match.group(0)
-	
+def lowercases(match, g=0):
+	val = match.group(g)
+
 	substitutions = {
 		'A': u'α',
 		'B': u'β',
@@ -636,8 +642,7 @@ def lowercases(match):
 		'Y': u'ψ',
 		'Z': u'ζ'
 	}
-	
-	substitute = substitutions[val]
-	
-	return substitute
 
+	substitute = substitutions[val]
+
+	return substitute
