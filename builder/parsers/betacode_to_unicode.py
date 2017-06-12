@@ -10,19 +10,25 @@ import re
 from builder.parsers.betacodecapitals import capitalletters
 from builder.parsers.betacodelowercase import lowercaseletters
 
+
 def replacegreekbetacode(texttoclean):
 	"""
 	swap betacode for unicode values
 	:param texttoclean:
 	:return:
 	"""
-	
+
 	texttoclean = capitalletters(texttoclean)
 	texttoclean = lowercaseletters(texttoclean)
 	# combining dot
-	texttoclean = re.sub(r'\?', u'\u0323',texttoclean)
+	texttoclean = re.sub(r'\?', u'\u0323', texttoclean)
+
 	# exclmation point not properly documented
-	texttoclean = re.sub(r'\!', u'\u2219',texttoclean)
+	# note that runs of individual '!' can be found: '∙∙∙'
+	# but if you see '!21`45' you are supposed to print
+	# 21 of them and then '45'
+	texttoclean = re.sub(r'\!(\d{1,})', multipledots, texttoclean)
+	texttoclean = re.sub(r'\!', u'\u2219', texttoclean)
 
 	return texttoclean
 
@@ -36,11 +42,11 @@ def parseromaninsidegreek(texttoclean):
 	:return:
 	"""
 	mangledroman = texttoclean.group(0)
-	
+
 	invals = u'αβξδεφγηι⒣κλμνοπρϲτυϝωχυζ·'
 	outvals = u'ABCDEFGHIJKLMNOPRSTUVWXYZ:'
 	transformed = mangledroman.translate(str.maketrans(invals, outvals))
-	
+
 	return transformed
 
 
@@ -71,8 +77,8 @@ def cleanaccentsandvj(texttostrip, transtable=None):
 	but if you are just doing things one-off, then it is fine to have
 	stripaccents() look up transtable itself
 
-	:param texttostrip: 
-	:return: 
+	:param texttostrip:
+	:return:
 	"""
 
 	if transtable == None:
@@ -89,7 +95,7 @@ def buildhipparchiatranstable():
 	pulled this out of stripaccents() so you do not maketrans 200k times when
 	polytonicsort() sifts an index
 
-	:return: 
+	:return:
 	"""
 
 	invals = [
@@ -129,7 +135,7 @@ def purgehybridgreekandlatinwords(texttoclean):
 
 	# fixes: ξonstantino
 	mix = re.compile(r'([α-ωϲϝ])([a-z])')
-	transformed = re.sub(mix,unmixer,texttoclean)
+	transformed = re.sub(mix, unmixer, texttoclean)
 
 	# fixes: s(anctae) ῥomanae
 	mix = re.compile(r'([ἁἑἱὁὑἡὡῥ])([a-z])')
@@ -225,6 +231,29 @@ def unpunctuated(matchgroup):
 	return transformed
 
 
+def multipledots(matchgroup):
+	"""
+
+	if you see '!21`45' you are supposed to print 21 copies of ∙ and then '45'
+
+	:param matchgroup:
+	:return:
+	"""
+
+	dotcount = 1
+
+	try:
+		dotcount = int(matchgroup.group(1))
+	except:
+		pass
+
+	lotsofdots = []
+	for d in range(0,dotcount):
+		lotsofdots.append('∙')
+
+	lotsofdots = ''.join(lotsofdots)
+
+	return lotsofdots
 
 
 # bleh: circular import if you try to load from regex_substitutions
@@ -245,12 +274,10 @@ def ldcfindandclean(texttoclean):
 
 	texttoclean = re.sub(finder, latinsubstitutes, texttoclean)
 
-
 	return texttoclean
 
 
 def latinsubstitutes(matchgroup):
-
 	val = matchgroup.group(0)
 
 	substitues = {
