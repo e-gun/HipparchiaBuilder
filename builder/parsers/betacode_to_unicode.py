@@ -251,7 +251,8 @@ def multipledots(matchgroup):
 	for d in range(0,dotcount):
 		lotsofdots.append('∙')
 
-	lotsofdots = ''.join(lotsofdots)
+	# '∙ ' for the sake of line spacing
+	lotsofdots = ' '.join(lotsofdots)
 
 	return lotsofdots
 

@@ -317,9 +317,9 @@ def lowercasesmoothcircumflex(match, g=1):
 
 	substitutions = {
 		'A': u'ἆ',
-		'E': u'',
+		'E': u'ἐ͂', # IG 104.27: AI)/TIOS E)=I FO/NO --> αἴτιος ἐ͂ι φόνο [U1f10 + U0342]
 		'I': u'ἶ',
-		'O': u'',
+		'O': u'ὀ͂', # IG 127.36: E)PAINE/SAI W(S O)=SIN A)NDRA/SIN --> ἐπαινέσαι ὡς ὀ͂σιν ἀνδράσιν [U1f40 + U0342]
 		'U': u'ὖ',
 		'H': u'ἦ',
 		'W': u'ὦ',
@@ -335,9 +335,9 @@ def lowercaseroughcircumflex(match, g=1):
 
 	substitutions = {
 		'A': u'ἇ',
-		'E': u'',
+		'E': u'ἑ͂', # IG: TE=S BOLE=S E(=I
 		'I': u'ἷ',
-		'O': u'',
+		'O': u'ὁ͂', # IG: PE]RI\ DE\ O(=[N !]DIK
 		'U': u'ὗ',
 		'H': u'ἧ',
 		'W': u'ὧ',
