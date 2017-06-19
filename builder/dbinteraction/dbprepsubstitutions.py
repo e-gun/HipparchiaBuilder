@@ -100,7 +100,7 @@ def halflinecleanup(dbunreadyversion):
 		else:
 			dbreadyversion.append(line)
 		
-	return list(dbreadyversion)
+	return dbreadyversion
 
 
 def dbpdeincrement(dbunreadyversion):
@@ -137,7 +137,7 @@ def dbpdeincrement(dbunreadyversion):
 		if line[workingcolumn] != '':
 			dbreadyversion.append(line)
 
-	return list(dbreadyversion)
+	return dbreadyversion
 
 
 def dbstrippedliner(dbunreadyversion):
@@ -205,7 +205,7 @@ def dbstrippedliner(dbunreadyversion):
 		line = line + [unaccented]
 		dbreadyversion.append(line)
 		
-	return list(dbreadyversion)
+	return dbreadyversion
 
 
 def dbfindhypens(dbunreadyversion):
@@ -219,13 +219,17 @@ def dbfindhypens(dbunreadyversion):
 	:param dbunreadyversion:
 	:return:
 	"""
+
 	dbreadyversion = deque()
 	workingcolumn = 3
-	previous = dbunreadyversion[0]
+	#previous = dbunreadyversion[0]
+	previous = dbunreadyversion.popleft()
+	lastline = dbunreadyversion[-1]
 
 	transtable = buildhipparchiatranstable()
 
-	for line in dbunreadyversion[1:]:
+	while dbunreadyversion:
+		line = dbunreadyversion.popleft()
 		try:
 			# a problem if the line is empty: nothing to split
 			# a good opportunity to skip adding a line to dbreadyversion
@@ -247,10 +251,10 @@ def dbfindhypens(dbunreadyversion):
 			dbreadyversion.append(previous)
 			previous = line
 	
-	if dbunreadyversion[-1][workingcolumn] != '' and dbunreadyversion[-1][workingcolumn] != ' ':
-		dbreadyversion.append(dbunreadyversion[-1])
+	if lastline[workingcolumn] != '' and lastline[workingcolumn] != ' ':
+		dbreadyversion.append(lastline)
 	
-	return list(dbreadyversion)
+	return dbreadyversion
 
 
 def dbfindannotations(dbunreadyversion):
@@ -275,7 +279,7 @@ def dbfindannotations(dbunreadyversion):
 			line.append('')
 		dbreadyversion.append(line)
 
-	return list(dbreadyversion)
+	return dbreadyversion
 
 
 def hmutonbsp(dbunreadyversion):
@@ -296,7 +300,7 @@ def hmutonbsp(dbunreadyversion):
 		line[workingcolumn] = re.sub(r'<hmu_standalone_tabbedtext />', r'&nbsp;&nbsp;&nbsp;&nbsp; ', line[workingcolumn])
 		dbreadyversion.append(line)
 	
-	return list(dbreadyversion)
+	return dbreadyversion
 
 
 def quarterspacer(matchgroup):
@@ -328,7 +332,7 @@ def noleadingortrailingwhitespace(dbunreadyversion):
 			line[column] = re.sub(r'(^\s|\s$)','',line[column])
 		dbreadyversion.append(line)
 	
-	return list(dbreadyversion)
+	return dbreadyversion
 
 
 def consolidatecontiguouslines(previousline, thisline, hypenatedword, transtable):

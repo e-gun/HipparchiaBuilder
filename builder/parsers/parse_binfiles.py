@@ -7,8 +7,14 @@
 
 import csv
 import re
-import psycopg2
 import configparser
+try:
+	# python3
+	import psycopg2
+except ImportError:
+	# pypy3
+	# pypy3 support is EXPERIMENTAL (and unlikely to be actively pursued)
+	import psycopg2cffi as psycopg2
 from multiprocessing import Pool
 from builder import parsers
 from builder import file_io

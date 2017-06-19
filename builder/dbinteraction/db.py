@@ -9,7 +9,15 @@
 
 import json
 import configparser
-import psycopg2
+try:
+	# python3
+	# latin buid: Build took 4.0 minutes
+	import psycopg2
+except ImportError:
+	# pypy3
+	# pypy3 support is EXPERIMENTAL (and unlikely to be actively pursued)
+	# latin buid: Build took 3.67 minutes
+	import psycopg2cffi as psycopg2
 
 from builder.parsers.parse_binfiles import peekatcanon
 from builder.builder_classes import dbOpus, dbAuthor
