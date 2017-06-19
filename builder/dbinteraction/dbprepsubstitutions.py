@@ -7,6 +7,7 @@
 """
 
 import re
+from collections import deque
 from builder.parsers.betacode_to_unicode import cleanaccentsandvj, buildhipparchiatranstable
 
 
@@ -76,7 +77,7 @@ def halflinecleanup(dbunreadyversion):
 	setter = re.compile(r'<hmu_set_level_(\d)_to_(\d{1,})\s/>')
 	
 	workingcolumn = 2
-	dbreadyversion = []
+	dbreadyversion = deque()
 	memory = None
 	for line in dbunreadyversion:
 		try:
@@ -99,7 +100,7 @@ def halflinecleanup(dbunreadyversion):
 		else:
 			dbreadyversion.append(line)
 		
-	return dbreadyversion
+	return list(dbreadyversion)
 
 
 def dbpdeincrement(dbunreadyversion):
@@ -127,7 +128,7 @@ def dbpdeincrement(dbunreadyversion):
 	docu = re.compile(r'<hmu_assert_document_number_(.*?)>')
 	# empty = r'(?<!*)\s{0,1}(?=!*)'
 		
-	dbreadyversion = []
+	dbreadyversion = deque()
 
 	for line in dbunreadyversion:
 		for expression in [setter, adder, blocker, eob, docu]:
@@ -136,7 +137,7 @@ def dbpdeincrement(dbunreadyversion):
 		if line[workingcolumn] != '':
 			dbreadyversion.append(line)
 
-	return dbreadyversion
+	return list(dbreadyversion)
 
 
 def dbstrippedliner(dbunreadyversion):
@@ -168,12 +169,12 @@ def dbstrippedliner(dbunreadyversion):
 	# squarebrackets = re.compile(r'\[.*?\]')
 	straydigits = re.compile(r'\d')
 	# sadly can't nuke :punct: as a class because we need hyphens
-	straypunct = re.compile('[\<\>\{\}⎜͙ˈͻ✳※¶§⸨⸩｟｠《⟪⟫⦅⦆❴❵\.\?﹖→◦⊚𐄂𝕔☩\!;:,͵‚‛‘ʹ’“”„·∣\[\]\(\)]')
-	dbreadyversion = []
+	straypunct = re.compile('[\<\>\{\}⌉⸔⎜͙ͻ✳※¶§͜⸨⸩｟｠《⟪⟫⦅⦆❴❵\.\?﹖→◦⊚𐄂𝕔☩\!;:ˈ＇,͵‚‛‘ʹ’“”„·‧∣\[\]\(\)]')
+	dbreadyversion = deque()
 	workingcolumn = 2
 	# tempting to strip delenda here, but that presupposes you caught all the number-brackets before
 	# '[delenda]' vs '[2 formatted_text...'
-
+	#
 	for line in dbunreadyversion:
 		# in two parts because it is possible that the markup jumps lines
 		clean = re.sub(markup, '', line[workingcolumn])
@@ -191,7 +192,7 @@ def dbstrippedliner(dbunreadyversion):
 		dbreadyversion.append(line)
 
 	dbunreadyversion = dbreadyversion
-	dbreadyversion = []
+	dbreadyversion = deque()
 	workingcolumn = 3
 	# capitalization can be made to still matter; does that matter?
 	# you won't get the first word of the iliad right unless you search for capital Mu
@@ -204,7 +205,7 @@ def dbstrippedliner(dbunreadyversion):
 		line = line + [unaccented]
 		dbreadyversion.append(line)
 		
-	return dbreadyversion
+	return list(dbreadyversion)
 
 
 def dbfindhypens(dbunreadyversion):
@@ -218,7 +219,7 @@ def dbfindhypens(dbunreadyversion):
 	:param dbunreadyversion:
 	:return:
 	"""
-	dbreadyversion = []
+	dbreadyversion = deque()
 	workingcolumn = 3
 	previous = dbunreadyversion[0]
 
@@ -249,12 +250,12 @@ def dbfindhypens(dbunreadyversion):
 	if dbunreadyversion[-1][workingcolumn] != '' and dbunreadyversion[-1][workingcolumn] != ' ':
 		dbreadyversion.append(dbunreadyversion[-1])
 	
-	return dbreadyversion
+	return list(dbreadyversion)
 
 
 def dbfindannotations(dbunreadyversion):
 	workingcolumn = 2
-	dbreadyversion = []
+	dbreadyversion = deque()
 	search = re.compile(r'<hmu(_|_metadata_)annotations value="(.*?)" />')
 	for line in dbunreadyversion:
 		notes = re.findall(search, line[workingcolumn])
@@ -274,7 +275,7 @@ def dbfindannotations(dbunreadyversion):
 			line.append('')
 		dbreadyversion.append(line)
 
-	return dbreadyversion
+	return list(dbreadyversion)
 
 
 def hmutonbsp(dbunreadyversion):
@@ -287,7 +288,7 @@ def hmutonbsp(dbunreadyversion):
 	:return:
 	"""
 	workingcolumn = 2
-	dbreadyversion = []
+	dbreadyversion = deque()
 	bqs = re.compile(r'<hmu_blank_quarter_spaces quantity="(\d{1,})" />')
 	
 	for line in dbunreadyversion:
@@ -295,7 +296,7 @@ def hmutonbsp(dbunreadyversion):
 		line[workingcolumn] = re.sub(r'<hmu_standalone_tabbedtext />', r'&nbsp;&nbsp;&nbsp;&nbsp; ', line[workingcolumn])
 		dbreadyversion.append(line)
 	
-	return dbreadyversion
+	return list(dbreadyversion)
 
 
 def quarterspacer(matchgroup):
@@ -320,14 +321,14 @@ def noleadingortrailingwhitespace(dbunreadyversion):
 	:param dbunreadyversion:
 	:return:
 	"""
-	dbreadyversion = []
+	dbreadyversion = deque()
 	
 	for line in dbunreadyversion:
 		for column in [2,3,4]:
 			line[column] = re.sub(r'(^\s|\s$)','',line[column])
 		dbreadyversion.append(line)
 	
-	return dbreadyversion
+	return list(dbreadyversion)
 
 
 def consolidatecontiguouslines(previousline, thisline, hypenatedword, transtable):
