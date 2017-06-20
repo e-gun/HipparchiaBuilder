@@ -58,7 +58,8 @@ def highunicodefileload(filepath):
 
 	utf = ''.join(map(chr, o))
 
-	# swap out the high values for hex representations of those values
+	# swap out the high values for hex representations of those values:
+	#   █ⓔⓕ █⑧⓪ █ⓑ⓪ █ⓑ⓪ █ⓑ① █ⓑ⓪ █ⓕⓕ
 
 	txt = []
 	for c in range(0, len(o) - 1):
@@ -67,7 +68,6 @@ def highunicodefileload(filepath):
 			# cumbersome and painful, but it prevents any possibility of confusing the ascii and the control sequences
 			x = '█' + hextohighunicode(x[2:4]) # FULL BLOCK Unicode: U+2588
 			txt.append(x + ' ')
-			# txt.append(hex(o[c]) + ' ')
 		else:
 			txt.append(utf[c])
 

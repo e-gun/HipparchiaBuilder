@@ -10,7 +10,6 @@ import re
 from builder.parsers.betacodecapitals import capitalletters
 from builder.parsers.betacodelowercase import lowercaseletters
 
-
 def replacegreekbetacode(texttoclean):
 	"""
 	swap betacode for unicode values

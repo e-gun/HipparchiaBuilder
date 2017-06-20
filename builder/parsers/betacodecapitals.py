@@ -72,9 +72,7 @@ def capitalletters(betacode):
 
 
 # capital + breathing + accent + adscript
-def capitalsmoothgraveadscript(match, g=1):
-	val = match.group(g)
-
+def capitalsmoothgraveadscript(match):
 	substitutions = {
 		'A': u'ᾊ',
 		'E': u'',
@@ -85,14 +83,12 @@ def capitalsmoothgraveadscript(match, g=1):
 		'W': u'ᾪ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalroughgraveadscript(match, g=1):
-	val = match.group(g)
-
+def capitalroughgraveadscript(match):
 	substitutions = {
 		'A': u'ᾋ',
 		'E': u'',
@@ -103,14 +99,12 @@ def capitalroughgraveadscript(match, g=1):
 		'W': u'ᾫ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalsmoothacuteadscript(match, g=1):
-	val = match.group(g)
-
+def capitalsmoothacuteadscript(match):
 	substitutions = {
 		'A': u'ᾌ',
 		'E': u'',
@@ -121,14 +115,12 @@ def capitalsmoothacuteadscript(match, g=1):
 		'W': u'ᾬ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalroughacuteadscript(match, g=1):
-	val = match.group(g)
-
+def capitalroughacuteadscript(match):
 	substitutions = {
 		'A': u'ᾍ',
 		'E': u'',
@@ -139,14 +131,12 @@ def capitalroughacuteadscript(match, g=1):
 		'W': u'ᾭ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalsmoothcircumflexadscript(match, g=1):
-	val = match.group(g)
-
+def capitalsmoothcircumflexadscript(match):
 	substitutions = {
 		'A': u'ᾎ',
 		'E': u'',
@@ -157,14 +147,12 @@ def capitalsmoothcircumflexadscript(match, g=1):
 		'W': u'ᾮ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalroughcircumflexadscript(match, g=1):
-	val = match.group(g)
-
+def capitalroughcircumflexadscript(match):
 	substitutions = {
 		'A': u'ᾏ',
 		'E': u'',
@@ -175,15 +163,13 @@ def capitalroughcircumflexadscript(match, g=1):
 		'W': u'ᾯ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
 # capital + breathing + accent
-def capitalsmoothgrave(match, g=1):
-	val = match.group(g)
-
+def capitalsmoothgrave(match):
 	substitutions = {
 		'A': u'Ἂ',
 		'E': u'Ἒ',
@@ -194,14 +180,12 @@ def capitalsmoothgrave(match, g=1):
 		'W': u'Ὢ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalroughgrave(match, g=1):
-	val = match.group(g)
-
+def capitalroughgrave(match):
 	substitutions = {
 		'A': u'Ἃ',
 		'E': u'Ἓ',
@@ -212,14 +196,12 @@ def capitalroughgrave(match, g=1):
 		'W': u'Ὣ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalsmoothacute(match, g=1):
-	val = match.group(g)
-
+def capitalsmoothacute(match):
 	substitutions = {
 		'A': u'Ἄ',
 		'E': u'Ἔ',
@@ -230,14 +212,12 @@ def capitalsmoothacute(match, g=1):
 		'W': u'Ὤ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalroughacute(match, g=1):
-	val = match.group(g)
-
+def capitalroughacute(match):
 	substitutions = {
 		'A': u'Ἅ',
 		'E': u'Ἕ',
@@ -248,14 +228,12 @@ def capitalroughacute(match, g=1):
 		'W': u'Ὥ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalsmoothcircumflex(match, g=1):
-	val = match.group(g)
-
+def capitalsmoothcircumflex(match):
 	substitutions = {
 		'A': u'Ἆ',
 		'E': u'',
@@ -266,14 +244,12 @@ def capitalsmoothcircumflex(match, g=1):
 		'W': u'Ὦ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalroughcircumflex(match, g=1):
-	val = match.group(g)
-
+def capitalroughcircumflex(match):
 	substitutions = {
 		'A': u'Ἇ',
 		'E': u'',
@@ -284,15 +260,13 @@ def capitalroughcircumflex(match, g=1):
 		'W': u'Ὧ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
 # capital + breathing
-def capitalsmooth(match, g=1):
-	val = match.group(g)
-
+def capitalsmooth(match):
 	substitutions = {
 		'A': u'Ἀ',
 		'E': u'Ἐ',
@@ -304,14 +278,12 @@ def capitalsmooth(match, g=1):
 		'R': u'Ρ'
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalrough(match, g=1):
-	val = match.group(g)
-
+def capitalrough(match):
 	substitutions = {
 		'A': u'Ἁ',
 		'E': u'Ἑ',
@@ -323,15 +295,13 @@ def capitalrough(match, g=1):
 		'R': u'Ῥ'
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
 # capital + accent
-def capitalgrave(match, g=1):
-	val = match.group(g)
-
+def capitalgrave(match):
 	substitutions = {
 		'A': u'Ὰ',
 		'E': u'Ὲ',
@@ -342,14 +312,12 @@ def capitalgrave(match, g=1):
 		'W': u'Ὼ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitalacute(match, g=1):
-	val = match.group(g)
-
+def capitalacute(match):
 	substitutions = {
 		'A': u'Ά',
 		'E': u'Έ',
@@ -360,14 +328,12 @@ def capitalacute(match, g=1):
 		'W': u'Ώ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitaladscript(match, g=1):
-	val = match.group(g)
-
+def capitaladscript(match):
 	substitutions = {
 		'A': u'ᾼ',
 		'E': u'',
@@ -378,14 +344,12 @@ def capitaladscript(match, g=1):
 		'W': u'ῼ',
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
 
 
-def capitals(match, g=1):
-	val = match.group(g)
-
+def capitals(match):
 	substitutions = {
 		'A': u'Α',
 		'B': u'Β',
@@ -397,7 +361,7 @@ def capitals(match, g=1):
 		'H': u'Η',
 		'I': u'Ι',
 		'J': u'⒣',
-	# need the unused J because Roman characters are present; but see IG I3 1-2 [1-500 501-1517]) - 370: fr d-f, line 69 - Jέ[κτει Jεμέραι -- ⒣εμέραι is what we want
+		# need the unused J because Roman characters are present; but see IG I3 1-2 [1-500 501-1517]) - 370: fr d-f, line 69 - Jέ[κτει Jεμέραι -- ⒣εμέραι is what we want
 		'K': u'Κ',
 		'L': u'Λ',
 		'M': u'Μ',
@@ -416,6 +380,6 @@ def capitals(match, g=1):
 		'Z': u'Ζ'
 	}
 
-	substitute = substitutions[val]
+	substitute = substitutions[match.group(1)]
 
 	return substitute
