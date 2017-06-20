@@ -255,7 +255,7 @@ def registernewworks(newworktuples):
 		valstring = ', '.join(valstring)
 		vals = tuple(vals)
 
-		q = 'INSERT INTO works ( '+columns+' ) VALUES ( '+valstring+' ) '
+		q = 'INSERT INTO works ( {c} ) VALUES ( {v} ) '.format(c=columns, v=valstring)
 		d = (vals)
 		cursor.execute(q, d)
 		if count % 2500 == 0:
@@ -272,7 +272,7 @@ def registernewworks(newworktuples):
 			idx = workinfodict[w]['annotationsatindexvalue'][1]
 			notes = workinfodict[w]['annotationsatindexvalue'][0]
 
-			q = 'UPDATE ' + db + ' SET annotations=%s WHERE index=%s'
+			q = 'UPDATE {db} SET annotations=%s WHERE index=%s'.format(db=db)
 			d = (notes, idx)
 			cursor.execute(q, d)
 		if count % 2500 == 0:
@@ -280,6 +280,7 @@ def registernewworks(newworktuples):
 		if count % 5000 == 0:
 			print('\t',count,'works updated')
 	dbc.commit()
+	del dbc
 
 	return
 
@@ -423,7 +424,7 @@ def parallelnewworkworker(workpile, newworktuples):
 			authortablemaker(a.universalid, cursor)
 			dbc.commit()
 
-			q = 'SELECT DISTINCT level_05_value FROM ' + db + ' WHERE wkuniversalid=%s ORDER BY level_05_value'
+			q = 'SELECT DISTINCT level_05_value FROM {db} WHERE wkuniversalid=%s ORDER BY level_05_value'.format(db=db)
 			d = (wkid,)
 			cursor.execute(q, d)
 			results = cursor.fetchall()
@@ -439,7 +440,7 @@ def parallelnewworkworker(workpile, newworktuples):
 				elif len(dbstring) == 2:
 					dbstring = '0' + dbstring
 
-				q = 'SELECT * FROM ' + db + ' WHERE (wkuniversalid=%s AND level_05_value=%s) ORDER BY index'
+				q = 'SELECT * FROM {db} WHERE (wkuniversalid=%s AND level_05_value=%s) ORDER BY index'.format(db=db)
 				d = (wkid, document[0])
 				cursor.execute(q, d)
 				results = cursor.fetchall()
@@ -455,6 +456,8 @@ def parallelnewworkworker(workpile, newworktuples):
 			dbc.commit()
 
 	dbc.commit()
+
+	del dbc
 
 	return newworktuples
 
@@ -602,6 +605,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			metadatalist.append((wkid, pi,pr,dt,cd,tr,ty,(notes,idx)))
 
 	dbc.commit()
+	del dbc
 
 	return metadatalist
 
@@ -673,6 +677,14 @@ def insertnewworksintonewauthor(newwkuid, results, cursor):
 
 	db = newwkuid[0:6]
 
+	qtemplate = """
+		INSERT INTO {db} 
+			(index, wkuniversalid, level_05_value, level_04_value, level_03_value, level_02_value,
+			level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words,
+			annotations) 
+		VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+	"""
+
 	for r in results:
 		r = list(r)
 		# you need to have '-1' in the unused levels otherwise HipparchiaServer will have trouble building citations
@@ -700,9 +712,7 @@ def insertnewworksintonewauthor(newwkuid, results, cursor):
 		r = r[0:1] + [newwkuid] + r[2:]
 		d = tuple(r)
 
-		q = 'INSERT INTO ' + db + ' (index, wkuniversalid, level_05_value, level_04_value, level_03_value, level_02_value, ' \
-						'level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words, ' \
-						'annotations) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+		q = qtemplate.format(db=db)
 		cursor.execute(q, d)
 
 	return

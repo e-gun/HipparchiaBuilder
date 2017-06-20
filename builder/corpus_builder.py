@@ -156,6 +156,7 @@ def parallelworker(thework):
 	result = addoneauthor(thework[0], thework[1], thework[2], thework[3], thework[4], dbc, cur)
 	print(re.sub(r'[^\x00-\x7F]+', ' ', result))
 	dbc.commit()
+	del dbc
 
 	return
 

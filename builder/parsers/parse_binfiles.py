@@ -326,6 +326,7 @@ def wipegreekauthorcolumn(column, cursor, dbconnection):
 		query = 'UPDATE authors SET ' + column + '=%s WHERE universalid=%s'
 		data = (None, find[0])
 		cursor.execute(query, data)
+
 	return
 
 
@@ -543,6 +544,8 @@ def loadgkcanon(canonfile):
 	this is suprisingly slow at the end of a build
 	there are 8412 of UPDATES to run: parallelize them
 
+	actually, a temp table update is what is really needed...
+
 	:param canonfile:
 	:param cursor:
 	:param dbconnection:
@@ -555,10 +558,11 @@ def loadgkcanon(canonfile):
 
 	txt = gkcanoncleaner(txt)
 	thework = []
+	workers = int(config['io']['workers'])
 
 	for t in txt:
 		thework.append(t)
-	pool = Pool(processes=int(config['io']['workers']))
+	pool = Pool(processes=workers)
 	pool.map(parallelcanonworker, thework)
 
 	return

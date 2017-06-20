@@ -44,7 +44,7 @@ def wordcounter(restriction=None):
 			dbs = [key for key in authordict.keys() if authordict[key].converted_date and tr[0] < int(authordict[key].converted_date) < tr[1]]
 			dbs += [key for key in workdict.keys() if workdict[key].converted_date and tr[0] < int(workdict[key].converted_date) < tr[1]]
 			# mostly lots of little dicts: notifications get spammy
-			chunksize = 350
+			chunksize = 1500
 		except KeyError:
 			# no such restriction
 			pass
@@ -52,12 +52,12 @@ def wordcounter(restriction=None):
 			restriction['genre']
 			# restriction will be an item from the list of known genres
 			dbs = [key for key in workdict.keys() if workdict[key].workgenre == restriction['genre']]
-			chunksize = 20
+			chunksize = 30
 		except KeyError:
 			# no such restriction
 			pass
 	else:
-		chunksize = 200
+		chunksize = 225
 		dbs = list(authordict.keys())
 
 	# limit to NN for testing purposes
@@ -152,8 +152,7 @@ def wordcounter(restriction=None):
 		wordkeys = list(masterconcorcdance.keys())
 		wordkeys = sorted(wordkeys)
 		print(len(wordkeys),'unique items to catalog (nb: plenty of these are word fragments and not whole words)')
-
-		chunksize = 100000
+		chunksize = 150000
 		chunkedkeys = [wordkeys[i:i + chunksize] for i in range(0, len(wordkeys), chunksize)]
 		argmap = [(c, masterconcorcdance, wordcounttable) for c in enumerate(chunkedkeys)]
 		print('breaking up the lists and parallelizing:', len(chunkedkeys), 'chunks to insert')
@@ -282,7 +281,7 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 			except:
 				print('failed to insert', key)
 
-		if count % 2500 == 0:
+		if count % 2000 == 0:
 			dbc.commit()
 
 	#print('\t', str(len(chunkedkeys)), 'words inserted into the wordcount tables')
