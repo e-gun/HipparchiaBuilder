@@ -47,6 +47,16 @@ def citationbuilder(hexsequence):
 	hexsequence.pop()
 	fullcitation = ''
 
+	actions = {
+		8: nyb08,
+		9: nyb09,
+		10: nyb10,
+		11: nyb11,
+		12: nyb12,
+		13: nyb13,
+		14: nyb14,
+		15: nyb15 }
+
 	while (len(hexsequence) > 0):
 		# left is the first digit and the level marker: 0x8N, 0x9N, 0xAN
 		# 8 --> level00; 9 --> level01; A--> level02; ...
@@ -65,38 +75,13 @@ def citationbuilder(hexsequence):
 				fullcitation += '\n<hmu_increment_level_{tl}_by_1 />'.format(tl=textlevel)
 			elif (action > 0) and (action < 8):
 				fullcitation += '<hmu_set_level_{tl}_to_{a} />'.format(tl=textlevel, a=action)
-			elif action == 8:
-				citation, hexsequence = nyb08(hexsequence)
-				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel,c=citation)
-			elif action == 9:
-				citation, hexsequence = nyb09(hexsequence)
-				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel, c=citation)
-			elif action == 10:
-				citation, hexsequence = nyb10(hexsequence)
-				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel, c=citation)
-			elif action == 11:
-				citation, hexsequence = nyb11(hexsequence)
-				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel, c=citation)
-			elif action == 12:
-				citation, hexsequence = nyb12(hexsequence)
-				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel, c=citation)
-			elif action == 13:
-				citation, hexsequence = nyb13(hexsequence)
-				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel, c=citation)
-			elif action == 14:
-				citation, hexsequence = nyb14(hexsequence)
-				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel, c=citation)
-			elif action == 15:
-				citation, hexsequence = nyb15(hexsequence)
-				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel, c=citation)
 			else:
-				# impossible to reach this
-				fullcitation += '<hmu_unhandled_right_byte_value_{a} />'.format(a=action)
+				citation, hexsequence = actions[action](hexsequence)
+				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel,c=citation)
 		elif textlevel == 6:
 			fullcitation, hexsequence = levelsixparsing(action, fullcitation, hexsequence)
 
 	return fullcitation
-
 
 #
 # a collection of tiny byte-by-byte cases that is closely attached to citationbuilder
