@@ -138,7 +138,7 @@ def replacegreekmarkup(texttoclean):
 	texttoclean = re.sub(dollars, dollarssubstitutes, texttoclean)
 
 	# these strays are rough
-	#texttoclean = re.sub(r'\$(.*?)\$', '<hmu_shift_greek_font value="regular">\1</hmu_shift_greek_font>', texttoclean)
+	#texttoclean = re.sub(r'\$(.*?)\$', '<hmu_shift_greek_font betacodeval="regular">\1</hmu_shift_greek_font>', texttoclean)
 
 	return texttoclean
 
@@ -152,13 +152,13 @@ def replacelatinmarkup(texttoclean):
 	ands = re.compile(r'&(\d{1,2})(.*?)(&\d{0,1})')
 	texttoclean = re.sub(ands, andsubstitutes, texttoclean)
 
-	#texttoclean = re.sub(r'\&(.*?)\&', r'<hmu_shift_latin_font value="regular">\1</hmu_shift_latin_font>', texttoclean)
+	#texttoclean = re.sub(r'\&(.*?)\&', r'<hmu_shift_latin_font betacodeval="regular">\1</hmu_shift_latin_font>', texttoclean)
 
 	anddollars = re.compile(r'&(\d{1,2})(.*?)(\$\d{0,1})')
 	texttoclean = re.sub(anddollars, andsubstitutes, texttoclean)
 
 	# these strays are rough
-	# texttoclean = re.sub(r'\&(.*?)\&', r'<hmu_shift_latin_font value="regular">\1</hmu_shift_latin_font>', texttoclean)
+	# texttoclean = re.sub(r'\&(.*?)\&', r'<hmu_shift_latin_font betacodeval="regular">\1</hmu_shift_latin_font>', texttoclean)
 
 	return texttoclean
 
@@ -232,9 +232,9 @@ def latinsubstitutes(matchgroup):
 		'V\\': 'Ù'
 	}
 
-	if val in substitues:
+	try:
 		substitute = substitues[val]
-	else:
+	except KeyError:
 		substitute = ''
 
 	return substitute
@@ -368,8 +368,8 @@ def quotesubstitutesa(match):
 
 	try:
 		substitute = substitutions[val]
-	except:
-		substitute = '<hmu_unhandled_quote_markup value="{v}" />'.format(v=match.group(1))
+	except KeyError:
+		substitute = '<hmu_unhandled_quote_markup betacodeval="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -396,8 +396,8 @@ def quotesubstitutesb(match):
 
 	try:
 		substitute = substitutions[val][0] + core + substitutions[val][1]
-	except:
-		substitute = '<hmu_unhandled_quote_markup value="{v}" />{c}'.format(v=match.group(1), c=core)
+	except KeyError:
+		substitute = '<hmu_unhandled_quote_markup betacodeval="{v}" />{c}'.format(v=match.group(1), c=core)
 		if warnings:
 			print('\t',substitute)
 
@@ -423,7 +423,7 @@ def poundsubstitutes(match):
 		4: u'\u03d9',
 		5: u'\u03e1',
 		6: u'\u2e0f',
-		7: r'<hmu_idiosyncratic_char value="7">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		7: r'<hmu_idiosyncratic_char betacodeval="7">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		8: u'\u2e10',
 		9: u'\u0301',
 		10: u'\u03fd',
@@ -447,18 +447,18 @@ def poundsubstitutes(match):
 		27: r'𐄂', # 'check mark'; non tlg; and so - AEGEAN CHECK MARK; Unicode: U+10102, UTF-8: F0 90 84 82
 		28: r'<hmu_mark_deleting_entry />␥',
 		29: u'\u00b7',
-		30: r'<hmu_idiosyncratic_char value="30">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		31: r'<hmu_idiosyncratic_char value="31">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		48: r'<hmu_undocumented_poundsign value="48">⊚</hmu_undocumented_poundsign>',
-		50: r'<hmu_undocumented_poundsign value="50">⊚</hmu_undocumented_poundsign>',
+		30: r'<hmu_idiosyncratic_char betacodeval="30">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		31: r'<hmu_idiosyncratic_char betacodeval="31">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		48: r'<hmu_undocumented_poundsign betacodeval="48">⊚</hmu_undocumented_poundsign>',
+		50: r'<hmu_undocumented_poundsign betacodeval="50">⊚</hmu_undocumented_poundsign>',
 		51: u'\u00b7',
 		52: u'\u205a',
 		53: u'\u205d',
-		54: r'<hmu_undocumented_poundsign value="54">⊚</hmu_undocumented_poundsign>',
+		54: r'<hmu_undocumented_poundsign betacodeval="54">⊚</hmu_undocumented_poundsign>',
 		55: u'\u2059',
 		56: r'∣', # 'dividers of other forms'; not a helpful description: trying u2223 for now
-		57: r'<hmu_undocumented_poundsign value="57">⊚</hmu_undocumented_poundsign>',
-		58: r'<hmu_undocumented_poundsign value="58">⊚</hmu_undocumented_poundsign>',
+		57: r'<hmu_undocumented_poundsign betacodeval="57">⊚</hmu_undocumented_poundsign>',
+		58: r'<hmu_undocumented_poundsign betacodeval="58">⊚</hmu_undocumented_poundsign>',
 		59: u'\u03fd',
 		60: u'\u0399',
 		61: r'𐅂',
@@ -485,16 +485,16 @@ def poundsubstitutes(match):
 		86: u'\u02bc',
 		87: u'\u0394\u0345',
 		90: u'\u2014',
-		99: r'<hmu_undocumented_poundsign value="99">⊚</hmu_undocumented_poundsign>',
+		99: r'<hmu_undocumented_poundsign betacodeval="99">⊚</hmu_undocumented_poundsign>',
 		100: r'𐆆',
 		101: u'𐅻',  #trouble with the four character unicode codes: uh oh
 		102: u'𐆂<6\u03c56>',  # upsilon supposed to be superscript too: add betacode for that <6...6>
 		103: u'\u039b\u0338',
 		104: u'𐆂<6\u03bf6>',  # the omicron is supposed to be superscript too: add betacode for that <6...6>
-		105: r'<hmu_idiosyncratic_char value="105">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		105: r'<hmu_idiosyncratic_char betacodeval="105">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		106: r'𐆄',
-		107: r'<hmu_idiosyncratic_char value="107">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		108: r'<hmu_idiosyncratic_char value="108">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		107: r'<hmu_idiosyncratic_char betacodeval="107">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		108: r'<hmu_idiosyncratic_char betacodeval="108">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		109: u'𐆂<6\u03bf6>',  # the omicron is supposed to be superscript too: add betacode for that <6...6>
 		110: u'<11α>11<10\u0375>10',  # need to do the combining accent second, right?
 		111: u'𐆂<6\u03b56>',
@@ -509,9 +509,9 @@ def poundsubstitutes(match):
 		121: u'u\03be\u0338',
 		122: r'𐅽',
 		123: r'𐅼',
-		124: r'<hmu_idiosyncratic_char value="124">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		124: r'<hmu_idiosyncratic_char betacodeval="124">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		125: u'𐆂<6\u03c56>',  # the upsilon is supposed to be superscript too: add betacode for that <6...6>
-		126: r'<hmu_idiosyncratic_char value="126">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		126: r'<hmu_idiosyncratic_char betacodeval="126">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		127: u'\u039b\u0325',
 		128: u'\u03fc',
 		129: u'\u039b\u0325',
@@ -530,7 +530,7 @@ def poundsubstitutes(match):
 		154: u'\u2c80',
 		155: u'\u2014\u0323',
 		156: u'\u2310',
-		157: r'<hmu_idiosyncratic_char value="157">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		157: r'<hmu_idiosyncratic_char betacodeval="157">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		158: u'\u2237\u0336',
 		159: u'\u2237\u0344',
 		160: u'\u007e\u0323',
@@ -571,12 +571,12 @@ def poundsubstitutes(match):
 		240: r'𐅷',  # 𐅷 GREEK TWO THIRDS SIGN; Unicode: U+10177, UTF-8: F0 90 85 B7
 		241: u'\u260b',
 		242: u'\u2651',
-		243: r'<hmu_idiosyncratic_char value="243">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		243: r'<hmu_idiosyncratic_char betacodeval="243">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		244: u'\u264c',
-		246: r'<hmu_idiosyncratic_char value="246">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		247: r'<hmu_idiosyncratic_char value="247">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		246: r'<hmu_idiosyncratic_char betacodeval="246">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		247: r'<hmu_idiosyncratic_char betacodeval="247">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		300: u'\u2e0e',  # but supposed to be just upper half of a coronis
-		302: r'<hmu_idiosyncratic_char value="302">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		302: r'<hmu_idiosyncratic_char betacodeval="302">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		303: u'›',
 		304: u'\u2e0e',  # but supposed to be just part of a coronis
 		305: u'\u2e0e',
@@ -587,9 +587,9 @@ def poundsubstitutes(match):
 		311: u'\u2e0e', # but supposed to be just lower half of a coronis
 		312: u'\u2e0e', # but supposed to be just upper half of a coronis
 		313: u'\u2e0e',
-		314: r'<hmu_idiosyncratic_char value="314">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		314: r'<hmu_idiosyncratic_char betacodeval="314">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		315: u'\u2e0e',
-		316: r'<hmu_idiosyncratic_char value="316">◦</hmu_idiosyncratic_char>',  # deprecated: no further info
+		316: r'<hmu_idiosyncratic_char betacodeval="316">◦</hmu_idiosyncratic_char>',  # deprecated: no further info
 		317: r'<hmu_document_cancelled_with_slashes />⑊⑊⑊⑊⑊',
 		318: r'<hmu_line_filled_with_cross-strokes />⧷⧷⧷⧷⧷',
 		319: u'\u25cf',
@@ -615,18 +615,18 @@ def poundsubstitutes(match):
 		453: u'\u2e11',
 		454: u'\u2e10',
 		456: u'\u2e0e',
-		457: r'<hmu_idiosyncratic_char value="457">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		457: r'<hmu_idiosyncratic_char betacodeval="457">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		458: u'\u0387',
 		459: u'\u00b7',
 		460: u'\u2014',
 		461: u'\u007c',
 		465: u'\u2627',
-		466: r'<hmu_idiosyncratic_char value="466">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		466: r'<hmu_idiosyncratic_char betacodeval="466">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		467: u'\u2192',
 		468: u'\u2e0e',
 		476: u'\u0283',
-		486: r'<hmu_undocumented_poundsign value="486">⊚</hmu_undocumented_poundsign>',
-		500: r'<hmu_undocumented_poundsign value="500">⊚</hmu_undocumented_poundsign>',
+		486: r'<hmu_undocumented_poundsign betacodeval="486">⊚</hmu_undocumented_poundsign>',
+		500: r'<hmu_undocumented_poundsign betacodeval="500">⊚</hmu_undocumented_poundsign>',
 		501: r'π<6ιθ6>',  # abbreviation for πιθανόν: added own betacode - <6...6>
 		502: r'🜚',  # listed as idiosyncratic; but looks like 'alchemical symbol for gold': U+1F71A
 		503: r'ΡΠ', # but supposed to be on top of one another
@@ -639,15 +639,15 @@ def poundsubstitutes(match):
 		510: r'ε/π',  # but supposed to be stacked
 		511: r'ι/κ', # but supposed to be stacked
 		512: u'\u03fd',
-		513: r'<hmu_idiosyncratic_char value="513">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		514: r'<hmu_idiosyncratic_char value="514">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		513: r'<hmu_idiosyncratic_char betacodeval="513">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		514: r'<hmu_idiosyncratic_char betacodeval="514">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		515: r'𐆅',
 		516: u'\u0394\u0345',
 		517: r'𐆅',
 		518: r'𐅹',
 		519: u'\u2191',
 		520: u'\u2629',
-		521: r'<hmu_idiosyncratic_char value="521">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		521: r'<hmu_idiosyncratic_char betacodeval="521">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		522: r'<span class="90degreerotate>Η</span>',  # markup <rotate> 0397
 		523: u'\u2e13',
 		524: u'\u2297',
@@ -655,35 +655,35 @@ def poundsubstitutes(match):
 		527: u'\u02c6',
 		528: u'\u03bb\u032d',
 		529: u'\u204b',
-		530: r'<hmu_idiosyncratic_char value="530">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		530: r'<hmu_idiosyncratic_char betacodeval="530">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		531: u'\u035c',
 		532: u'\u2e12',
 		533: u'\u03da',
 		534: u'\u0302',
-		535: r'<hmu_idiosyncratic_char value="535">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		536: r'<hmu_idiosyncratic_char value="536">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		537: r'<hmu_idiosyncratic_char value="537">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		538: r'<hmu_idiosyncratic_char value="538">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		540: r'<hmu_idiosyncratic_char value="540">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		541: r'<hmu_idiosyncratic_char value="541">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		535: r'<hmu_idiosyncratic_char betacodeval="535">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		536: r'<hmu_idiosyncratic_char betacodeval="536">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		537: r'<hmu_idiosyncratic_char betacodeval="537">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		538: r'<hmu_idiosyncratic_char betacodeval="538">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		540: r'<hmu_idiosyncratic_char betacodeval="540">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		541: r'<hmu_idiosyncratic_char betacodeval="541">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		542: u'\u03a1\u0336',
-		543: r'<hmu_idiosyncratic_char value="543">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		543: r'<hmu_idiosyncratic_char betacodeval="543">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		544: u'\u2058',
-		545: r'<hmu_idiosyncratic_char value="545">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		546: r'<hmu_idiosyncratic_char value="546">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		547: r'<hmu_idiosyncratic_char value="547">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		545: r'<hmu_idiosyncratic_char betacodeval="545">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		546: r'<hmu_idiosyncratic_char betacodeval="546">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		547: r'<hmu_idiosyncratic_char betacodeval="547">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		548: r'<span class="superscript">‖̴</span>', # 2016+0334
-		549: r'<hmu_idiosyncratic_char value="549">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		549: r'<hmu_idiosyncratic_char betacodeval="549">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		550: u'\u003a\u003a\u2e2e',
 		551: u'\u25cc',
-		552: r'<hmu_idiosyncratic_char value="552">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		553: r'<hmu_idiosyncratic_char value="553">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		554: r'<hmu_idiosyncratic_char value="554">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		555: r'<hmu_idiosyncratic_char value="555">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		552: r'<hmu_idiosyncratic_char betacodeval="552">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		553: r'<hmu_idiosyncratic_char betacodeval="553">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		554: r'<hmu_idiosyncratic_char betacodeval="554">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		555: r'<hmu_idiosyncratic_char betacodeval="555">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		556: u'\u2629',
-		557: r'<hmu_idiosyncratic_char value="557">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		558: r'<hmu_idiosyncratic_char value="558">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		559: r'<hmu_idiosyncratic_char value="559">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		557: r'<hmu_idiosyncratic_char betacodeval="557">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		558: r'<hmu_idiosyncratic_char betacodeval="558">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		559: r'<hmu_idiosyncratic_char betacodeval="559">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		561: u'\u2191',
 		562: u'\u0305',
 		563: r'⏗',
@@ -758,26 +758,26 @@ def poundsubstitutes(match):
 		677: r'μ',
 		678: r'𝈠',
 		679: r'𝈄',
-		681: r'<hmu_idiosyncratic_char value="681">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		682: r'<hmu_idiosyncratic_char value="682">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		681: r'<hmu_idiosyncratic_char betacodeval="681">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		682: r'<hmu_idiosyncratic_char betacodeval="682">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		688: u'\u03bc\u030a',
 		689: r'𐅵',
 		690: u'\u27d8',
 		691: u'\u27c0',
 		692: u'\u27c1',
 		700: u'\u205e',
-		701: r'<hmu_idiosyncratic_char value="701">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		702: r'<hmu_idiosyncratic_char value="702">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		701: r'<hmu_idiosyncratic_char betacodeval="701">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		702: r'<hmu_idiosyncratic_char betacodeval="702">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		703: u'\u25cb\u25cb\u25cb',
 		704: u'\u2014\u0307',
-		705: r'<hmu_idiosyncratic_char value="705">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		706: r'<hmu_idiosyncratic_char value="706">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		707: r'<hmu_idiosyncratic_char value="707">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		708: r'<hmu_idiosyncratic_char value="708">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		705: r'<hmu_idiosyncratic_char betacodeval="705">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		706: r'<hmu_idiosyncratic_char betacodeval="706">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		707: r'<hmu_idiosyncratic_char betacodeval="707">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		708: r'<hmu_idiosyncratic_char betacodeval="708">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		709: u'\u223b',
 		710: u'\u039a\u0336',
 		711: u'\u03fb',
-		741: r'<hmu_idiosyncratic_char value="741">◦</hmu_idiosyncratic_char>',
+		741: r'<hmu_idiosyncratic_char betacodeval="741">◦</hmu_idiosyncratic_char>',
 		751: u'\u0661',  # arabic-indic digits...
 		752: u'\u0662',
 		753: u'\u0663',
@@ -794,9 +794,10 @@ def poundsubstitutes(match):
 		803: u'\u03a7',
 		804: r'／', # fulwidth solidus instead
 		805: u'\u03a4',
+		806: u'\u039A',
 		807: r'𐅦',
 		808: r'𐅈',
-		809: r'<hmu_undocumented_poundsign value="809">⊚</hmu_undocumented_poundsign>',
+		809: r'<hmu_undocumented_poundsign betacodeval="809">⊚</hmu_undocumented_poundsign>',
 		811: u'\u03a4',
 		812: r'𐅈',
 		813: r'𐅉',
@@ -838,71 +839,89 @@ def poundsubstitutes(match):
 		865: r'𐅅',
 		866: u'\u03a7',
 		867: r'𐅆',
-		870: r'<hmu_undocumented_poundsign value="870">⊚</hmu_undocumented_poundsign>',
-		880: r'<hmu_undocumented_poundsign value="880">⊚</hmu_undocumented_poundsign>',
-		898: r'<hmu_undocumented_poundsign value="898">⊚</hmu_undocumented_poundsign>',
+		870: r'<hmu_undocumented_poundsign betacodeval="870">⊚</hmu_undocumented_poundsign>',
+		880: r'<hmu_undocumented_poundsign betacodeval="880">⊚</hmu_undocumented_poundsign>',
+		898: r'<hmu_undocumented_poundsign betacodeval="898">⊚</hmu_undocumented_poundsign>',
 		899: r'<hmu_unknown_numeral>',
-		900: r'<hmu_undocumented_poundsign value="900">⊚</hmu_undocumented_poundsign>',
-		901: r'<hmu_undocumented_poundsign value="901">⊚</hmu_undocumented_poundsign>',
-		921: r'<hmu_undocumented_poundsign value="921">⊚</hmu_undocumented_poundsign>',
+		900: r'<hmu_undocumented_poundsign betacodeval="900">⊚</hmu_undocumented_poundsign>',
+		901: r'<hmu_undocumented_poundsign betacodeval="901">⊚</hmu_undocumented_poundsign>',
+		921: r'<hmu_undocumented_poundsign betacodeval="921">⊚</hmu_undocumented_poundsign>',
 		922: r'𝈨',
-		923: r'<hmu_idiosyncratic_char value="923">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		924: r'<hmu_idiosyncratic_char value="924">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		923: r'<hmu_idiosyncratic_char betacodeval="923">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		924: r'<hmu_idiosyncratic_char betacodeval="924">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		925: r'𝈗',
 		926: r'𝈫',
 		927: r'W',
 		928: r'𝈋',
 		929: r'𝈔',
-		930: r'<hmu_idiosyncratic_char value="930">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		930: r'<hmu_idiosyncratic_char betacodeval="930">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		932: u'\u2733',
-		933: r'<hmu_idiosyncratic_char value="933">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		934: r'<hmu_idiosyncratic_char value="934">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		933: r'<hmu_idiosyncratic_char betacodeval="933">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		934: r'<hmu_idiosyncratic_char betacodeval="934">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		937: r'<hmu_miscellaneous_illustrations>',
-		940: r'<hmu_idiosyncratic_char value="940">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		943: r'<hmu_undocumented_poundsign value="943">⊚</hmu_undocumented_poundsign>',
-		949: r'<hmu_undocumented_poundsign value="949">⊚</hmu_undocumented_poundsign>',
+		939: r'~', # undocumented; but so printed by packhum.org
+		940: r'<hmu_idiosyncratic_char betacodeval="940">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		943: r'<hmu_undocumented_poundsign betacodeval="943">⊚</hmu_undocumented_poundsign>',
+		949: r'<hmu_undocumented_poundsign betacodeval="949">⊚</hmu_undocumented_poundsign>',
 		961: r'<hmu_line_on_stone_stops_but_edition_continues_line />',
-		973: r'<hmu_undocumented_poundsign value="973">⊚</hmu_undocumented_poundsign>',
-		990: r'<hmu_undocumented_poundsign value="990">⊚</hmu_undocumented_poundsign>',
+		973: r'<hmu_undocumented_poundsign betacodeval="973">⊚</hmu_undocumented_poundsign>',
+		990: r'<hmu_undocumented_poundsign betacodeval="990">⊚</hmu_undocumented_poundsign>',
 		1000: r'𐅼',
 		1001: r'𐅽',
 		1002: r'𐅾',
 		1003: r'𐅿',
 		1004: r'𐆀',
 		# a huge run of undocumented poundsigns in the inscriptions: this only scratches the surface
-		1053: r'<hmu_undocumented_poundsign value="1053">⊚</hmu_undocumented_poundsign>',
-		1059: r'<hmu_undocumented_poundsign value="1059">⊚</hmu_undocumented_poundsign>',
-		1068: r'<hmu_undocumented_poundsign value="1068">⊚</hmu_undocumented_poundsign>',
-		1069: r'<hmu_undocumented_poundsign value="1069">⊚</hmu_undocumented_poundsign>',
-		1070: r'<hmu_undocumented_poundsign value="1070">⊚</hmu_undocumented_poundsign>',
-		1071: r'<hmu_undocumented_poundsign value="1071">⊚</hmu_undocumented_poundsign>',
-		1072: r'<hmu_undocumented_poundsign value="1072">⊚</hmu_undocumented_poundsign>',
+		# packhum.org has representations of many of them 
+		# see especially: http://noapplet.epigraphy.packhum.org/text/260603?&bookid=509&location=1035
+		1053: r'<hmu_undocumented_poundsign betacodeval="1053">⊚</hmu_undocumented_poundsign>',
+		1059: r'<hmu_undocumented_poundsign betacodeval="1059">⊚</hmu_undocumented_poundsign>',
+		1061: r'γʹ',
+		1062: r'δʹ',
+		1063: r'εʹ',
+		1064: r'ϛʹ',
+		1067: r'θʹ',
+		1068: r'ιʹ',
+		1069: r'κʹ',
+		1070: r'λʹ',
+		1071: r'μʹ',
+		1072: r'νʹ',
+		1073: r'ξʹ',
+		1074: r'οʹ',
+		1075: r'πʹ',
+		1077: r'ρʹ',
+		1078: r'σʹ',
+		1079: r'τʹ',
+		1080: r'υʹ',
+		1082: r'χʹ',
+		1086: r'͵α',
+		1087: r'͵β',
 		1100: u'\u2183',
 		1101: r'IS',
 		1102: r'H',
 		1103: u'\u0323\u0313',
 		1104: u'S\u0038',  # deprecated, use &S%162$
 		1105: u'\u004d\u030a',
-		1106: r'<hmu_idiosyncratic_char value="1106">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1106: r'<hmu_idiosyncratic_char betacodeval="1106">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1107: u'\u0053\u0335\u0053\u0336',
 		1108: u'\u0058\u0036',
 		1109: u'\u003d',
 		1110: u'\u002d',
 		1111: u'\u00b0',
-		1112: r'<hmu_idiosyncratic_char value="1112">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		1113: r'<hmu_idiosyncratic_char value="1113">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1112: r'<hmu_idiosyncratic_char betacodeval="1112">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1113: r'<hmu_idiosyncratic_char betacodeval="1113">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1114: r'𝈁',
 		1115: u'\u007c',
 		1116: u'\u01a7',
 		1117: u'\u005a',
-		1118: r'<hmu_idiosyncratic_char value="1118">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1118: r'<hmu_idiosyncratic_char betacodeval="1118">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1119: u'\u0110',
-		1120: r'<hmu_idiosyncratic_char value="1120">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1120: r'<hmu_idiosyncratic_char betacodeval="1120">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1121: u'\u005a',
-		1122: r'<hmu_idiosyncratic_char value="1122">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		1123: r'<hmu_idiosyncratic_char value="1123">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1122: r'<hmu_idiosyncratic_char betacodeval="1122">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1123: r'<hmu_idiosyncratic_char betacodeval="1123">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1124: u'\u211e',
-		1125: r'<hmu_idiosyncratic_char value="1125">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1125: r'<hmu_idiosyncratic_char betacodeval="1125">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1126: u'\u004f',
 		1127: u'\u0076\u0338',
 		1128: u'\u0049\u0336\u0049\u0336\u0053\u0336',
@@ -911,7 +930,7 @@ def poundsubstitutes(match):
 		1131: u'\u005c\u005c',
 		1132: u'\u005c\u0336',
 		1133: u'\u005c\u0336\u005c\u0336',
-		1134: r'<hmu_idiosyncratic_char value="1134">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1134: r'<hmu_idiosyncratic_char betacodeval="1134">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1135: u'\u002f\u002f',
 		1136: u'\u2112',
 		1221: u'\u0131',
@@ -926,21 +945,21 @@ def poundsubstitutes(match):
 		1322: u'\u2644',
 		1323: u'\u03b6\u0337\u03c2\u0300',
 		1324: u'\u03b8\u03c2\u0302',
-		1326: r'<hmu_idiosyncratic_char value="1326">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		1327: r'<hmu_idiosyncratic_char value="1327">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		1328: r'<hmu_idiosyncratic_char value="1328">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		1334: r'<hmu_idiosyncratic_char value="1334">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1326: r'<hmu_idiosyncratic_char betacodeval="1326">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1327: r'<hmu_idiosyncratic_char betacodeval="1327">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1328: r'<hmu_idiosyncratic_char betacodeval="1328">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1334: r'<hmu_idiosyncratic_char betacodeval="1334">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1335: r'／／', # fulwidth solidus instead
 		1336: r'<hmu_unsupported_hebrew_character>□</hmu_unsupported_hebrew_character>',
 		1337: r'﹥', # supposed to be 003e, ie simple angle bracket ; this is fe65
 		1338: r'𐅾',
-		1341: r'<hmu_idiosyncratic_char value="1341">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1341: r'<hmu_idiosyncratic_char betacodeval="1341">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1500: u'\u03b3\u030a',
-		1501: r'<hmu_idiosyncratic_char value="1501">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1501: r'<hmu_idiosyncratic_char betacodeval="1501">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1502: u'\u03a7\u0374',
-		1503: r'<hmu_idiosyncratic_char value="1503">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		1504: r'<hmu_idiosyncratic_char value="1504">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		1505: r'<hmu_unknown_abbreviation value="1505">◦</hmu_unknown_abbreviation>',
+		1503: r'<hmu_idiosyncratic_char betacodeval="1503">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1504: r'<hmu_idiosyncratic_char betacodeval="1504">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		1505: r'<hmu_unknown_abbreviation betacodeval="1505">◦</hmu_unknown_abbreviation>',
 		1506: u'\u0300\u0306',
 		1509: r'πληθ', # supposed to be a symbol
 		1510: u'Α\u0338<6\u0304ν\u002f>6', # A%162<6E%26N%3>6 [!]
@@ -949,8 +968,8 @@ def poundsubstitutes(match):
 
 	try:
 		substitute = substitutions[val]
-	except:
-		substitute = '<hmu_unhandled_pound_sign value="{v}" />▦'.format(v=match.group(1))
+	except KeyError:
+		substitute = '<hmu_unhandled_pound_sign betacodeval="{v}" />▦'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1022,7 +1041,7 @@ def percentsubstitutes(match):
 		54: r'<hmu_papyrological_fraction>⅟<span class="denominator">32</span></hmu_papyrological_fraction>',
 		55: r'<hmu_papyrological_fraction>⅟<span class="denominator">64</span></hmu_papyrological_fraction>',
 		56: r'<hmu_papyrological_fraction>⅟<span class="denominator">128</span></hmu_papyrological_fraction>',
-		57: r'<hmu_undocumented_percentsign value="57">⊚</hmu_undocumented_percentsign>',
+		57: r'<hmu_undocumented_percentsign betacodeval="57">⊚</hmu_undocumented_percentsign>',
 		59: r'<hmu_papyrological_fraction>¾</hmu_papyrological_fraction>',
 		60: r'<hmu_papyrological_fraction>⅓</hmu_papyrological_fraction>',
 		61: r'<hmu_papyrological_fraction>⅙</hmu_papyrological_fraction>',
@@ -1035,8 +1054,8 @@ def percentsubstitutes(match):
 		71: r'<hmu_papyrological_fraction>⅟<span class="denominator">100</span></hmu_papyrological_fraction>',
 		72: r'<hmu_papyrological_fraction>⅟<span class="denominator">100</span></hmu_papyrological_fraction>',
 		73: r'<hmu_papyrological_fraction>⅟<span class="denominator">100</span></hmu_papyrological_fraction>',
-		75: r'<hmu_undocumented_percentsign value="75">⊚</hmu_undocumented_percentsign>',
-		79: r'<hmu_undocumented_percentsign value="79">⊚</hmu_undocumented_percentsign>',
+		75: r'<hmu_undocumented_percentsign betacodeval="75">⊚</hmu_undocumented_percentsign>',
+		79: r'<hmu_undocumented_percentsign betacodeval="79">⊚</hmu_undocumented_percentsign>',
 		80: u'\u0076\u002E',  # supposed to put the 'v' in italics too
 		81: r'<span class="italic">vac.</span>',
 		91: u'\u0485',
@@ -1082,8 +1101,8 @@ def percentsubstitutes(match):
 
 	try:
 		substitute = substitutions[val]
-	except:
-		substitute = '<hmu_unhandled_percent_sign value="{v}" />▩'.format(v=match.group(1))
+	except KeyError:
+		substitute = '<hmu_unhandled_percent_sign betacodeval="{v}" />▩'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1135,8 +1154,8 @@ def leftbracketsubstitutions(match):
 
 	try:
 		substitute = substitutions[val]
-	except:
-		substitute = '<hmu_unhandled_left_bracket value="{v}" />'.format(v=match.group(1))
+	except KeyError:
+		substitute = '<hmu_unhandled_left_bracket betacodeval="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1188,8 +1207,8 @@ def rightbracketsubstitutions(match):
 
 	try:
 		substitute = substitutions[val]
-	except:
-		substitute = '<hmu_unhandled_right_bracket value="{v}" />'.format(v=match.group(1))
+	except KeyError:
+		substitute = '<hmu_unhandled_right_bracket betacodeval="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1234,8 +1253,8 @@ def atsignsubstitutions(match):
 
 	try:
 		substitute = substitutions[val]
-	except:
-		substitute = '<hmu_unhandled_atsign value="{v}" />'.format(v=match.group(1))
+	except KeyError:
+		substitute = '<hmu_unhandled_atsign betacodeval="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1286,8 +1305,8 @@ def ltcurlybracketsubstitutes(match):
 
 	try:
 		substitute = substitutions[val]
-	except:
-		substitute = '<hmu_unhandled_ltcurlybracket value="{v}" />'.format(v=match.group(1))
+	except KeyError:
+		substitute = '<hmu_unhandled_ltcurlybracket betacodeval="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1328,8 +1347,8 @@ def rtcurlybracketsubstitutes(match):
 
 	try:
 		substitute = substitutions[val]
-	except:
-		substitute = '<hmu_unhandled_rtcurlybracket value="{v}" />'.format(v=match.group(1))
+	except KeyError:
+		substitute = '<hmu_unhandled_rtcurlybracket betacodeval="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1399,8 +1418,8 @@ def ltanglebracketsubstitutes(match):
 
 	try:
 		substitute = substitutions[val]
-	except:
-		substitute = '<hmu_unhandled_ltangle value="{v}" />'.format(v=match.group(1))
+	except KeyError:
+		substitute = '<hmu_unhandled_ltangle betacodeval="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1469,8 +1488,8 @@ def rtanglebracketsubstitutes(match):
 
 	try:
 		substitute = substitutions[val]
-	except:
-		substitute = '<hmu_unhandled_rtangle value="{v}" />'.format(v=match.group(1))
+	except KeyError:
+		substitute = '<hmu_unhandled_rtangle betacodeval="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1515,8 +1534,8 @@ def dollarssubstitutes(match):
 
 	try:
 		substitute = substitutions[val][0] + core + substitutions[val][1]
-	except:
-		substitute = '<hmu_unhandled_greek_font_shift value="{v}" />{c}'.format(v=match.group(1), c=core)
+	except KeyError:
+		substitute = '<hmu_unhandled_greek_font_shift betacodeval="{v}" />{c}'.format(v=match.group(1), c=core)
 		if warnings:
 			print('\t',substitute)
 
@@ -1555,8 +1574,8 @@ def andsubstitutes(match):
 
 	try:
 		substitute = substitutions[val][0] + core + substitutions[val][1]
-	except:
-		substitute = '<hmu_unhandled_latin_font_shift value="{v}" />{c}'.format(v=match.group(1), c=core)
+	except KeyError:
+		substitute = '<hmu_unhandled_latin_font_shift betacodeval="{v}" />{c}'.format(v=match.group(1), c=core)
 		if warnings:
 			print('\t',substitute)
 
@@ -1695,7 +1714,7 @@ def totallemmatization(parsedtextfile, authorobject):
 
 	setter = re.compile(r'<hmu_set_level_(\d)_to_(.*?)\s/>')
 	adder = re.compile(r'<hmu_increment_level_(\d)_by_1\s')
-	wnv = re.compile(r'<hmu_cd_assert_work_number value="(\d{1,3})')
+	wnv = re.compile(r'<hmu_cd_assert_work_number betacodeval="(\d{1,3})')
 
 	for line in parsedtextfile:
 		gotwork = re.search(wnv, line)
@@ -1772,7 +1791,7 @@ def addcdlabels(texttoclean, authornumber):
 	# the NEWLINE here has subtle implications: might need to play with it...
 	# if you do not then you can include the last ilne of one work in the next...
 	search = r'(█ⓔⓕ █⑧① █ⓑ(.) █ⓑ(.) █ⓑ(.) █ⓕⓕ )'
-	replace = r'\n<hmu_cd_assert_work_number value="\2\3\4"/>'
+	replace = r'\n<hmu_cd_assert_work_number betacodeval="\2\3\4"/>'
 	texttoclean = re.sub(search, replace, texttoclean)
 
 	# 'secondary level (82)' info stored in a run of bytes whose length varies: add 127 to them and you get an ascii value
@@ -1780,29 +1799,29 @@ def addcdlabels(texttoclean, authornumber):
 	# 0xef 0x82 0xc1 0xf0 0xef 0xec 0xff
 	# 0xef 0x82 0xcd 0xf5 0xee 0xff
 	search = r'(█ⓔⓕ\s█⑧②\s((█..\s){1,}?)█ⓕⓕ) '
-	replace = r'<hmu_cd_assert_work_abbreviation value="\2"/>'
+	replace = r'<hmu_cd_assert_work_abbreviation betacodeval="\2"/>'
 	texttoclean = re.sub(search, replace, texttoclean)
 
 	# 'tertiray level (83)' info stored in a run of bytes whose length varies: add 127 to them and you get an ascii value
 	# 0xef 0x83 0xc1 0xf0 0xf5 0xec 0xff
 	search = r'(█ⓔⓕ\s█⑧③\s((█..\s){1,}?)█ⓕⓕ) '
-	replace = r'<hmu_cd_assert_author_abbrev value="\2"/>'
+	replace = r'<hmu_cd_assert_author_abbrev betacodeval="\2"/>'
 	texttoclean = re.sub(search, replace, texttoclean)
 
 	# now reparse
 
-	search = r'<hmu_cd_assert_work_number value="..."/>'
+	search = r'<hmu_cd_assert_work_number betacodeval="..."/>'
 	texttoclean = re.sub(search, hutohxgrouper, texttoclean)
 
-	search = r'(<hmu_cd_assert_work_abbreviation value=")(.*?)\s("/>)'
+	search = r'(<hmu_cd_assert_work_abbreviation betacodeval=")(.*?)\s("/>)'
 	texttoclean = re.sub(search, converthextoascii, texttoclean)
 
-	search = r'(<hmu_cd_assert_author_abbrev value=")(.*?)\s("/>)'
+	search = r'(<hmu_cd_assert_author_abbrev betacodeval=")(.*?)\s("/>)'
 	texttoclean = re.sub(search, converthextoascii, texttoclean)
 
 	# next comes something terrifying: after the author_abbrev we get 4 - 6  hex values
 	# try to handle it with the citationbuilder
-	search = r'(<hmu_cd_assert_author_abbrev value="(.*?)" />)((█[⓪①②③④⑤⑥⑦⑧⑨ⓐⓑⓒⓓⓔⓕ]{1,2}\s){2,})'
+	search = r'(<hmu_cd_assert_author_abbrev betacodeval="(.*?)" />)((█[⓪①②③④⑤⑥⑦⑧⑨ⓐⓑⓒⓓⓔⓕ]{1,2}\s){2,})'
 	texttoclean = re.sub(search, citationbuilder, texttoclean)
 
 	return texttoclean
