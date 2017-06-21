@@ -173,7 +173,7 @@ def latindiacriticals(texttoclean):
 	:return:
 	"""
 
-	finder = re.compile(r'[aeiouyAEIOU][\+\\=/]')
+	finder = re.compile(r'[aeiouyAEIOUV][\+\\=/]')
 
 	texttoclean = re.sub(finder, latinsubstitutes, texttoclean)
 
@@ -197,6 +197,7 @@ def latinsubstitutes(matchgroup):
 		'I/': u'\u00cd',
 		'O/': u'\u00d3',
 		'U/': u'\u00da',
+		'V/': u'\u00da',
 		'a+': 'ä',
 		'A+': 'Ä',
 		'e+': 'ë',
@@ -217,6 +218,7 @@ def latinsubstitutes(matchgroup):
 		'O=': 'Ô',
 		'u=': 'û',
 		'U=': 'Û',
+		'V=': 'Û',
 		'a\\': 'à',
 		'A\\': 'À',
 		'e\\': 'è',
@@ -227,6 +229,7 @@ def latinsubstitutes(matchgroup):
 		'O\\': 'Ò',
 		'u\\': 'ù',
 		'U\\': 'Ù',
+		'V\\': 'Ù'
 	}
 
 	if val in substitues:
@@ -333,7 +336,7 @@ def bracketspacer(matchgroup):
 	grptwo = re.sub(r'\s',u'\u00a0', matchgroup.group(2))
 	grpthree = re.sub(r'\s', u'\u00a0', matchgroup.group(3))
 
-	substitute = '['+grpone+'𝕔'+grptwo+']'+grpthree
+	substitute = '[{x}𝕔{y}]{z}'.format(x=grpone, y=grptwo, z=grpthree)
 
 	return substitute
 
@@ -363,10 +366,10 @@ def quotesubstitutesa(match):
 		8: 'QUOTE8'
 	}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val]
-	else:
-		substitute = '<hmu_unhandled_quote_markup value="' + match.group(1) + '" />'
+	except:
+		substitute = '<hmu_unhandled_quote_markup value="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -391,10 +394,10 @@ def quotesubstitutesb(match):
 		8: ['“', '„'],
 	}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val][0] + core + substitutions[val][1]
-	else:
-		substitute = '<hmu_unhandled_quote_markup value="' + match.group(1) + '" />' + core
+	except:
+		substitute = '<hmu_unhandled_quote_markup value="{v}" />{c}'.format(v=match.group(1), c=core)
 		if warnings:
 			print('\t',substitute)
 
@@ -941,14 +944,13 @@ def poundsubstitutes(match):
 		1506: u'\u0300\u0306',
 		1509: r'πληθ', # supposed to be a symbol
 		1510: u'Α\u0338<6\u0304ν\u002f>6', # A%162<6E%26N%3>6 [!]
-		1511: r'π<span class="superscript">ε:`</span>'
+		1511: r'π<span class="superscript">ε:`</span>'
 	}
 
-
-	if val in substitutions:
+	try:
 		substitute = substitutions[val]
-	else:
-		substitute = '<hmu_unhandled_pound_sign value="'+match.group(1)+'" />▦'
+	except:
+		substitute = '<hmu_unhandled_pound_sign value="{v}" />▦'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1078,10 +1080,10 @@ def percentsubstitutes(match):
 		162: u'\u0338'
 	}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val]
-	else:
-		substitute = '<hmu_unhandled_percent_sign value="' + match.group(1) + '" />▩'
+	except:
+		substitute = '<hmu_unhandled_percent_sign value="{v}" />▩'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1131,12 +1133,13 @@ def leftbracketsubstitutions(match):
 		1: '⦅' # supposed to be parenthesis '('; but can interfere with betacode parsing; either swap here or change order of execution
 		}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val]
-	else:
-		substitute = '<hmu_unhandled_left_bracket value="' + match.group(1) + '" />'
+	except:
+		substitute = '<hmu_unhandled_left_bracket value="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
+
 
 	return substitute
 
@@ -1183,10 +1186,10 @@ def rightbracketsubstitutions(match):
 		1: '⦆' # swapped for ')'
 	}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val]
-	else:
-		substitute = '<hmu_unhandled_right_bracket value="' + match.group(1) + '" />'
+	except:
+		substitute = '<hmu_unhandled_right_bracket value="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1229,10 +1232,10 @@ def atsignsubstitutions(match):
 		1: r'<hmu_standalone_endofpage />'
 	}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val]
-	else:
-		substitute = '<hmu_unhandled_atsign value="' + match.group(1) + '" />'
+	except:
+		substitute = '<hmu_unhandled_atsign value="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1281,10 +1284,10 @@ def ltcurlybracketsubstitutes(match):
 		1: r'<span class="title">'
 	}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val]
-	else:
-		substitute = '<hmu_unhandled_ltcurlybracket value="' + match.group(1) + '" />'
+	except:
+		substitute = '<hmu_unhandled_ltcurlybracket value="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1323,10 +1326,10 @@ def rtcurlybracketsubstitutes(match):
 		1: r'</span>' # hmu_title
 	}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val]
-	else:
-		substitute = '<hmu_unhandled_rtcurlybracket value="' + match.group(1) + '" />'
+	except:
+		substitute = '<hmu_unhandled_rtcurlybracket value="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1394,10 +1397,10 @@ def ltanglebracketsubstitutes(match):
 		96: r'<hmu_undocumented_anglebracketspan96>',
 	}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val]
-	else:
-		substitute = '<hmu_unhandled_ltangle value="' + match.group(1) + '" />'
+	except:
+		substitute = '<hmu_unhandled_ltangle value="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1464,10 +1467,10 @@ def rtanglebracketsubstitutes(match):
 		96: r'</hmu_undocumented_anglebracketspan96>',
 	}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val]
-	else:
-		substitute = '<hmu_unhandled_rtangle value="' + match.group(1) + '" />'
+	except:
+		substitute = '<hmu_unhandled_rtangle value="{v}" />'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
@@ -1510,10 +1513,10 @@ def dollarssubstitutes(match):
 		1: [r'<span class="bold">', r'</span>']
 	}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val][0] + core + substitutions[val][1]
-	else:
-		substitute = '<hmu_unhandled_greek_font_shift value="' + match.group(1) + '" />' + core
+	except:
+		substitute = '<hmu_unhandled_greek_font_shift value="{v}" />{c}'.format(v=match.group(1), c=core)
 		if warnings:
 			print('\t',substitute)
 
@@ -1550,10 +1553,10 @@ def andsubstitutes(match):
 		1: [r'<span class="bold">', r'</span>'],
 	}
 
-	if val in substitutions:
+	try:
 		substitute = substitutions[val][0] + core + substitutions[val][1]
-	else:
-		substitute = '<hmu_unhandled_latin_font_shift value="' + match.group(1) + '" />' + core
+	except:
+		substitute = '<hmu_unhandled_latin_font_shift value="{v}" />{c}'.format(v=match.group(1), c=core)
 		if warnings:
 			print('\t',substitute)
 
@@ -1643,7 +1646,7 @@ def doublecheckromanwithingreek(match):
 		substitution = re.sub(linetermination, r'<hmu_roman_in_a_greek_text>\2</hmu_roman_in_a_greek_text>\3',
 		                      substitution)
 	else:
-		substitution = r'<hmu_roman_in_a_greek_text>' + match.group(2) + r'</hmu_roman_in_a_greek_text>'
+		substitution = '<hmu_roman_in_a_greek_text>{m}</hmu_roman_in_a_greek_text>'.format(m=match.group(2))
 
 	substitution += match.group(3)
 	# print(match.group(1) + match.group(2),'\n\t',substitution)
@@ -1687,7 +1690,6 @@ def totallemmatization(parsedtextfile, authorobject):
 	}
 	lemmatized = []
 	dbready = []
-
 
 	work = 1
 
@@ -1870,5 +1872,3 @@ def cleanworkname(betacodeworkname):
 	workname = re.sub(r'`', '', workname)
 
 	return workname
-
-
