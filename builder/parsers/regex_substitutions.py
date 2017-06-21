@@ -840,7 +840,10 @@ def poundsubstitutes(match):
 		866: u'\u03a7',
 		867: r'𐅆',
 		870: r'<hmu_undocumented_poundsign betacodeval="870">⊚</hmu_undocumented_poundsign>',
+		# 875: r'', # see http://noapplet.epigraphy.packhum.org/text/247092?&bookid=489&location=1689; private use area?
+		# 877: r'', # see http://noapplet.epigraphy.packhum.org/text/247091?&bookid=489&location=1689; private use area?
 		880: r'<hmu_undocumented_poundsign betacodeval="880">⊚</hmu_undocumented_poundsign>',
+		# 881: r'', # see http://noapplet.epigraphy.packhum.org/text/247091?&bookid=489&location=1689; private use area?
 		898: r'<hmu_undocumented_poundsign betacodeval="898">⊚</hmu_undocumented_poundsign>',
 		899: r'<hmu_unknown_numeral>',
 		900: r'<hmu_undocumented_poundsign betacodeval="900">⊚</hmu_undocumented_poundsign>',
@@ -859,27 +862,33 @@ def poundsubstitutes(match):
 		933: r'<hmu_idiosyncratic_char betacodeval="933">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		934: r'<hmu_idiosyncratic_char betacodeval="934">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		937: r'<hmu_miscellaneous_illustrations>',
+		# 938: r'', # http://noapplet.epigraphy.packhum.org/text/260647?&bookid=509&location=1035; private use area?
 		939: r'~', # undocumented; but so printed by packhum.org
 		940: r'<hmu_idiosyncratic_char betacodeval="940">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		943: r'<hmu_undocumented_poundsign betacodeval="943">⊚</hmu_undocumented_poundsign>',
 		949: r'<hmu_undocumented_poundsign betacodeval="949">⊚</hmu_undocumented_poundsign>',
 		961: r'<hmu_line_on_stone_stops_but_edition_continues_line />',
 		973: r'<hmu_undocumented_poundsign betacodeval="973">⊚</hmu_undocumented_poundsign>',
+		977: r'§', # Caria (Stratonikeia), 8 2, line 12; http://noapplet.epigraphy.packhum.org/text/262496?&bookid=526&location=1035
 		990: r'<hmu_undocumented_poundsign betacodeval="990">⊚</hmu_undocumented_poundsign>',
 		1000: r'𐅼',
 		1001: r'𐅽',
 		1002: r'𐅾',
 		1003: r'𐅿',
 		1004: r'𐆀',
+		1009: r'', # http://noapplet.epigraphy.packhum.org/text/247092?&bookid=489&location=1689
 		# a huge run of undocumented poundsigns in the inscriptions: this only scratches the surface
 		# packhum.org has representations of many of them 
 		# see especially: http://noapplet.epigraphy.packhum.org/text/260603?&bookid=509&location=1035
+		1023: r'ηʹ', # http://noapplet.epigraphy.packhum.org/text/247092?&bookid=489&location=1689
 		1053: r'<hmu_undocumented_poundsign betacodeval="1053">⊚</hmu_undocumented_poundsign>',
+		# 1057: r'', # http://noapplet.epigraphy.packhum.org/text/258019?&bookid=493&location=1035; private use area?
 		1059: r'<hmu_undocumented_poundsign betacodeval="1059">⊚</hmu_undocumented_poundsign>',
 		1061: r'γʹ',
 		1062: r'δʹ',
 		1063: r'εʹ',
 		1064: r'ϛʹ',
+		1065: r'ζʹ',
 		1067: r'θʹ',
 		1068: r'ιʹ',
 		1069: r'κʹ',
@@ -894,6 +903,8 @@ def poundsubstitutes(match):
 		1079: r'τʹ',
 		1080: r'υʹ',
 		1082: r'χʹ',
+		1084: r'ωʹ', # Caria (Tralles), 243: line 16; http://noapplet.epigraphy.packhum.org/text/263093?&bookid=531&location=1035
+		1085: r' ϡʹ',
 		1086: r'͵α',
 		1087: r'͵β',
 		1100: u'\u2183',
