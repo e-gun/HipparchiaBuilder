@@ -866,7 +866,7 @@ def poundsubstitutes(match):
 		939: r'~', # undocumented; but so printed by packhum.org
 		940: r'<hmu_idiosyncratic_char betacodeval="940">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		943: r'<hmu_undocumented_poundsign betacodeval="943">⊚</hmu_undocumented_poundsign>',
-		949: r'<hmu_undocumented_poundsign betacodeval="949">⊚</hmu_undocumented_poundsign>',
+		949: r'—', # http://noapplet.epigraphy.packhum.org/text/251612?&bookid=491&location=1689
 		961: r'<hmu_line_on_stone_stops_but_edition_continues_line />',
 		973: r'<hmu_undocumented_poundsign betacodeval="973">⊚</hmu_undocumented_poundsign>',
 		977: r'§', # Caria (Stratonikeia), 8 2, line 12; http://noapplet.epigraphy.packhum.org/text/262496?&bookid=526&location=1035

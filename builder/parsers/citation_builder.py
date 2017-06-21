@@ -47,7 +47,7 @@ def citationbuilder(hexsequence):
 	hexsequence.pop()
 	fullcitation = ''
 
-	actions = {
+	actionmapper = {
 		8: nyb08,
 		9: nyb09,
 		10: nyb10,
@@ -76,12 +76,70 @@ def citationbuilder(hexsequence):
 			elif (action > 0) and (action < 8):
 				fullcitation += '<hmu_set_level_{tl}_to_{a} />'.format(tl=textlevel, a=action)
 			else:
-				citation, hexsequence = actions[action](hexsequence)
+				citation, hexsequence = actionmapper[action](hexsequence)
 				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel,c=citation)
 		elif textlevel == 6:
-			fullcitation, hexsequence = levelsixparsing(action, fullcitation, hexsequence)
+			fullcitation, hexsequence = levelsixparsing(action, actionmapper, fullcitation, hexsequence)
 
 	return fullcitation
+
+
+def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
+	"""
+
+	because level6 is its own world
+
+	:param action:
+	:param actionmapper:
+	:param fullcitation:
+	:param hexsequence:
+	:return:
+	"""
+
+	metadata = {}
+	metadatacategories = {
+		0: 'newauthor',
+		1: 'newwork',
+		2: 'workabbrev',
+		3: 'authabbrev',
+		97: 'region', # 'a'
+		98: 'city', # 'b'
+		99: 'notes', # 'c' (will be textdirection in INS/DDP)
+		100: 'date', # 'd'
+		101: 'publicationinfo', # 'e'
+		102: 'additionalpubinfo', # 'f'
+		103: 'stillfurtherpubinfo', # 'g'
+		108: 'provenance', # 'l'
+		114: 'reprints', # 'r'
+		116: 'unknownmetadata116', # 't'
+		122: 'documentnumber' # 'z'
+		}
+
+	try:
+		category = int(hexsequence.pop(), 16) & int('7f', 16)
+	except:
+		category = ''
+	if action == 0:
+		if category == 1:
+			fullcitation += '\n<hmu_increment_work_number_by_1 />'
+		citation = ''
+	elif 0 < action < 8:
+		citation, hexsequence = nyb15(hexsequence)
+	else:
+		citation, hexsequence = actionmapper[action](hexsequence)
+
+	metadata[metadatacategories[category]] = citation
+
+	for key in metadata.keys():
+		# should actually only be one key, but we don't know which one it is in advance
+		if len(metadata[key]) > 0:
+			v = regex_substitutions.replaceaddnlchars(metadata[key])
+			v = re.sub(r'`','', v)
+			# print('<hmu_metadata_{k} value="{v}" />'.format(k=key,v=v))
+			fullcitation += '<hmu_metadata_{k} value="{v}" />'.format(k=key,v=v)
+
+	return fullcitation, hexsequence
+
 
 #
 # a collection of tiny byte-by-byte cases that is closely attached to citationbuilder
@@ -221,70 +279,3 @@ def nyb15(hexsequence):
 			stop = True
 
 	return citation, hexsequence
-
-
-#
-# because level6 is its own world
-#
-
-
-def levelsixparsing(action, fullcitation, hexsequence):
-	metadata = {}
-	metadatacategories = {
-		0: 'newauthor',
-		1: 'newwork',
-		2: 'workabbrev',
-		3: 'authabbrev',
-		97: 'region', # 'a'
-		98: 'city', # 'b'
-		99: 'notes', # 'c' (will be textdirection in INS/DDP)
-		100: 'date', # 'd'
-		101: 'publicationinfo', # 'e'
-		102: 'additionalpubinfo', # 'f'
-		103: 'stillfurtherpubinfo', # 'g'
-		108: 'provenance', # 'l'
-		114: 'reprints', # 'r'
-		116: 'unknownmetadata116', # 't'
-		122: 'documentnumber' # 'z'
-		}
-
-	try:
-		category = int(hexsequence.pop(), 16) & int('7f', 16)
-	except:
-		category = ''
-	if action == 0:
-		if category == 1:
-			fullcitation += '\n<hmu_increment_work_number_by_1 />'
-		citation = ''
-	elif 0 < action < 8:
-		citation, hexsequence = nyb15(hexsequence)
-	elif action == 8:
-		citation, hexsequence = nyb08(hexsequence)
-	elif action == 9:
-		citation, hexsequence = nyb09(hexsequence)
-	elif action == 10:
-		citation, hexsequence = nyb10(hexsequence)
-	elif action == 11:
-		citation, hexsequence = nyb11(hexsequence)
-	elif action == 12:
-		citation, hexsequence = nyb12(hexsequence)
-	elif action == 13:
-		citation, hexsequence = nyb13(hexsequence)
-	elif action == 14:
-		citation, hexsequence = nyb14(hexsequence)
-	elif action == 15:
-		citation, hexsequence = nyb15(hexsequence)
-	else:
-		citation = ''
-
-	metadata[metadatacategories[category]] = citation
-
-	for key in metadata.keys():
-		# should actually only be one key, but we don't know which one it is in advance
-		if len(metadata[key]) > 0:
-			v = regex_substitutions.replaceaddnlchars(metadata[key])
-			v = re.sub(r'`','', v)
-			# print('<hmu_metadata_{k} value="{v}" />'.format(k=key,v=v))
-			fullcitation += '<hmu_metadata_{k} value="{v}" />'.format(k=key,v=v)
-
-	return fullcitation, hexsequence

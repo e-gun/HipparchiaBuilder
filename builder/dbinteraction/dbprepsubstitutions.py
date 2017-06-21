@@ -172,7 +172,8 @@ def dbstrippedliner(dbunreadyversion):
 	# if you want to find »αʹ« you need ʹ
 	# if you want to find »͵α« you need ͵
 	# if you want to search for undocumented/idiosyncratic chars you need ◦⊚
-	straypunct = re.compile('[\<\>\{\}⌉⎜͙ͻ✳※¶§͜⸨⸩｟｠《⟪⟫⦅⦆❴❵\.\?﹖→𐄂𝕔☩\!;:ˈ＇,‚‛‘’“”„·‧∣\[\]\(\)]')
+	# misc other things that one might want to exclude but are currently included: ☩ͻ
+	straypunct = re.compile('[\<\>\{\}⌉⎜͙✳※¶§͜⸨⸩｟｠《⟪⟫⦅⦆❴❵\.\?﹖→𐄂𝕔\!;:ˈ＇,‚‛‘’“”„·‧∣\[\]\(\)]')
 	dbreadyversion = deque()
 	workingcolumn = 2
 	# tempting to strip delenda here, but that presupposes you caught all the number-brackets before
