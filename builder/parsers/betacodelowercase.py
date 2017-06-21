@@ -28,7 +28,9 @@ def lowercaseletters(betacode):
 	# needs to be done in order of length of regex string
 	# otherwise 4-element items will disappear in the wake of doing all of the 3s, etc.
 
-	# roman numeral problem: (XI) will wind up as (Xἰ
+	# roman numeral problem:
+	#   (XI) will wind up as (Xἰ
+	#   IG II(2) 891 --> IG Iἱ2) 891.1–3
 	# very had to fix because a lookahead of (?!\s) will ruin εἰ
 
 	# lowercase + breathing + accent + subscript
@@ -88,7 +90,8 @@ def lowercaseletters(betacode):
 
 	# lowercase + breathing
 	ls = re.compile(r'([AEIOUHWR])\)')
-	lr = re.compile(r'([AEIOUHWR])\(')
+	# IG II(2) 891 --> IG Iἱ2) 891.1–3
+	lr = re.compile(r'([AEIOUHWR])\((?!\d)')
 
 	unicode = re.sub(ls, lowercasesmooth, unicode)
 	unicode = re.sub(lr, lowercaserough, unicode)
