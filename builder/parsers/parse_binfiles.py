@@ -8,6 +8,7 @@
 import csv
 import re
 import configparser
+from multiprocessing import Pool
 try:
 	# python3
 	import psycopg2
@@ -15,9 +16,12 @@ except ImportError:
 	# pypy3
 	# pypy3 support is EXPERIMENTAL (and unlikely to be actively pursued)
 	import psycopg2cffi as psycopg2
-from multiprocessing import Pool
-from builder import parsers
+
 from builder import file_io
+from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode
+from builder.parsers.regex_substitutions import latindiacriticals
+from builder.parsers.betacodeescapedcharacters import percentsubstitutes
+from builder.parsers.betacodefontshifts import andsubstitutes
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -177,7 +181,7 @@ def cleanlabels(labellist):
 	
 	for l in labellist:
 		l = re.sub(r'%3%19ae','',l) # Epigrammatici%3%19ae
-		l = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, l)
+		l = re.sub(percents, percentsubstitutes, l)
 		l = re.sub('^ ', '', l)
 		l = re.sub(' $','',l)
 		l = re.sub('\*', '', l)
@@ -333,7 +337,7 @@ def wipegreekauthorcolumn(column, cursor, dbconnection):
 def dbloadlist(labellist, column, cursor, dbconnection):
 	for key in labellist:
 		for author in labellist[key]:
-			query = 'SELECT universalid, ' + column + ' FROM authors WHERE universalid LIKE %s'
+			query = 'SELECT universalid, {c} FROM authors WHERE universalid LIKE %s'.format(c=column)
 			data = ('gr' + author,)
 			cursor.execute(query, data)
 			if isinstance(key, int) or isinstance(key, float):
@@ -349,7 +353,7 @@ def dbloadlist(labellist, column, cursor, dbconnection):
 					else:
 						newinfo = key
 					# irritating to handle Epici/-ae later
-					query = 'UPDATE authors SET ' + column + '=%s WHERE universalid=%s'
+					query = 'UPDATE authors SET {c}=%s WHERE universalid=%s'.format(c=column)
 					data = (newinfo, 'gr' + author)
 					cursor.execute(query, data)
 			except:
@@ -485,10 +489,10 @@ def gkcanoncleaner(txt):
 	# txt = re.sub(r'\t', r'', txt)
 	
 	percents = re.compile(r'\%(\d{1,3})')
-	txt = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, txt)
+	txt = re.sub(percents, percentsubstitutes, txt)
 	txt = re.sub(r'`', r'', txt)
 	
-	txt = parsers.regex_substitutions.latindiacriticals(txt)
+	txt = latindiacriticals(txt)
 	txt = txt.split('\n')
 	# txt = txt[:-1]
 
@@ -515,7 +519,7 @@ def worknamecleaner(matchgroup):
 	if re.search(gk,toclean) is not None:
 		g = re.search(gk,toclean)
 		g = re.sub(r'_',r'-',g.group(1))
-		g = parsers.betacode_to_unicode.replacegreekbetacode(g)
+		g = replacegreekbetacode(g)
 		toclean = re.sub(gk,g,toclean)
 		try:
 			cleanedname = re.sub(re.escape(matchgroup.group(1)), toclean, matchgroup.group(0))
@@ -528,8 +532,8 @@ def worknamecleaner(matchgroup):
 		cleanedname = matchgroup.group(0)
 	
 	percents = re.compile(r'\%(\d{1,3})')
-	cleanedname = re.sub(percents,parsers.regex_substitutions.percentsubstitutes,cleanedname)
-	cleanedname = parsers.regex_substitutions.latindiacriticals(cleanedname)
+	cleanedname = re.sub(percents, percentsubstitutes,cleanedname)
+	cleanedname = latindiacriticals(cleanedname)
 	cleanedname = re.sub(r'&\d{0,2}(.*?)&\d{0,1}',r'\1',cleanedname)
 	cleanedname = re.sub(r'&',r'',cleanedname)
 	cleanedname = re.sub(r'\$\d{0,1}', r'', cleanedname)
@@ -607,7 +611,7 @@ def modifygkauthordb(newauthorinfo, cursor):
 	short = re.search(sh, newauthorinfo)
 	try:
 		s = re.sub(' {1,}$','',short.group(1))
-		s = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, s)
+		s = re.sub(percents, percentsubstitutes, s)
 	except:
 		s = ''
 	
@@ -662,7 +666,7 @@ def modifygkworksdb(newworkinfo, cursor):
 	wtype = re.search(typ, newworkinfo)
 	count = re.search(wc, newworkinfo)
 	cite = re.search(cf, newworkinfo)
-	cite = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, cite.group(1))
+	cite = re.sub(percents, percentsubstitutes, cite.group(1))
 	cite = cite.split('/')
 	try:
 		cite.remove('')
@@ -698,8 +702,8 @@ def modifygkworksdb(newworkinfo, cursor):
 	except:
 		p = ''
 	
-	p = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, p)
-	p = re.sub(ands, parsers.regex_substitutions.andsubstitutes, p)
+	p = re.sub(percents, percentsubstitutes, p)
+	p = re.sub(ands, andsubstitutes, p)
 	p = re.sub(r' $', '', p)
 	
 	try:
@@ -707,7 +711,7 @@ def modifygkworksdb(newworkinfo, cursor):
 	except:
 		g = ''
 		
-	g = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, g)
+	g = re.sub(percents, percentsubstitutes, g)
 	g = re.sub(r' $', '', g)
 	# *Epic., *Hist., ...
 	g = re.sub(r'\*', '', g)
@@ -722,7 +726,7 @@ def modifygkworksdb(newworkinfo, cursor):
 	except:
 		w = ''
 	
-	w = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, w)
+	w = re.sub(percents, percentsubstitutes, w)
 	w = re.sub(r' $', '', w)
 	
 	# try some comparisons: the (flawed) canon data can help to fix the flawed idt data
@@ -803,8 +807,8 @@ def latinloadcanon(canonfile, cursor):
 			c = contents.group(1)
 		except:
 			c = ''
-		c = re.sub(percents, parsers.regex_substitutions.percentsubstitutes, c)
-		c = parsers.regex_substitutions.latindiacriticals(c)
+		c = re.sub(percents, percentsubstitutes, c)
+		c = latindiacriticals(c)
 		c = re.sub(r'`', r'', c)
 		try:
 			canoninfo[prefix + author.group(1) + 'w' + work.group(1)] = c
