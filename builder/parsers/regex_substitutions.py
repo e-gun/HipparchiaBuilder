@@ -259,7 +259,7 @@ def lastsecondsubsitutions(texttoclean):
 	for i in range(0, len(betacodetuples)):
 		texttoclean = re.sub(betacodetuples[i][0], betacodetuples[i][1], texttoclean)
 
-	tosimplify = re.compile(r'[❨❩❴❵⟦⟧⟪⟫‹›⦅⦆]')
+	tosimplify = re.compile(r'[❨❩❴❵⟦⟧⟪⟫《》‹›⦅⦆]')
 	texttoclean = re.sub(tosimplify, bracketsimplifier, texttoclean)
 
 	# combining breve is misplaced
@@ -279,6 +279,13 @@ def lastsecondsubsitutions(texttoclean):
 def bracketsimplifier(match):
 	"""
 
+	lots of brackets are out there; converge upon a smaller set
+
+	note that most of them were chosen to avoid confusing the parser, so restoring these puts us
+	more in line with the betacode manual
+
+	comment some of these out to restore biodiversity
+
 	:param matchgroup:
 	:return:
 	"""
@@ -292,12 +299,17 @@ def bracketsimplifier(match):
 		'❵': '}',
 		'⟦': '[',
 		'⟧': ']',
+		'⦅': '(',
+		'⦆': ')',
+		# various angled brackets all set to 'mathematical left/right angle bracket' (u+27e8, u+27e9)
+		# alternately one could consider small versions instead of the full-sized versions (u+fe64, u+fe65)
+		# the main issue is that '<' and '>' are being kept out of the text data because of the HTML problem
 		'⟪': '⟨',
 		'⟫': '⟩',
+		'《': '⟨',
+		'》': '⟩',
 		'‹': '⟨',
-		'›': '⟩',
-		'⦅': '(',
-		'⦆': ')'
+		'›': '⟩'
 	}
 
 	try:
@@ -450,7 +462,8 @@ def poundsubstitutes(match):
 
 	substitutions = {
 		# u'\u',
-		# 1326: idiosync magical char
+		# it is noisy to build with the 'undocumenteds' commented out
+		# but, if you want to get the codes as HTML, this is what you need to do...
 
 		1: u'\u03df',
 		2: u'\u03da',
@@ -466,11 +479,11 @@ def poundsubstitutes(match):
 		12: u'\u2014',
 		13: u'\u203b',
 		14: u'\u2e16',
-		15: u'\u003e',
+		15: r'⟩', # officially: u'\u003e', greater than sign, diple
 		16: u'\u03fe',
 		# 17: u'002f',  # careful: '/' is dangerous
 		17: r'／', # fulwidth solidus instead
-		18: r'《',
+		18: r'⟨', # officially: u'\u003c', less than sign, reversed diple
 		19: u'\u0300',
 		20: r'𐅵',
 		21: r'𐅵',
@@ -484,16 +497,16 @@ def poundsubstitutes(match):
 		29: u'\u00b7',
 		30: r'<hmu_idiosyncratic_char betacodeval="30">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		31: r'<hmu_idiosyncratic_char betacodeval="31">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		48: r'<hmu_undocumented_poundsign betacodeval="48">⊚</hmu_undocumented_poundsign>',
-		50: r'<hmu_undocumented_poundsign betacodeval="50">⊚</hmu_undocumented_poundsign>',
+		# 48: r'<hmu_undocumented_poundsign betacodeval="48">⊚</hmu_undocumented_poundsign>',
+		# 50: r'<hmu_undocumented_poundsign betacodeval="50">⊚</hmu_undocumented_poundsign>',
 		51: u'\u00b7',
 		52: u'\u205a',
 		53: u'\u205d',
-		54: r'<hmu_undocumented_poundsign betacodeval="54">⊚</hmu_undocumented_poundsign>',
+		# 54: r'<hmu_undocumented_poundsign betacodeval="54">⊚</hmu_undocumented_poundsign>',
 		55: u'\u2059',
 		56: r'∣', # 'dividers of other forms'; not a helpful description: trying u2223 for now
-		57: r'<hmu_undocumented_poundsign betacodeval="57">⊚</hmu_undocumented_poundsign>',
-		58: r'<hmu_undocumented_poundsign betacodeval="58">⊚</hmu_undocumented_poundsign>',
+		# 57: r'<hmu_undocumented_poundsign betacodeval="57">⊚</hmu_undocumented_poundsign>',
+		# 58: r'<hmu_undocumented_poundsign betacodeval="58">⊚</hmu_undocumented_poundsign>',
 		59: u'\u03fd',
 		60: u'\u0399',
 		61: r'𐅂',
@@ -631,7 +644,7 @@ def poundsubstitutes(match):
 		320: u'\u2629',
 		321: u'\u2629',
 		322: u'\u2627',
-		323: r'﹥', # 'greater-than sign -> line filler' says the instructions; small version instead of the markup version
+		323: r'﹥', # 'greater-than sign -> line filler' says the instructions; small version instead of the markup version (uFE65, cf uFE64)
 		324: r'<hmu_filler_stroke_to_margin />',
 		325: r'<hmu_large_single_X>✕</hmu_large_single_X>',
 		326: r'<hmu_pattern_of_Xs>✕✕✕✕</hmu_pattern_of_Xs>',
@@ -660,8 +673,8 @@ def poundsubstitutes(match):
 		467: u'\u2192',
 		468: u'\u2e0e',
 		476: u'\u0283',
-		486: r'<hmu_undocumented_poundsign betacodeval="486">⊚</hmu_undocumented_poundsign>',
-		500: r'<hmu_undocumented_poundsign betacodeval="500">⊚</hmu_undocumented_poundsign>',
+		# 486: r'<hmu_undocumented_poundsign betacodeval="486">⊚</hmu_undocumented_poundsign>',
+		# 500: r'<hmu_undocumented_poundsign betacodeval="500">⊚</hmu_undocumented_poundsign>',
 		501: r'π<6ιθ6>',  # abbreviation for πιθανόν: added own betacode - <6...6>
 		502: r'🜚',  # listed as idiosyncratic; but looks like 'alchemical symbol for gold': U+1F71A
 		503: r'ΡΠ', # but supposed to be on top of one another
@@ -832,7 +845,7 @@ def poundsubstitutes(match):
 		806: u'\u039A',
 		807: r'𐅦',
 		808: r'𐅈',
-		809: r'<hmu_undocumented_poundsign betacodeval="809">⊚</hmu_undocumented_poundsign>',
+		# 809: r'<hmu_undocumented_poundsign betacodeval="809">⊚</hmu_undocumented_poundsign>',
 		811: u'\u03a4',
 		812: r'𐅈',
 		813: r'𐅉',
@@ -874,16 +887,24 @@ def poundsubstitutes(match):
 		865: r'𐅅',
 		866: u'\u03a7',
 		867: r'𐅆',
-		870: r'<hmu_undocumented_poundsign betacodeval="870">⊚</hmu_undocumented_poundsign>',
-		# 875: r'', # see http://noapplet.epigraphy.packhum.org/text/247092?&bookid=489&location=1689; private use area?
-		# 877: r'', # see http://noapplet.epigraphy.packhum.org/text/247091?&bookid=489&location=1689; private use area?
-		880: r'<hmu_undocumented_poundsign betacodeval="880">⊚</hmu_undocumented_poundsign>',
-		# 881: r'', # see http://noapplet.epigraphy.packhum.org/text/247091?&bookid=489&location=1689; private use area?
-		898: r'<hmu_undocumented_poundsign betacodeval="898">⊚</hmu_undocumented_poundsign>',
+		# 870: r'<hmu_undocumented_poundsign betacodeval="870">⊚</hmu_undocumented_poundsign>',
+		# PHI will show you glyphs, but 'private use area' means that they are feeding them to you
+		# it seems that there is no official support for these characters
+		# 875: r'', # see http://noapplet.epigraphy.packhum.org/text/247092?&bookid=489&location=1689; private use area
+		# 875: u'\ue022', # private use area
+		# 876: u'\ue023', # private use area
+		# 877: u'\ue024', # inferred; private use area
+		# 878: u'\ue025', # inferred; private use area
+		# 879: u'\ue026',  # inferred; private use area
+		# 880: u'\ue027',  # inferred; private use area
+		# 881: u'\ue028',  # inferred; private use area
+		# 882: u'\ue029',  # inferred; private use area
+		# 883: u'\ue02a', # private use area
+		# 898: r'<hmu_undocumented_poundsign betacodeval="898">⊚</hmu_undocumented_poundsign>',
 		899: r'<hmu_unknown_numeral>',
-		900: r'<hmu_undocumented_poundsign betacodeval="900">⊚</hmu_undocumented_poundsign>',
-		901: r'<hmu_undocumented_poundsign betacodeval="901">⊚</hmu_undocumented_poundsign>',
-		921: r'<hmu_undocumented_poundsign betacodeval="921">⊚</hmu_undocumented_poundsign>',
+		# 900: r'<hmu_undocumented_poundsign betacodeval="900">⊚</hmu_undocumented_poundsign>',
+		# 901: r'<hmu_undocumented_poundsign betacodeval="901">⊚</hmu_undocumented_poundsign>',
+		# 921: r'<hmu_undocumented_poundsign betacodeval="921">⊚</hmu_undocumented_poundsign>',
 		922: r'𝈨',
 		923: r'<hmu_idiosyncratic_char betacodeval="923">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		924: r'<hmu_idiosyncratic_char betacodeval="924">◦</hmu_idiosyncratic_char>',  # idiosyncratic
@@ -900,12 +921,12 @@ def poundsubstitutes(match):
 		# 938: r'', # http://noapplet.epigraphy.packhum.org/text/260647?&bookid=509&location=1035; private use area?
 		939: r'~', # undocumented; but so printed by packhum.org
 		940: r'<hmu_idiosyncratic_char betacodeval="940">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		943: r'<hmu_undocumented_poundsign betacodeval="943">⊚</hmu_undocumented_poundsign>',
+		# 943: r'<hmu_undocumented_poundsign betacodeval="943">⊚</hmu_undocumented_poundsign>',
 		949: r'—', # http://noapplet.epigraphy.packhum.org/text/251612?&bookid=491&location=1689
 		961: r'<hmu_line_on_stone_stops_but_edition_continues_line />',
-		973: r'<hmu_undocumented_poundsign betacodeval="973">⊚</hmu_undocumented_poundsign>',
+		# 973: r'<hmu_undocumented_poundsign betacodeval="973">⊚</hmu_undocumented_poundsign>',
 		977: r'§', # Caria (Stratonikeia), 8 2, line 12; http://noapplet.epigraphy.packhum.org/text/262496?&bookid=526&location=1035
-		990: r'<hmu_undocumented_poundsign betacodeval="990">⊚</hmu_undocumented_poundsign>',
+		# 990: r'<hmu_undocumented_poundsign betacodeval="990">⊚</hmu_undocumented_poundsign>',
 		1000: r'𐅼',
 		1001: r'𐅽',
 		1002: r'𐅾',
@@ -915,6 +936,7 @@ def poundsubstitutes(match):
 		# a huge run of undocumented poundsigns in the inscriptions: this only scratches the surface
 		# packhum.org has representations of many of them 
 		# see especially: http://noapplet.epigraphy.packhum.org/text/260603?&bookid=509&location=1035
+		1012: u'\ue036',
 		1023: r'ηʹ', # http://noapplet.epigraphy.packhum.org/text/247092?&bookid=489&location=1689
 		1053: r'<hmu_undocumented_poundsign betacodeval="1053">⊚</hmu_undocumented_poundsign>',
 		# 1057: r'', # http://noapplet.epigraphy.packhum.org/text/258019?&bookid=493&location=1035; private use area?
@@ -1015,7 +1037,7 @@ def poundsubstitutes(match):
 	try:
 		substitute = substitutions[val]
 	except KeyError:
-		substitute = '<hmu_unhandled_pound_sign betacodeval="{v}" />▦'.format(v=match.group(1))
+		substitute = '<hmu_unhandled_pound_sign betacodeval="{v}" /><span class="undocumentedpound">{v}</span>'.format(v=match.group(1))
 		if warnings:
 			print('\t',substitute)
 
