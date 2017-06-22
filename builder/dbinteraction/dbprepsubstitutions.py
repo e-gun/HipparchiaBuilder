@@ -168,12 +168,14 @@ def dbstrippedliner(dbunreadyversion):
 	# this will help with some and hurt with others? need to double-check
 	# squarebrackets = re.compile(r'\[.*?\]')
 	straydigits = re.compile(r'\d')
-	# sadly can't nuke :punct: as a class because we need hyphens
-	# if you want to find »αʹ« you need ʹ
-	# if you want to find »͵α« you need ͵
-	# if you want to search for undocumented/idiosyncratic chars you need ◦⊚
-	# misc other things that one might want to exclude but are currently included: ☩ͻ
-	straypunct = re.compile('[\<\>\{\}⌉⎜͙✳※¶§͜⸨⸩｟｠《⟪⟫⦅⦆❴❵\.\?﹖→𐄂𝕔\!;:ˈ＇,‚‛‘’“”„·‧∣\[\]\(\)]')
+	# straypunct is a big deal: it defines what a clean line will look like and so what you can search for
+	#   sadly can't nuke :punct: as a class because we need hyphens
+	#   if you want to find »αʹ« you need ʹ
+	#   if you want to find »͵α« you need ͵
+	#   if you want to search for undocumented/idiosyncratic chars you need ◦⊚
+	#   misc other things that one might want to exclude but are currently included: ☩ͻ
+	#   the following are supposed to be killed off by bracketsimplifier(): ❨❩⟨⟩⟪⟫⦅⦆❴❵
+	straypunct = re.compile('[\<\>\{\}\[\]\(\)\.\?\!⌉⎜͙✳※¶§͜⸨⸩｟｠《﹖→𐄂𝕔;:ˈ＇,‚‛‘’“”„·‧∣]')
 	dbreadyversion = deque()
 	workingcolumn = 2
 	# tempting to strip delenda here, but that presupposes you caught all the number-brackets before

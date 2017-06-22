@@ -259,6 +259,9 @@ def lastsecondsubsitutions(texttoclean):
 	for i in range(0, len(betacodetuples)):
 		texttoclean = re.sub(betacodetuples[i][0], betacodetuples[i][1], texttoclean)
 
+	tosimplify = re.compile(r'[❨❩❴❵⟦⟧⟪⟫‹›⦅⦆]')
+	texttoclean = re.sub(tosimplify, bracketsimplifier, texttoclean)
+
 	# combining breve is misplaced
 	texttoclean = re.sub(r'(.)(\u035c)', r'\2\1', texttoclean)
 
@@ -271,6 +274,38 @@ def lastsecondsubsitutions(texttoclean):
 	texttoclean = re.sub(r'([\w\.,])“([\W])', r'\1”\2', texttoclean)
 
 	return texttoclean
+
+
+def bracketsimplifier(match):
+	"""
+
+	:param matchgroup:
+	:return:
+	"""
+
+	val = match.group(0)
+
+	substitutions = {
+		'❨': '(',
+		'❩': ')',
+		'❴': '{',
+		'❵': '}',
+		'⟦': '[',
+		'⟧': ']',
+		'⟪': '⟨',
+		'⟫': '⟩',
+		'‹': '⟨',
+		'›': '⟩',
+		'⦅': '(',
+		'⦆': ')'
+	}
+
+	try:
+		substitute = substitutions[val]
+	except KeyError:
+		substitute = val
+
+	return substitute
 
 
 def debughostilesubstitutions(texttoclean):
@@ -1158,9 +1193,9 @@ def leftbracketsubstitutions(match):
 		5: '⌊',
 		4: '⟦',
 		3: '❴',
-		2: '⟪',
+		2: '⟨',
 		# 2: '‹',
-		1: '⦅' # supposed to be parenthesis '('; but can interfere with betacode parsing; either swap here or change order of execution
+		1: '❨' # supposed to be parenthesis '('; but can interfere with betacode parsing; either swap here or change order of execution
 		}
 
 	try:
@@ -1211,9 +1246,9 @@ def rightbracketsubstitutions(match):
 		5: '⌋',
 		4: '⟧',
 		3: '❵',
-		2: '⟫',
+		2: '⟩',
 		# 2: '›',
-		1: '⦆' # swapped for ')'
+		1: '❩' # swapped for ')'
 	}
 
 	try:
@@ -1300,7 +1335,7 @@ def ltcurlybracketsubstitutes(match):
 		27: u'\u0359',
 		26: r'<hmu_recitfied_form>',
 		# 10: u'\u0332',
-		10: r'⟪', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
+		10: r'⟨', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
 		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
 		# cf. ltanglebracketsubstitutes() #1
 		9: r'<hmu_alternative_reading>',
@@ -1342,7 +1377,7 @@ def rtcurlybracketsubstitutes(match):
 		27: u'\u0359',
 		26: r'</hmu_recitfied_form>',
 		# 10: u'\u0332',
-		10: r'⟫', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
+		10: r'⟩', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
 		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
 		# cf. ltanglebracketsubstitutes() #1
 		9: r'</hmu_alternative_reading>',
@@ -1377,7 +1412,7 @@ def ltanglebracketsubstitutes(match):
 
 	substitutions = {
 		# 1: '',
-		1: '⟪', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
+		1: '⟨', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
 		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
 		2: u'\u2035',
 		16: u'\u2035',
@@ -1448,7 +1483,7 @@ def rtanglebracketsubstitutes(match):
 
 	substitutions = {
 		#1: u'\u0332',
-		1: r'⟫', # see note in ltanglebracketsubstitutes()
+		1: r'⟩', # see note in ltanglebracketsubstitutes()
 		2: u'\u2032',
 		16: u'\u2032',
 		19: u'\u2032',
@@ -1895,7 +1930,7 @@ def cleanworkname(betacodeworkname):
 
 	percents = re.compile(r'%(\d{1,3})')
 	workname = re.sub(percents, percentsubstitutes, workname)
-	workname = re.sub(r'\[2(.*?)]2', r'⟪\1⟫',workname)
+	workname = re.sub(r'\[2(.*?)]2', r'⟨\1⟩',workname)
 	workname = re.sub(r'<.*?>','', workname)
 	workname = re.sub(r'&\d{1,}(`|)', '', workname) # e.g.: IG I&4`2&
 	workname = re.sub(r'&', '', workname)
