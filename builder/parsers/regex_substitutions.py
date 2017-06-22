@@ -40,6 +40,8 @@ def earlybirdsubstitutions(texttoclean):
 		(r'_', u' \u2014 '),  # doing this without spaces was producing problems with giant 'hyphenated' line ends
 		(r'\s\'', r' ‘'),
 		(r'\'( |\.|,|;)', r'’\1'),
+		(r'\\\{', r'❴'),
+		(r'\\\}', r'❵'),
 		# the papyri exposed an interesting problem with '?'
 		# let's try to deal with this at earlybirdsubstitutions() because if you let '?' turn into '\u0323' it seems impossible to undo that
 		#
@@ -167,8 +169,6 @@ def lastsecondsubsitutions(texttoclean):
 		(r'`(\d)',r'\1'),
 		(r'\\\(',r'('),
 		(r'\\\)', r')'),
-		(r'\\\{', r'{'),
-		(r'\\\}', r'}'),
 	)
 
 	for i in range(0, len(betacodetuples)):
@@ -243,7 +243,6 @@ def debughostilesubstitutions(texttoclean):
 	:return:
 	"""
 	betacodetuples = (
-		# a format shift code like '[3' if followed by a number that is supposed to print has an intervening ` to stop the TLG parser
 		(r'\$',r''),
 		(r'\&',r'')
 	)
