@@ -8,6 +8,7 @@
 
 import re
 
+import builder.parsers.betacodeescapedcharacters
 from builder.parsers.swappers import highunicodetohex
 from builder.parsers import regex_substitutions
 
@@ -133,7 +134,7 @@ def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
 	for key in metadata.keys():
 		# should actually only be one key, but we don't know which one it is in advance
 		if len(metadata[key]) > 0:
-			v = regex_substitutions.replaceaddnlchars(metadata[key])
+			v = builder.parsers.betacodeescapedcharacters.replaceaddnlchars(metadata[key])
 			v = re.sub(r'`','', v)
 			# print('<hmu_metadata_{k} value="{v}" />'.format(k=key,v=v))
 			fullcitation += '<hmu_metadata_{k} value="{v}" />'.format(k=key,v=v)

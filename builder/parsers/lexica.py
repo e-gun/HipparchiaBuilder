@@ -7,7 +7,7 @@
 """
 
 
-from builder.parsers.betacode_to_unicode import *
+from builder.parsers.betacodeandunicodeinterconversion import *
 
 #
 # lexica parser helpers

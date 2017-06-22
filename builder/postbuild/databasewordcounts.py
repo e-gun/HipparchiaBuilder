@@ -14,7 +14,7 @@ from string import punctuation
 
 from builder.builder_classes import dbWordCountObject
 from builder.dbinteraction.db import setconnection, loadallauthorsasobjects, loadallworksasobjects
-from builder.parsers.betacode_to_unicode import cleanaccentsandvj, buildhipparchiatranstable
+from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj, buildhipparchiatranstable
 from builder.postbuild.postbuildhelperfunctions import forceterminalacute, graballlinesasobjects, \
 	graballcountsasobjects, grablemmataasobjects, createwordcounttable, cleanwords, prettyprintcohortdata, dictmerger
 

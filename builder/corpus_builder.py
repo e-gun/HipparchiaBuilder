@@ -13,9 +13,11 @@ import time
 from multiprocessing import Pool
 
 import builder.dbinteraction.dbprepsubstitutions
+import builder.parsers.betacodeescapedcharacters
+import builder.parsers.betacodefontshifts
 from builder.dbinteraction import db
 from builder.file_io import filereaders
-from builder.parsers import idtfiles, regex_substitutions, betacode_to_unicode, parse_binfiles
+from builder.parsers import idtfiles, regex_substitutions, betacodeandunicodeinterconversion, parse_binfiles
 from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
 from builder.dbinteraction.versioning import timestampthebuild
@@ -271,23 +273,23 @@ def initialworkparsing(authorobject, language, datapath):
 	txt = filereaders.highunicodefileload(datapath + authorobject.dataprefix+authorobject.number + '.TXT')
 	txt = regex_substitutions.earlybirdsubstitutions(txt)
 	txt = regex_substitutions.replacequotationmarks(txt)
-	txt = regex_substitutions.replaceaddnlchars(txt)
+	txt = builder.parsers.betacodeescapedcharacters.replaceaddnlchars(txt)
 	# now you are about to get a bunch of brackets added to the data via hmu_markup
 	if language == 'G' and authorobject.language == 'G':
 		# where else/how else to handle colons?
 		txt = re.sub(r':','·',txt)
 		txt = regex_substitutions.findromanwithingreek(txt)
-		txt = regex_substitutions.replacegreekmarkup(txt)
-		txt = regex_substitutions.replacelatinmarkup(txt)
-		txt = betacode_to_unicode.replacegreekbetacode(txt)
-		txt = betacode_to_unicode.restoreromanwithingreek(txt)
+		txt = builder.parsers.betacodefontshifts.replacegreekmarkup(txt)
+		txt = builder.parsers.betacodefontshifts.replacelatinmarkup(txt)
+		txt = betacodeandunicodeinterconversion.replacegreekbetacode(txt)
+		txt = betacodeandunicodeinterconversion.restoreromanwithingreek(txt)
 	else:
-		txt = regex_substitutions.replacelatinmarkup(txt)
+		txt = builder.parsers.betacodefontshifts.replacelatinmarkup(txt)
 		txt = regex_substitutions.replacelatinbetacode(txt)
 
 	# last pass to mitigate the 'αugusto λeone anno χϝι et ξonstantino' problem
 	txt = regex_substitutions.cleanuplingeringmesses(txt)
-	txt = betacode_to_unicode.purgehybridgreekandlatinwords(txt)
+	txt = betacodeandunicodeinterconversion.purgehybridgreekandlatinwords(txt)
 
 	return txt
 

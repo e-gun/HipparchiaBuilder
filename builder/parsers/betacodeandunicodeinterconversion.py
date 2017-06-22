@@ -7,8 +7,8 @@
 """
 
 import re
-from builder.parsers.betacodecapitals import capitalletters
-from builder.parsers.betacodelowercase import lowercaseletters
+from builder.parsers.betacodeletterscapitals import capitalletters
+from builder.parsers.betacodeletterslowercase import lowercaseletters
 
 def replacegreekbetacode(texttoclean):
 	"""
