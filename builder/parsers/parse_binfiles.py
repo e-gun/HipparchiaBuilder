@@ -22,6 +22,8 @@ from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetaco
 from builder.parsers.regex_substitutions import latindiacriticals
 from builder.parsers.betacodeescapedcharacters import percentsubstitutes
 from builder.parsers.betacodefontshifts import andsubstitutes
+from builder.workers import setworkercount
+
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -562,7 +564,7 @@ def loadgkcanon(canonfile):
 
 	txt = gkcanoncleaner(txt)
 	thework = []
-	workers = int(config['io']['workers'])
+	workers = setworkercount()
 
 	for t in txt:
 		thework.append(t)

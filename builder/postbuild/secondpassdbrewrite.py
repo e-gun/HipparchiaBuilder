@@ -15,6 +15,7 @@ from builder.dbinteraction.db import setconnection, dbauthorandworkloader, autho
 from builder.parsers.regex_substitutions import latindiacriticals
 from builder.postbuild.postbuilddating import convertdate
 from builder.postbuild.postbuildhelperfunctions import rebasedcounter
+from builder.workers import setworkercount
 
 """
 
@@ -195,7 +196,7 @@ def compilenewworks(newauthors, wkmapper):
 	workpile = manager.list(thework)
 	newworktuples = manager.list()
 
-	workers = int(config['io']['workers'])
+	workers = setworkercount()
 	jobs = [Process(target=parallelnewworkworker, args=(workpile, newworktuples)) for i in range(workers)]
 	for j in jobs: j.start()
 	for j in jobs: j.join()
@@ -358,7 +359,7 @@ def buildnewworkmetata(workandtitletuplelist):
 	workpile = manager.list(workinfodict.keys())
 	metadatalist = manager.list()
 
-	workers = int(config['io']['workers'])
+	workers = setworkercount()
 	jobs = [Process(target=buildworkmetadatatuples, args=(workpile, count, metadatalist)) for i in range(workers)]
 	for j in jobs: j.start()
 	for j in jobs: j.join()

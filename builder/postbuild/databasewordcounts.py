@@ -17,6 +17,7 @@ from builder.dbinteraction.db import setconnection, loadallauthorsasobjects, loa
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj, buildhipparchiatranstable
 from builder.postbuild.postbuildhelperfunctions import forceterminalacute, graballlinesasobjects, \
 	graballcountsasobjects, grablemmataasobjects, createwordcounttable, cleanwords, prettyprintcohortdata, dictmerger
+from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -114,7 +115,7 @@ def wordcounter(restriction=None):
 	# safe to almost hit number of cores here since we are not doing both db and regex simultaneously in each thread
 	# here's hoping that the workers number was not over-ambitious to begin with
 
-	bigpool = int(config['io']['workers'])+(int(config['io']['workers'])/2)
+	bigpool = setworkercount() + int(setworkercount()/2)
 	with Pool(processes=int(bigpool)) as pool:
 		listofconcordancedicts = pool.map(concordancechunk, enumerate(chunked))
 
@@ -158,7 +159,7 @@ def wordcounter(restriction=None):
 		print('breaking up the lists and parallelizing:', len(chunkedkeys), 'chunks to insert')
 
 		# lots of swapping if you go high: wordcounttable is huge and you are making multiple copies of it
-		notsobigpool = int(config['io']['workers'])
+		notsobigpool = setworkercount()
 		with Pool(processes=int(notsobigpool)) as pool:
 			# starmap: Like map() except that the elements of the iterable are expected to be iterables that are unpacked as arguments.
 			pool.starmap(dbchunkloader, argmap)

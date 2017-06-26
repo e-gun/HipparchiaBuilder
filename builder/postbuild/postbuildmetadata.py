@@ -7,9 +7,10 @@
 """
 
 import configparser
-from multiprocessing import Process, Manager, Pool
+from multiprocessing import Process, Manager
 from builder.dbinteraction.db import setconnection
 from builder.builder_classes import MPCounter
+from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -72,7 +73,7 @@ def boundaryfinder(uids):
 	found = manager.list()
 
 	print('\t', len(uids), 'items to examine')
-	workers = int(config['io']['workers'])
+	workers = setworkercount()
 	jobs = [Process(target=mpboundaryfinder, args=(uids, commitcount, found)) for i in range(workers)]
 	for j in jobs: j.start()
 	for j in jobs: j.join()
@@ -205,7 +206,7 @@ def calculatewordcounts(uids):
 
 	print('\t',len(uids),'works to examine')
 
-	workers = int(config['io']['workers'])
+	workers = setworkercount()
 	jobs = [Process(target=mpworkwordcountworker, args=(uids, counttuplelist, commitcount)) for i in range(workers)]
 	for j in jobs: j.start()
 	for j in jobs: j.join()
@@ -333,7 +334,7 @@ def buildtrigramindices(workcategoryprefix, cursor):
 
 	print('\t',len(uids),'items to index')
 
-	workers = int(config['io']['workers'])
+	workers = setworkercount()
 	jobs = [Process(target=mpindexbuilder, args=(uids, commitcount)) for i in range(workers)]
 	for j in jobs: j.start()
 	for j in jobs: j.join()

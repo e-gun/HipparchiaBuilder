@@ -23,6 +23,7 @@ from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordco
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
 from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
+from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -39,6 +40,8 @@ def buildcorpusdbs(corpusname, corpusvars):
 	:return:
 	"""
 
+	workercount = setworkercount()
+
 	print('\ndropping any existing', corpusname, 'tables')
 	if corpusvars[corpusname]['tmpprefix'] is not None:
 		resetauthorsandworksdbs(corpusvars[corpusname]['tmpprefix'], corpusvars[corpusname]['corpusabbrev'])
@@ -48,7 +51,7 @@ def buildcorpusdbs(corpusname, corpusvars):
 		abbrev = corpusvars[corpusname]['corpusabbrev']
 		resetauthorsandworksdbs(abbrev, abbrev)
 
-	print('\nbuilding', corpusname, 'dbs')
+	print('\n',workercount,'workers dispatched to build the', corpusname, 'dbs')
 
 	dataprefix = corpusvars[corpusname]['dataprefix']
 	datapath = corpusvars[corpusname]['datapath']
@@ -76,11 +79,10 @@ def buildcorpusdbs(corpusname, corpusvars):
 					thework.append(({a: allauthors[a]}, 'L', abbrev, datapath, dataprefix))
 				else:
 					thework.append(({a: allauthors[a]}, 'G', abbrev, datapath, dataprefix))
-					
-	pool = Pool(processes=int(config['io']['workers']))
+
+	pool = Pool(processes=workercount)
 	pool.map(parallelworker, thework)
-	
-	
+
 	return
 
 
@@ -329,5 +331,3 @@ def databaseloading(dbreadyversion, authorobject,  dbconnection, cursor):
 
 	# to debug return dbreadyversion
 	return
-
-

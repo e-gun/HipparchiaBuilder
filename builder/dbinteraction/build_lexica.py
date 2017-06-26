@@ -13,6 +13,7 @@ from multiprocessing import Process, Manager
 from builder.builder_classes import MPCounter
 from builder.dbinteraction.mplexicalworkers import mplatindictionaryinsert, mpgreekdictionaryinsert, mplemmatainsert, mpanalysisinsert
 from builder.dbinteraction.db import setconnection
+from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -44,7 +45,7 @@ def formatgklexicon():
 	entries = manager.list(entries)
 	commitcount = MPCounter()
 
-	workers = int(config['io']['workers'])
+	workers = setworkercount()
 	jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, commitcount)) for i in
 			range(workers)]
 	for j in jobs: j.start()
@@ -79,7 +80,7 @@ def formatlatlexicon():
 	entries = manager.list(entries)
 	commitcount = MPCounter()
 
-	workers = int(config['io']['workers'])
+	workers = setworkercount()
 	jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, commitcount)) for i in
 			range(workers)]
 	for j in jobs: j.start()
@@ -132,8 +133,8 @@ def grammarloader(language):
 	manager = Manager()
 	entries = manager.list(entries)
 	commitcount = MPCounter()
-	
-	workers = int(config['io']['workers'])
+
+	workers = setworkercount()
 	jobs = [Process(target=mplemmatainsert, args=(table, entries, islatin, commitcount)) for i in
 	        range(workers)]
 	for j in jobs: j.start()
@@ -207,7 +208,7 @@ def analysisloader(language):
 		items = manager.list(bundle)
 		commitcount = MPCounter()
 
-		workers = int(config['io']['workers'])
+		workers = setworkercount()
 		jobs = [Process(target=mpanalysisinsert, args=(table, items, islatin, commitcount)) for i in
 		        range(workers)]
 		for j in jobs: j.start()
