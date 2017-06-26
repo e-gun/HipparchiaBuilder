@@ -1,2 +1,3 @@
-__all__ = ['idtfiles', 'betacode_to_unicode','regex_substitutions', 'swappers', 'lexica',
-           'betacodelowercase', 'citation_builder', 'betacodecapitals']
+__all__ = ['idtfiles', 'regex_substitutions', 'swappers', 'lexica',
+           'betacodelowercase', 'citation_builder', 'betacodecapitals', 'betacodeescapedcharacters',
+           'betacodefontshifts', 'betacodeandunicodeinterconversion']

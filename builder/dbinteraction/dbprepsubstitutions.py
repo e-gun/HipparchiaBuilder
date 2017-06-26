@@ -43,7 +43,7 @@ def dbprepper(dbunreadyversion):
 	# so the simple solution to a complex problem is to slap a single whitespace at the end of the file
 	dbunreadyversion[-1][2] = dbunreadyversion[-1][2] + ' '
 	
-	dbunreadyversion = halflinecleanup(dbunreadyversion)
+	dbunreadyversion = cleanblanks(dbunreadyversion)
 	dbunreadyversion = dbpdeincrement(dbunreadyversion)
 	dbunreadyversion = dbstrippedliner(dbunreadyversion)
 	dbunreadyversion = dbfindhypens(dbunreadyversion)
@@ -55,51 +55,40 @@ def dbprepper(dbunreadyversion):
 	return dbreadyversion
 
 
-def halflinecleanup(dbunreadyversion):
+def cleanblanks(dbunreadyversion):
 	"""
-	this painful next kludge is a function of half-lines that do multiple sets and level shifts in rapid succession and leave the actual text on 'line 1' unless you do something drastic:
-		['6', [('0', '1099'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_increment_level_0_by_1 /><hmu_blank_quarter_spaces quantity="63" /> ἠρινά τε βοϲκόμεθα παρθένια ']
-		['6', [('0', '1100'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1100-11 />']
-		['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '2'), ('4', '1'), ('5', '1')], '<hmu_increment_level_3_by_1 />']
-		['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_3_to_1 /><hmu_blank_quarter_spaces quantity="63" /> λευκότροφα μύρτα Χαρίτων τε κηπεύματα. ']
-		['6', [('0', '1100'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1100-11 />']
-		['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '2'), ('4', '1'), ('5', '1')], '<hmu_increment_level_3_by_1 />']
-		['6', [('0', '1'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_3_to_1 /><hmu_blank_line />']
-		['6', [('0', '1102'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1102 /><hmu_blank_quarter_spaces quantity="38" /> Τοῖϲ κριταῖϲ εἰπεῖν τι βουλόμεϲθα τῆϲ νίκηϲ πέρι, ']
-	
+	multiple sets and level shifts in rapid succession sometimes leaves blank lines that are 'numbered': zap them
+
+	note that this is an old, subtle issue. and it tends to shift as with changes to the functions that come befor it.
+
+	the defunct halflinecleanup() was a flawed fix for a slightly different version of the problem.
+
+	it may be necessary to keep debugging this: lyric is the best place to look for the issue
+
+	aristophanes:
+
+		['6', [('0', '1099'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_increment_level_0_by_1 /><hmu_blank_quarter_spaces quantity="63" /> ἠρινά τε βοϲκόμεθα παρθένια '],
+		['6', [('0', '1100-1101'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1100-1101 /><hmu_blank_quarter_spaces quantity="63" /> λευκότροφα μύρτα Χαρίτων τε κηπεύματα. '],
+		['6', [('0', '1100-1101'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1100-1101 /><br /> '],
+		['6', [('0', '1102'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_1102 /><hmu_blank_quarter_spaces quantity="38" /> Τοῖϲ κριταῖϲ εἰπεῖν τι βουλόμεϲθα τῆϲ νίκηϲ πέρι, '],
+		['6', [('0', '1103'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_increment_level_0_by_1 /><hmu_blank_quarter_spaces quantity="38" /> ὅϲ’ ἀγάθ’, ἢν κρίνωϲιν ἡμᾶϲ, πᾶϲιν αὐτοῖϲ δώϲομεν, '],
+
+	aeschylus:
+
+		['1', [('0', '175e'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_increment_level_0_by_1 /><hmu_blank_quarter_spaces quantity="27" /> χαλεποῦ γὰρ ἐκ ']
+		['1', [('0', '175f'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_increment_level_0_by_1 /><hmu_blank_quarter_spaces quantity="43" /> πνεύματοϲ εἶϲι χειμών.⟩ ']
+		['1', [('0', '175f'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_175f /><br /> ']
+		['1', [('0', '176'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], '<hmu_set_level_0_to_176 /><hmu_blank_quarter_spaces quantity="4" /> <span class="speaker"><span class="smallerthannormal">ΔΑΝΑΟϹ</span></span> ']
+
 	:param dbunreadyversion:
 	:return:
 	"""
-	#
 
-	lvlzerodasher = re.compile(r'<hmu_set_level_0_to_(\d{1,})-(\d{1,})\s/>')
-	adder = re.compile(r'<hmu_increment_level_(\d)_by_1\s/>')
-	setter = re.compile(r'<hmu_set_level_(\d)_to_(\d{1,})\s/>')
-	
 	workingcolumn = 2
-	dbreadyversion = deque()
-	memory = None
-	for line in dbunreadyversion:
-		try:
-			add = re.search(adder,line[workingcolumn]).span(0)[1]
-		except:
-			add = 9999
-		try:
-			set = re.search(setter,line[workingcolumn]).span(0)[1]
-		except:
-			set = 9999
-		if re.search(lvlzerodasher, line[workingcolumn]) is not None:
-			memory = line
-		elif (memory is not None):
-			if add != len(line[workingcolumn]) and set != len(line[workingcolumn]):
-				# print('xformed',line)
-				line = [memory[0],memory[1],line[workingcolumn]]
-				# print('into',line)
-				dbreadyversion.append(line)
-				memory = None
-		else:
-			dbreadyversion.append(line)
-		
+
+	blankline = re.compile(r'<hmu_set_level_0_to_.*?\s/><br />\s$')
+	dbreadyversion = [d for d in dbunreadyversion if not re.search(blankline, d[workingcolumn])]
+
 	return dbreadyversion
 
 
@@ -158,16 +147,15 @@ def dbstrippedliner(dbunreadyversion):
 	# generate the easy-to-search column
 	# example:
 	# ['1', [('0', '5'), ('1', '1'), ('2', '4'), ('3', 'Milt'), ('4', '1')], 'hostem esse Atheniensibus, quod eorum auxilio Iones Sardis expugnas-']
-	# be careful: the next will kill even editorial insertions 'do <ut> des'
+	# be careful: the next will kill even editorial insertions 'do <ut> des': you have to be sure that no angled brackets made it this far
 	# markup = re.compile(r'\<.*?\>')
 	markup = re.compile(r'\<hmu_.*?\>')
 	unmarkup = re.compile(r'\</hmu_.*?\>')
 	span = re.compile(r'<span .*?>')
 	unspan = re.compile(r'</span>')
 	combininglowerdot = re.compile(u'\u0323')
-	# this will help with some and hurt with others? need to double-check
-	# squarebrackets = re.compile(r'\[.*?\]')
 	straydigits = re.compile(r'\d')
+
 	# straypunct is a big deal: it defines what a clean line will look like and so what you can search for
 	#   sadly can't nuke :punct: as a class because we need hyphens
 	#   if you want to find »αʹ« you need ʹ
