@@ -135,7 +135,7 @@ def poundsubstitutes(match):
 		26: u'\u2e0f',
 		27: r'𐄂', # 'check mark'; non tlg; and so - AEGEAN CHECK MARK; Unicode: U+10102, UTF-8: F0 90 84 82
 		28: r'<hmu_mark_deleting_entry />␥',
-		29: u'\u00b7',
+		29: u'\u00b7', # middle dot: ·
 		30: r'<hmu_idiosyncratic_char betacodeval="30">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		31: r'<hmu_idiosyncratic_char betacodeval="31">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		# 48: r'<hmu_undocumented_poundsign betacodeval="48">⊚</hmu_undocumented_poundsign>',
@@ -172,7 +172,7 @@ def poundsubstitutes(match):
 		84: u'\u1fc0',
 		85: u'\u02bd',
 		86: u'\u02bc',
-		87: u'\u0394\u0345',
+		87: u'\u0394\u0345', # 'ΔΕ'
 		90: u'\u2014',
 		99: r'<hmu_undocumented_poundsign betacodeval="99">⊚</hmu_undocumented_poundsign>',
 		100: r'𐆆',
@@ -201,12 +201,12 @@ def poundsubstitutes(match):
 		124: r'<hmu_idiosyncratic_char betacodeval="124">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		125: u'𐆂<6\u03c56>',  # the upsilon is supposed to be superscript too: add betacode for that <6...6>
 		126: r'<hmu_idiosyncratic_char betacodeval="126">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		127: u'\u039b\u0325',
+		127: u'\u039b\u0325', # 'ΛΕ'
 		128: u'\u03fc',
-		129: u'\u039b\u0325',
+		129: u'\u039b\u0325', # 'ΛΕ'
 		130: r'𐆊',
 		131: r'𐅷',
-		132: u'\u03b2\u0388',
+		132: u'\u03b2\u0388', # 'βΈ'
 		133: u'u\0393<6\u03b26>',
 		134: u'\u0393<6\u03b26>',  # the beta is supposed to be superscript too: add betacode for that <6...6>
 		135: u'\u02d9',
@@ -788,7 +788,7 @@ def percentsubstitutes(match):
 		73: r'<hmu_papyrological_fraction>⅟<span class="denominator">100</span></hmu_papyrological_fraction>',
 		75: r'<hmu_undocumented_percentsign betacodeval="75">⊚</hmu_undocumented_percentsign>',
 		79: r'<hmu_undocumented_percentsign betacodeval="79">⊚</hmu_undocumented_percentsign>',
-		80: u'\u0076\u002E',  # supposed to put the 'v' in italics too
+		80: u'<span class="italic">\u0076\u002E</span>', # 'v.'
 		81: r'<span class="italic">vac.</span>',
 		91: u'\u0485',
 		92: u'\u0486',
@@ -800,14 +800,16 @@ def percentsubstitutes(match):
 		98: u'\u0022',
 		99: u'\u2248',
 		100: u'\u003b',
-		101: u'\u0023',  # had best do pounds before percents since this is '#'
+		# 101: u'\u0023',  # had best do pounds before percents since this is '#'
+		101: r'﹟', # small number sign instead (ufe5f)
 		102: r'’', # single quotation mark
-		103: u'\u005c',  # backslash: careful
+		# 103: u'\u005c',  # backslash: careful
+		103: r'﹨', # small reverse solidus instead: ufe68
 		105: u'\u007c\u007c\u007c',
 		106: u'\u224c',
-		107: u'\u007e',
-		108: u'\u00b1',
-		109: u'\u00b7',
+		107: u'\u007e', # '~'
+		108: u'\u00b1', # '±'
+		109: u'\u00b7', # middle dot: '·'
 		110: u'\u25cb',
 		127: u'\u032f',
 		128: u'\u0302',
@@ -826,8 +828,8 @@ def percentsubstitutes(match):
 		149: u'\u0328',
 		150: u'\u007c',
 		157: u'\u2e38',
-		159: u'\u00d7',
-		160: u'\u002d',
+		159: u'\u00d7', # multiplication sign: '×'
+		160: u'\u002d', # hyphen-minus: '-'
 		162: u'\u0338'
 	}
 
@@ -855,7 +857,7 @@ def leftbracketsubstitutions(match):
 	substitutions = {
 		# u'\u',
 		1: '❨', # supposed to be parenthesis '('; but can interfere with betacode parsing; either swap here or change order of execution
-		# 2: '‹',
+		# 2: u'\u2329', # '〈'
 		2: '⟨',
 		3: '❴',
 		4: '⟦',
@@ -867,7 +869,7 @@ def leftbracketsubstitutions(match):
 		10: r'<span class="largerthannormal">[</span>',
 		11: u'u\208d',
 		12: u'\u2192',
-		13: u'\u005b',  # supposed to be italic as well
+		13: u'<span class="italic">\u005b',  # supposed to be italic as well
 		14: u'\u007c\u003a',
 		17: u'\u230a\u230a',
 		18: u'27ea',
@@ -908,7 +910,7 @@ def rightbracketsubstitutions(match):
 	substitutions = {
 		# u'\u',
 		1: '❩', # swapped for ')'
-		# 2: '›',
+		# 2: u'\u232a', # '〉'
 		2: '⟩',
 		3: '❵',
 		4: '⟧',
@@ -920,23 +922,22 @@ def rightbracketsubstitutions(match):
 		10: r'<span class="largerthannormal">]</span>',
 		11: u'u\208e',
 		12: u'\u2190',
-		13: u'\u005d',  # supposed to be italic as well
-		14: u'\003a\u007c',
-		17: u'\u230b\u230b',
-		18: u'\u27eb',
-		20: u'\u23ab',
-		21: u'\u23aa',
-		22: u'\u23ac',
-		23: u'\u23ad',
-		30: u'\u329e',
+		13: u'\u005d</span>',  # supposed to be italic as well
+		14: u'\003a\u007c', # ':|'
+		17: u'\u230b\u230b', # '⌋⌋'
+		18: u'\u27eb', # '⟫'
+		20: u'\u23ab', # '⎫'
+		21: u'\u23aa', # '⎪'
+		22: u'\u23ac', # '⎬'
+		23: u'\u23ad', # '⎭'
+		30: u'\u239e', # '⎞' typo in betacode manual: should say 239e and not 329e (㊞)
 		31: u'\u239f',
-		32: u'\u32a0',
+		32: u'\u23a0', # '⎠' typo in betacode manual: should say 23a0 and not 32a0 (㊠)
 		33: r'｠</hmu_parenthesis_ancient_punctuation>',
 		34: r'⸩</hmu_parenthesis_deletion_marker>',
 		35: r'<hmu_papyrological_project_rt_bracket_35 />',
 		49: r'<hmu_papyrological_project_rt_bracket_49 />',  # 49-35
 		51: r'</span>', # erasedepigraphicaltext
-
 	}
 
 	try:

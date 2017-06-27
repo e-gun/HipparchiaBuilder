@@ -216,11 +216,13 @@ def bracketsimplifier(match):
 		'⟧': ']',
 		'⦅': '(',
 		'⦆': ')',
+		'⸨': '(',
+		'⸩': ')',
 		# various angled brackets all set to 'mathematical left/right angle bracket' (u+27e8, u+27e9)
 		# alternately one could consider small versions instead of the full-sized versions (u+fe64, u+fe65)
 		# the main issue is that '<' and '>' are being kept out of the text data because of the HTML problem
-		'⟪': '⟨',
-		'⟫': '⟩',
+		# '⟪': '⟨', # but these are all asserted in the betacode
+		# '⟫': '⟩', # but these are all asserted in the betacode
 		'《': '⟨',
 		'》': '⟩',
 		'‹': '⟨',
