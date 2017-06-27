@@ -500,7 +500,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 
 			db = wkid[0:6]
 
-			q = 'SELECT index, marked_up_line, annotations FROM '+db+' WHERE wkuniversalid=%s ORDER BY index LIMIT 1'
+			q = 'SELECT index, marked_up_line, annotations FROM {db} WHERE wkuniversalid=%s ORDER BY index LIMIT 1'.format(db=db)
 			d = (wkid,)
 			cursor.execute(q,d)
 			r = cursor.fetchone()
@@ -515,7 +515,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 					pi.append(p.group(1))
 			pi = '; '.join(pi)
 			if pi != '':
-				pi = '<volumename>'+pi+'<volumename>'
+				pi = '<volumename>{pi}<volumename>'.format(pi=pi)
 
 			dt = re.search(date,ln)
 			try:
@@ -554,10 +554,10 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 				ct = '[unknown]'
 
 			if rg != '[unknown]' and ct != '[unknown]':
-				ct = ct + ' ('+rg+')'
+				ct = '{ct} ({rg})'.format(ct=ct, rg=rg)
 
 			if pr != '[unknown]' and ct != '[unknown]':
-				pr = pr + '; ' + ct
+				pr = '{pr}; {ct}'.format(pr=pr, ct=ct)
 			elif pr == '[unknown]' and ct != '[unknown]':
 				pr = ct
 

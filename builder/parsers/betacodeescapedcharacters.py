@@ -880,6 +880,7 @@ def leftbracketsubstitutions(match):
 		30: u'\239b',
 		31: u'\u239c',
 		32: u'\u239d',
+		# this one is odd: you will 'open' it 17x in dp0002 and 'close' it 1x; what is really going on?
 		33: r'<hmu_parenthesis_ancient_punctuation>｟',
 		34: r'<hmu_parenthesis_deletion_marker>⸨',
 		35: r'<hmu_papyrological_project_lt_bracket_35 />',
