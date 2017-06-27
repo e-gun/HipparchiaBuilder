@@ -142,20 +142,15 @@ def dbstrippedliner(dbunreadyversion):
 	:param dbunreadyversion:
 	:return:
 	"""
-	
-	
+
 	# generate the easy-to-search column
 	# example:
 	# ['1', [('0', '5'), ('1', '1'), ('2', '4'), ('3', 'Milt'), ('4', '1')], 'hostem esse Atheniensibus, quod eorum auxilio Iones Sardis expugnas-']
-	# be careful: the next will kill even editorial insertions 'do <ut> des': you have to be sure that no angled brackets made it this far
-	# markup = re.compile(r'\<.*?\>')
-	markup = re.compile(r'\<hmu_.*?\>')
-	unmarkup = re.compile(r'\</hmu_.*?\>')
-	span = re.compile(r'<span .*?>')
-	unspan = re.compile(r'</span>')
-	combininglowerdot = re.compile(u'\u0323')
-	straydigits = re.compile(r'\d')
-
+	# be careful: the next will kill even editorial insertions 'do <ut> des': you have to be sure that no 'pure' angled brackets made it this far
+	# ⟨abc⟩ should be all that you see
+	markup = re.compile(r'\<.*?\>')
+	combininglowerdot = u'\u0323'
+	straydigits = r'\d'
 	# straypunct is a big deal: it defines what a clean line will look like and so what you can search for
 	#   sadly can't nuke :punct: as a class because we need hyphens
 	#   if you want to find »αʹ« you need ʹ
@@ -163,24 +158,18 @@ def dbstrippedliner(dbunreadyversion):
 	#   if you want to search for undocumented/idiosyncratic chars you need ◦⊚
 	#   misc other things that one might want to exclude but are currently included: ☩ͻ
 	#   the following are supposed to be killed off by bracketsimplifier(): ❨❩⟨⟩⟪⟫⦅⦆❴❵
-	straypunct = re.compile('[\<\>\{\}\[\]\(\)\.\?\!⌉⎜͙✳※¶§͜⸨⸩｟｠《﹖→𐄂𝕔;:ˈ＇,‚‛‘’“”„·‧∣]')
+	#   no longer relevant?: ⸨⸩｟｠《
+	straypunct = r'\<\>\{\}\[\]\(\)\.\?\!⌉⎜͙✳※¶§͜﹖→𐄂𝕔;:ˈ＇,‚‛‘’“”„·‧∣'
+
+	nukem = re.compile('['+combininglowerdot+straydigits+straypunct+']')
+
 	dbreadyversion = deque()
 	workingcolumn = 2
-	# tempting to strip delenda here, but that presupposes you caught all the number-brackets before
-	# '[delenda]' vs '[2 formatted_text...'
-	#
+
 	for line in dbunreadyversion:
-		# in two parts because it is possible that the markup jumps lines
 		clean = re.sub(markup, '', line[workingcolumn])
-		clean = re.sub(unmarkup, '', clean)
-		clean = re.sub(straydigits, '', clean)
-		# clean = re.sub(squarebrackets, '', clean)
-		clean = re.sub(span, '', clean)
-		clean = re.sub(unspan, '', clean)
-		clean = re.sub(straypunct, '', clean)
-		clean = re.sub(combininglowerdot, '', clean)
+		clean = re.sub(nukem, '', clean)
 		clean = clean.lower()
-		
 		line.append(clean)
 		# this is the clean line with accents
 		dbreadyversion.append(line)
@@ -188,6 +177,7 @@ def dbstrippedliner(dbunreadyversion):
 	dbunreadyversion = dbreadyversion
 	dbreadyversion = deque()
 	workingcolumn = 3
+
 	# capitalization can be made to still matter; does that matter?
 	# you won't get the first word of the iliad right unless you search for capital Mu
 	# it seems like you will seldom wish you had caps and that remembering to handle them as a casual user is not so hot
