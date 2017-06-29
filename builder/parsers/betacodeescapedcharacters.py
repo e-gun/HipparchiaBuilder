@@ -279,8 +279,8 @@ def poundsubstitutes(match):
 		314: r'<hmu_idiosyncratic_char betacodeval="314">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		315: u'\u2e0e',
 		316: r'<hmu_idiosyncratic_char betacodeval="316">◦</hmu_idiosyncratic_char>',  # deprecated: no further info
-		317: r'<hmu_document_cancelled_with_slashes />⑊⑊⑊⑊⑊',
-		318: r'<hmu_line_filled_with_cross-strokes />⧷⧷⧷⧷⧷',
+		317: r'<hmu_document_cancelled_with_slashes />⑊⑊⑊⑊⑊⑊⑊⑊',
+		318: r'<hmu_line_filled_with_cross-strokes />⧷⧷⧷⧷⧷⧷⧷⧷',
 		319: u'\u25cf',
 		320: u'\u2629',
 		321: u'\u2629',
@@ -293,12 +293,12 @@ def poundsubstitutes(match):
 		329: r'<hmu_monogram />',
 		330: r'<hmu_drawing />',
 		331: r'<hmu_wavy_line_as_divider />〜〜〜〜〜',
-		332: r'<hmu_impression_of_stamp_on_papyrus />⦻',
+		332: r'<span class="hmu_impression_of_stamp_on_papyrus">⦻</span>',
 		333: r'<hmu_text_enclosed_in_box_or_circle />',
 		334: r'<hmu_text_enclosed_in_brackets />',
 		335: r'<span class="strikethrough">N</span>',
 		336: r'<hum_redundant_s-type_sign />',
-		337: r'<hmu_seal_attached_to_papyrus>❊</hmu_seal_attached_to_papyrus>',
+		337: r'<span class="hmu_seal_attached_to_papyrus">❊</span>',
 		451: u'\u0283',
 		452: u'\u2310',
 		453: u'\u2e11',
@@ -882,7 +882,7 @@ def leftbracketsubstitutions(match):
 		32: u'\u239d',
 		# this one is odd: you will 'open' it 17x in dp0002 and 'close' it 1x; what is really going on?
 		33: r'<hmu_parenthesis_ancient_punctuation>｟',
-		34: r'<hmu_parenthesis_deletion_marker>⸨',
+		34: r'<span class="parenthesis_deletion_marker>"⸨',
 		35: r'<hmu_papyrological_project_lt_bracket_35 />',
 		49: r'<hmu_papyrological_project_lt_bracket_49 />', # 49-35
 		51: '<span class="erasedepigraphicaltext">'
@@ -935,7 +935,7 @@ def rightbracketsubstitutions(match):
 		31: u'\u239f',
 		32: u'\u23a0', # '⎠' typo in betacode manual: should say 23a0 and not 32a0 (㊠)
 		33: r'｠</hmu_parenthesis_ancient_punctuation>',
-		34: r'⸩</hmu_parenthesis_deletion_marker>',
+		34: r'⸩</span>', # parenthesis_deletion_marker
 		35: r'<hmu_papyrological_project_rt_bracket_35 />',
 		49: r'<hmu_papyrological_project_rt_bracket_49 />',  # 49-35
 		51: r'</span>', # erasedepigraphicaltext
@@ -1005,21 +1005,21 @@ def ltcurlybracketsubstitutes(match):
 	val = int(match.group(1))
 
 	substitutions = {
-		1: r'<span class="title">',
-		2: r'<span class="marginaltext">',
-		3: r'<span class="scholium">',
-		4: r'<hmu_unconventional_form_written_by_scribe>',
-		5: r'<hmu_form_altered_by_scribe>',
-		6: r'<hmu_discarded_form>',
-		7: r'<hmu_reading_discarded_in_another_source>',
-		8: r'<hmu_numerical_equivalent>',
-		9: r'<hmu_alternative_reading>',
+		1: r'<span class="hmu_title">',
+		2: r'<span class="hmu_marginaltext">',
+		3: r'<span class="hmu_scholium">',
+		4: r'<span class="hmu_unconventional_form_written_by_scribe">',
+		5: r'<span class="hmu_form_altered_by_scribe">',
+		6: r'<span class="hmu_discarded_form">',
+		7: r'<span class="hmu_reading_discarded_in_another_source">',
+		8: r'<span class="hmu_numerical_equivalent">',
+		9: r'<span class="hmu_alternative_reading">',
 		# 10: u'\u0332',
 		10: r'⟨', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
-		26: r'<hmu_recitfied_form>',
+		26: r'<span class="hmu_recitfied_form">',
 		27: u'\u0359',
-		28: r'<hmu_date_or_numeric_equivalent_of_date>',
-		29: r'<hmu_emendation_by_editor_of_text_not_obviously_incorrect>',
+		28: r'<span class="hmu_date_or_numeric_equivalent_of_date">',
+		29: r'<span class="hmu_emendation_by_editor_of_text_not_obviously_incorrect">',
 		30: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_30 />',
 		31: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_31 />',
 		32: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_32 />',
@@ -1055,26 +1055,26 @@ def rtcurlybracketsubstitutes(match):
 	val = int(match.group(1))
 
 	substitutions = {
-		43: r'</span>',  # hmu_servius_bracket
-		41: r'</span>',  # hmu_stage_direction
-		40: r'</span>',  # hmu_speaker
-		29: r'</hmu_emendation_by_editor_of_text_not_obviously_incorrect>',
-		28: r'</hmu_date_or_numeric_equivalent_of_date>',
-		27: u'\u0359',
-		26: r'</hmu_recitfied_form>',
-		# 10: u'\u0332',
-		10: r'⟩', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
-		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
-		# cf. ltanglebracketsubstitutes() #1
-		9: r'</hmu_alternative_reading>',
-		8: r'</hmu_numerical_equivalent>',
-		7: r'</hmu_reading_discarded_in_another_source>',
-		6: r'</hmu_discarded_form>',
-		5: r'</hmu_form_altered_by_scribe>',
-		4: r'</hmu_unconventional_form_written_by_scribe>',
-		3: r'</span>',  # hmu_reference_in_scholium
+		1: r'</span>', # hmu_title
 		2: r'</span>',  # hmu_marginal_text
-		1: r'</span>' # hmu_title
+		3: r'</span>',  # hmu_reference_in_scholium
+		4: r'</span>', # hmu_unconventional_form_written_by_scribe
+		5: r'</span>', # hmu_form_altered_by_scribe
+		6: r'</span>', # hmu_discarded_form
+		7: r'</span>', # hmu_reading_discarded_in_another_source
+		8: r'</span>', # hmu_numerical_equivalent
+		9: r'</span>', # hmu_alternative_reading
+		# 10: u'\u0332',
+		# cf. ltanglebracketsubstitutes() #1
+		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
+		10: r'⟩', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
+		26: r'</span>', # hmu_recitfied_form
+		27: u'\u0359',
+		28: r'</span>', # hmu_date_or_numeric_equivalent_of_date
+		29: r'</span>', # hmu_emendation_by_editor_of_text_not_obviously_incorrect
+		40: r'</span>',  # hmu_speaker
+		41: r'</span>',  # hmu_stage_direction
+		43: r'</span>',  # hmu_servius_bracket
 	}
 
 	try:
@@ -1108,9 +1108,9 @@ def ltanglebracketsubstitutes(match):
 		6: r'<span class="superscript">',  # hmu_shift_font_to_superscript
 		7: r'<span class="subscript">',  # hmu_shift_font_to_subscript
 		8: '',
-		9: r'<span class="lemma">',  # hmu_textual_lemma
-		10: r'<span class="stackedlower">',  # hmu_stacked_text_lower
-		11: r'<span class="stackedupper">',  # hmu_stacked_text_upper
+		9: r'<span class="hmu_textual_lemma">',  # hmu_textual_lemma
+		10: r'<span class="hmu_stacked_text_lower">',  # hmu_stacked_text_lower
+		11: r'<span class="hmu_stacked_text_upper">',  # hmu_stacked_text_upper
 		12: r'<span class="nonstandarddirection">',
 		13: r'<hmu_standalone_singlelinespacing_in_doublespacedtext />',
 		14: r'<span class="interlineartext">',
@@ -1118,23 +1118,23 @@ def ltanglebracketsubstitutes(match):
 		16: u'\u2035',
 		17: '',  # Combining Double Underline
 		19: u'\u2035',
-		20: r'<span class="expanded">',  # hmu_expanded_text
-		21: r'<span class="expanded">',  # hmu_latin_expanded_text
+		20: r'<span class="hmu_expanded_text">',  # hmu_expanded_text
+		21: r'<span class="hmu_latin_expanded_text">',  # hmu_latin_expanded_text
 		22: r'<hmu_undocumented_anglebracketspan22>',
 		24: r'<hmu_undocumented_anglebracketspan24>',
 		30: r'<span class="overline">',  # Combining Overline and Dependent Vertical Bars
 		31: r'<span class="strikethrough">',
-		32: r'<span class="overunder">',  # hmu_overline_and_underline
+		32: r'<span class="hmu_overline_and_underline">',  # hmu_overline_and_underline
 		34: r'⁄',  # fractions (which have balanced sets of markup...)
 		48: r'<hmu_undocumented_anglebracketspan48>',
 		50: r'<hmu_undocumented_anglebracketspan50>',
 		51: r'<hmu_undocumented_anglebracketspan51>',
 		52: r'<hmu_undocumented_anglebracketspan52>',
 		53: r'<hmu_undocumented_anglebracketspan53>',
-		60: r'<hmu_preferred_epigraphical_text_used>',
-		61: r'<hmu_epigraphical_text_inserted_after_erasure>',
+		60: r'<span class="hmu_preferred_epigraphical_text_used">',
+		61: r'<span class="hmu_epigraphical_text_inserted_after_erasure>"',
 		62: r'<span class="lineover">',
-		63: r'<hmu_epigraphical_text_after_correction>',
+		63: r'<span class="hmu_epigraphical_text_after_correction">',
 		64: r'<span class="letterbox">',
 		65: r'<hmu_epigraphical_letters_enclosed_in_wreath>',
 		66: r'<hmu_epigraphical_project_escape_66>',
@@ -1201,10 +1201,10 @@ def rtanglebracketsubstitutes(match):
 		51: r'</hmu_undocumented_anglebracketspan51>',
 		52: r'</hmu_undocumented_anglebracketspan52>',
 		53: r'</hmu_undocumented_anglebracketspan53>',
-		60: r'</hmu_preferred_epigraphical_text_used>',
-		61: r'</hmu_epigraphical_text_inserted_after_erasure>',
+		60: r'</span>', # hmu_preferred_epigraphical_text_used
+		61: r'</span>', # hmu_epigraphical_text_inserted_after_erasure
 		62: r'</span>', # epigraphical line over letters
-		63: r'</hmu_epigraphical_text_after_correction>',
+		63: r'</span>', # hmu_epigraphical_text_after_correction
 		64: r'</span>', # letters in a box
 		65: r'</hmu_epigraphical_letters_enclosed_in_wreath>',
 		66: r'</hmu_epigraphical_project_escape_66>',
