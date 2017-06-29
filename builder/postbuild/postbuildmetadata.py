@@ -67,16 +67,37 @@ def boundaryfinder(uids):
 	:return:
 	"""
 
-	manager = Manager()
-	uids = manager.list(uids)
-	commitcount = MPCounter()
-	found = manager.list()
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
 
-	print('\t', len(uids), 'items to examine')
-	workers = setworkercount()
-	jobs = [Process(target=mpboundaryfinder, args=(uids, commitcount, found)) for i in range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
+	found = []
+
+	# don't need to do 100k queries by asking for every work inside of every author
+	# instead ask for it all at once and then sort it on this end
+
+	# find all authors
+	authors = {}
+	for id in uids:
+		try:
+			authors[id[0:6]].append(id)
+		except KeyError:
+			authors[id[0:6]] = [id]
+
+	# get all line values for all works
+	workmapper = {}
+	for a in authors:
+		q = 'SELECT index, wkuniversalid FROM {a}'.format(a=a)
+		cursor.execute(q)
+		indexvalues = cursor.fetchall()
+
+		for i in indexvalues:
+			try:
+				workmapper[i[1]].append(i[0])
+			except:
+				workmapper[i[1]] = [i[0]]
+
+	# determine the min/max for each work
+	found = [(w, min(workmapper[w]), max(workmapper[w])) for w in workmapper]
 
 	return found
 
@@ -122,51 +143,6 @@ def insertboundaries(boundariestuplelist):
 	return
 
 
-def mpboundaryfinder(universalids, commitcount, found):
-	"""
-	public.works needs to know
-		firstline integer,
-        lastline integer
-	(allow one author at a time so you can debug)
-	:param cursor:
-	:param dbconnection:
-	:return:
-	"""
-
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
-
-	while len(universalids) > 0:
-		try:
-			universalid = universalids.pop()
-		except:
-			universalid = ''
-
-		auid = universalid[0:6]
-
-		if universalid != '':
-			query = 'SELECT index FROM ' + auid + ' WHERE wkuniversalid = %s ORDER BY index ASC'
-			data = (universalid,)
-			cursor.execute(query, data)
-			lines = cursor.fetchall()
-			firstline = lines[0]
-			lastline = lines[-1]
-			first = int(firstline[0])
-			last = int(lastline[0])
-
-			found.append((universalid, first, last))
-
-		commitcount.increment()
-		if commitcount.value % 250 == 0:
-			dbc.commit()
-		if commitcount.value % 10000 == 0:
-			print('\t', commitcount.value, 'works examined')
-
-	dbc.commit()
-
-	return
-
-
 def findwordcounts(cursor, dbconnection):
 	"""
 	if you don't already have an official wordcount, generate one
@@ -199,19 +175,45 @@ def calculatewordcounts(uids):
 	:return:
 	"""
 
-	manager = Manager()
-	uids = manager.list(uids)
-	counttuplelist = manager.list()
-	commitcount = MPCounter()
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
 
-	print('\t',len(uids),'works to examine')
+	found = []
 
-	workers = setworkercount()
-	jobs = [Process(target=mpworkwordcountworker, args=(uids, counttuplelist, commitcount)) for i in range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
+	# don't need to do 100k queries by asking for every work inside of every author
+	# instead ask for it all at once and then sort it on this end
 
-	countdict = {w[0]: w[1] for w in counttuplelist}
+	# find all authors
+	authors = {}
+	for id in uids:
+		try:
+			authors[id[0:6]].append(id)
+		except KeyError:
+			authors[id[0:6]] = [id]
+
+	# get all line values for all works
+		countdict = {}
+	for a in authors:
+		q = 'SELECT wkuniversalid, stripped_line, hyphenated_words FROM {a}'.format(a=a)
+		cursor.execute(q)
+		lines = cursor.fetchall()
+
+		while lines:
+			l = lines.pop()
+			id = l[0]
+			stripped = l[1]
+			hyphens = l[2]
+			h = 0
+			if len(hyphens) > 0:
+				h = 1
+
+			try:
+				countdict[id]
+			except:
+				countdict[id] = 0
+			words = stripped.split(' ')
+			words = [x for x in words if x]
+			countdict[id] += len(words) + h
 
 	return countdict
 
@@ -254,59 +256,6 @@ def insertcounts(countdict):
 	dbc.commit()
 
 	return
-
-
-def mpworkwordcountworker(universalids, counttuplelist, commitcount):
-	"""
-	if you don't already have an official wordcount, generate one
-	
-	return a tuplelist:
-
-		[(uid1, count1), (uid2, count2), ...]
-	
-	:param universalid:
-	:param cursor:
-	:param dbconnection:
-	:return:
-	"""
-
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
-
-	while len(universalids) > 0:
-		try:
-			universalid = universalids.pop()
-		except:
-			universalid = ''
-
-		if universalid != '':
-			query = 'SELECT COUNT (hyphenated_words) FROM ' + universalid[0:6] + ' WHERE (wkuniversalid=%s AND hyphenated_words <> %s)'
-			data = (universalid,'')
-			cursor.execute(query, data)
-			hcount = cursor.fetchone()
-
-			query = 'SELECT stripped_line FROM ' + universalid[0:6] + ' WHERE wkuniversalid=%s ORDER BY index ASC'
-			data = (universalid,)
-			cursor.execute(query, data)
-			lines = cursor.fetchall()
-			wordcount = 0
-			for line in lines:
-				words = line[0].split(' ')
-				words = [x for x in words if x]
-				wordcount += len(words)
-
-			totalwords = wordcount - hcount[0]
-
-			counttuplelist.append((universalid,totalwords))
-			commitcount.increment()
-			if commitcount.value % 250 == 0:
-				dbc.commit()
-			if commitcount.value % 10000 == 0:
-				print('\t', commitcount.value, 'works examined')
-	
-	dbc.commit()
-	
-	return counttuplelist
 
 
 def buildtrigramindices(workcategoryprefix, cursor):
@@ -362,15 +311,14 @@ def mpindexbuilder(universalids, commitcount):
 
 		if universalid != '':
 			for column in [('_mu', 'accented_line'), ('_st', 'stripped_line')]:
-				query = 'DROP INDEX IF EXISTS ' + universalid + column[0] + '_trgm_idx'
+				query = 'DROP INDEX IF EXISTS {i}_trgm_idx'.format(i=universalid + column[0])
 				try:
 					curs.execute(query)
 				except:
 					print('failed to drop index for', universalid)
 					pass
 
-				query = 'CREATE INDEX ' + universalid + column[0] + '_trgm_idx ON ' + universalid + ' USING GIN (' \
-				        + column[1] + ' gin_trgm_ops)'
+				query = 'CREATE INDEX {i}_trgm_idx ON {t} USING GIN ({c} gin_trgm_ops)'.format(i=universalid + column[0], t=universalid, c=column[1])
 				try:
 					curs.execute(query)
 				except:
@@ -387,3 +335,155 @@ def mpindexbuilder(universalids, commitcount):
 	return
 
 
+# slated for removal
+
+def oldboundaryfinder(uids):
+	"""
+
+	find first and last lines
+
+	return a list of tuples:
+
+		[(universalid1, first1, last1), (universalid2, first2, last2), ...]
+
+	:param uids:
+	:return:
+	"""
+
+	manager = Manager()
+	uids = manager.list(uids)
+	commitcount = MPCounter()
+	found = manager.list()
+
+	print('\t', len(uids), 'items to examine')
+	workers = setworkercount()
+	jobs = [Process(target=mpboundaryfinder, args=(uids, commitcount, found)) for i in range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+	return found
+
+def oldcalculatewordcounts(uids):
+	"""
+
+	take a list of ids and grab wordcounts for the corresponding works
+
+	return a dict:
+		{ uid1: count1, uid2: count2, ... }
+
+	:param uids:
+	:return:
+	"""
+
+	manager = Manager()
+	uids = manager.list(uids)
+	counttuplelist = manager.list()
+	commitcount = MPCounter()
+
+	print('\t',len(uids),'works to examine')
+
+	workers = setworkercount()
+	jobs = [Process(target=mpworkwordcountworker, args=(uids, counttuplelist, commitcount)) for i in range(workers)]
+	for j in jobs: j.start()
+	for j in jobs: j.join()
+
+	countdict = {w[0]: w[1] for w in counttuplelist}
+
+	return countdict
+
+def mpworkwordcountworker(universalids, counttuplelist, commitcount):
+	"""
+	if you don't already have an official wordcount, generate one
+
+	return a tuplelist:
+
+		[(uid1, count1), (uid2, count2), ...]
+
+	:param universalid:
+	:param cursor:
+	:param dbconnection:
+	:return:
+	"""
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	while len(universalids) > 0:
+		try:
+			universalid = universalids.pop()
+		except:
+			universalid = ''
+
+		if universalid != '':
+			query = 'SELECT COUNT (hyphenated_words) FROM ' + universalid[
+			                                                  0:6] + ' WHERE (wkuniversalid=%s AND hyphenated_words <> %s)'
+			data = (universalid, '')
+			cursor.execute(query, data)
+			hcount = cursor.fetchone()
+
+			query = 'SELECT stripped_line FROM ' + universalid[0:6] + ' WHERE wkuniversalid=%s ORDER BY index ASC'
+			data = (universalid,)
+			cursor.execute(query, data)
+			lines = cursor.fetchall()
+			wordcount = 0
+			for line in lines:
+				words = line[0].split(' ')
+				words = [x for x in words if x]
+				wordcount += len(words)
+
+			totalwords = wordcount - hcount[0]
+
+			counttuplelist.append((universalid, totalwords))
+			commitcount.increment()
+			if commitcount.value % 250 == 0:
+				dbc.commit()
+			if commitcount.value % 10000 == 0:
+				print('\t', commitcount.value, 'works examined')
+
+	dbc.commit()
+
+	return counttuplelist
+
+def mpboundaryfinder(universalids, commitcount, found):
+	"""
+	public.works needs to know
+		firstline integer,
+        lastline integer
+	(allow one author at a time so you can debug)
+	:param cursor:
+	:param dbconnection:
+	:return:
+	"""
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	while len(universalids) > 0:
+		try:
+			universalid = universalids.pop()
+		except:
+			universalid = ''
+
+		auid = universalid[0:6]
+
+		if universalid != '':
+			query = 'SELECT index FROM {a} WHERE wkuniversalid = %s ORDER BY index ASC'.format(a=auid)
+			data = (universalid,)
+			cursor.execute(query, data)
+			lines = cursor.fetchall()
+			firstline = lines[0]
+			lastline = lines[-1]
+			first = int(firstline[0])
+			last = int(lastline[0])
+
+			found.append((universalid, first, last))
+
+		commitcount.increment()
+		if commitcount.value % 250 == 0:
+			dbc.commit()
+		if commitcount.value % 10000 == 0:
+			print('\t', commitcount.value, 'works examined')
+
+	dbc.commit()
+
+	return
