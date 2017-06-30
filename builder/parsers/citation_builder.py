@@ -136,11 +136,11 @@ def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
 		if len(metadata[key]) > 0:
 			v = builder.parsers.betacodeescapedcharacters.replaceaddnlchars(metadata[key])
 			v = re.sub(r'`','', v)
-			# the server won't hide things with parentheses/brackets:
+			# things with parentheses/brackets will be visible in the html later:
 			#   in line: '<hmu_metadata_publicationinfo value="IG II(2) 1366" />'
-			#   seen: '2) 1366" />'
+			#   will see: '2) 1366" />'
 			#   in line: '...[W.]"'
-			#   seen: 'W.]"'
+			#   will see: 'W.]"'
 			v = re.sub(r'\(', r'﹙', v)
 			v = re.sub(r'\)', r'﹚', v)
 			v = re.sub(r'\]', r'⦘', v)
