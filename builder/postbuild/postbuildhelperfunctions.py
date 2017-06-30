@@ -35,45 +35,41 @@ def dictmerger(masterdict, targetdict, label):
 	return masterdict
 
 
-def forceterminalacute(matchgroup):
+def acuteforgrave(matchgroup):
 	"""
-	θαμά and θαμὰ need to be stored in the same place
 
-	otherwise you will click on θαμὰ, search for θαμά and get prevalence data that is not what you really wanted
+	swap acute version for the grave
 
-	:param match:
+	:param matchgroup:
 	:return:
 	"""
 
-	map = { 'ὰ': 'ά',
-			'ὲ': 'έ',
-			'ὶ': 'ί',
-			'ὸ': 'ό',
-			'ὺ': 'ύ',
-			'ὴ': 'ή',
-			'ὼ': 'ώ',
-			'ἂ': 'ἄ',
-			'ἒ': 'ἔ',
-			'ἲ': 'ἴ',
-			'ὂ': 'ὄ',
-			'ὒ': 'ὔ',
-			'ἢ': 'ἤ',
-			'ὢ': 'ὤ',
-			'ᾃ': 'ᾅ',
-			'ᾓ': 'ᾕ',
-			'ᾣ': 'ᾥ',
-			'ᾂ': 'ᾄ',
-			'ᾒ': 'ᾔ',
-			'ᾢ': 'ᾤ',
-		}
+	map = {'ὰ': 'ά',
+	       'ὲ': 'έ',
+	       'ὶ': 'ί',
+	       'ὸ': 'ό',
+	       'ὺ': 'ύ',
+	       'ὴ': 'ή',
+	       'ὼ': 'ώ',
+	       'ἂ': 'ἄ',
+	       'ἒ': 'ἔ',
+	       'ἲ': 'ἴ',
+	       'ὂ': 'ὄ',
+	       'ὒ': 'ὔ',
+	       'ἢ': 'ἤ',
+	       'ὢ': 'ὤ',
+	       'ᾃ': 'ᾅ',
+	       'ᾓ': 'ᾕ',
+	       'ᾣ': 'ᾥ',
+	       'ᾂ': 'ᾄ',
+	       'ᾒ': 'ᾔ',
+	       'ᾢ': 'ᾤ'
+	       }
 
-	substitute = map[matchgroup[1]]
 	try:
-		# the word did not end with a vowel
-		substitute += matchgroup[2]
-	except:
-		# the word ended with a vowel
-		pass
+		substitute = map[matchgroup.group(0)]
+	except KeyError:
+		substitute = ''
 
 	return substitute
 

@@ -70,8 +70,6 @@ def boundaryfinder(uids):
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
 
-	found = []
-
 	# don't need to do 100k queries by asking for every work inside of every author
 	# instead ask for it all at once and then sort it on this end
 
@@ -177,8 +175,6 @@ def calculatewordcounts(uids):
 
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
-
-	found = []
 
 	# don't need to do 100k queries by asking for every work inside of every author
 	# instead ask for it all at once and then sort it on this end

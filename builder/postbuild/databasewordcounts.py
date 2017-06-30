@@ -15,8 +15,8 @@ from string import punctuation
 from builder.builder_classes import dbWordCountObject
 from builder.dbinteraction.db import setconnection, loadallauthorsasobjects, loadallworksasobjects
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj, buildhipparchiatranstable
-from builder.postbuild.postbuildhelperfunctions import forceterminalacute, graballlinesasobjects, \
-	graballcountsasobjects, grablemmataasobjects, createwordcounttable, cleanwords, prettyprintcohortdata, dictmerger
+from builder.postbuild.postbuildhelperfunctions import graballlinesasobjects, acuteforgrave, graballcountsasobjects, \
+	grablemmataasobjects, createwordcounttable, cleanwords, prettyprintcohortdata, dictmerger
 from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
@@ -187,11 +187,8 @@ def concordancechunk(enumerateddbdict):
 
 	dblist = list(dbdict.keys())
 
-	graves = 'ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ'
-	graves = {graves[g] for g in range(0, len(graves))}
+	graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ](.|$)')
 
-	terminalgravea = re.compile(r'([ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ])$')
-	terminalgraveb = re.compile(r'([ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ])(.)$')
 	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
 	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
 
@@ -205,28 +202,14 @@ def concordancechunk(enumerateddbdict):
 		for line in lineobjects:
 			words = line.wordlist('polytonic')
 			words = [cleanwords(w, punct) for w in words]
-			words = list(set(words))
+			words = [re.sub(graves, acuteforgrave, w) for w in words]
+			words = [re.sub('v','u', w) for w in words]
 			words[:] = [x.lower() for x in words]
 			prefix = line.universalid[0:2]
 			for w in words:
 				# uncomment to watch individual words enter the dict
 				# if w == 'docilem':
 				# 	print(line.universalid,line.unformattedline())
-				if 'v' in w:
-					# 'vivere' --> 'uiuere'
-					w = re.sub('v','u',w)
-				try:
-					if w[-1] in graves:
-						w = re.sub(terminalgravea, forceterminalacute, w)
-				except:
-					# the word was not >0 char long
-					pass
-				try:
-					if w[-2] in graves:
-						w = re.sub(terminalgraveb, forceterminalacute, w)
-				except:
-					# the word was not >1 char long
-					pass
 				try:
 					concordance[w][prefix] += 1
 				except:
@@ -244,8 +227,14 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 	:param resultbundle:
 	:return:
 	"""
+
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
+
+	qtemplate = """
+	INSERT INTO {wct}_{lt} (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count)
+		VALUES (%s, %s, %s, %s, %s, %s, %s)
+	"""
 
 	transtable = buildhipparchiatranstable()
 
@@ -274,8 +263,7 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 			lettertable = '0'
 
 		if skip is not True:
-			q = 'INSERT INTO ' + wordcounttable + '_' + lettertable + \
-			    ' (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) VALUES (%s, %s, %s, %s, %s, %s, %s)'
+			q = qtemplate.format(wct=wordcounttable, lt=lettertable)
 			d = (key, cw['total'], cw['gr'], cw['lt'], cw['dp'], cw['in'], cw['ch'])
 			try:
 				cursor.execute(q, d)

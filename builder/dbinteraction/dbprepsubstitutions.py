@@ -159,7 +159,7 @@ def dbstrippedliner(dbunreadyversion):
 	#   misc other things that one might want to exclude but are currently included: ☩ͻ
 	#   the following are supposed to be killed off by bracketsimplifier(): ❨❩⟨⟩⟪⟫⦅⦆❴❵
 	#   no longer relevant?: ⸨⸩｟｠《
-	straypunct = r'\<\>\{\}\[\]\(\)\.\?\!⌉⎜͙✳※¶§͜﹖→𐄂𝕔;:ˈ＇,‚‛‘’“”„·‧∣'
+	straypunct = r'\<\>\{\}\[\]\(\)⟨⟩₍₎\.\?\!⌉⎜͙✳※¶§͜﹖→𐄂𝕔;:ˈ＇,‚‛‘’“”„·‧∣'
 
 	nukem = re.compile('['+combininglowerdot+straydigits+straypunct+']')
 

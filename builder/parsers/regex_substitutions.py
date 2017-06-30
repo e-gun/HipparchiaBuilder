@@ -174,7 +174,7 @@ def lastsecondsubsitutions(texttoclean):
 	for i in range(0, len(betacodetuples)):
 		texttoclean = re.sub(betacodetuples[i][0], betacodetuples[i][1], texttoclean)
 
-	tosimplify = re.compile(r'[❨❩❴❵⟦⟧⟪⟫《》‹›⦅⦆]')
+	tosimplify = re.compile(r'[❨❩❴❵⟦⟧⟪⟫《》‹›⦅⦆₍₎]')
 	texttoclean = re.sub(tosimplify, bracketsimplifier, texttoclean)
 
 	# combining breve is misplaced
@@ -218,6 +218,8 @@ def bracketsimplifier(match):
 		'⦆': ')',
 		'⸨': '(',
 		'⸩': ')',
+		# '₍': '(', # '[11' (enclose missing letter dots (!), expressing doubt whether there is a letter there at all)
+		# '₎': ')', # '11]'
 		# various angled brackets all set to 'mathematical left/right angle bracket' (u+27e8, u+27e9)
 		# alternately one could consider small versions instead of the full-sized versions (u+fe64, u+fe65)
 		# the main issue is that '<' and '>' are being kept out of the text data because of the HTML problem
@@ -244,10 +246,19 @@ def debughostilesubstitutions(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
-	betacodetuples = (
-		(r'\$',r''),
-		(r'\&',r'')
-	)
+
+	betacodetuples = ()
+
+	# betacodetuples = (
+	# 	(r'\$',r''),
+	# 	(r'\&',r'')
+	# )
+
+	# off, becuase maybe we do not need it to be on any longer
+
+	# note that '&' will return to the text up via the hexrunner: it can be embedded in the annotations
+	# and you will want it later in order to format that material when it hits HipparchiaServer:
+	# in 'Gel. &3N.A.& 20.3.2' the '&3' turns on italics and stripping & leaves you with 3N.A. (which is hard to deal with)
 
 	for i in range(0, len(betacodetuples)):
 		texttoclean = re.sub(betacodetuples[i][0], betacodetuples[i][1], texttoclean)

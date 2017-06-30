@@ -867,17 +867,17 @@ def leftbracketsubstitutions(match):
 		8: '⌊',
 		9: u'\u2027',
 		10: r'<span class="largerthannormal">[</span>',
-		11: u'u\208d',
+		11: u'\u208d',
 		12: u'\u2192',
 		13: u'<span class="italic">\u005b',  # supposed to be italic as well
 		14: u'\u007c\u003a',
 		17: u'\u230a\u230a',
 		18: u'27ea',
-		20: u'u\23a7',
-		21: u'u\23aa',
-		22: u'u\23a8',
-		23: u'u\23a9',
-		30: u'\239b',
+		20: u'\u23a7',
+		21: u'\u23aa',
+		22: u'\u23a8',
+		23: u'\u23a9',
+		30: u'\u239b',
 		31: u'\u239c',
 		32: u'\u239d',
 		# this one is odd: you will 'open' it 17x in dp0002 and 'close' it 1x; what is really going on?
@@ -921,10 +921,10 @@ def rightbracketsubstitutions(match):
 		8: '⌋',
 		9: u'\u2027',
 		10: r'<span class="largerthannormal">]</span>',
-		11: u'u\208e',
+		11: u'\u208e',
 		12: u'\u2190',
 		13: u'\u005d</span>',  # supposed to be italic as well
-		14: u'\003a\u007c', # ':|'
+		14: u'\u003a\u007c', # ':|'
 		17: u'\u230b\u230b', # '⌋⌋'
 		18: u'\u27eb', # '⟫'
 		20: u'\u23ab', # '⎫'

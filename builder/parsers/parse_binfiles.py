@@ -31,6 +31,16 @@ tlg = config['io']['tlg']
 
 
 def resetbininfo(relativepath, cursor, dbconnection):
+	"""
+
+	:param relativepath:
+	:param cursor:
+	:param dbconnection:
+	:return:
+	"""
+
+	print('resetting info from the .BIN files')
+
 	bininfo = {
 		'genre': 'LIST3CLA.BIN',
 		'genre_clx': 'LIST3CLX.BIN',
