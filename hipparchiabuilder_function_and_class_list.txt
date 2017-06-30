@@ -1,4 +1,24 @@
-$ grep "^class" */*.py
+cloc --not-match-f='^j' HipparchiaBuilder/
+      53 text files.
+      53 unique files.
+      13 files ignored.
+
+github.com/AlDanial/cloc v 1.72  T=0.39 s (107.3 files/s, 35295.4 lines/s)
+-------------------------------------------------------------------------------
+Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+Python                          33           2293           2729           6964
+XML                              4              0              0           1262
+SQL                              2             68             40            254
+INI                              2             43              0            119
+Markdown                         1             12              0             28
+-------------------------------------------------------------------------------
+SUM:                            42           2416           2769           8627
+-------------------------------------------------------------------------------
+
+
+HipparchiaBuilder/ $ grep "^class" */*.py && grep "^def " */*.py && grep "^def " */*/*.py
+
 
 builder/builder_classes.py:class Author(object):
 builder/builder_classes.py:class dbAuthor(object):
@@ -8,9 +28,6 @@ builder/builder_classes.py:class dbWordCountObject(object):
 builder/builder_classes.py:class dbLemmaObject(object):
 builder/builder_classes.py:class Opus(object):
 builder/builder_classes.py:class MPCounter(object):
-
-$ grep "^def " */*.py
-
 builder/corpus_builder.py:def buildcorpusdbs(corpusname, corpusvars):
 builder/corpus_builder.py:def remaptables(corpusname, corpusvars):
 builder/corpus_builder.py:def buildcorpusmetadata(corpusname, corpusvars):
@@ -22,34 +39,30 @@ builder/corpus_builder.py:def buildauthor(authortabnumber, language, datapath, u
 builder/corpus_builder.py:def initialworkparsing(authorobject, language, datapath):
 builder/corpus_builder.py:def secondaryworkparsing(authorobject, txt):
 builder/corpus_builder.py:def databaseloading(dbreadyversion, authorobject,  dbconnection, cursor):
-
-$ grep "^def " */*/*.py
-
+builder/workers.py:def setworkercount():
+z_debugging/debug.py:def streamout(txt,outfile):
+z_debugging/debug.py:def linesout(txt,outfile):
+z_debugging/debug.py:def canondebug(outfile):
+z_debugging/debug.py:def datetester():
 builder/dbinteraction/build_lexica.py:def formatgklexicon():
 builder/dbinteraction/build_lexica.py:def formatlatlexicon():
 builder/dbinteraction/build_lexica.py:def grammarloader(language):
 builder/dbinteraction/build_lexica.py:def analysisloader(language):
 builder/dbinteraction/build_lexica.py:def resettable(tablename, tablestructurelist, indexcolumn):
 builder/dbinteraction/build_lexica.py:def getlexicaltablestructuredict(tablename):
-builder/dbinteraction/concordance.py:def findwordsinaline(line):
-builder/dbinteraction/concordance.py:def cleanwords(word):
-builder/dbinteraction/concordance.py:def conctablemaker(concdbname, dbconnection, cursor):
-builder/dbinteraction/concordance.py:def dbsubmitconcordance(concordance, workuniversalid, dbconnection, cursor):
-builder/dbinteraction/concordance.py:def buildconcordances(authorid, dbconnection, cursor):
-builder/dbinteraction/concordance.py:def polytonicsort(unsortedwords):
 builder/dbinteraction/db.py:def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 builder/dbinteraction/db.py:def authortablemaker(authordbname, cursor):
 builder/dbinteraction/db.py:def tablenamer(authorobject, indexedat):
 builder/dbinteraction/db.py:def dbauthoradder(authorobject, cursor):
 builder/dbinteraction/db.py:def dbauthorloadersubroutine(uid, cursor):
 builder/dbinteraction/db.py:def dbauthorandworkloader(authoruid, cursor):
-builder/dbinteraction/db.py:def workmaker(authorobject, worknumber, indexedat, cursor):
+builder/dbinteraction/db.py:def workmaker(authorobject, indexedat, cursor):
 builder/dbinteraction/db.py:def setconnection(config):
 builder/dbinteraction/db.py:def resetauthorsandworksdbs(tmpprefix, prefix):
 builder/dbinteraction/db.py:def loadallauthorsasobjects():
 builder/dbinteraction/db.py:def loadallworksasobjects():
 builder/dbinteraction/dbprepsubstitutions.py:def dbprepper(dbunreadyversion):
-builder/dbinteraction/dbprepsubstitutions.py:def halflinecleanup(dbunreadyversion):
+builder/dbinteraction/dbprepsubstitutions.py:def cleanblanks(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def dbpdeincrement(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def dbstrippedliner(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def dbfindhypens(dbunreadyversion):
@@ -57,7 +70,7 @@ builder/dbinteraction/dbprepsubstitutions.py:def dbfindannotations(dbunreadyvers
 builder/dbinteraction/dbprepsubstitutions.py:def hmutonbsp(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def quarterspacer(matchgroup):
 builder/dbinteraction/dbprepsubstitutions.py:def noleadingortrailingwhitespace(dbunreadyversion):
-builder/dbinteraction/dbprepsubstitutions.py:def consolidatecontiguouslines(previousline, thisline, hypenatedword):
+builder/dbinteraction/dbprepsubstitutions.py:def consolidatecontiguouslines(previousline, thisline, hypenatedword, transtable):
 builder/dbinteraction/mplexicalworkers.py:def mplatindictionaryinsert(dictdb, entries, commitcount):
 builder/dbinteraction/mplexicalworkers.py:def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 builder/dbinteraction/mplexicalworkers.py:def mplemmatainsert(grammardb, entries, islatin, commitcount):
@@ -69,67 +82,86 @@ builder/file_io/filereaders.py:def findauthors(pathtoauthtab):
 builder/file_io/filereaders.py:def highunicodefileload(filepath):
 builder/file_io/filereaders.py:def dirtyhexloader(filepath):
 builder/file_io/filereaders.py:def loadbin(filepath):
-builder/parsers/betacode_to_unicode.py:def replacegreekbetacode(texttoclean):
-builder/parsers/betacode_to_unicode.py:def parseromaninsidegreek(texttoclean):
-builder/parsers/betacode_to_unicode.py:def parsegreekinsidelatin(texttoclean):
-builder/parsers/betacode_to_unicode.py:def restoreromanwithingreek(texttoclean):
-builder/parsers/betacode_to_unicode.py:def stripaccents(texttostrip):
-builder/parsers/betacode_to_unicode.py:def purgehybridgreekandlatinwords(texttoclean):
-builder/parsers/betacode_to_unicode.py:def unmixer(matchgroup):
-builder/parsers/betacode_to_unicode.py:def unbreather(matchgroup):
-builder/parsers/betacode_to_unicode.py:def unpunctuated(matchgroup):
-builder/parsers/betacode_to_unicode.py:def ldcfindandclean(texttoclean):
-builder/parsers/betacode_to_unicode.py:def latinsubstitutes(matchgroup):
-builder/parsers/betacode_to_unicode.py:def ldc(matchgroup):
-builder/parsers/betacodecapitals.py:def capitalletters(betacode):
-builder/parsers/betacodecapitals.py:def capitalsmoothgraveadscript(match):
-builder/parsers/betacodecapitals.py:def capitalroughgraveadscript(match):
-builder/parsers/betacodecapitals.py:def capitalsmoothacuteadscript(match):
-builder/parsers/betacodecapitals.py:def capitalroughacuteadscript(match):
-builder/parsers/betacodecapitals.py:def capitalsmoothcircumflexadscript(match):
-builder/parsers/betacodecapitals.py:def capitalroughcircumflexadscript(match):
-builder/parsers/betacodecapitals.py:def capitalsmoothgrave(match):
-builder/parsers/betacodecapitals.py:def capitalroughgrave(match):
-builder/parsers/betacodecapitals.py:def capitalsmoothacute(match):
-builder/parsers/betacodecapitals.py:def capitalroughacute(match):
-builder/parsers/betacodecapitals.py:def capitalsmoothcircumflex(match):
-builder/parsers/betacodecapitals.py:def capitalroughcircumflex(match):
-builder/parsers/betacodecapitals.py:def capitalsmooth(match):
-builder/parsers/betacodecapitals.py:def capitalrough(match):
-builder/parsers/betacodecapitals.py:def capitalgrave(match):
-builder/parsers/betacodecapitals.py:def capitalacute(match):
-builder/parsers/betacodecapitals.py:def capitaladscript(match):
-builder/parsers/betacodecapitals.py:def capitals(match):
-builder/parsers/betacodelowercase.py:def lowercaseletters(betacode):
-builder/parsers/betacodelowercase.py:def lowercasesmoothgravesubscript(match):
-builder/parsers/betacodelowercase.py:def lowercaseroughgravesubscript(match):
-builder/parsers/betacodelowercase.py:def lowercasesmoothacutesubscript(match):
-builder/parsers/betacodelowercase.py:def lowercaseroughacutesubscript(match):
-builder/parsers/betacodelowercase.py:def lowercasesmoothcircumflexsubscript(match):
-builder/parsers/betacodelowercase.py:def lowercaseroughcircumflexsubscript(match):
-builder/parsers/betacodelowercase.py:def lowercasesmoothgrave(match):
-builder/parsers/betacodelowercase.py:def lowercaseroughgrave(match):
-builder/parsers/betacodelowercase.py:def lowercasesmoothacute(match):
-builder/parsers/betacodelowercase.py:def lowercaseroughacute(match):
-builder/parsers/betacodelowercase.py:def lowercasesmoothcircumflex(match):
-builder/parsers/betacodelowercase.py:def lowercaseroughcircumflex(match):
-builder/parsers/betacodelowercase.py:def lowercasegravesub(match):
-builder/parsers/betacodelowercase.py:def lowercaseacutedsub(match):
-builder/parsers/betacodelowercase.py:def lowercasesircumflexsub(match):
-builder/parsers/betacodelowercase.py:def lowercasesmoothsub(match):
-builder/parsers/betacodelowercase.py:def lowercaseroughsub(match):
-builder/parsers/betacodelowercase.py:def lowercasegravediaresis(match):
-builder/parsers/betacodelowercase.py:def lowercaseacutediaresis(match):
-builder/parsers/betacodelowercase.py:def lowercasesircumflexdiaresis(match):
-builder/parsers/betacodelowercase.py:def lowercasesmooth(match):
-builder/parsers/betacodelowercase.py:def lowercaserough(match):
-builder/parsers/betacodelowercase.py:def lowercasegrave(match):
-builder/parsers/betacodelowercase.py:def lowercaseacute(match):
-builder/parsers/betacodelowercase.py:def lowercascircumflex(match):
-builder/parsers/betacodelowercase.py:def lowercasediaresis(match):
-builder/parsers/betacodelowercase.py:def lowercasesubscript(match):
-builder/parsers/betacodelowercase.py:def lowercases(match):
+builder/parsers/betacodeandunicodeinterconversion.py:def replacegreekbetacode(texttoclean):
+builder/parsers/betacodeandunicodeinterconversion.py:def parseromaninsidegreek(texttoclean):
+builder/parsers/betacodeandunicodeinterconversion.py:def parsegreekinsidelatin(texttoclean):
+builder/parsers/betacodeandunicodeinterconversion.py:def restoreromanwithingreek(texttoclean):
+builder/parsers/betacodeandunicodeinterconversion.py:def cleanaccentsandvj(texttostrip, transtable=None):
+builder/parsers/betacodeandunicodeinterconversion.py:def buildhipparchiatranstable():
+builder/parsers/betacodeandunicodeinterconversion.py:def purgehybridgreekandlatinwords(texttoclean):
+builder/parsers/betacodeandunicodeinterconversion.py:def unmixer(matchgroup):
+builder/parsers/betacodeandunicodeinterconversion.py:def unbreather(matchgroup):
+builder/parsers/betacodeandunicodeinterconversion.py:def unpunctuated(matchgroup):
+builder/parsers/betacodeandunicodeinterconversion.py:def multipledots(matchgroup):
+builder/parsers/betacodeandunicodeinterconversion.py:def ldcfindandclean(texttoclean):
+builder/parsers/betacodeandunicodeinterconversion.py:def latinsubstitutes(matchgroup):
+builder/parsers/betacodeandunicodeinterconversion.py:def ldc(matchgroup):
+builder/parsers/betacodeescapedcharacters.py:def replaceaddnlchars(texttoclean):
+builder/parsers/betacodeescapedcharacters.py:def singletonsubstitutes(match):
+builder/parsers/betacodeescapedcharacters.py:def poundsubstitutes(match):
+builder/parsers/betacodeescapedcharacters.py:def percentsubstitutes(match):
+builder/parsers/betacodeescapedcharacters.py:def leftbracketsubstitutions(match):
+builder/parsers/betacodeescapedcharacters.py:def rightbracketsubstitutions(match):
+builder/parsers/betacodeescapedcharacters.py:def atsignsubstitutions(match):
+builder/parsers/betacodeescapedcharacters.py:def ltcurlybracketsubstitutes(match):
+builder/parsers/betacodeescapedcharacters.py:def rtcurlybracketsubstitutes(match):
+builder/parsers/betacodeescapedcharacters.py:def ltanglebracketsubstitutes(match):
+builder/parsers/betacodeescapedcharacters.py:def rtanglebracketsubstitutes(match):
+builder/parsers/betacodefontshifts.py:def replacegreekmarkup(texttoclean):
+builder/parsers/betacodefontshifts.py:def replacelatinmarkup(texttoclean):
+builder/parsers/betacodefontshifts.py:def dollarssubstitutes(match):
+builder/parsers/betacodefontshifts.py:def andsubstitutes(match):
+builder/parsers/betacodeletterscapitals.py:def capitalletters(betacode):
+builder/parsers/betacodeletterscapitals.py:def capitalsmoothgraveadscript(match):
+builder/parsers/betacodeletterscapitals.py:def capitalroughgraveadscript(match):
+builder/parsers/betacodeletterscapitals.py:def capitalsmoothacuteadscript(match):
+builder/parsers/betacodeletterscapitals.py:def capitalroughacuteadscript(match):
+builder/parsers/betacodeletterscapitals.py:def capitalsmoothcircumflexadscript(match):
+builder/parsers/betacodeletterscapitals.py:def capitalroughcircumflexadscript(match):
+builder/parsers/betacodeletterscapitals.py:def capitalsmoothgrave(match):
+builder/parsers/betacodeletterscapitals.py:def capitalroughgrave(match):
+builder/parsers/betacodeletterscapitals.py:def capitalsmoothacute(match):
+builder/parsers/betacodeletterscapitals.py:def capitalroughacute(match):
+builder/parsers/betacodeletterscapitals.py:def capitalsmoothcircumflex(match):
+builder/parsers/betacodeletterscapitals.py:def capitalroughcircumflex(match):
+builder/parsers/betacodeletterscapitals.py:def capitalsmooth(match):
+builder/parsers/betacodeletterscapitals.py:def capitalrough(match):
+builder/parsers/betacodeletterscapitals.py:def capitalgrave(match):
+builder/parsers/betacodeletterscapitals.py:def capitalacute(match):
+builder/parsers/betacodeletterscapitals.py:def capitaladscript(match):
+builder/parsers/betacodeletterscapitals.py:def capitals(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaseletters(betacode):
+builder/parsers/betacodeletterslowercase.py:def lowercasesmoothgravesubscript(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaseroughgravesubscript(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasesmoothacutesubscript(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaseroughacutesubscript(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasesmoothcircumflexsubscript(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaseroughcircumflexsubscript(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasesmoothgrave(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaseroughgrave(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasesmoothacute(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaseroughacute(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasesmoothcircumflex(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaseroughcircumflex(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasegravesub(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaseacutedsub(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasesircumflexsub(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasesmoothsub(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaseroughsub(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasegravediaresis(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaseacutediaresis(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasesircumflexdiaresis(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasesmooth(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaserough(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasegrave(match):
+builder/parsers/betacodeletterslowercase.py:def lowercaseacute(match):
+builder/parsers/betacodeletterslowercase.py:def lowercascircumflex(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasediaresis(match):
+builder/parsers/betacodeletterslowercase.py:def lowercasesubscript(match):
+builder/parsers/betacodeletterslowercase.py:def lowercases(match):
+builder/parsers/betacodeletterslowercase.py:def alternatelowercases(match, g=0):
 builder/parsers/citation_builder.py:def citationbuilder(hexsequence):
+builder/parsers/citation_builder.py:def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
 builder/parsers/citation_builder.py:def nybbler(singlehexval):
 builder/parsers/citation_builder.py:def nyb08(hexsequence):
 builder/parsers/citation_builder.py:def nyb09(hexsequence):
@@ -139,7 +171,6 @@ builder/parsers/citation_builder.py:def nyb12(hexsequence):
 builder/parsers/citation_builder.py:def nyb13(hexsequence):
 builder/parsers/citation_builder.py:def nyb14(hexsequence):
 builder/parsers/citation_builder.py:def nyb15(hexsequence):
-builder/parsers/citation_builder.py:def levelsixparsing(action, fullcitation, hexsequence):
 builder/parsers/idtfiles.py:def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 builder/parsers/idtfiles.py:def getasciistring(filearray, offset):
 builder/parsers/idtfiles.py:def getpascalstr(filearray, offset):
@@ -171,34 +202,21 @@ builder/parsers/parse_binfiles.py:def parallelcanonworker(thework):
 builder/parsers/parse_binfiles.py:def modifygkauthordb(newauthorinfo, cursor):
 builder/parsers/parse_binfiles.py:def modifygkworksdb(newworkinfo, cursor):
 builder/parsers/parse_binfiles.py:def latinloadcanon(canonfile, cursor):
+builder/parsers/parse_binfiles.py:def insertlatingenres(cursor, dbc):
 builder/parsers/parse_binfiles.py:def citationreformatter(matchgroups):
 builder/parsers/parse_binfiles.py:def peekatcanon(workdbname):
 builder/parsers/parse_binfiles.py:def streamout(txt,outfile):
-builder/parsers/parse_binfiles.py:def mkdbconn(config):
 builder/parsers/regex_substitutions.py:def earlybirdsubstitutions(texttoclean):
 builder/parsers/regex_substitutions.py:def replacequotationmarks(texttoclean):
-builder/parsers/regex_substitutions.py:def replaceaddnlchars(texttoclean):
-builder/parsers/regex_substitutions.py:def replacegreekmarkup(texttoclean):
-builder/parsers/regex_substitutions.py:def replacelatinmarkup(texttoclean):
 builder/parsers/regex_substitutions.py:def latindiacriticals(texttoclean):
 builder/parsers/regex_substitutions.py:def latinsubstitutes(matchgroup):
 builder/parsers/regex_substitutions.py:def lastsecondsubsitutions(texttoclean):
+builder/parsers/regex_substitutions.py:def bracketsimplifier(match):
 builder/parsers/regex_substitutions.py:def debughostilesubstitutions(texttoclean):
 builder/parsers/regex_substitutions.py:def cleanuplingeringmesses(texttoclean):
 builder/parsers/regex_substitutions.py:def bracketspacer(matchgroup):
 builder/parsers/regex_substitutions.py:def quotesubstitutesa(match):
 builder/parsers/regex_substitutions.py:def quotesubstitutesb(match):
-builder/parsers/regex_substitutions.py:def poundsubstitutes(match):
-builder/parsers/regex_substitutions.py:def percentsubstitutes(match):
-builder/parsers/regex_substitutions.py:def leftbracketsubstitutions(match):
-builder/parsers/regex_substitutions.py:def rightbracketsubstitutions(match):
-builder/parsers/regex_substitutions.py:def atsignsubstitutions(match):
-builder/parsers/regex_substitutions.py:def ltcurlybracketsubstitutes(match):
-builder/parsers/regex_substitutions.py:def rtcurlybracketsubstitutes(match):
-builder/parsers/regex_substitutions.py:def ltanglebracketsubstitutes(match):
-builder/parsers/regex_substitutions.py:def rtanglebracketsubstitutes(match):
-builder/parsers/regex_substitutions.py:def dollarssubstitutes(match):
-builder/parsers/regex_substitutions.py:def andsubstitutes(match):
 builder/parsers/regex_substitutions.py:def replacelatinbetacode(texttoclean):
 builder/parsers/regex_substitutions.py:def doublecheckgreekwithinlatin(match):
 builder/parsers/regex_substitutions.py:def findromanwithingreek(texttoclean):
@@ -214,25 +232,17 @@ builder/parsers/swappers.py:def hextohighunicode(twocharhexstring):
 builder/parsers/swappers.py:def bitswapchars(valuelist):
 builder/parsers/swappers.py:def superscripterone(digitmatch):
 builder/parsers/swappers.py:def superscripterzero(digitmatch):
-builder/postbuild/databasewordcounts.py:def wordcounter(timerestriction=None):
-builder/postbuild/databasewordcounts.py:def dictmerger(masterdict, targetdict, label):
+builder/postbuild/databasewordcounts.py:def wordcounter(restriction=None):
 builder/postbuild/databasewordcounts.py:def concordancechunk(enumerateddbdict):
-builder/postbuild/databasewordcounts.py:def forceterminalacute(matchgroup):
 builder/postbuild/databasewordcounts.py:def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
-builder/postbuild/databasewordcounts.py:def formcounter():
-builder/postbuild/databasewordcounts.py:def buildcountsfromlemmalist(lemmatalist, wordcountdict):
+builder/postbuild/databasewordcounts.py:def headwordcounts():
+builder/postbuild/databasewordcounts.py:def buildcountsfromlemmalist(lemmataobjectslist, wordcountdict):
 builder/postbuild/databasewordcounts.py:def derivedictionaryentrymetadata(headwordtable, cursor):
-builder/postbuild/databasewordcounts.py:def derivechronologicalmetadata(metadata, cursor):
+builder/postbuild/databasewordcounts.py:def derivechronologicalmetadata(metadata, lemmataobjectlist, cursor):
+builder/postbuild/databasewordcounts.py:def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres, cursor):
 builder/postbuild/databasewordcounts.py:def cohortstats(wordobjects):
-builder/postbuild/databasewordcounts.py:def prettyprintcohortdata(label, cohortresultsdict):
-builder/postbuild/databasewordcounts.py:def graballlinesasobjects(db, linerangetuple, cursor):
-builder/postbuild/databasewordcounts.py:def graballcountsasobjects(db,cursor, extrasql=''):
-builder/postbuild/databasewordcounts.py:def grablemmataasobjects(db, cursor):
-builder/postbuild/databasewordcounts.py:def createwordcounttable(tablename, extracolumns=False):
-builder/postbuild/databasewordcounts.py:def insertmetadata(metadatadict, thetable):
-builder/postbuild/databasewordcounts.py:def dblineintolineobject(dbline):
-builder/postbuild/databasewordcounts.py:def cleanwords(word, punct):
-builder/postbuild/databasewordcounts.py:def makeablankline(work, fakelinenumber):
+builder/postbuild/databasewordcounts.py:def insertchronologicalmetadata(metadatadict, thetable):
+builder/postbuild/databasewordcounts.py:def insertgenremetadata(metadatadict, genrename, thetable):
 builder/postbuild/postbuilddating.py:def convertdate(date, passvalue=0):
 builder/postbuild/postbuilddating.py:def germandate(stringdate):
 builder/postbuild/postbuilddating.py:def numberedcenturydate(stringdate, ordinalregexfinder):
@@ -240,14 +250,24 @@ builder/postbuild/postbuilddating.py:def aetatesdates(stringdate):
 builder/postbuild/postbuilddating.py:def romannumeraldate(stringdate):
 builder/postbuild/postbuilddating.py:def numericdate(stringdate):
 builder/postbuild/postbuilddating.py:def datemapper(stringdate):
+builder/postbuild/postbuildhelperfunctions.py:def dictmerger(masterdict, targetdict, label):
+builder/postbuild/postbuildhelperfunctions.py:def acuteforgrave(matchgroup):
+builder/postbuild/postbuildhelperfunctions.py:def graballlinesasobjects(db, linerangetuple, cursor):
+builder/postbuild/postbuildhelperfunctions.py:def graballcountsasobjects(db,cursor, extrasql=''):
+builder/postbuild/postbuildhelperfunctions.py:def grablemmataasobjects(db, cursor):
+builder/postbuild/postbuildhelperfunctions.py:def createwordcounttable(tablename, extracolumns=False):
+builder/postbuild/postbuildhelperfunctions.py:def dblineintolineobject(dbline):
+builder/postbuild/postbuildhelperfunctions.py:def cleanwords(word, punct):
+builder/postbuild/postbuildhelperfunctions.py:def makeablankline(work, fakelinenumber):
+builder/postbuild/postbuildhelperfunctions.py:def prettyprintcohortdata(label, cohortresultsdict):
+builder/postbuild/postbuildhelperfunctions.py:def rebasedcounter(decimalvalue, base):
+builder/postbuild/postbuildhelperfunctions.py:def deletetemporarydbs(temprefix):
 builder/postbuild/postbuildmetadata.py:def insertfirstsandlasts(workcategoryprefix, cursor):
 builder/postbuild/postbuildmetadata.py:def boundaryfinder(uids):
 builder/postbuild/postbuildmetadata.py:def insertboundaries(boundariestuplelist):
-builder/postbuild/postbuildmetadata.py:def mpboundaryfinder(universalids, commitcount, found):
 builder/postbuild/postbuildmetadata.py:def findwordcounts(cursor, dbconnection):
 builder/postbuild/postbuildmetadata.py:def calculatewordcounts(uids):
 builder/postbuild/postbuildmetadata.py:def insertcounts(countdict):
-builder/postbuild/postbuildmetadata.py:def mpworkwordcountworker(universalids, counttuplelist, commitcount):
 builder/postbuild/postbuildmetadata.py:def buildtrigramindices(workcategoryprefix, cursor):
 builder/postbuild/postbuildmetadata.py:def mpindexbuilder(universalids, commitcount):
 builder/postbuild/secondpassdbrewrite.py:def builddbremappers(oldprefix, newprefix):
@@ -258,7 +278,5 @@ builder/postbuild/secondpassdbrewrite.py:def findnewtitles(newworktuples):
 builder/postbuild/secondpassdbrewrite.py:def buildnewworkmetata(workandtitletuplelist):
 builder/postbuild/secondpassdbrewrite.py:def parallelnewworkworker(workpile, newworktuples):
 builder/postbuild/secondpassdbrewrite.py:def buildworkmetadatatuples(workpile, commitcount, metadatalist):
-builder/postbuild/secondpassdbrewrite.py:def deletetemporarydbs(temprefix):
-builder/postbuild/secondpassdbrewrite.py:def rebasedcounter(decimalvalue, base):
 builder/postbuild/secondpassdbrewrite.py:def modifyauthorsdb(newentryname, worktitle, cursor):
 builder/postbuild/secondpassdbrewrite.py:def insertnewworksintonewauthor(newwkuid, results, cursor):
