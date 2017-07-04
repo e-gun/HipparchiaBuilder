@@ -7,6 +7,10 @@
 """
 
 import re
+import configparser
+
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 def lowercaseletters(betacode):
 	"""
@@ -120,15 +124,39 @@ def lowercaseletters(betacode):
 	# short = re.compile(r'[AIU]\^')
 	# long = re.compile(r'[AIU]_')
 
-	# sigmas: all lunates
-	sig = re.compile(r'S[1-3]{0,1}')
-	unicode = re.sub(sig, u'ϲ', unicode)
+
+	if config['buildoptions']['lunate'] == 'n':
+		sig = re.compile(r'S([1-3]){0,1}')
+		unicode = re.sub(sig, lowercasesigmassubsitutes, unicode)
+		straypunct = r'\<\>\{\}\[\]\(\)⟨⟩₍₎\.\?\!⌉⎜͙✳※¶§͜﹖→𐄂𝕔;:ˈ＇,‚‛‘’“”„·‧∣'
+		combininglowerdot = u'\u0323'
+		boundaries = r'([' + combininglowerdot + straypunct + '\s]|$)'
+		terminalsigma = re.compile(r'σ'+boundaries)
+		unicode = re.sub(terminalsigma, r'ς\1', unicode)
+	else:
+		sig = re.compile(r'S[1-3]{0,1}')
+		unicode = re.sub(sig, u'ϲ', unicode)
 
 	# lowercases
 	lap = re.compile(r'([A-Z])')
 	unicode = re.sub(lap, lowercases, unicode)
 
 	return unicode
+
+
+def lowercasesigmassubsitutes(match):
+	substitutions: {
+		1: u'σ',
+		2: u'ς',
+		3: u'ϲ'
+		}
+
+	try:
+		substitute = substitutions[match.group(1)]
+	except:
+		substitute = 'σ'
+
+	return substitute
 
 
 # lowercase + breathing + accent + subscript

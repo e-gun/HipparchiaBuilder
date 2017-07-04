@@ -7,7 +7,10 @@
 """
 
 import re
+import configparser
 
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 def capitalletters(betacode):
 	# needs to be done in order of length of regex string
@@ -61,14 +64,32 @@ def capitalletters(betacode):
 	unicode = re.sub(cad, capitaladscript, unicode)
 
 	# sigmas: all lunates
-	sig = re.compile(r'[*]S[1-3]{0,1}')
-	unicode = re.sub(sig, u'\u03f9', unicode)
+
+	if config['buildoptions']['lunate'] == 'n':
+		sig = re.compile(r'[*]S([1-3]){0,1}')
+		unicode = re.sub(sig, capitalsigmassubsitutes, unicode)
+	else:
+		sig = re.compile(r'[*]S[1-3]{0,1}')
+		unicode = re.sub(sig, u'\u03f9', unicode)
 
 	# capitals
 	cap = re.compile(r'[*]([A-Z])')
 	unicode = re.sub(cap, capitals, unicode)
 
 	return unicode
+
+
+def capitalsigmassubsitutes(match):
+	substitutions: {
+		3: u'\u03f9'
+		}
+
+	try:
+		substitute = substitutions[match.group(1)]
+	except:
+		substitute = 'Σ'
+
+	return substitute
 
 
 # capital + breathing + accent + adscript

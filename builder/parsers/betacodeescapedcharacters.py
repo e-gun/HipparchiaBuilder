@@ -407,17 +407,44 @@ def poundsubstitutes(match):
 		590: r'𝈿',
 		591: r'𝈛',
 		592: r'𝉀',
-		593: u'039b',
-		598: u'0394',
+		593: u'\u039b',
+		# 594: r'', # 'rare' and so has no unicode representation
+		# 595: r'', # 'rare' and so has no unicode representation
+		# 596: r'', # 'rare' and so has no unicode representation
+		# 597: r'', # 'rare' and so has no unicode representation
+		598: u'\u0394',
+		599: r'𝈔',
 		600: r'𝈨',  # Instrum #18
+		# 601: r'', # 'rare' and so has no unicode representation
+		602: r'𝈷',
 		603: u'\u03a0',
 		604: r'𝈦',  # 𝈦GREEK INSTRUMENTAL NOTATION SYMBOL-14; Unicode: U+1D226, UTF-8: F0 9D 88 A6
+		# 605: r'', # 'rare' and so has no unicode representation
+		# 606: r'', # 'rare' and so has no unicode representation
+		# 607: r'', # 'rare' and so has no unicode representation
+		# 608: r'', # 'rare' and so has no unicode representation
+		# 609: r'', # 'rare' and so has no unicode representation
+		# 610: r'', # 'rare' and so has no unicode representation
+		# 611: r'', # 'rare' and so has no unicode representation
+		# 612: r'', # 'rare' and so has no unicode representation
+		# 613: r'', # 'rare' and so has no unicode representation
+		# 614: r'', # 'rare' and so has no unicode representation
 		615: r'𝈰',  # 𝈰GREEK INSTRUMENTAL NOTATION SYMBOL-30; Unicode: U+1D230, UTF-8: F0 9D 88 B0
-		618: r'𝈴',  # 𝈴GREEK INSTRUMENTAL NOTATION SYMBOL-38; Unicode: U+1D234, UTF-8: F0 9D 88 B4
+		616: r'𝈞',
+		617: r'Ω',
+		# 618: r'', # 'rare' and so has no unicode representation
+		619: r'λ',
+		# 620: r'', # 'rare' and so has no unicode representation
 		621: r'𝈅',
 		622: r'𝈁',
 		623: u'\u2127',
 		624: u'\u03fd',
+		# 625: r'', # 'rare' and so has no unicode representation
+		# 626: r'', # 'rare' and so has no unicode representation
+		627: r'𝈗',
+		628: r'Ο',
+		629: r'Ξ',
+		630: r'Δ',
 		631: u'\u039a',
 		632: r'𝈎',
 		633: r'𝈲',
@@ -428,11 +455,30 @@ def poundsubstitutes(match):
 		638: r'𝈉',
 		639: r'𝈌',
 		640: r'𝈑',
+		641: r'Ω',
+		642: r'Η',
+		643: r'𝈝',
+		644: r'𝈟',
+		645: r'𝈡',
+		646: r'𝈥',
+		647: r'𝈬',
+		648: r'𝈵',
+		649: r'𝈋',
+		650: r'𝈏',
 		651: u'\u03a7',
 		652: u'\u03a4',
+		653: r'𝈙',
+		654: r'𝈜',
+		655: r'𝈂',
+		656: r'𝈤',
+		657: r'𝈮',
+		658: r'𝈾',
+		659: r'𝉁',
 		660: u'\u0391',
 		661: u'\u0392',
 		662: u'\u03a5',
+		663: u'\u03a8',
+		664: r'𝈺',
 		665: r'𝈴',  # 𝈴GREEK INSTRUMENTAL NOTATION SYMBOL-38; Unicode: U+1D234, UTF-8: F0 9D 88 B4
 		666: r'𝈯',  # 𝈯GREEK INSTRUMENTAL NOTATION SYMBOL-29; Unicode: U+1D22F, UTF-8: F0 9D 88 AF
 		667: r'𝈭',
@@ -450,11 +496,21 @@ def poundsubstitutes(match):
 		679: r'𝈄',
 		681: r'<hmu_idiosyncratic_char betacodeval="681">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		682: r'<hmu_idiosyncratic_char betacodeval="682">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		683: u'\u2733',
+		684: r'𝈪',
+		# 685: r'', # 'rare' and so has no unicode representation
+		# 686: r'', # 'rare' and so has no unicode representation
+		# 687: r'', # 'rare' and so has no unicode representation
 		688: u'\u03bc\u030a',
 		689: r'𐅵',
 		690: u'\u27d8',
 		691: u'\u27c0',
 		692: u'\u27c1',
+		693: r'<hmu_idiosyncratic_char betacodeval="693">◦</hmu_idiosyncratic_char>',  # idiosyncratic
+		694: r'𝈼',
+		695: r'—', # em-dash 2014
+		696: r'𝈧',
+		697: r'𝉅',
 		700: u'\u205e',
 		701: r'<hmu_idiosyncratic_char betacodeval="701">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		702: r'<hmu_idiosyncratic_char betacodeval="702">◦</hmu_idiosyncratic_char>',  # idiosyncratic
@@ -1016,7 +1072,7 @@ def ltcurlybracketsubstitutes(match):
 		9: r'<span class="hmu_alternative_reading">',
 		# 10: u'\u0332',
 		10: r'⟨', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
-		26: r'<span class="hmu_recitfied_form">',
+		26: r'<span class="hmu_rectified_form">',
 		27: u'\u0359',
 		28: r'<span class="hmu_date_or_numeric_equivalent_of_date">',
 		29: r'<span class="hmu_emendation_by_editor_of_text_not_obviously_incorrect">',
@@ -1068,7 +1124,7 @@ def rtcurlybracketsubstitutes(match):
 		# cf. ltanglebracketsubstitutes() #1
 		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
 		10: r'⟩', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
-		26: r'</span>', # hmu_recitfied_form
+		26: r'</span>', # hmu_rectified_form
 		27: u'\u0359',
 		28: r'</span>', # hmu_date_or_numeric_equivalent_of_date
 		29: r'</span>', # hmu_emendation_by_editor_of_text_not_obviously_incorrect

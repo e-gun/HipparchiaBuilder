@@ -7,8 +7,12 @@
 """
 
 import re
+import configparser
 from collections import deque
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj, buildhipparchiatranstable
+
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 
 def dbprepper(dbunreadyversion):
@@ -151,6 +155,7 @@ def dbstrippedliner(dbunreadyversion):
 	markup = re.compile(r'\<.*?\>')
 	combininglowerdot = u'\u0323'
 	straydigits = r'\d'
+	sigmas = re.compile(r'[σς]')
 	# straypunct is a big deal: it defines what a clean line will look like and so what you can search for
 	#   sadly can't nuke :punct: as a class because we need hyphens
 	#   if you want to find »αʹ« you need ʹ
@@ -170,6 +175,8 @@ def dbstrippedliner(dbunreadyversion):
 		clean = re.sub(markup, '', line[workingcolumn])
 		clean = re.sub(nukem, '', clean)
 		clean = clean.lower()
+		if config['buildoptions']['lunate'] == 'n':
+			clean = re.sub(sigmas, 'ϲ', clean)
 		line.append(clean)
 		# this is the clean line with accents
 		dbreadyversion.append(line)
