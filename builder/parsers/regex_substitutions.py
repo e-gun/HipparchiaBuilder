@@ -11,7 +11,7 @@ import configparser
 import re
 
 from builder.parsers.betacodeandunicodeinterconversion import parsegreekinsidelatin
-from builder.parsers.betacodeescapedcharacters import percentsubstitutes
+from builder.parsers.betacodeescapedcharacters import percentsubstitutes, quotesubstitutesa, quotesubstitutesb
 from builder.parsers.citation_builder import citationbuilder
 from builder.parsers.swappers import highunicodetohex, hutohxgrouper, hextohighunicode, bitswapchars
 
@@ -174,8 +174,9 @@ def lastsecondsubsitutions(texttoclean):
 	for i in range(0, len(betacodetuples)):
 		texttoclean = re.sub(betacodetuples[i][0], betacodetuples[i][1], texttoclean)
 
-	tosimplify = re.compile(r'[❨❩❴❵⟦⟧⟪⟫《》‹›⦅⦆₍₎]')
-	texttoclean = re.sub(tosimplify, bracketsimplifier, texttoclean)
+	if config['buildoptions']['simplifybrackets'] != 'n':
+		tosimplify = re.compile(r'[❨❩❴❵⟦⟧⟪⟫《》‹›⦅⦆₍₎]')
+		texttoclean = re.sub(tosimplify, bracketsimplifier, texttoclean)
 
 	# combining breve is misplaced
 	texttoclean = re.sub(r'(.)(\u035c)', r'\2\1', texttoclean)
@@ -247,18 +248,26 @@ def debughostilesubstitutions(texttoclean):
 	:return:
 	"""
 
-	betacodetuples = ()
+	if config['buildoptions']['hideknownblemishes'] == 'y':
+		return texttoclean
+
+	betacodetuples = [ (r'\$',r'') ]
 
 	# betacodetuples = (
 	# 	(r'\$',r''),
 	# 	(r'\&',r'')
 	# )
 
-	# off, becuase maybe we do not need it to be on any longer
+	# \& off, becuase maybe we do not need it to be on any longer
 
 	# note that '&' will return to the text up via the hexrunner: it can be embedded in the annotations
 	# and you will want it later in order to format that material when it hits HipparchiaServer:
 	# in 'Gel. &3N.A.& 20.3.2' the '&3' turns on italics and stripping & leaves you with 3N.A. (which is hard to deal with)
+
+	# $ is still a problem:
+	# e.g., 0085:
+	#   Der Antiatt. p. 115, 3 Bekk.: ‘ὑδρηλοὺϲ’ $πίθουϲ καὶ ‘οἰνηροὺϲ’
+	#   @&Der Antiatt. p. 115, 3 Bekk.%10 $8’U(DRHLOU\S‘ $PI/QOUS KAI\ $8’OI)NHROU\S‘$
 
 	for i in range(0, len(betacodetuples)):
 		texttoclean = re.sub(betacodetuples[i][0], betacodetuples[i][1], texttoclean)
@@ -318,64 +327,6 @@ def bracketspacer(matchgroup):
 #
 # matchgroup substitutions
 #
-
-def quotesubstitutesa(match):
-	"""
-	turn "N into unicode
-	have to do this first because html quotes are going to appear soon
-	:param match:
-	:return:
-	"""
-
-	val = int(match.group(1))
-
-	substitutions = {
-		1: u'\u201e',
-		2: 'QUOTE2',
-		3: 'QUOTE3',
-		4: u'\u201a',
-		5: u'\u201b',
-		6: 'QUOTE6',
-		7: 'QUOTE7',
-		8: 'QUOTE8'
-	}
-
-	try:
-		substitute = substitutions[val]
-	except KeyError:
-		substitute = '<hmu_unhandled_quote_markup betacodeval="{v}" />'.format(v=val)
-		if warnings:
-			print('\t',substitute)
-
-	return substitute
-
-
-def quotesubstitutesb(match):
-	"""
-	turn "N into unicode
-	:param match:
-	:return:
-	"""
-
-	val = int(match.group(1))
-	core = match.group(2)
-
-	substitutions = {
-		2: ['“', '”'],
-		3: ['‘', '’'],
-		6: ['«', '»'],
-		7: ['‹', '›'],
-		8: ['“', '„'],
-	}
-
-	try:
-		substitute = substitutions[val][0] + core + substitutions[val][1]
-	except KeyError:
-		substitute = '<hmu_unhandled_quote_markup betacodeval="{v}" />{c}'.format(v=val, c=core)
-		if warnings:
-			print('\t',substitute)
-
-	return substitute
 
 
 #

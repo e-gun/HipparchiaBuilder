@@ -13,17 +13,22 @@ import time
 from multiprocessing import Pool
 
 import builder.dbinteraction.dbprepsubstitutions
-import builder.parsers.betacodeescapedcharacters
 import builder.parsers.betacodefontshifts
 from builder.dbinteraction import db
 from builder.file_io import filereaders
-from builder.parsers import idtfiles, regex_substitutions, betacodeandunicodeinterconversion, parse_binfiles
+from builder.parsers import idtfiles, parse_binfiles
 from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
 from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
 from builder.workers import setworkercount
+from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
+from builder.parsers.betacodefontshifts import replacegreekmarkup, replacelatinmarkup
+from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
+from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacelatinbetacode, \
+	replacequotationmarks, findromanwithingreek, addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
+	totallemmatization
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -273,25 +278,25 @@ def initialworkparsing(authorobject, language, datapath):
 	"""
 
 	txt = filereaders.highunicodefileload(datapath + authorobject.dataprefix+authorobject.number + '.TXT')
-	txt = regex_substitutions.earlybirdsubstitutions(txt)
-	txt = regex_substitutions.replacequotationmarks(txt)
-	txt = builder.parsers.betacodeescapedcharacters.replaceaddnlchars(txt)
+	txt = earlybirdsubstitutions(txt)
+	txt = replacequotationmarks(txt)
+	txt = replaceaddnlchars(txt)
 	# now you are about to get a bunch of brackets added to the data via hmu_markup
 	if language == 'G' and authorobject.language == 'G':
 		# where else/how else to handle colons?
 		txt = re.sub(r':','·',txt)
-		txt = regex_substitutions.findromanwithingreek(txt)
-		txt = builder.parsers.betacodefontshifts.replacegreekmarkup(txt)
-		txt = builder.parsers.betacodefontshifts.replacelatinmarkup(txt)
-		txt = betacodeandunicodeinterconversion.replacegreekbetacode(txt)
-		txt = betacodeandunicodeinterconversion.restoreromanwithingreek(txt)
+		txt = findromanwithingreek(txt)
+		txt = replacegreekmarkup(txt)
+		txt = replacelatinmarkup(txt)
+		txt = replacegreekbetacode(txt)
+		txt = restoreromanwithingreek(txt)
 	else:
-		txt = builder.parsers.betacodefontshifts.replacelatinmarkup(txt)
-		txt = regex_substitutions.replacelatinbetacode(txt)
+		txt = replacelatinmarkup(txt)
+		txt = replacelatinbetacode(txt)
 
 	# last pass to mitigate the 'αugusto λeone anno χϝι et ξonstantino' problem
-	txt = regex_substitutions.cleanuplingeringmesses(txt)
-	txt = betacodeandunicodeinterconversion.purgehybridgreekandlatinwords(txt)
+	txt = cleanuplingeringmesses(txt)
+	txt = purgehybridgreekandlatinwords(txt)
 
 	return txt
 
@@ -305,14 +310,14 @@ def secondaryworkparsing(authorobject, txt):
 	:param parserdata:
 	:return:
 	"""
-	lemmatized = regex_substitutions.addcdlabels(txt, authorobject.number)
-	lemmatized = regex_substitutions.hexrunner(lemmatized)
-	lemmatized = regex_substitutions.lastsecondsubsitutions(lemmatized)
-	lemmatized = regex_substitutions.debughostilesubstitutions(lemmatized)
+	lemmatized = addcdlabels(txt, authorobject.number)
+	lemmatized = hexrunner(lemmatized)
+	lemmatized = lastsecondsubsitutions(lemmatized)
+	lemmatized = debughostilesubstitutions(lemmatized)
 	lemmatized = re.sub(r'(<hmu_set_level)', r'\n\1', lemmatized)
 
 	lemmatized = lemmatized.split('\n')
-	dbreadyversion = regex_substitutions.totallemmatization(lemmatized,authorobject)
+	dbreadyversion = totallemmatization(lemmatized,authorobject)
 
 	return dbreadyversion
 

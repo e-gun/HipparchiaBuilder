@@ -1283,3 +1283,71 @@ def rtanglebracketsubstitutes(match):
 			print('\t',substitute)
 
 	return substitute
+
+
+def quotesubstitutesa(match):
+	"""
+	turn "N into unicode
+	have to do this first because html quotes are going to appear soon
+	:param match:
+	:return:
+	"""
+
+	val = int(match.group(1))
+
+	substitutions = {
+		1: u'\u201e',
+		2: 'QUOTE2',
+		3: 'QUOTE3',
+		4: u'\u201a',
+		5: u'\u201b',
+		6: 'QUOTE6',
+		7: 'QUOTE7',
+		8: 'QUOTE8'
+	}
+
+	try:
+		substitute = substitutions[val]
+	except KeyError:
+		substitute = '<hmu_unhandled_quote_markup betacodeval="{v}" />'.format(v=val)
+		if warnings:
+			print('\t',substitute)
+
+	return substitute
+
+
+def quotesubstitutesb(match):
+	"""
+	turn "N into unicode
+	:param match:
+	:return:
+	"""
+
+	val = int(match.group(1))
+	core = match.group(2)
+
+	if config['buildoptions']['simplifyquotes'] != 'n':
+		substitutions = {
+			2: ['“', '”'],
+			3: ['‘', '’'],
+			6: ['“', '”'],
+			7: ['‘', '’'],
+			8: ['“', '”'],
+		}
+	else:
+		substitutions = {
+			2: ['“', '”'],
+			3: ['‘', '’'],
+			6: ['«', '»'],
+			7: ['‹', '›'],
+			8: ['“', '„'],
+		}
+
+	try:
+		substitute = substitutions[val][0] + core + substitutions[val][1]
+	except KeyError:
+		substitute = '<hmu_unhandled_quote_markup betacodeval="{v}" />{c}'.format(v=val, c=core)
+		if warnings:
+			print('\t',substitute)
+
+	return substitute
