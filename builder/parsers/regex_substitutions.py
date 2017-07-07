@@ -169,6 +169,7 @@ def lastsecondsubsitutions(texttoclean):
 		(r'`(\d)',r'\1'),
 		(r'\\\(',r'('),
 		(r'\\\)', r')'),
+		(r'﹖', r'?')
 	)
 
 	for i in range(0, len(betacodetuples)):
@@ -248,7 +249,7 @@ def debughostilesubstitutions(texttoclean):
 	:return:
 	"""
 
-	if config['buildoptions']['hideknownblemishes'] == 'y':
+	if config['buildoptions']['hideknownblemishes'] != 'n':
 		return texttoclean
 
 	betacodetuples = [ (r'\$',r'') ]
@@ -407,13 +408,18 @@ def doublecheckromanwithingreek(match):
 	"""
 	linetermination = re.compile(r'(&\d{0,2})(.*?)(\s{0,1}$)')
 	internaltermination = re.compile(r'(&\d{0,2})(.*?)\$(\d{0,2})')
-	if re.search(internaltermination, match.group(1) + match.group(2)) is not None:
+
+	# Democrito? will turn into Democritọ if you are not careful
+	core = match.group(2)
+	core = re.sub(r'\?', '﹖', core)
+
+	if re.search(internaltermination, match.group(1) + core) is not None:
 		substitution = re.sub(internaltermination, r'<hmu_roman_in_a_greek_text>\2</hmu_roman_in_a_greek_text>',
-		                      match.group(1) + match.group(2))
+		                      match.group(1) + core)
 		substitution = re.sub(linetermination, r'<hmu_roman_in_a_greek_text>\2</hmu_roman_in_a_greek_text>\3',
 		                      substitution)
 	else:
-		substitution = '<hmu_roman_in_a_greek_text>{m}</hmu_roman_in_a_greek_text>'.format(m=match.group(2))
+		substitution = '<hmu_roman_in_a_greek_text>{m}</hmu_roman_in_a_greek_text>'.format(m=core)
 
 	substitution += match.group(3)
 	# print(match.group(1) + match.group(2),'\n\t',substitution)
