@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'TLG2054'
+debugauthor = 'TLG0085'
 
 """
 
@@ -61,6 +61,21 @@ dataprefix = debugauthor[0:3]
 lg = mapper[dataprefix]['lg']
 db = mapper[dataprefix]['db']
 uidprefix = mapper[dataprefix]['uidprefix']
+
+htmlthead = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv=content-type content="text/html; charset=UTF-8">
+	<title>testing builder output for {a}</title>
+</head>
+<body>
+"""
+
+htmlfoot = """
+</body>
+</html>
+"""
+
 
 n = debugauthor
 
@@ -129,5 +144,13 @@ linesout(dbreadyversion,outputdir+'15'+debugoutfile)
 
 dbreadyversion = dbinteraction.dbprepsubstitutions.dbprepper(dbreadyversion)
 linesout(dbreadyversion,outputdir+'16'+debugoutfile)
+
+txt = [ln[2] for ln in dbreadyversion]
+linesout(txt,outputdir+'88_'+debugauthor+'.txt')
+
+txt = [ln+'<br \>' for ln in txt]
+txt = [htmlthead.format(a=debugauthor)] + txt + [htmlfoot]
+
+linesout(txt,outputdir+'99_'+debugauthor+'.html')
 
 print('textfile generation took:\n\t', str(time.time() - start))
