@@ -25,7 +25,7 @@ def replacegreekmarkup(texttoclean):
 	:return:
 	"""
 	dollars = re.compile(r'\$(\d{1,2})(.*?)(\$\d{0,1})')
-	texttoclean = re.sub(dollars, dollarssubstitutes, texttoclean)
+	texttoclean = re.sub(dollars, lambda x: dollarssubstitutes(int(x.group(1)), x.group(2)), texttoclean)
 
 	# these strays are rough
 	#texttoclean = re.sub(r'\$(.*?)\$', '<hmu_shift_greek_font betacodeval="regular">\1</hmu_shift_greek_font>', texttoclean)
@@ -39,29 +39,21 @@ def replacelatinmarkup(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
-	ands = re.compile(r'&(\d{1,2})(.*?)(&\d{0,1})')
-	texttoclean = re.sub(ands, andsubstitutes, texttoclean)
-
-	#texttoclean = re.sub(r'\&(.*?)\&', r'<hmu_shift_latin_font betacodeval="regular">\1</hmu_shift_latin_font>', texttoclean)
+	ands = re.compile(r'&(\d{1,2})([^\$]*?)(&\d{0,1})')
+	texttoclean = re.sub(ands, lambda x: andsubstitutes(x.group(1), x.group(2)), texttoclean)
 
 	anddollars = re.compile(r'&(\d{1,2})(.*?)(\$\d{0,1})')
-	texttoclean = re.sub(anddollars, andsubstitutes, texttoclean)
-
-	# these strays are rough
-	# texttoclean = re.sub(r'\&(.*?)\&', r'<hmu_shift_latin_font betacodeval="regular">\1</hmu_shift_latin_font>', texttoclean)
+	texttoclean = re.sub(anddollars, lambda x: andsubstitutes(x.group(1), x.group(2), anddollar=True), texttoclean)
 
 	return texttoclean
 
 
-def dollarssubstitutes(match):
+def dollarssubstitutes(val, core):
 	"""
 	turn $NN...$ into unicode
 	:param match:
 	:return:
 	"""
-
-	val = int(match.group(1))
-	core = match.group(2)
 
 	substitutions = {
 		70: [r'<span class="uncial">', r'</span>'],
@@ -99,15 +91,15 @@ def dollarssubstitutes(match):
 	return substitute
 
 
-def andsubstitutes(match):
+def andsubstitutes(groupone, grouptwo, anddollar=False):
 	"""
 	turn &NN...& into unicode
 	:param match:
 	:return:
 	"""
 
-	val = int(match.group(1))
-	core = match.group(2)
+	val = int(groupone)
+	core = grouptwo
 
 	substitutions = {
 		91: [r'<hmu_undocumented_font_shift_AND91>',r'</hmu_undocumented_font_shift_AND91>'],
@@ -136,4 +128,8 @@ def andsubstitutes(match):
 		if warnings:
 			print('\t',substitute)
 
+	if anddollar:
+		substitute = '<hmu_roman_in_a_greek_text>{s}</hmu_roman_in_a_greek_text>'.format(s=substitute)
+
 	return substitute
+

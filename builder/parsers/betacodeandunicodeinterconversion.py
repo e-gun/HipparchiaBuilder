@@ -42,8 +42,8 @@ def parseromaninsidegreek(texttoclean):
 	"""
 	mangledroman = texttoclean.group(0)
 
-	invals = u'αβξδεφγηι⒣κλμνοπρϲτυϝωχυζ·'
-	outvals = u'ABCDEFGHIJKLMNOPRSTUVWXYZ:'
+	invals = u'αβξδεφγηι⒣κλμνοπρϲστυϝωχυζ·'
+	outvals = u'ABCDEFGHIJKLMNOPRSSTUVWXYZ:'
 	transformed = mangledroman.translate(str.maketrans(invals, outvals))
 
 	return transformed

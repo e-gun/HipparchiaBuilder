@@ -128,7 +128,8 @@ def lowercaseletters(betacode):
 	if config['buildoptions']['lunate'] == 'n':
 		sig = re.compile(r'S([1-3]){0,1}')
 		unicode = re.sub(sig, lowercasesigmassubsitutes, unicode)
-		straypunct = r'\<\>\{\}\[\]\(\)⟨⟩₍₎\.\?\!⌉⎜͙✳※¶§͜﹖→𐄂𝕔;:ˈ＇,‚‛‘’“”„·‧∣'
+		# look out for ς’ instead of σ’
+		straypunct = r'\<\>\{\}\[\]\(\)⟨⟩₍₎\.\?\!⌉⎜͙✳※¶§͜﹖→𐄂𝕔;:ˈ＇,‚‛‘“”„·‧∣'
 		combininglowerdot = u'\u0323'
 		boundaries = r'([' + combininglowerdot + straypunct + '\s]|$)'
 		terminalsigma = re.compile(r'σ'+boundaries)

@@ -452,6 +452,7 @@ def totallemmatization(parsedtextfile, authorobject):
 	:param parsedtextfile:
 	:return: tuples that levelmap+the line
 	"""
+
 	levelmapper = {
 		# be careful about re returning '1' and not 1
 		0: 1,
@@ -480,7 +481,10 @@ def totallemmatization(parsedtextfile, authorobject):
 		if gotsetting != None:
 			level = int(gotsetting.group(1))
 			setting = gotsetting.group(2)
-			levelmapper[level] = setting
+			# Euripides (0006) has <hmu_set_level_0_to_post 961 /> after πῶς οὖν ἔτ’ ἂν θνήισκοιμ’ ἂν ἐνδίκως, πόσι,
+			# 'post 961' becomes a problem: you need to add one to 961, but you will fail 'str(int(setting)'
+			# and so we are going to check for the whitespace...
+			levelmapper[level] = setting.split(' ')[-1]
 			if level > 0:
 				for l in range(0, level):
 					levelmapper[l] = 1
@@ -491,7 +495,6 @@ def totallemmatization(parsedtextfile, authorobject):
 		if gotincrement != None:
 			level = int(gotincrement.group(1))
 			setting = 1
-			# awkward avoidance of type problems
 			try:
 				# are we adding integers?
 				levelmapper[level] = str(int(setting) + int(levelmapper[level]))
