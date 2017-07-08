@@ -30,9 +30,15 @@ else:
 
 
 def earlybirdsubstitutions(texttoclean):
-	# try to get out in front of some of the trickiest bits
-	# note that you can't use quotation marks in here
-	textualmarkuptuples = []
+	"""
+
+	try to get out in front of some of the trickiest bits
+	note that you can't use quotation marks in here
+
+	:param texttoclean:
+	:return:
+	"""
+
 
 	betacodetuples = (
 		(r'<(?!\d)',r'‹'),  # '<': this one is super-dangerous: triple-check
