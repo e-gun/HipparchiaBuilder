@@ -38,8 +38,11 @@ def earlybirdsubstitutions(texttoclean):
 		(r'<(?!\d)',r'‹'),  # '<': this one is super-dangerous: triple-check
 		(r'>(?!\d)', u'›'),  # '>': this one is super-dangerous: triple-check
 		(r'_', u' \u2014 '),  # doing this without spaces was producing problems with giant 'hyphenated' line ends
-		(r'\s\'', r' ‘'),
-		(r'\'( |\.|,|;)', r'’\1'),
+		# 'smart' single quotes; but this produces an intial elision problem for something like ’κείνων which will be ‘κείνων instead
+		# (r'\s\'', r' ‘'),
+		# (r'\'( |\.|,|;)', r'’\1'),
+		# make all single quotes curl in the same direction
+		(r'\'', r'’'),
 		(r'\\\{', r'❴'),
 		(r'\\\}', r'❵'),
 		# the papyri exposed an interesting problem with '?'
@@ -93,7 +96,6 @@ def latindiacriticals(texttoclean):
 	finder = re.compile(r'[aeiouyAEIOUV][\+\\=/]')
 
 	texttoclean = re.sub(finder, latinsubstitutes, texttoclean)
-
 
 	return texttoclean
 
@@ -185,7 +187,9 @@ def lastsecondsubsitutions(texttoclean):
 	# misbalanced punctuation in something like ’αὐλῶνεϲ‘: a trivial issue that will add a lot of time to builds if you do all of the variants
 	# easy enough to turn this off
 
-	texttoclean = re.sub(r'(\W)’(\w)', r'\1‘\2', texttoclean)
+	# if you enable the next a problem arises with initial elision: ‘κείνων instead of ’κείνων
+	# you will get bitten by this more often than you will be fixing a problem?
+	# texttoclean = re.sub(r'(\W)’(\w)', r'\1‘\2', texttoclean)
 	texttoclean = re.sub(r'([\w\.,])‘([\W])', r'\1’\2', texttoclean)
 	texttoclean = re.sub(r'(\W)”(\w)', r'\1“\2', texttoclean)
 	texttoclean = re.sub(r'([\w\.,])“([\W])', r'\1”\2', texttoclean)
