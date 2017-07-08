@@ -38,13 +38,16 @@ def earlybirdsubstitutions(texttoclean):
 		(r'<(?!\d)',r'‹'),  # '<': this one is super-dangerous: triple-check
 		(r'>(?!\d)', u'›'),  # '>': this one is super-dangerous: triple-check
 		(r'_', u' \u2014 '),  # doing this without spaces was producing problems with giant 'hyphenated' line ends
+
 		# 'smart' single quotes; but this produces an intial elision problem for something like ’κείνων which will be ‘κείνων instead
 		# (r'\s\'', r' ‘'),
 		# (r'\'( |\.|,|;)', r'’\1'),
 		# make all single quotes curl in the same direction
 		(r'\'', r'’'),
+
 		(r'\\\{', r'❴'),
 		(r'\\\}', r'❵'),
+
 		# the papyri exposed an interesting problem with '?'
 		# let's try to deal with this at earlybirdsubstitutions() because if you let '?' turn into '\u0323' it seems impossible to undo that
 		#
