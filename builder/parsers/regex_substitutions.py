@@ -177,7 +177,8 @@ def lastsecondsubsitutions(texttoclean):
 		(r'`(\d)',r'\1'),
 		(r'\\\(',r'('),
 		(r'\\\)', r')'),
-		(r'﹖', r'?')
+		(r'﹖', r'?'),
+		(r'﹠', r'&')
 	)
 
 	for i in range(0, len(betacodetuples)):
@@ -259,21 +260,14 @@ def debughostilesubstitutions(texttoclean):
 	:return:
 	"""
 
-	if config['buildoptions']['hideknownblemishes'] != 'n':
+	if config['buildoptions']['hideknownblemishes'] != 'y':
 		return texttoclean
 
 	betacodetuples = [ (r'[\$\&]', r'') ,
-	                   (r'﹠', r'&')
 	                   ]
 
-	# betacodetuples = (
-	# 	(r'\$',r''),
-	# 	(r'\&',r'')
-	# )
 
-	# \& off, becuase maybe we do not need it to be on any longer
-
-	# note that '&' will return to the text up via the hexrunner: it can be embedded in the annotations
+	# note that '&' will return to the text via the hexrunner: it can be embedded in the annotations
 	# and you will want it later in order to format that material when it hits HipparchiaServer:
 	# in 'Gel. &3N.A.& 20.3.2' the '&3' turns on italics and stripping & leaves you with 3N.A. (which is hard to deal with)
 

@@ -122,7 +122,7 @@ def andsubstitutes(groupone, grouptwo, groupthree, anddollar=False):
 	}
 
 	try:
-		substitute = substitutions[val][0] + core + substitutions[val][1]
+		substitute = substitutions[val][0] + core + substitutions[val][1] + groupthree
 	except KeyError:
 		substitute = '<hmu_unhandled_latin_font_shift betacodeval="{v}" />{c}'.format(v=val, c=core)
 		if warnings:
