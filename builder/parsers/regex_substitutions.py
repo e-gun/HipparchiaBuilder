@@ -262,7 +262,9 @@ def debughostilesubstitutions(texttoclean):
 	if config['buildoptions']['hideknownblemishes'] != 'n':
 		return texttoclean
 
-	betacodetuples = [ (r'\$', r'') ]
+	betacodetuples = [ (r'[\$\&]', r'') ,
+	                   (r'﹠', r'&')
+	                   ]
 
 	# betacodetuples = (
 	# 	(r'\$',r''),

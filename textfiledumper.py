@@ -103,7 +103,7 @@ htmlfoot = """
 # functions need to match initialworkparsing() in corpus_builder.py
 grkinitial = [
 	earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars, colonshift,
-	findromanwithingreek, replacegreekmarkup, replacelatinmarkup, replacegreekbetacode,
+	replacegreekmarkup, findromanwithingreek, replacelatinmarkup, replacegreekbetacode,
 	restoreromanwithingreek, cleanuplingeringmesses, purgehybridgreekandlatinwords
 	]
 

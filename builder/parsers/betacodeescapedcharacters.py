@@ -782,7 +782,7 @@ def percentsubstitutes(match):
 		5: u'\u007c',
 		6: u'\u003d',
 		7: u'\u002b',
-		9: u'\u0026',
+		9: u'﹠', # '&' (0026) is also a control character; using small version instead (fe60); will swap it out in the end
 		10: u'\u003a',
 		11: u'\u2022',
 		12: u'\u002a',  # look out for future problems: *

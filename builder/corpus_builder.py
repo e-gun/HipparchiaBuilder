@@ -285,8 +285,10 @@ def initialworkparsing(authorobject, language, datapath):
 	if language == 'G' and authorobject.language == 'G':
 		# where else/how else to handle colons?
 		txt = re.sub(r':','·',txt)
-		txt = findromanwithingreek(txt)
+		# testing the order in which the functions should execute
+		# txt = findromanwithingreek(txt)
 		txt = replacegreekmarkup(txt)
+		txt = findromanwithingreek(txt)
 		txt = replacelatinmarkup(txt)
 		txt = replacegreekbetacode(txt)
 		txt = restoreromanwithingreek(txt)
