@@ -317,7 +317,7 @@ def secondaryworkparsing(authorobject, txt):
 	lemmatized = re.sub(r'(<hmu_set_level)', r'\n\1', lemmatized)
 
 	lemmatized = lemmatized.split('\n')
-	dbreadyversion = totallemmatization(lemmatized,authorobject)
+	dbreadyversion = totallemmatization(lemmatized)
 
 	return dbreadyversion
 

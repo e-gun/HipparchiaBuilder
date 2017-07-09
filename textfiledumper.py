@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'TLG2003'
+debugauthor = 'DDP0175'
 
 """
 
@@ -17,12 +17,26 @@ the parsing process
 
 import re
 import time
+import configparser
 
-from builder import corpus_builder
-from builder import dbinteraction
-from builder import file_io
-from builder import parsers
-from builder.dbinteraction.build_lexica import *
+import builder.dbinteraction.dbprepsubstitutions
+import builder.parsers.betacodefontshifts
+from builder.dbinteraction import db
+from builder.file_io.filereaders import highunicodefileload
+from builder.corpus_builder import buildauthor
+from builder.parsers import idtfiles, parse_binfiles
+from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
+from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
+from builder.dbinteraction.versioning import timestampthebuild
+from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
+from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
+from builder.workers import setworkercount
+from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
+from builder.parsers.betacodefontshifts import replacegreekmarkup, replacelatinmarkup
+from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
+from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacelatinbetacode, \
+	replacequotationmarks, findromanwithingreek, addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
+	totallemmatization
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -41,6 +55,15 @@ def linesout(txt,outfile):
 		f.write("%s\n" % item)
 	f.close()
 	return
+
+def colonshift(txt):
+	return re.sub(r':', '·', txt)
+
+def levelbreak(txt):
+	return re.sub(r'(<hmu_set_level)', r'\n\1', txt)
+
+def finalsplit(txt):
+	return txt.split('\n')
 
 outputdir = config['io']['outputdir']
 debugoutfile = config['io']['debugoutfile']
@@ -76,76 +99,58 @@ htmlfoot = """
 </html>
 """
 
+# functions need to match initialworkparsing() in corpus_builder.py
+grkinitial = [
+	earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars, colonshift,
+	findromanwithingreek, replacegreekmarkup, replacelatinmarkup, replacegreekbetacode,
+	restoreromanwithingreek, cleanuplingeringmesses, purgehybridgreekandlatinwords
+	]
+
+latininitial = [
+	earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars,
+	replacelatinmarkup, replacelatinbetacode,
+	cleanuplingeringmesses, purgehybridgreekandlatinwords
+	]
+
+
+# functions need to match secondaryworkparsing() in corpus_builder.py
+secondary = [
+	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, levelbreak, finalsplit,
+	totallemmatization
+	]
+
+
+if lg == 'G':
+	functions = {key: val for (key,val) in enumerate(grkinitial + secondary)}
+else:
+	functions = {key: val for (key,val) in enumerate(latininitial + secondary)}
 
 n = debugauthor
 
 start = time.time()
 
-a = corpus_builder.buildauthor(n,lg,db, uidprefix, dataprefix)
-txt = file_io.filereaders.highunicodefileload(db+n+'.TXT')
-streamout(txt,outputdir+'01a'+debugoutfile)
-streamout(re.sub(' █','\n█', txt),outputdir+'01b'+debugoutfile)
+a = buildauthor(n,lg,db, uidprefix, dataprefix)
+txt = highunicodefileload(db+n+'.TXT')
 
-txt = parsers.regex_substitutions.earlybirdsubstitutions(txt)
-streamout(txt,outputdir+'02a'+debugoutfile)
-streamout(re.sub(' █', '\n█', txt), outputdir + '02b' + debugoutfile)
 
-txt = parsers.regex_substitutions.replacequotationmarks(txt)
-streamout(txt,outputdir+'03a'+debugoutfile)
-streamout(re.sub(' █', '\n█', txt), outputdir + '03b' + debugoutfile)
+streamout(txt,outputdir+'00a'+debugoutfile)
+streamout(re.sub(' █','\n█', txt),outputdir+'00b'+debugoutfile)
 
-txt = parsers.betacodeescapedcharacters.replaceaddnlchars(txt)
-streamout(txt,outputdir+'04a'+debugoutfile)
-streamout(re.sub(' █', '\n█', txt), outputdir + '04b' + debugoutfile)
+for f in sorted(functions.keys()):
+	try:
+		txt = functions[f](txt)
+	except TypeError:
+		txt = functions[f](txt, debugauthor[2:])
 
-streamout(txt,outputdir+'05a'+debugoutfile)
-streamout(re.sub(' █', '\n█', txt), outputdir + '05b' + debugoutfile)
+	fn = chr(97+f)+'_'+getattr(functions[f], '__name__')
+	print(fn)
 
-if lg == 'G' and a.language == 'G':
-	txt = parsers.regex_substitutions.findromanwithingreek(txt)
-	streamout(txt,outputdir+'06a'+debugoutfile)
-	streamout(re.sub(' █', '\n█', txt), outputdir + '06b' + debugoutfile)
+	try:
+		streamout(re.sub(' █', '\n█', txt), outputdir + fn + '_' + n + '.txt')
+	except TypeError:
+		linesout(txt, outputdir + fn + '_' + n + '.txt')
 
-	txt = parsers.betacodefontshifts.replacegreekmarkup(txt)
-	txt = parsers.betacodefontshifts.replacelatinmarkup(txt)
-	streamout(txt,outputdir+'07a'+debugoutfile)
-	streamout(re.sub(' █', '\n█', txt), outputdir + '07b' + debugoutfile)
-
-	txt = parsers.betacodeandunicodeinterconversion.replacegreekbetacode(txt)
-	streamout(txt,outputdir+'08a'+debugoutfile)
-	streamout(re.sub(' █', '\n█', txt), outputdir + '08b' + debugoutfile)
-
-	txt = parsers.betacodeandunicodeinterconversion.restoreromanwithingreek(txt)
-	streamout(txt,outputdir+'09a'+debugoutfile)
-	streamout(re.sub(' █', '\n█', txt), outputdir + '09b' + debugoutfile)
-else:
-	txt = parsers.betacodefontshifts.replacelatinmarkup(txt)
-	txt = parsers.regex_substitutions.replacelatinbetacode(txt)
-	streamout(txt,outputdir+'10a'+debugoutfile)
-	streamout(re.sub(' █', '\n█', txt), outputdir + '10b' + debugoutfile)
-
-lemmatized = parsers.regex_substitutions.addcdlabels(txt, a.number)
-streamout(lemmatized,outputdir+'11a'+debugoutfile)
-
-lemmatized = parsers.regex_substitutions.hexrunner(lemmatized)
-streamout(lemmatized,outputdir+'12a'+debugoutfile)
-
-lemmatized = parsers.regex_substitutions.lastsecondsubsitutions(lemmatized)
-streamout(lemmatized,outputdir+'13a'+debugoutfile)
-
-# toggle me if you need to
-# lemmatized = parsers.regex_substitutions.debughostilesubstitutions(lemmatized)
-lemmatized = re.sub(r'(<hmu_set_level)', r'\n\1', lemmatized)
-lemmatized = lemmatized.split('\n')
-linesout(lemmatized,outputdir+'14'+debugoutfile)
-
-dbreadyversion = parsers.regex_substitutions.totallemmatization(lemmatized,a)
-linesout(dbreadyversion,outputdir+'15'+debugoutfile)
-
-dbreadyversion = dbinteraction.dbprepsubstitutions.dbprepper(dbreadyversion)
-linesout(dbreadyversion,outputdir+'16'+debugoutfile)
-
-txt = [ln[2] for ln in dbreadyversion]
+txt = [ln[2] for ln in txt]
 linesout(txt,outputdir+'88_'+debugauthor+'.txt')
 
 txt = [ln+'<br \>' for ln in txt]

@@ -23,9 +23,7 @@ if config['buildoptions']['warnings'] == 'y':
 else:
 	warnings = False
 
-#
-# hex datafile and betacode cleanup
-#
+
 # [nb: some regex happens in db.py as prep for loading]
 
 
@@ -38,7 +36,6 @@ def earlybirdsubstitutions(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
-
 
 	betacodetuples = (
 		(r'<(?!\d)',r'‹'),  # '<': this one is super-dangerous: triple-check
@@ -307,9 +304,9 @@ def cleanuplingeringmesses(texttoclean):
 	# see also: '[*MESORH\ &c `12 ] `302$'
 	# this failed without the second
 
-	missing = re.compile(r'\[(\s{1,})<hmu_roman_in_a_greek_text>c(.*?)\](.*?)</hmu_roman_in_a_greek_text>')
-	#texttoclean = re.sub(missing, r'[\1c \2 ]', texttoclean)
-	texttoclean = re.sub(missing, bracketspacer, texttoclean)
+	# missing = re.compile(r'\[(\s{1,})<hmu_roman_in_a_greek_text>c(.*?)\](.*?)</hmu_roman_in_a_greek_text>')
+	# texttoclean = re.sub(missing, r'[\1c \2 ]', texttoclean)
+	# texttoclean = re.sub(missing, bracketspacer, texttoclean)
 
 	return texttoclean
 
@@ -455,7 +452,7 @@ def doublecheckromanwithingreek(match):
 #
 
 
-def totallemmatization(parsedtextfile, authorobject):
+def totallemmatization(parsedtextfile):
 	"""
 	will use decoded hex commands to build a citation value for every line in the text file
 	can produce a formatted line+citation, but really priming us for the move to the db
@@ -475,7 +472,7 @@ def totallemmatization(parsedtextfile, authorobject):
 		4: 1,
 		5: 1
 	}
-	lemmatized = []
+
 	dbready = []
 
 	work = 1
