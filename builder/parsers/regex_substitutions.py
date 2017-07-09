@@ -62,9 +62,9 @@ def earlybirdsubstitutions(texttoclean):
 		#	'&{10m4}10 [ c ? ]$IASNI#80 *)EZIKEH\ M[ARTURW= &c ? ]$'
 		# this one also fails to have '&c' because the '&' came earlier
 		# here's hoping there is no other way to achieve this pattern...
-		(r'&c\s\?(.*?)\$', r'𝕔 ﹖\1$'), # the question mark needs to be preserved, so we substitute a small question mark
-		(r'\[\sc\s\?(.*?)\$', r'[ 𝕔 ﹖\1$'), # try to catch '&{10m4}10 [ c ? ]$I' without doing any damage
-		(r'&\?(.*?)\](.*?)\$',r'﹖\1]\2$') # some stray lonely '?' cases remain
+		(r'&c\s\?(.*?)\$', r'&c ﹖\1$'), # the question mark needs to be preserved, so we substitute a small question mark
+		(r'\[\sc\s\?(.*?)\$', r'[ c ﹖\1$'), # try to catch '&{10m4}10 [ c ? ]$I' without doing any damage
+		(r'&\?(.*?)\](.*?)\$',r'&﹖\1]\2$') # some stray lonely '?' cases remain
 	)
 
 	for i in range(0, len(betacodetuples)):
@@ -262,7 +262,7 @@ def debughostilesubstitutions(texttoclean):
 	if config['buildoptions']['hideknownblemishes'] != 'n':
 		return texttoclean
 
-	betacodetuples = [ (r'\$',r'') ]
+	betacodetuples = [ (r'\$', r'') ]
 
 	# betacodetuples = (
 	# 	(r'\$',r''),
@@ -330,7 +330,7 @@ def bracketspacer(matchgroup):
 	grptwo = re.sub(r'\s',u'\u00a0', matchgroup.group(2))
 	grpthree = re.sub(r'\s', u'\u00a0', matchgroup.group(3))
 
-	substitute = '[{x}𝕔{y}]{z}'.format(x=grpone, y=grptwo, z=grpthree)
+	substitute = '[{x}c{y}]{z}'.format(x=grpone, y=grptwo, z=grpthree)
 
 	return substitute
 

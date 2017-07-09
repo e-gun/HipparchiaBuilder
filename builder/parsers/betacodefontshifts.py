@@ -40,10 +40,10 @@ def replacelatinmarkup(texttoclean):
 	:return:
 	"""
 	ands = re.compile(r'&(\d{1,2})([^\$]*?)(&\d{0,1})')
-	texttoclean = re.sub(ands, lambda x: andsubstitutes(x.group(1), x.group(2)), texttoclean)
+	texttoclean = re.sub(ands, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(3)), texttoclean)
 
 	anddollars = re.compile(r'&(\d{1,2})(.*?)(\$\d{0,1})')
-	texttoclean = re.sub(anddollars, lambda x: andsubstitutes(x.group(1), x.group(2), anddollar=True), texttoclean)
+	texttoclean = re.sub(anddollars, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(3), anddollar=True), texttoclean)
 
 	return texttoclean
 
@@ -91,7 +91,7 @@ def dollarssubstitutes(val, core):
 	return substitute
 
 
-def andsubstitutes(groupone, grouptwo, anddollar=False):
+def andsubstitutes(groupone, grouptwo, groupthree, anddollar=False):
 	"""
 	turn &NN...& into unicode
 	:param match:
