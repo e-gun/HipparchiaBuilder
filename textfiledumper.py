@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'DDP0175'
+debugauthor = 'TLG5014'
 
 """
 
@@ -19,18 +19,8 @@ import re
 import time
 import configparser
 
-import builder.dbinteraction.dbprepsubstitutions
-import builder.parsers.betacodefontshifts
-from builder.dbinteraction import db
 from builder.file_io.filereaders import highunicodefileload
 from builder.corpus_builder import buildauthor
-from builder.parsers import idtfiles, parse_binfiles
-from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
-from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
-from builder.dbinteraction.versioning import timestampthebuild
-from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
-from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
-from builder.workers import setworkercount
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import replacegreekmarkup, replacelatinmarkup
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
@@ -41,6 +31,20 @@ from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybir
 config = configparser.ConfigParser()
 config.read('config.ini')
 
+outputdir = config['io']['outputdir']
+debugoutfile = config['io']['debugoutfile']
+tlg = config['io']['tlg']
+phi = config['io']['phi']
+ddp = config['io']['ddp']
+ins = config['io']['ins']
+
+mapper = {
+	'TLG': {'lg': 'G', 'db': tlg, 'uidprefix': 'gr'},
+	'LAT': {'lg': 'L', 'db': phi, 'uidprefix': 'lt'},
+	'DDP': {'lg': 'G', 'db': ddp, 'uidprefix': 'dp'},
+	'INS': {'lg': 'G', 'db': ins, 'uidprefix': 'in'},
+	'CHR': {'lg': 'G', 'db': chr, 'uidprefix': 'ch'},
+	}
 
 def streamout(txt,outfile):
 	f = open(outfile, 'w')
@@ -56,40 +60,37 @@ def linesout(txt,outfile):
 	f.close()
 	return
 
+
 def colonshift(txt):
 	return re.sub(r':', '·', txt)
+
 
 def levelbreak(txt):
 	return re.sub(r'(<hmu_set_level)', r'\n\1', txt)
 
+
 def finalsplit(txt):
 	return txt.split('\n')
 
-outputdir = config['io']['outputdir']
-debugoutfile = config['io']['debugoutfile']
-tlg = config['io']['tlg']
-phi = config['io']['phi']
-ddp = config['io']['ddp']
-ins = config['io']['ins']
-
-mapper = {
-	'TLG': {'lg': 'G', 'db': tlg, 'uidprefix': 'gr'},
-	'LAT': {'lg': 'L', 'db': phi, 'uidprefix': 'lt'},
-	'DDP': {'lg': 'G', 'db': ddp, 'uidprefix': 'dp'},
-	'INS': {'lg': 'G', 'db': ins, 'uidprefix': 'in'},
-	'CHR': {'lg': 'G', 'db': chr, 'uidprefix': 'ch'},
-}
 
 dataprefix = debugauthor[0:3]
 lg = mapper[dataprefix]['lg']
 db = mapper[dataprefix]['db']
 uidprefix = mapper[dataprefix]['uidprefix']
 
+csslocation = config['io']['serverdir'] + 'server/static/hipparchia_styles.css'
+
+with open(csslocation, 'r') as f:
+	css = f.read()
+
 htmlthead = """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
 	<meta http-equiv=content-type content="text/html; charset=UTF-8">
 	<title>testing builder output for {a}</title>
+	<style>
+	{css}
+	</style>
 </head>
 <body>
 """
@@ -143,7 +144,6 @@ for f in sorted(functions.keys()):
 		txt = functions[f](txt, debugauthor[2:])
 
 	fn = chr(97+f)+'_'+getattr(functions[f], '__name__')
-	print(fn)
 
 	try:
 		streamout(re.sub(' █', '\n█', txt), outputdir + fn + '_' + n + '.txt')
@@ -154,7 +154,9 @@ txt = [ln[2] for ln in txt]
 linesout(txt,outputdir+'88_'+debugauthor+'.txt')
 
 txt = [ln+'<br \>' for ln in txt]
-txt = [htmlthead.format(a=debugauthor)] + txt + [htmlfoot]
+txt = [re.sub(r'<hmu_increment_.*? />', '', ln) for ln in txt]
+txt = [re.sub(r'<hmu_set_level_.*? />', '', ln) for ln in txt]
+txt = [htmlthead.format(a=debugauthor, css=css)] + txt + [htmlfoot]
 
 linesout(txt,outputdir+'99_'+debugauthor+'.html')
 
