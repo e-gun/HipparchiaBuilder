@@ -28,7 +28,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
+def insertworksintoauthortable(authorobject, dbreadyversion, cursor, dbconnection):
 	"""
 	run throught the dbreadyversion and put it into the db
 	iterate through the works
@@ -55,9 +55,6 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 	:param dbconnection:
 	:return:
 	"""
-
-	dbauthoradder(authorobject, cursor)
-	authortablemaker(authorobject.universalid, cursor)
 
 	for indexedat in range(len(authorobject.works)):
 		# warning: '002' might be the value at work[0]
@@ -118,12 +115,16 @@ def dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection):
 							# do we want '-1' instead?
 							tups[lvl] = (lvl, -1)
 
+				qtemplate = """
+				INSERT INTO {t} 
+					(index, wkuniversalid, 
+					level_00_value, level_01_value, level_02_value, level_03_value, level_04_value, level_05_value,
+					marked_up_line, accented_line, stripped_line, hyphenated_words, annotations) 
+				VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+				"""
 				# print('ll',wn,wkuniversalid,wk.structure,wklvs, toplvl,tups,line[2])
 				# tempting to not add the -1's, but they are used to check top levels later
-				query = 'INSERT INTO ' + authorobject.universalid + \
-						' (index, wkuniversalid, level_00_value, level_01_value, ' \
-						'level_02_value, level_03_value, level_04_value, level_05_value, marked_up_line, accented_line, ' \
-						'stripped_line, hyphenated_words, annotations) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+				query = qtemplate.format(t=authorobject.universalid)
 				data = (index, wkuniversalid, tups[0][1], tups[1][1], tups[2][1], tups[3][1], tups[4][1], tups[5][1],
 						line[2], line[3], line[4], line[5], line[6])
 				try:

@@ -200,7 +200,7 @@ def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnec
 
 	starttime = time.time()
 	(number,name), = authordict.items()
-	authorobj = buildauthor(number, language, datapath, uidprefix, dataprefix)
+	authorobj = buildauthorobject(number, language, datapath, uidprefix, dataprefix)
 	authorobj.addauthtabname(name)
 	authorobj.language = language
 	thecollectedworksof(authorobj, language, datapath,  dbconnection, cursor)
@@ -226,7 +226,7 @@ def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor)
 	return
 
 
-def buildauthor(authortabnumber, language, datapath, uidprefix, dataprefix):
+def buildauthorobject(authortabnumber, language, datapath, uidprefix, dataprefix):
 	"""
 	construct an author object
 
@@ -334,7 +334,9 @@ def databaseloading(dbreadyversion, authorobject,  dbconnection, cursor):
 	"""
 	dbreadyversion = builder.dbinteraction.dbprepsubstitutions.dbprepper(dbreadyversion)
 	# pickle.dump(dbreadyversion, outputfile, open( "wb"))
-	db.dbcitationinsert(authorobject, dbreadyversion, cursor, dbconnection)
+	db.dbauthoradder(authorobject, cursor)
+	db.authortablemaker(authorobject.universalid, cursor)
+	db.insertworksintoauthortable(authorobject, dbreadyversion, cursor, dbconnection)
 
 	# to debug return dbreadyversion
 	return

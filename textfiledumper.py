@@ -20,7 +20,7 @@ import time
 import configparser
 
 from builder.file_io.filereaders import highunicodefileload
-from builder.corpus_builder import buildauthor
+from builder.corpus_builder import buildauthorobject
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import replacegreekmarkup, replacelatinmarkup
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
@@ -130,7 +130,7 @@ n = debugauthor
 
 start = time.time()
 
-a = buildauthor(n,lg,db, uidprefix, dataprefix)
+a = buildauthorobject(n, lg, db, uidprefix, dataprefix)
 txt = highunicodefileload(db+n+'.TXT')
 
 

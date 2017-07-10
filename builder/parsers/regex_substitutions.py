@@ -368,6 +368,12 @@ def replacelatinbetacode(texttoclean):
 def doublecheckgreekwithinlatin(match):
 	"""
 	only works in conjunction with replacelatinbetacode()
+
+	still plenty of trouble with something like Scholia In Aristophanem, (TLG5014):
+
+		█⑧⓪ DEUTE/RA I(STAME/NOU &3lb,$ ⌈TRI/TH I(STAME/NOU &Va&3b ... ❨&c2$❩ ME/XRI ⌈KAI\ &3l$ TW=N ...█
+
+
 	:param match:
 	:return:
 	"""
