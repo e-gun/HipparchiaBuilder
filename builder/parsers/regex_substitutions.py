@@ -195,7 +195,7 @@ def lastsecondsubsitutions(texttoclean):
 	# if you enable the next a problem arises with initial elision: ‘κείνων instead of ’κείνων
 	# you will get bitten by this more often than you will be fixing a problem?
 	# texttoclean = re.sub(r'(\W)’(\w)', r'\1‘\2', texttoclean)
-	resized = re.compile(r'[﹖﹠＇]')
+	resized = re.compile(r'[﹖﹠＇﹡﹕／]')
 	texttoclean = re.sub(resized, sizeshifter, texttoclean)
 	texttoclean = re.sub(r'([\w\.,])‘([\W])', r'\1’\2', texttoclean)
 	texttoclean = re.sub(r'(\W)”(\w)', r'\1“\2', texttoclean)
@@ -218,7 +218,10 @@ def sizeshifter(match):
 	substitutions = {
 		'﹖': '?',
 		'﹠': '&',
-		'＇': u'\u0027' # simple apostrophe
+		'＇': u'\u0027', # simple apostrophe
+		'﹡': '*',
+		'﹕': ':',
+		'／': '/'
 		}
 
 	try:
@@ -368,8 +371,11 @@ def bracketspacer(matchgroup):
 
 def replacelatinbetacode(texttoclean):
 	"""
-	first look for greek inside of a latin text
+	first look for greek inside of a latin string
+
 	the add in latin accents
+
+	currently only called by cleanworkname()
 
 	:param texttoclean:
 	:return:
@@ -418,61 +424,6 @@ def doublecheckgreekwithinlatin(match):
 
 	return substitution
 
-
-def findromanwithingreek(texttoclean):
-	"""
-	need to flag this so you can undo the transformation of capital letters into greek characters
-	:param texttoclean:
-	:return:
-	"""
-
-	# &1Catenae &(Novum Testamentum): on but not off
-	# a line should turn things off; but what if it does not?
-	# so we do this in two parts: first grab the whole line, then make sure there is not a section with a $ in it
-	# if there is: turn off roman at the $; if there is not turn of roman at line end
-
-	search = re.compile(r'(&\d{0,2})(.*?)(\s{0,1}█)')
-	# texttoclean = re.sub(search, doublecheckromanwithingreek, texttoclean)
-
-	return texttoclean
-
-
-def doublecheckromanwithingreek(match):
-	"""
-	only works in conjunction with findromanwithingreek()
-	:param matchgroups:
-	:return:
-	"""
-	linetermination = re.compile(r'(&\d{0,2})(.*?)(\s{0,1}$)')
-	internaltermination = re.compile(r'(&\d{0,2})(.*?)\$(\d{0,2})')
-
-	# Democrito? will turn into Democritọ if you are not careful
-	core = match.group(2)
-	core = re.sub(r'\?', '﹖', core)
-
-	if re.search(internaltermination, match.group(1) + core) is not None:
-		substitution = re.sub(internaltermination, r'<hmu_latin_normal>\2</hmu_latin_normal>',
-		                      match.group(1) + core)
-		substitution = re.sub(linetermination, r'<hmu_latin_normal>\2</hmu_latin_normal>\3',
-		                      substitution)
-	else:
-		substitution = '<hmu_latin_normal>{m}</hmu_latin_normal>'.format(m=core)
-
-	substitution += match.group(3)
-	# print(match.group(1) + match.group(2),'\n\t',substitution)
-
-	# it is all to common to see a punctuation issue where one side falls outside the span:
-	#   <hmu_latin_normal> [582/1</hmu_latin_normal>]
-	#   [<hmu_latin_normal>FGrHist. 76 F 74 II 155]</hmu_latin_normal>
-	# patch that up here and now...
-
-	substitution = re.sub(r'<hmu_latin_normal> \[',' [<hmu_latin_normal>',substitution)
-	substitution = re.sub(r']</hmu_latin_normal>', '</hmu_latin_normal>]', substitution)
-
-	# the next will ruin the greek betacode:
-	# substitution = latindiacriticals(substitution)
-
-	return substitution
 
 #
 # cleanup of the cleaned up: generative citeable texts

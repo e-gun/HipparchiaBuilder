@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'TLG5014'
+debugauthor = 'TLG4097'
 
 """
 
@@ -26,7 +26,7 @@ from builder.parsers.betacodefontshifts import replacegreekmarkup, replacelatinm
 	replacegreekkupinalatintext
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
 from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacelatinbetacode, \
-	replacequotationmarks, findromanwithingreek, addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
+	replacequotationmarks, addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
 	totallemmatization
 
 config = configparser.ConfigParser()
@@ -103,8 +103,8 @@ htmlfoot = """
 
 # functions need to match initialworkparsing() in corpus_builder.py
 initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
-greekmiddle = [colonshift, replacegreekmarkup, findromanwithingreek, replacelatinmarkupinagreektext,
-               replacegreekbetacode, restoreromanwithingreek]
+greekmiddle = [colonshift, replacegreekmarkup, replacelatinmarkupinagreektext, replacegreekbetacode,
+               restoreromanwithingreek]
 latinmiddle = [replacegreekkupinalatintext, replacelatinbetacode]
 final = [hmufontshiftsintospans, cleanuplingeringmesses, purgehybridgreekandlatinwords]
 
@@ -148,7 +148,7 @@ for f in sorted(functions.keys()):
 	try:
 		streamout(re.sub(' █', '\n█', txt), outputdir + n + '_' + fn + '.txt')
 	except TypeError:
-		linesout(txt, outputdir + fn + '_' + n + '.txt')
+		linesout(txt, outputdir + n + '_' + fn + '.txt')
 
 txt = [ln[2] for ln in txt]
 linesout(txt,outputdir+'yy_'+debugauthor+'.txt')

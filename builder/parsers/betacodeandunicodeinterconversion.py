@@ -42,8 +42,9 @@ def parseromaninsidegreek(texttoclean):
 	"""
 	mangledroman = texttoclean.group(2)
 
-	invals = u'αβξδεφγηι⒣κλμνοπρϲστυϝωχψζ·'
-	outvals = u'ABCDEFGHIJKLMNOPRSSTUVWXYZ:'
+	# note that combining dot below is at the end: 0323
+	invals = u'αβξδεφγηι⒣κλμνοπρϲστυϝωχψζ·̣'
+	outvals = u'ABCDEFGHIJKLMNOPRSSTUVWXYZ:?'
 	transformed = mangledroman.translate(str.maketrans(invals, outvals))
 
 	span = '{open}{t}{close}'.format(t=transformed, open=texttoclean.group(1), close=texttoclean.group(3))

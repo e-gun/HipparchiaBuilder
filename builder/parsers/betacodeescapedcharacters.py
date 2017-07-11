@@ -107,10 +107,10 @@ def poundsubstitutes(match):
 		# but, if you want to get the codes as HTML, this is what you need to do...
 
 		1: u'\u03df',
-		2: u'\u03da',
-		3: u'\u03d9',
-		4: u'\u03d9',
-		5: u'\u03e1',
+		2: u'\u03da', # stigma; supposed to be able to handle '*#2' and not just '#2'
+		3: u'\u03d9', # koppa; supposed to be able to handle '*#3' and not just '#3'
+		4: u'\u03d9', # koppa, variant
+		5: u'\u03e1', # sampi; supposed to be able to handle '*#5' and not just '#5'
 		6: u'\u2e0f',
 		7: r'<hmu_idiosyncratic_char betacodeval="7">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		8: u'\u2e10',
@@ -131,7 +131,7 @@ def poundsubstitutes(match):
 		22: u'\u0375',
 		23: u'\u03d9',
 		24: r'𐅵',
-		25: r'?',
+		25: r'𐅶',
 		26: u'\u2e0f',
 		27: r'𐄂', # 'check mark'; non tlg; and so - AEGEAN CHECK MARK; Unicode: U+10102, UTF-8: F0 90 84 82
 		28: r'<hmu_mark_deleting_entry />␥',
@@ -140,7 +140,7 @@ def poundsubstitutes(match):
 		31: r'<hmu_idiosyncratic_char betacodeval="31">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		# 48: r'<hmu_undocumented_poundsign betacodeval="48">⊚</hmu_undocumented_poundsign>',
 		# 50: r'<hmu_undocumented_poundsign betacodeval="50">⊚</hmu_undocumented_poundsign>',
-		51: u'\u00b7',
+		51: u'\u00b7', # middle dot: ·
 		52: u'\u205a',
 		53: u'\u205d',
 		# 54: r'<hmu_undocumented_poundsign betacodeval="54">⊚</hmu_undocumented_poundsign>',
@@ -299,6 +299,8 @@ def poundsubstitutes(match):
 		335: r'<span class="strikethrough">N</span>',
 		336: r'<hum_redundant_s-type_sign />',
 		337: r'<span class="hmu_seal_attached_to_papyrus">❊</span>',
+		400: r'ͱ', # heta; supposed to know how to do capital too: *#400
+		401: r'ϳ', # yot; supposed to know how to do capital too: *#401
 		451: u'\u0283',
 		452: u'\u2310',
 		453: u'\u2e11',
@@ -775,15 +777,15 @@ def percentsubstitutes(match):
 
 	substitutions = {
 		# u'\u',
-		1: u'\u003f',
-		2: u'\u002a',
+		1: r'﹖', # '?' (003f), but using small variant instead: fe56
+		2: r'﹡', # '*' (u002a), but using small variant instead: fe61
 		3: u'\u002f',
 		4: u'\u0021',
 		5: u'\u007c',
 		6: u'\u003d',
 		7: u'\u002b',
 		9: u'﹠', # '&' (0026) is also a control character; using small version instead (fe60); can swap it out in the end
-		10: u'\u003a',
+		10: r'﹕', # ':' (003a); samll variant instead: fe55
 		11: u'\u2022',
 		12: u'﹡',  # '*' (u002a) might lead to future problems: small version instead (fe61); can swap it out in the end
 		14: u'\u00a7',
