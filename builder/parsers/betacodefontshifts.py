@@ -30,35 +30,57 @@ def replacegreekmarkup(texttoclean):
 	return texttoclean
 
 
-def replacelatinmarkupinagreektext(texttoclean):
+def latinfontlinemarkupprober(texttoclean):
 	"""
-	turn &NN into markup
 
-	note that we have to do some of this in order so that &3 has been taken care of before we get to &
+	take line-like segments of the text
 
-	:param texttoclean:
+	then hand them off to another function to check them for '&' escapes
+
+	if you find them, do the substitutions
+
+	:param txt:
+	:return:
+	"""
+	grabaline = re.compile(r'(.*?)(\s{0,1}█)')
+	texttoclean = re.sub(grabaline, latinfontlinemarkupparser, texttoclean)
+
+	return texttoclean
+
+
+def latinfontlinemarkupparser(match):
+	"""
+
+	check a quasi-line for '&' escapes
+
+	:param match:
 	:return:
 	"""
 
-	# the most stupid case: a line should turn things off; but what if it does not?
-	onbutnotoff = re.compile(r'(&)(\d{1,2})([^\$]*?)(\s{0,1}█)')
-	texttoclean = re.sub(onbutnotoff, lambda x: andsubstitutes(x.group(2), x.group(3), x.group(4), threeitems=True), texttoclean)
+	m = match.group(1)
+	tail = match.group(2)
 
-	# the simplest case: &Va$ (but don't catch '&Chalc&3b$')
-	loneandlonedollar = re.compile(r'&([^\d][^&]*?)\$')
-	texttoclean = re.sub(loneandlonedollar, lambda x: andsubstitutes(0, x.group(1), '', ), texttoclean)
+	ands = m.split('&')
+	if len(ands) == 1:
+		return match.group(0)
 
-	ands = re.compile(r'&(\d{1,2})([^\$█]*?)(&\d{0,1})')
-	texttoclean = re.sub(ands, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(3), threeitems=True), texttoclean)
+	newline = [ands[0]]
+	nodollar = re.compile(r'^(\d{0,})(.*?)$')
+	yesdollar = re.compile(r'^(\d{0,})(.*?)(\$)(.*?)$')
+	dollars = re.compile(r'\$')
 
-	# roman + romanshift + greek: &Chalc&3b$
-	andand = re.compile(r'&([^\$█]*?)(&\d{0,1})')
-	texttoclean = re.sub(andand, lambda x: andsubstitutes(0, x.group(1), x.group(2), threeitems=True), texttoclean)
+	for a in ands[1:]:
+		if not re.search(dollars, a):
+			newand = re.sub(nodollar, lambda x: andsubstitutes(x.group(1), x.group(2), ''), a)
+		else:
+			newand = re.sub(yesdollar, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(4)), a)
+		newline.append(newand)
 
-	anddollars = re.compile(r'&(\d{1,2})([^█]*?)(\$\d{0,1})')
-	texttoclean = re.sub(anddollars, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(3)), texttoclean)
+	newline = ''.join(newline)
 
-	return texttoclean
+	returnline = '{n}{t}'.format(n=newline, t=tail)
+
+	return returnline
 
 
 def replacegreekkupinalatintext(texttoclean):
@@ -135,7 +157,7 @@ def dollarssubstitutes(val, core, extra=''):
 	return substitute
 
 
-def andsubstitutes(groupone, grouptwo, groupthree, threeitems=False):
+def andsubstitutes(groupone, grouptwo, groupthree):
 	"""
 	turn &NN...& into unicode
 	:param match:
@@ -148,6 +170,8 @@ def andsubstitutes(groupone, grouptwo, groupthree, threeitems=False):
 		val = 0
 
 	core = grouptwo
+
+	groupthree = re.sub(r'\$','', groupthree)
 
 	substitutions = {
 		91: [r'<hmu_fontshift_latin_undocumented_font_shift_AND91>',r'</hmu_fontshift_latin_undocumented_font_shift_AND91>'],
@@ -171,17 +195,11 @@ def andsubstitutes(groupone, grouptwo, groupthree, threeitems=False):
 	}
 
 	try:
-		substitutions[val]
+		substitute = substitutions[val][0] + core + substitutions[val][1] + groupthree
 	except KeyError:
-		substitute = '<hmu_unhandled_latin_font_shift betacodeval="{v}" />{c}'.format(v=val, c=core)
+		substitute = '<hmu_unhandled_greek_font_shift betacodeval="{v}" />{c}'.format(v=val, c=core)
 		if warnings:
 			print('\t',substitute)
-		return substitute
-
-	if not threeitems:
-		groupthree = ''
-
-	substitute = substitutions[val][0] + core + substitutions[val][1] + groupthree
 
 	return substitute
 

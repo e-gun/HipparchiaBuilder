@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'TLG4097'
+debugauthor = 'TLG5014'
 
 """
 
@@ -22,7 +22,7 @@ import configparser
 from builder.file_io.filereaders import highunicodefileload
 from builder.corpus_builder import buildauthorobject
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
-from builder.parsers.betacodefontshifts import replacegreekmarkup, replacelatinmarkupinagreektext, hmufontshiftsintospans, \
+from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, hmufontshiftsintospans, \
 	replacegreekkupinalatintext
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
 from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacelatinbetacode, \
@@ -103,7 +103,7 @@ htmlfoot = """
 
 # functions need to match initialworkparsing() in corpus_builder.py
 initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
-greekmiddle = [colonshift, replacegreekmarkup, replacelatinmarkupinagreektext, replacegreekbetacode,
+greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode,
                restoreromanwithingreek]
 latinmiddle = [replacegreekkupinalatintext, replacelatinbetacode]
 final = [hmufontshiftsintospans, cleanuplingeringmesses, purgehybridgreekandlatinwords]

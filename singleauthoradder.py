@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'TLG4097'
+debugauthor = 'TLG5014'
 
 """
 use this script to build and insert a single author into the database

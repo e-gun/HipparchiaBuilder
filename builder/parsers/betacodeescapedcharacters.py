@@ -17,6 +17,11 @@ if config['buildoptions']['warnings'] == 'y':
 else:
 	warnings = False
 
+if config['buildoptions']['simplifyquotes'] == 'y':
+	simplequotes = True
+else:
+	simplequotes = False
+
 
 def replaceaddnlchars(texttoclean):
 	"""
@@ -915,7 +920,7 @@ def leftbracketsubstitutions(match):
 	substitutions = {
 		# u'\u',
 		1: '❨', # supposed to be parenthesis '('; but can interfere with betacode parsing; either swap here or change order of execution
-		# 2: u'\u2329', # '〈'
+		# 2: u'\u2329', # '〈'
 		2: '⟨',
 		3: '❴',
 		4: '⟦',
@@ -969,7 +974,7 @@ def rightbracketsubstitutions(match):
 	substitutions = {
 		# u'\u',
 		1: '❩', # swapped for ')'
-		# 2: u'\u232a', # '〉'
+		# 2: u'\u232a', # '〉'
 		2: '⟩',
 		3: '❵',
 		4: '⟧',
@@ -1297,16 +1302,28 @@ def quotesubstitutesa(match):
 
 	val = int(match.group(1))
 
-	substitutions = {
-		1: u'\u201e',
-		2: 'QUOTE2',
-		3: 'QUOTE3',
-		4: u'\u201a',
-		5: u'\u201b',
-		6: 'QUOTE6',
-		7: 'QUOTE7',
-		8: 'QUOTE8'
-	}
+	if simplequotes:
+		substitutions = {
+			1: '“',
+			2: 'QUOTE2',
+			3: 'QUOTE3',
+			4: u'‘',
+			5: u'’',
+			6: 'QUOTE6',
+			7: 'QUOTE7',
+			8: 'QUOTE8'
+		}
+	else:
+		substitutions = {
+			1: u'\u201e',
+			2: 'QUOTE2',
+			3: 'QUOTE3',
+			4: u'\u201a',
+			5: u'\u201b',
+			6: 'QUOTE6',
+			7: 'QUOTE7',
+			8: 'QUOTE8'
+		}
 
 	try:
 		substitute = substitutions[val]
@@ -1328,7 +1345,7 @@ def quotesubstitutesb(match):
 	val = int(match.group(1))
 	core = match.group(2)
 
-	if config['buildoptions']['simplifyquotes'] != 'n':
+	if simplequotes:
 		substitutions = {
 			2: ['“', '”'],
 			3: ['‘', '’'],

@@ -22,7 +22,7 @@ from builder.parsers import idtfiles, parse_binfiles
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, \
 	purgehybridgreekandlatinwords
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
-from builder.parsers.betacodefontshifts import replacegreekmarkup, replacelatinmarkupinagreektext, hmufontshiftsintospans, \
+from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, hmufontshiftsintospans, \
 	replacegreekkupinalatintext
 from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacelatinbetacode, \
 	replacequotationmarks, addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
@@ -282,7 +282,7 @@ def initialworkparsing(authorobject, language, datapath):
 	txt = filereaders.highunicodefileload(datapath + authorobject.dataprefix+authorobject.number + '.TXT')
 
 	initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
-	greekmiddle = [colonshift, replacegreekmarkup, replacelatinmarkupinagreektext, replacegreekbetacode, restoreromanwithingreek]
+	greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode, restoreromanwithingreek]
 	latinmiddle = [replacegreekkupinalatintext, replacelatinbetacode]
 	final = [hmufontshiftsintospans, cleanuplingeringmesses, purgehybridgreekandlatinwords]
 
