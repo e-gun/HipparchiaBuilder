@@ -15,20 +15,22 @@ from multiprocessing import Pool
 import builder.dbinteraction.dbprepsubstitutions
 import builder.parsers.betacodefontshifts
 from builder.dbinteraction import db
+from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
+from builder.dbinteraction.versioning import timestampthebuild
 from builder.file_io import filereaders
 from builder.parsers import idtfiles, parse_binfiles
-from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
-from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
-from builder.dbinteraction.versioning import timestampthebuild
-from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
-from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
-from builder.workers import setworkercount
+from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, \
+	purgehybridgreekandlatinwords
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
-from builder.parsers.betacodefontshifts import replacegreekmarkup, replacelatinmarkup
-from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
+from builder.parsers.betacodefontshifts import replacegreekmarkup, replacelatinmarkupinagreektext, hmufontshiftsintospans, \
+	replacegreekkupinalatintext
 from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacelatinbetacode, \
 	replacequotationmarks, findromanwithingreek, addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
-	totallemmatization
+	totallemmatization, colonshift, insertnewlines
+from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
+from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
+from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
+from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -278,27 +280,19 @@ def initialworkparsing(authorobject, language, datapath):
 	"""
 
 	txt = filereaders.highunicodefileload(datapath + authorobject.dataprefix+authorobject.number + '.TXT')
-	txt = earlybirdsubstitutions(txt)
-	txt = replacequotationmarks(txt)
-	txt = replaceaddnlchars(txt)
-	# now you are about to get a bunch of brackets added to the data via hmu_markup
-	if language == 'G' and authorobject.language == 'G':
-		# where else/how else to handle colons?
-		txt = re.sub(r':','·',txt)
-		# testing the order in which the functions should execute
-		# txt = findromanwithingreek(txt)
-		txt = replacegreekmarkup(txt)
-		txt = findromanwithingreek(txt)
-		txt = replacelatinmarkup(txt)
-		txt = replacegreekbetacode(txt)
-		txt = restoreromanwithingreek(txt)
-	else:
-		txt = replacelatinmarkup(txt)
-		txt = replacelatinbetacode(txt)
 
-	# last pass to mitigate the 'αugusto λeone anno χϝι et ξonstantino' problem
-	txt = cleanuplingeringmesses(txt)
-	txt = purgehybridgreekandlatinwords(txt)
+	initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
+	greekmiddle = [colonshift, replacegreekmarkup, findromanwithingreek, replacelatinmarkupinagreektext, replacegreekbetacode, restoreromanwithingreek]
+	latinmiddle = [replacegreekkupinalatintext, replacelatinbetacode]
+	final = [hmufontshiftsintospans, cleanuplingeringmesses, purgehybridgreekandlatinwords]
+
+	if language == 'G' and authorobject.language == 'G':
+		functionlist = initial + greekmiddle + final
+	else:
+		functionlist = initial + latinmiddle + final
+
+	for f in functionlist:
+		txt = f(txt)
 
 	return txt
 
@@ -312,13 +306,12 @@ def secondaryworkparsing(authorobject, txt):
 	:param parserdata:
 	:return:
 	"""
+
 	lemmatized = addcdlabels(txt, authorobject.number)
 	lemmatized = hexrunner(lemmatized)
 	lemmatized = lastsecondsubsitutions(lemmatized)
 	lemmatized = debughostilesubstitutions(lemmatized)
-	lemmatized = re.sub(r'(<hmu_set_level)', r'\n\1', lemmatized)
-
-	lemmatized = lemmatized.split('\n')
+	lemmatized = insertnewlines(lemmatized)
 	dbreadyversion = totallemmatization(lemmatized)
 
 	return dbreadyversion
@@ -340,3 +333,4 @@ def databaseloading(dbreadyversion, authorobject,  dbconnection, cursor):
 
 	# to debug return dbreadyversion
 	return
+

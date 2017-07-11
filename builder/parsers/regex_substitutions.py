@@ -45,8 +45,8 @@ def earlybirdsubstitutions(texttoclean):
 		# 'smart' single quotes; but this produces an intial elision problem for something like ’κείνων which will be ‘κείνων instead
 		# (r'\s\'', r' ‘'),
 		# (r'\'( |\.|,|;)', r'’\1'),
-		# make all single quotes curl in the same direction
-		(r'\'', r'’'),
+		# single quotes are a problem because OTOH, we have elision at the first letter of the word and, OTOH, we have plain old quotes
+		(r'\'', r'＇'), # full width variant for now
 
 		(r'\\\{', r'❴'),
 		(r'\\\}', r'❵'),
@@ -55,7 +55,7 @@ def earlybirdsubstitutions(texttoclean):
 		# let's try to deal with this at earlybirdsubstitutions() because if you let '?' turn into '\u0323' it seems impossible to undo that
 		#
 		# many papyrus lines start like: '[ &c ? ]$' (cf. '[ &c ? $TO\ PRA=]GMA')
-		# this will end up as: '[ <hmu_roman_in_a_greek_text>c ̣ ]</hmu_roman_in_a_greek_text>'
+		# this will end up as: '[ <hmu_latin_normal>c ̣ ]</hmu_latin_normal>'
 		# the space after '?' is not always there
 		# 	'[ &c ?]$! KEKEI/NHKA DI/KH PERI\ U(/BREWS [4!!!!!!!!!![ &c ?]4 ]$'
 		# also get a version of the pattern that does not have '[' early because we are not starting a line:
@@ -177,8 +177,6 @@ def lastsecondsubsitutions(texttoclean):
 		(r'`(\d)',r'\1'),
 		(r'\\\(',r'('),
 		(r'\\\)', r')'),
-		(r'﹖', r'?'),
-		(r'﹠', r'&')
 	)
 
 	for i in range(0, len(betacodetuples)):
@@ -197,11 +195,38 @@ def lastsecondsubsitutions(texttoclean):
 	# if you enable the next a problem arises with initial elision: ‘κείνων instead of ’κείνων
 	# you will get bitten by this more often than you will be fixing a problem?
 	# texttoclean = re.sub(r'(\W)’(\w)', r'\1‘\2', texttoclean)
+	resized = re.compile(r'[﹖﹠＇]')
+	texttoclean = re.sub(resized, sizeshifter, texttoclean)
 	texttoclean = re.sub(r'([\w\.,])‘([\W])', r'\1’\2', texttoclean)
 	texttoclean = re.sub(r'(\W)”(\w)', r'\1“\2', texttoclean)
 	texttoclean = re.sub(r'([\w\.,])“([\W])', r'\1”\2', texttoclean)
 
 	return texttoclean
+
+
+def sizeshifter(match):
+	"""
+
+	swap a little and (﹠) for a big one (&), etc.
+
+	:param match:
+	:return:
+	"""
+
+	val = match.group(0)
+
+	substitutions = {
+		'﹖': '?',
+		'﹠': '&',
+		'＇': u'\u0027' # simple apostrophe
+		}
+
+	try:
+		substitute = substitutions[val]
+	except KeyError:
+		substitute = ''
+
+	return substitute
 
 
 def bracketsimplifier(match):
@@ -293,14 +318,14 @@ def cleanuplingeringmesses(texttoclean):
 	"""
 
 	# many papyrus lines start like: '[ &c ? ]$'
-	# this ends up as: '[ <hmu_roman_in_a_greek_text>c ̣ ]</hmu_roman_in_a_greek_text>'
+	# this ends up as: '[ <hmu_latin_normal>c ̣ ]</hmu_latin_normal>'
 	# good luck geting re to find that pattern, though: some sort of bug in re?
 	# restoremissing(matchgroup) will not work!
 	# let's address the '?' in earlybirds...
 	# see also: '[*MESORH\ &c `12 ] `302$'
 	# this failed without the second
 
-	# missing = re.compile(r'\[(\s{1,})<hmu_roman_in_a_greek_text>c(.*?)\](.*?)</hmu_roman_in_a_greek_text>')
+	# missing = re.compile(r'\[(\s{1,})<hmu_latin_normal>c(.*?)\](.*?)</hmu_latin_normal>')
 	# texttoclean = re.sub(missing, r'[\1c \2 ]', texttoclean)
 	# texttoclean = re.sub(missing, bracketspacer, texttoclean)
 
@@ -310,7 +335,7 @@ def cleanuplingeringmesses(texttoclean):
 def bracketspacer(matchgroup):
 	"""
 	this is not good:
-		'[      <hmu_roman_in_a_greek_text>c 27     </hmu_roman_in_a_greek_text>π]όλεωϲ χ⦅αίρειν⦆. ὁμολογῶ'
+		'[      <hmu_latin_normal>c 27     </hmu_latin_normal>π]όλεωϲ χ⦅αίρειν⦆. ὁμολογῶ'
 
 	it should be:
 		'[(spaces)c 27(spaces)π]όλεωϲ χ⦅αίρειν⦆. ὁμολογῶ'
@@ -407,7 +432,7 @@ def findromanwithingreek(texttoclean):
 	# if there is: turn off roman at the $; if there is not turn of roman at line end
 
 	search = re.compile(r'(&\d{0,2})(.*?)(\s{0,1}█)')
-	texttoclean = re.sub(search, doublecheckromanwithingreek, texttoclean)
+	# texttoclean = re.sub(search, doublecheckromanwithingreek, texttoclean)
 
 	return texttoclean
 
@@ -426,23 +451,23 @@ def doublecheckromanwithingreek(match):
 	core = re.sub(r'\?', '﹖', core)
 
 	if re.search(internaltermination, match.group(1) + core) is not None:
-		substitution = re.sub(internaltermination, r'<hmu_roman_in_a_greek_text>\2</hmu_roman_in_a_greek_text>',
+		substitution = re.sub(internaltermination, r'<hmu_latin_normal>\2</hmu_latin_normal>',
 		                      match.group(1) + core)
-		substitution = re.sub(linetermination, r'<hmu_roman_in_a_greek_text>\2</hmu_roman_in_a_greek_text>\3',
+		substitution = re.sub(linetermination, r'<hmu_latin_normal>\2</hmu_latin_normal>\3',
 		                      substitution)
 	else:
-		substitution = '<hmu_roman_in_a_greek_text>{m}</hmu_roman_in_a_greek_text>'.format(m=core)
+		substitution = '<hmu_latin_normal>{m}</hmu_latin_normal>'.format(m=core)
 
 	substitution += match.group(3)
 	# print(match.group(1) + match.group(2),'\n\t',substitution)
 
 	# it is all to common to see a punctuation issue where one side falls outside the span:
-	#   <hmu_roman_in_a_greek_text> [582/1</hmu_roman_in_a_greek_text>]
-	#   [<hmu_roman_in_a_greek_text>FGrHist. 76 F 74 II 155]</hmu_roman_in_a_greek_text>
+	#   <hmu_latin_normal> [582/1</hmu_latin_normal>]
+	#   [<hmu_latin_normal>FGrHist. 76 F 74 II 155]</hmu_latin_normal>
 	# patch that up here and now...
 
-	substitution = re.sub(r'<hmu_roman_in_a_greek_text> \[',' [<hmu_roman_in_a_greek_text>',substitution)
-	substitution = re.sub(r']</hmu_roman_in_a_greek_text>', '</hmu_roman_in_a_greek_text>]', substitution)
+	substitution = re.sub(r'<hmu_latin_normal> \[',' [<hmu_latin_normal>',substitution)
+	substitution = re.sub(r']</hmu_latin_normal>', '</hmu_latin_normal>]', substitution)
 
 	# the next will ruin the greek betacode:
 	# substitution = latindiacriticals(substitution)
@@ -660,3 +685,28 @@ def cleanworkname(betacodeworkname):
 	workname = re.sub(r'`', '', workname)
 
 	return workname
+
+
+def colonshift(txt):
+	"""
+
+	colon to middot
+
+	:param txt:
+	:return:
+	"""
+	return re.sub(r':', '·', txt)
+
+
+def insertnewlines(txt):
+	"""
+
+	break up the file into something you can walk through line-by-line
+
+	:param txt:
+	:return:
+	"""
+	txt =  re.sub(r'(<hmu_set_level)', r'\n\1', txt)
+	txt = txt.split('\n')
+
+	return txt

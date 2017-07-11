@@ -24,112 +24,183 @@ def replacegreekmarkup(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
-	dollars = re.compile(r'\$(\d{1,2})(.*?)(\$\d{0,1})')
+	dollars = re.compile(r'\$(\d{1,2})([^\&]*?)(\$\d{0,1})')
 	texttoclean = re.sub(dollars, lambda x: dollarssubstitutes(int(x.group(1)), x.group(2)), texttoclean)
-
-	# these strays are rough
-	#texttoclean = re.sub(r'\$(.*?)\$', '<hmu_shift_greek_font betacodeval="regular">\1</hmu_shift_greek_font>', texttoclean)
 
 	return texttoclean
 
 
-def replacelatinmarkup(texttoclean):
+def replacelatinmarkupinagreektext(texttoclean):
 	"""
 	turn &NN into markup
+
+	note that we have to do some of this in order so that &3 has been taken care of before we get to &
+
 	:param texttoclean:
 	:return:
 	"""
-	ands = re.compile(r'&(\d{1,2})([^\$]*?)(&\d{0,1})')
-	texttoclean = re.sub(ands, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(3)), texttoclean)
 
-	anddollars = re.compile(r'&(\d{1,2})(.*?)(\$\d{0,1})')
-	texttoclean = re.sub(anddollars, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(3), anddollar=True), texttoclean)
+	# the most stupid case: a line should turn things off; but what if it does not?
+	onbutnotoff = re.compile(r'(&)(\d{1,2})([^\$]*?)(\s{0,1}█)')
+	texttoclean = re.sub(onbutnotoff, lambda x: andsubstitutes(x.group(2), x.group(3), x.group(4), threeitems=True), texttoclean)
+
+	# the simplest case: &Va$ (but don't catch '&Chalc&3b$')
+	loneandlonedollar = re.compile(r'&([^\d][^&]*?)\$')
+	texttoclean = re.sub(loneandlonedollar, lambda x: andsubstitutes(0, x.group(1), '', ), texttoclean)
+
+	ands = re.compile(r'&(\d{1,2})([^\$█]*?)(&\d{0,1})')
+	texttoclean = re.sub(ands, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(3), threeitems=True), texttoclean)
+
+	# roman + romanshift + greek: &Chalc&3b$
+	andand = re.compile(r'&([^\$█]*?)(&\d{0,1})')
+	texttoclean = re.sub(andand, lambda x: andsubstitutes(0, x.group(1), x.group(2), threeitems=True), texttoclean)
+
+	anddollars = re.compile(r'&(\d{1,2})([^█]*?)(\$\d{0,1})')
+	texttoclean = re.sub(anddollars, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(3)), texttoclean)
 
 	return texttoclean
 
 
-def dollarssubstitutes(val, core):
+def replacegreekkupinalatintext(texttoclean):
+	"""
+	turn &NN into markup
+
+	note that we have to do some of this in order so that &3 has been taken care of before we get to &
+
+	:param texttoclean:
+	:return:
+	"""
+
+	# $...$
+	texttoclean = replacegreekmarkup(texttoclean)
+
+	# the simplest case: &Va$
+	loneandlonedollar = re.compile(r'$(.*?)\&')
+	texttoclean = re.sub(loneandlonedollar, lambda x: dollarssubstitutes(0, x.group(1)), texttoclean)
+
+	# the most stupid case: a line should turn things off; but what if it does not?
+	onbutnotoff = re.compile(r'($)(\d{0,2})(.*?)(\s{0,1}█)')
+	texttoclean = re.sub(onbutnotoff, lambda x: dollarssubstitutes(x.group(1), x.group(2), extra=x.group(3)), texttoclean)
+
+
+	return texttoclean
+
+
+def dollarssubstitutes(val, core, extra=''):
 	"""
 	turn $NN...$ into unicode
 	:param match:
 	:return:
 	"""
 
+	try:
+		val = int(val)
+	except:
+		val = 0
+
 	substitutions = {
-		70: [r'<span class="uncial">', r'</span>'],
-		53: [r'<span class="hebrew">', r'</span>'],
-		52: [r'<span class="arabic">', r'</span>'],
-		51: [r'<span class="demotic">', r'</span>'],
-		50: [r'<span class="coptic">', r'</span>'],
-		40: [r'<span class="extralarge">', r'</span>'],
-		30: [r'<span class="extrasmall">', r'</span>'],
-		20: [r'<span class="largerthannormal">', r'</span>'],
-		18: [r'<span class="smallerthannormal">', r'</span>'],  # + 'vertical', but deprecated
-		16: [r'<span class="smallerthannormalsuperscriptbold">', r'</span>'],
-		15: [r'<span class="smallerthannormalsubscript">', r'</span>'],
-		14: [r'<span class="smallerthannormalsuperscript">', r'</span>'],
-		13: [r'<span class="smallerthannormalitalic">', r'</span>'],
-		11: [r'<span class="smallerthannormalbold">', r'</span>'],
-		10: [r'<span class="smallerthannormal">', r'</span>'],
-		9: [r'<span class="regular">', r'</span>'],
-		8: [r'<span class="vertical">', r'</span>'],
-		6: [r'<span class="superscriptbold">', r'</span>'],
-		5: [r'<span class="subscript">', r'</span>'],
-		4: [r'<span class="superscript">', r'</span>'],
-		3: [r'<span class="italic">', r'</span>'],
-		2: [r'<span class="bolditalic">', r'</span>'],
-		1: [r'<span class="bold">', r'</span>']
+		70: [r'<hmu_fontshift_greek_uncial>', r'</hmu_fontshift_greek_uncial>'],
+		53: [r'<hmu_fontshift_greek_hebrew>', r'</hmu_fontshift_greek_hebrew>'],
+		52: [r'<hmu_fontshift_greek_arabic>', r'</hmu_fontshift_greek_arabic>'],
+		51: [r'<hmu_fontshift_greek_demotic>', r'</hmu_fontshift_greek_demotic>'],
+		50: [r'<hmu_fontshift_greek_coptic>', r'</hmu_fontshift_greek_coptic>'],
+		40: [r'<hmu_fontshift_greek_extralarge>', r'</hmu_fontshift_greek_extralarge>'],
+		30: [r'<hmu_fontshift_greek_extrasmall>', r'</hmu_fontshift_greek_extrasmall>'],
+		20: [r'<hmu_fontshift_greek_largerthannormal>', r'</hmu_fontshift_greek_largerthannormal>'],
+		18: [r'<hmu_fontshift_greek_smallerthannormal>', r'</hmu_fontshift_greek_smallerthannormal>'],  # + 'vertical', but deprecated
+		16: [r'<hmu_fontshift_greek_smallerthannormalsuperscriptbold>', r'</hmu_fontshift_greek_smallerthannormalsuperscriptbold>'],
+		15: [r'<hmu_fontshift_greek_smallerthannormalsubscript>', r'</hmu_fontshift_greek_smallerthannormalsubscript>'],
+		14: [r'<hmu_fontshift_greek_smallerthannormalsuperscript>', r'</hmu_fontshift_greek_smallerthannormalsuperscript>'],
+		13: [r'<hmu_fontshift_greek_smallerthannormalitalic>', r'</hmu_fontshift_greek_smallerthannormalitalic>'],
+		11: [r'<hmu_fontshift_greek_smallerthannormalbold>', r'</hmu_fontshift_greek_smallerthannormalbold>'],
+		10: [r'<hmu_fontshift_greek_smallerthannormal>', r'</hmu_fontshift_greek_smallerthannormal>'],
+		9: [r'<hmu_fontshift_greek_regular>', r'</hmu_fontshift_greek_regular>'],
+		8: [r'<hmu_fontshift_greek_vertical>', r'</hmu_fontshift_greek_vertical>'],
+		6: [r'<hmu_fontshift_greek_superscriptbold>', r'</hmu_fontshift_greek_superscriptbold>'],
+		5: [r'<hmu_fontshift_greek_subscript>', r'</hmu_fontshift_greek_subscript>'],
+		4: [r'<hmu_fontshift_greek_superscript>', r'</hmu_fontshift_greek_superscript>'],
+		3: [r'<hmu_fontshift_greek_italic>', r'</hmu_fontshift_greek_italic>'],
+		2: [r'<hmu_fontshift_greek_bolditalic>', r'</hmu_fontshift_greek_bolditalic>'],
+		1: [r'<hmu_fontshift_greek_bold>', r'</hmu_fontshift_greek_bold>'],
+		0: [r'<hmu_fontshift_greek_normal>', r'</hmu_fontshift_greek_normal>']
 	}
 
 	try:
-		substitute = substitutions[val][0] + core + substitutions[val][1]
+		substitute = substitutions[val][0] + core + substitutions[val][1] + extra
 	except KeyError:
-		substitute = '<hmu_unhandled_greek_font_shift betacodeval="{v}" />{c}'.format(v=val, c=core)
+		substitute = '<hmu_unhandled_greek_font_shift betacodeval="{v}" />{c}{e}'.format(v=val, c=core, e=extra)
 		if warnings:
 			print('\t',substitute)
 
 	return substitute
 
 
-def andsubstitutes(groupone, grouptwo, groupthree, anddollar=False):
+def andsubstitutes(groupone, grouptwo, groupthree, threeitems=False):
 	"""
 	turn &NN...& into unicode
 	:param match:
 	:return:
 	"""
 
-	val = int(groupone)
+	try:
+		val = int(groupone)
+	except:
+		val = 0
+
 	core = grouptwo
 
 	substitutions = {
-		91: [r'<hmu_undocumented_font_shift_AND91>',r'</hmu_undocumented_font_shift_AND91>'],
-		90: [r'<hmu_undocumented_font_shift_AND90>', r'</hmu_undocumented_font_shift_AND90>'],
-		82: [r'<hmu_undocumented_font_shift_AND82>', r'</hmu_undocumented_font_shift_AND82>'],
-		81: [r'<hmu_undocumented_font_shift_AND81>', r'</hmu_undocumented_font_shift_AND81>'],
-		20: [r'<span class="largerthannormal">',r'</span>'],
-		14: [r'<span class="smallerthannormalsuperscript">',r'</span>'],
-		13: [r'<span class="smallerthannormalitalic">', r'</span>'],
-		10: [r'<span class="smallerthannormal">', r'</span>'],
-		9: [r'<span class="normal">', r'</span>'],
-		8: [r'<span class="smallcapitalsitalic">', r'</span>'],
-		7: [r'<span class="smallcapitals">', r'</span>'],
-		6: [r'<span class="romannumerals">', r'</span>'],
-		5: [r'<span class="subscript">', r'</span>'],
-		4: [r'<span class="superscript">', r'</span>'],
-		3: [r'<span class="italic">', r'</span>'],
-		2: [r'<span class="bolditalic">', r'</span>'],
-		1: [r'<span class="bold">', r'</span>'],
+		91: [r'<hmu_fontshift_latin_undocumented_font_shift_AND91>',r'</hmu_fontshift_latin_undocumented_font_shift_AND91>'],
+		90: [r'<hmu_fontshift_latin_undocumented_font_shift_AND90>', r'</hmu_fontshift_latin_undocumented_font_shift_AND90>'],
+		82: [r'<hmu_fontshift_latin_undocumented_font_shift_AND82>', r'</hmu_fontshift_latin_undocumented_font_shift_AND82>'],
+		81: [r'<hmu_fontshift_latin_undocumented_font_shift_AND81>', r'</hmu_fontshift_latin_undocumented_font_shift_AND81>'],
+		20: [r'<hmu_fontshift_latin_largerthannormal>',r'</hmu_fontshift_latin_largerthannormal>'],
+		14: [r'<hmu_fontshift_latin_smallerthannormalsuperscript>',r'</hmu_fontshift_latin_smallerthannormalsuperscript>'],
+		13: [r'<hmu_fontshift_latin_smallerthannormalitalic>', r'</hmu_fontshift_latin_smallerthannormalitalic>'],
+		10: [r'<hmu_fontshift_latin_smallerthannormal>', r'</hmu_fontshift_latin_smallerthannormal>'],
+		9: [r'<hmu_fontshift_latin_normal>', r'</hmu_fontshift_latin_normal>'],
+		8: [r'<hmu_fontshift_latin_smallcapitalsitalic>', r'</hmu_fontshift_latin_smallcapitalsitalic>'],
+		7: [r'<hmu_fontshift_latin_smallcapitals>', r'</hmu_fontshift_latin_smallcapitals>'],
+		6: [r'<hmu_fontshift_latin_romannumerals>', r'</hmu_fontshift_latin_romannumerals>'],
+		5: [r'<hmu_fontshift_latin_subscript>', r'</hmu_fontshift_latin_subscript>'],
+		4: [r'<hmu_fontshift_latin_superscript>', r'</hmu_fontshift_latin_superscript>'],
+		3: [r'<hmu_fontshift_latin_italic>', r'</hmu_fontshift_latin_italic>'],
+		2: [r'<hmu_fontshift_latin_bolditalic>', r'</hmu_fontshift_latin_bolditalic>'],
+		1: [r'<hmu_fontshift_latin_bold>', r'</hmu_fontshift_latin_bold>'],
+		0: [r'<hmu_fontshift_latin_normal>', r'</hmu_fontshift_latin_normal>'],
 	}
 
 	try:
-		substitute = substitutions[val][0] + core + substitutions[val][1] + groupthree
+		substitutions[val]
 	except KeyError:
 		substitute = '<hmu_unhandled_latin_font_shift betacodeval="{v}" />{c}'.format(v=val, c=core)
 		if warnings:
 			print('\t',substitute)
+		return substitute
 
-	if anddollar:
-		substitute = '<hmu_roman_in_a_greek_text>{s}</hmu_roman_in_a_greek_text>'.format(s=substitute)
+	if not threeitems:
+		groupthree = ''
+
+	substitute = substitutions[val][0] + core + substitutions[val][1] + groupthree
 
 	return substitute
 
+
+def hmufontshiftsintospans(texttoclean):
+	"""
+
+	turn '<hmu_fontshift_latin_italic>b </hmu_fontshift_latin_italic>'
+
+	into '<span class="latin italic">b </span>'
+
+	:param texttoclean:
+	:return:
+	"""
+
+	shiftfinder = re.compile(r'<hmu_fontshift_(.*?)_(.*?)>')
+	shiftcleaner = re.compile(r'</hmu_fontshift_.*?>')
+
+	texttoclean = re.sub(shiftfinder, r'<span class="\1 \2">', texttoclean)
+	texttoclean = re.sub(shiftcleaner, r'</span>', texttoclean)
+
+	return texttoclean

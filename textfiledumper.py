@@ -22,7 +22,8 @@ import configparser
 from builder.file_io.filereaders import highunicodefileload
 from builder.corpus_builder import buildauthorobject
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
-from builder.parsers.betacodefontshifts import replacegreekmarkup, replacelatinmarkup
+from builder.parsers.betacodefontshifts import replacegreekmarkup, replacelatinmarkupinagreektext, hmufontshiftsintospans, \
+	replacegreekkupinalatintext
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
 from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacelatinbetacode, \
 	replacequotationmarks, findromanwithingreek, addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
@@ -101,30 +102,29 @@ htmlfoot = """
 """
 
 # functions need to match initialworkparsing() in corpus_builder.py
-grkinitial = [
-	earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars, colonshift,
-	replacegreekmarkup, findromanwithingreek, replacelatinmarkup, replacegreekbetacode,
-	restoreromanwithingreek, cleanuplingeringmesses, purgehybridgreekandlatinwords
-	]
+initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
+greekmiddle = [colonshift, replacegreekmarkup, findromanwithingreek, replacelatinmarkupinagreektext,
+               replacegreekbetacode, restoreromanwithingreek]
+latinmiddle = [replacegreekkupinalatintext, replacelatinbetacode]
+final = [hmufontshiftsintospans, cleanuplingeringmesses, purgehybridgreekandlatinwords]
 
-latininitial = [
-	earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars,
-	replacelatinmarkup, replacelatinbetacode,
-	cleanuplingeringmesses, purgehybridgreekandlatinwords
-	]
 
+if lg == 'G':
+	initialworkparsing = initial + greekmiddle + final
+else:
+	initialworkparsing = initial + latinmiddle + final
 
 # functions need to match secondaryworkparsing() in corpus_builder.py
-secondary = [
+secondaryworkparsing = [
 	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, levelbreak, finalsplit,
 	totallemmatization
 	]
 
 
 if lg == 'G':
-	functions = {key: val for (key,val) in enumerate(grkinitial + secondary)}
+	functions = {key: val for (key,val) in enumerate(initialworkparsing + secondaryworkparsing)}
 else:
-	functions = {key: val for (key,val) in enumerate(latininitial + secondary)}
+	functions = {key: val for (key,val) in enumerate(initialworkparsing + secondaryworkparsing)}
 
 n = debugauthor
 
@@ -134,8 +134,8 @@ a = buildauthorobject(n, lg, db, uidprefix, dataprefix)
 txt = highunicodefileload(db+n+'.TXT')
 
 
-streamout(txt,outputdir+'00a'+debugoutfile)
-streamout(re.sub(' █','\n█', txt),outputdir+'00b'+debugoutfile)
+streamout(txt,outputdir+'aa'+debugoutfile)
+streamout(re.sub(' █','\n█', txt),outputdir+'bb'+debugoutfile)
 
 for f in sorted(functions.keys()):
 	try:
@@ -146,18 +146,18 @@ for f in sorted(functions.keys()):
 	fn = chr(97+f)+'_'+getattr(functions[f], '__name__')
 
 	try:
-		streamout(re.sub(' █', '\n█', txt), outputdir + fn + '_' + n + '.txt')
+		streamout(re.sub(' █', '\n█', txt), outputdir + n + '_' + fn + '.txt')
 	except TypeError:
 		linesout(txt, outputdir + fn + '_' + n + '.txt')
 
 txt = [ln[2] for ln in txt]
-linesout(txt,outputdir+'88_'+debugauthor+'.txt')
+linesout(txt,outputdir+'yy_'+debugauthor+'.txt')
 
 txt = [ln+'<br \>' for ln in txt]
 txt = [re.sub(r'<hmu_increment_.*? />', '', ln) for ln in txt]
 txt = [re.sub(r'<hmu_set_level_.*? />', '', ln) for ln in txt]
 txt = [htmlthead.format(a=debugauthor, css=css)] + txt + [htmlfoot]
 
-linesout(txt,outputdir+'99_'+debugauthor+'.html')
+linesout(txt,outputdir+'zz_'+debugauthor+'.html')
 
 print('textfile generation took:\n\t', str(time.time() - start))

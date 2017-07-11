@@ -68,8 +68,6 @@ result = addoneauthor(authordict, lg, uidprefix, datapath, dataprefix, dbc, cur)
 print(result)
 dbc.commit()
 
-
-
 if remap:
 	tmpprefix = remap
 	permprefix = mapper[dataprefix]['uidprefix']

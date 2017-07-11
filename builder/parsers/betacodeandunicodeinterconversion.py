@@ -40,13 +40,15 @@ def parseromaninsidegreek(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
-	mangledroman = texttoclean.group(0)
+	mangledroman = texttoclean.group(2)
 
-	invals = u'αβξδεφγηι⒣κλμνοπρϲστυϝωχυζ·'
+	invals = u'αβξδεφγηι⒣κλμνοπρϲστυϝωχψζ·'
 	outvals = u'ABCDEFGHIJKLMNOPRSSTUVWXYZ:'
 	transformed = mangledroman.translate(str.maketrans(invals, outvals))
 
-	return transformed
+	span = '{open}{t}{close}'.format(t=transformed, open=texttoclean.group(1), close=texttoclean.group(3))
+
+	return span
 
 
 def parsegreekinsidelatin(texttoclean):
@@ -57,7 +59,7 @@ def parsegreekinsidelatin(texttoclean):
 
 
 def restoreromanwithingreek(texttoclean):
-	search = r'<hmu_roman_in_a_greek_text>(.*?)</hmu_roman_in_a_greek_text>'
+	search = r'(<hmu_fontshift_latin_.*?>)(.*?)(</hmu_fontshift_latin_.*?>)'
 	texttoclean = re.sub(search, parseromaninsidegreek, texttoclean)
 	texttoclean = re.sub(search, ldc, texttoclean)
 
