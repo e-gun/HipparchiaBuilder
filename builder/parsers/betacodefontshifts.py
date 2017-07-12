@@ -24,8 +24,11 @@ def replacegreekmarkup(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
-	dollars = re.compile(r'\$(\d{1,2})([^\&]*?)(\$\d{0,1})')
+	dollars = re.compile(r'\$(\d{1,2})([^\&█]*?)(\$\d{0,1})')
 	texttoclean = re.sub(dollars, lambda x: dollarssubstitutes(int(x.group(1)), x.group(2)), texttoclean)
+
+	straydollars = re.compile(r'\$(\d{1,2})(.*?)(\s{0,1}█)')
+	texttoclean = re.sub(straydollars, lambda x: dollarssubstitutes(int(x.group(1)), x.group(2), extra=x.group(3)), texttoclean)
 
 	return texttoclean
 
