@@ -68,9 +68,12 @@ def latinfontlinemarkupparser(match):
 	nodollar = re.compile(r'^(\d{0,})(.*?)$')
 	yesdollar = re.compile(r'^(\d{0,})(.*?)(\$)(.*?)$')
 	dollars = re.compile(r'\$')
+	alreadyshifted = re.compile(r'^(\d{0,})([^\$]*?)(<hmu_fontshift_greek.*?>)')
 
 	for a in ands[1:]:
-		if not re.search(dollars, a):
+		if re.search(alreadyshifted, a):
+			newand = re.sub(alreadyshifted, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(3)), a)
+		elif not re.search(dollars, a):
 			newand = re.sub(nodollar, lambda x: andsubstitutes(x.group(1), x.group(2), ''), a)
 		else:
 			newand = re.sub(yesdollar, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(4)), a)
