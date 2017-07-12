@@ -782,13 +782,16 @@ def percentsubstitutes(match):
 
 	substitutions = {
 		# u'\u',
+		# many of these early items can look like betacode accents, etc.
+		# using small variants now; then lastpass can restore them
 		1: r'﹖', # '?' (003f), but using small variant instead: fe56
 		2: r'﹡', # '*' (u002a), but using small variant instead: fe61
-		3: u'\u002f',
-		4: u'\u0021',
-		5: u'\u007c',
-		6: u'\u003d',
-		7: u'\u002b',
+		3: u'／', # '/' (u002f), but using fullwidth variant instead: ff0f
+		4: u'﹗', # '!' (u0021), but using small variant instead: ff57
+		5: u'│', # '|' (u007c), but using box drawings light vertical instead: 2502
+		6: u'﹦', # '=' (u003d); but using small variant instead: fe66
+		7: u'﹢', # '+' (u002b); but using small variant instead: fe62
+		8: u'﹪', # '%' (u0025), but using small variant instead: fe6a
 		9: u'﹠', # '&' (0026) is also a control character; using small version instead (fe60); can swap it out in the end
 		10: r'﹕', # ':' (003a); samll variant instead: fe55
 		11: u'\u2022',
