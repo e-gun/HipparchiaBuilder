@@ -1348,15 +1348,15 @@ def quotesubstitutesb(match):
 	if simplequotes:
 		substitutions = {
 			2: ['“', '”'],
-			3: ['‘', '’'],
+			3: ['‵', '′'], # reversed prime and prime (for later fixing)
 			6: ['“', '”'],
-			7: ['‘', '’'],
+			7: ['‵', '′'], # reversed prime and prime (for later fixing)
 			8: ['“', '”'],
 		}
 	else:
 		substitutions = {
 			2: ['“', '”'],
-			3: ['‘', '’'],
+			3: ['‵', '′'], # reversed prime and prime (for later fixing)
 			6: ['«', '»'],
 			7: ['‹', '›'],
 			8: ['“', '„'],

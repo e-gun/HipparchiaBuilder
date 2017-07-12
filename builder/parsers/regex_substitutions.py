@@ -200,6 +200,11 @@ def lastsecondsubsitutions(texttoclean):
 	texttoclean = re.sub(r'([\w\.,])‘([\W])', r'\1’\2', texttoclean)
 	texttoclean = re.sub(r'(\W)”(\w)', r'\1“\2', texttoclean)
 	texttoclean = re.sub(r'([\w\.,])“([\W])', r'\1”\2', texttoclean)
+	# ['‵', '′'], # reversed prime and prime (for later fixing)
+	texttoclean = re.sub(r'([\w\.,])‵([\W])', r'\1′\2', texttoclean)
+	texttoclean = re.sub(r'(\W)′(\w)', r'\1‵\2', texttoclean)
+	texttoclean = re.sub(r'‵', r'‘', texttoclean)
+	texttoclean = re.sub(r'′', r'’', texttoclean)
 
 	return texttoclean
 

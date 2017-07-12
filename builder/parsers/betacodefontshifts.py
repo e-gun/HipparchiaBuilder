@@ -62,6 +62,7 @@ def latinfontlinemarkupparser(match):
 
 	ands = m.split('&')
 	if len(ands) == 1:
+		# the line does not actually have any escapes: we are done
 		return match.group(0)
 
 	newline = [ands[0]]
@@ -72,6 +73,7 @@ def latinfontlinemarkupparser(match):
 
 	for a in ands[1:]:
 		if re.search(alreadyshifted, a):
+			# do this before checking nodollar
 			newand = re.sub(alreadyshifted, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(3)), a)
 		elif not re.search(dollars, a):
 			newand = re.sub(nodollar, lambda x: andsubstitutes(x.group(1), x.group(2), ''), a)
