@@ -294,6 +294,17 @@ def debughostilesubstitutions(texttoclean):
 	"""
 	all sorts of things will be hard to figure out if you run this suite
 	but it does make many things 'look better' even if there are underlying problems.
+
+	see latinfontlinemarkupparser() for notes on what the problems are/look like
+
+	if the $ is part of an irrational 'on-without-off' Greek font toggle, then we don't care
+	it is anything that does not fit that pattern that is the problem
+
+	the hard part is churning through lots of texts looking for ones that do not fit that pattern
+
+	at the moment few texts seem to have even the benign toggle issue; still looking for places
+	where there is a genuine problem
+
 	:param texttoclean:
 	:return:
 	"""
@@ -301,7 +312,7 @@ def debughostilesubstitutions(texttoclean):
 	if config['buildoptions']['hideknownblemishes'] != 'y':
 		return texttoclean
 
-	betacodetuples = [ (r'[\$\&]', r'') ,
+	betacodetuples = [ (r'[\$]', r'') ,
 	                   ]
 
 

@@ -56,6 +56,13 @@ def latinfontlinemarkupparser(match):
 
 	check a quasi-line for '&' escapes
 
+	scholia are a great place to look for the hardest cases
+
+	remaining difficulties
+		(will get "SyntaxError: (unicode error) 'unicodeescape' codec..." if you put some of them in here
+		[TLG0085] [ '"3' vel sim  as something that counts as 'off' and requires 'greek on']
+		[TLG5014] ['%10' as something that counts as 'off' and requires 'greek on']
+
 	:param match:
 	:return:
 	"""
