@@ -66,7 +66,7 @@ def latinfontlinemarkupparser(match):
 
 	newline = [ands[0]]
 	nodollar = re.compile(r'^(\d{0,})(.*?)$')
-	yesdollar = re.compile(r'^(\d{0,})(.*?)(\$)(.*?)$')
+	yesdollar = re.compile(r'^(\d{0,})(.*?)(\$\d{0,2})(.*?)$')
 	dollars = re.compile(r'\$')
 	alreadyshifted = re.compile(r'^(\d{0,})([^\$]*?)(<hmu_fontshift_greek.*?>)')
 
@@ -76,6 +76,9 @@ def latinfontlinemarkupparser(match):
 		elif not re.search(dollars, a):
 			newand = re.sub(nodollar, lambda x: andsubstitutes(x.group(1), x.group(2), ''), a)
 		else:
+			# note that we are killing off whatever special thing happens with the '$' because of (\$\d{0,2})
+			# see Aeschylus, Fragmenta for '█⑨⑥ &10❨Dionysos tritt auf﹕❩$8'
+			# it is not clear what we are supposed to do with a trailing '8' like that...: 'greek vertical'
 			newand = re.sub(yesdollar, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(4)), a)
 		newline.append(newand)
 
