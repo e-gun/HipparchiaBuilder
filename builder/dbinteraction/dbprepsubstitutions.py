@@ -288,7 +288,8 @@ def hmutonbsp(dbunreadyversion):
 	
 	for line in dbunreadyversion:
 		line[workingcolumn] = re.sub(bqs, quarterspacer, line[workingcolumn])
-		line[workingcolumn] = re.sub(r'<hmu_standalone_tabbedtext />', r'&nbsp;&nbsp;&nbsp;&nbsp; ', line[workingcolumn])
+		# used to do 4, but the indentations could pile up
+		line[workingcolumn] = re.sub(r'<hmu_standalone_tabbedtext />', r'&nbsp;&nbsp;&nbsp;', line[workingcolumn])
 		dbreadyversion.append(line)
 	
 	return dbreadyversion
@@ -301,7 +302,8 @@ def quarterspacer(matchgroup):
 	:return: a digit as a string
 	"""
 	digit = int(matchgroup.group(1))
-	spaces = divmod(digit,4)[0]
+	# used to do 4, but the indentations could pile up
+	spaces = divmod(digit,6)[0]
 	substitution = ''
 	for i in range(0,spaces):
 		substitution += '&nbsp;'
