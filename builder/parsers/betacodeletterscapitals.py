@@ -52,11 +52,13 @@ def capitalletters(betacode):
 	unicode = re.sub(cr, capitalrough, unicode)
 
 	# capital + accent
-	cg = re.compile(r'[*]\\([AEIOUHW])')
-	ca = re.compile(r'[*]\/([AEIOUHW])')
+	cg = re.compile(r'[*]([AEIOUHW])\\')
+	ca = re.compile(r'[*]([AEIOUHW])/')
+	cc = re.compile(r'[*]([AEIOUHW])=')
 
 	unicode = re.sub(cg, capitalgrave, unicode)
 	unicode = re.sub(ca, capitalacute, unicode)
+	unicode = re.sub(cc, capitalcircumflex, unicode)
 
 	# capital + adscript
 	cad = re.compile(r'[*]\|([AHW])')
@@ -323,6 +325,18 @@ def capitalrough(match):
 
 # capital + accent
 def capitalgrave(match):
+	"""
+
+	this sort of thing will get requested, but it looks nuts:
+		ΠΕΡῚ ἈΝΑΓΝΏϹΕΩϹ
+		ΠΕΡῚ ΓΡΑΜΜΑΤΙΚΗ῀Ϲ
+
+	just return the capitals instead
+
+	:param match:
+	:return:
+	"""
+
 	substitutions = {
 		'A': u'Ὰ',
 		'E': u'Ὲ',
@@ -333,12 +347,34 @@ def capitalgrave(match):
 		'W': u'Ὼ',
 	}
 
-	substitute = substitutions[match.group(1)]
+	simplesubstitutions = {
+		'A': u'Α',
+		'E': u'Ε',
+		'I': u'Ι',
+		'O': u'Ο',
+		'U': u'Υ',
+		'H': u'Η',
+		'W': u'Ω',
+	}
+
+	substitute = simplesubstitutions[match.group(1)]
 
 	return substitute
 
 
 def capitalacute(match):
+	"""
+
+	this sort of thing will get requested, but it looks nuts:
+		ΠΕΡῚ ἈΝΑΓΝΏϹΕΩϹ
+		ΠΕΡῚ ΓΡΑΜΜΑΤΙΚΗ῀Ϲ
+
+	just return the capitals instead
+
+	:param match:
+	:return:
+	"""
+
 	substitutions = {
 		'A': u'Ά',
 		'E': u'Έ',
@@ -349,10 +385,56 @@ def capitalacute(match):
 		'W': u'Ώ',
 	}
 
-	substitute = substitutions[match.group(1)]
+	simplesubstitutions = {
+		'A': u'Α',
+		'E': u'Ε',
+		'I': u'Ι',
+		'O': u'Ο',
+		'U': u'Υ',
+		'H': u'Η',
+		'W': u'Ω',
+	}
+
+	substitute = simplesubstitutions[match.group(1)]
 
 	return substitute
 
+def capitalcircumflex(match):
+	"""
+
+	this sort of thing will get requested, but it looks nuts:
+		ΠΕΡῚ ἈΝΑΓΝΏϹΕΩϹ
+		ΠΕΡῚ ΓΡΑΜΜΑΤΙΚΗ῀Ϲ
+
+	just return the capitals instead
+
+	:param match:
+	:return:
+	"""
+
+	substitutions = {
+		'A': u'Α\u1fc0',
+		'E': u'Ε\u1fc0',
+		'I': u'Ι\u1fc0',
+		'O': u'Ο\u1fc0',
+		'U': u'Υ\u1fc0',
+		'H': u'Η\u1fc0', # there is no capital eta with a circumflex; but TLG0063 will ask for *G*R*A*M*M*A*T*I*K*H=*S3 anyway
+		'W': u'Ω\u1fc0',
+	}
+
+	simplesubstitutions = {
+		'A': u'Α',
+		'E': u'Ε',
+		'I': u'Ι',
+		'O': u'Ο',
+		'U': u'Υ',
+		'H': u'Η',
+		'W': u'Ω',
+	}
+
+	substitute = simplesubstitutions[match.group(1)]
+
+	return substitute
 
 def capitaladscript(match):
 	substitutions = {
