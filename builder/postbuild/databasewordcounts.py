@@ -35,10 +35,10 @@ def wordcounter(restriction=None):
 	"""
 	wordcounttable = 'wordcounts'
 
-	authordict = loadallauthorsasobjects()
+	authordict = loadallauthorsasobjects(config)
 
 	if restriction:
-		workdict = loadallworksasobjects()
+		workdict = loadallworksasobjects(config)
 		try:
 			tr = restriction['time']
 			# restriction should be a date range tuple (-850,300), e.g.
