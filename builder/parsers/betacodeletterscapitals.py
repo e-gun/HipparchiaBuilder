@@ -15,12 +15,13 @@ config.read('config.ini')
 def capitalletters(betacode):
 	# needs to be done in order of length of regex string
 	# capital + breathing + accent + adscript
-	csga = re.compile(r'[*]\)\\\|([AHW])')
-	crga = re.compile(r'[*]\(\\\|([AHW])')
-	csaa = re.compile(r'[*]\)\/\|([AHW])')
-	craa = re.compile(r'[*]\(\/\|([AHW])')
-	csca = re.compile(r'[*]\(\=\|([AHW])')
-	crca = re.compile(r'[*]\(\=\|([AHW])')
+	# '*)/W|ETO GOU=N KAI\ O( *DIONU/SIOS...'
+	csga = re.compile(r'[*]\)\\([AHW])\|')
+	crga = re.compile(r'[*]\(\\([AHW])\|')
+	csaa = re.compile(r'[*]\)\/([AHW])\|')
+	craa = re.compile(r'[*]\(\/([AHW])\|')
+	csca = re.compile(r'[*]\(\=([AHW])\|')
+	crca = re.compile(r'[*]\(\=([AHW])\|')
 
 	unicode = re.sub(csga, capitalsmoothgraveadscript, betacode)
 	unicode = re.sub(crga, capitalroughgraveadscript, unicode)
@@ -61,7 +62,7 @@ def capitalletters(betacode):
 	unicode = re.sub(cc, capitalcircumflex, unicode)
 
 	# capital + adscript
-	cad = re.compile(r'[*]\|([AHW])')
+	cad = re.compile(r'[*]([AHW])\|')
 
 	unicode = re.sub(cad, capitaladscript, unicode)
 
@@ -387,7 +388,7 @@ def capitalacute(match):
 		'U': u'Ύ',
 		'H': u'Ή',
 		'W': u'Ώ',
-	}
+		}
 
 	simplesubstitutions = {
 		'A': u'Α',
