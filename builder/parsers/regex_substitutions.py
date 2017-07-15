@@ -492,8 +492,12 @@ def totallemmatization(parsedtextfile):
 			setting = gotsetting.group(2)
 			# Euripides (0006) has <hmu_set_level_0_to_post 961 /> after πῶς οὖν ἔτ’ ἂν θνήισκοιμ’ ἂν ἐνδίκως, πόσι,
 			# 'post 961' becomes a problem: you need to add one to 961, but you will fail 'str(int(setting)'
-			# and so we are going to check for the whitespace...
-			levelmapper[level] = setting.split(' ')[-1]
+			# slicing at the whitespace will fix this (sort of)
+			# but then you get a new problem: UPZ (DDP0155) and its new documents '<hmu_set_level_5_to_2 rp />'
+			# the not so pretty solution of the hour is to build a quasi-condition that is seldom met
+			# it is almost never true that the split will yield anything other than the original item
+			# it also is not clear how many other similar cases are out there: 'after 1001', etc.
+			levelmapper[level] = setting.split('post ')[-1]
 			if level > 0:
 				for l in range(0, level):
 					levelmapper[l] = 1

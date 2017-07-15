@@ -11,7 +11,7 @@ import time
 
 from builder import corpus_builder
 from builder.dbinteraction.build_lexica import formatgklexicon, formatlatlexicon, analysisloader
-from builder.dbinteraction.db import setconnection
+from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.postbuild.databasewordcounts import headwordcounts, wordcounter
 

@@ -8,7 +8,7 @@
 
 import configparser
 from multiprocessing import Process, Manager
-from builder.dbinteraction.db import setconnection
+from builder.dbinteraction.connection import setconnection
 from builder.builder_classes import MPCounter
 from builder.workers import setworkercount
 
@@ -188,7 +188,7 @@ def calculatewordcounts(uids):
 			authors[id[0:6]] = [id]
 
 	# get all line values for all works
-		countdict = {}
+	countdict = {}
 	for a in authors:
 		q = 'SELECT wkuniversalid, stripped_line, hyphenated_words FROM {a}'.format(a=a)
 		cursor.execute(q)

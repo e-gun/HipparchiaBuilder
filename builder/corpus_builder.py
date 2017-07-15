@@ -15,7 +15,8 @@ from multiprocessing import Pool
 import builder.dbinteraction.dbprepsubstitutions
 import builder.parsers.betacodefontshifts
 from builder.dbinteraction import db
-from builder.dbinteraction.db import setconnection, resetauthorsandworksdbs
+from builder.dbinteraction.db import resetauthorsandworksdbs
+from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.file_io import filereaders
 from builder.parsers import idtfiles, parse_binfiles
@@ -23,7 +24,7 @@ from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetaco
 	purgehybridgreekandlatinwords
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, hmufontshiftsintospans, \
-	replacegreekkupinalatintext
+	replacegreekmarkupinalatintext
 from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacelatinbetacode, \
 	replacequotationmarks, addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
 	totallemmatization, colonshift, insertnewlines
@@ -46,6 +47,11 @@ def buildcorpusdbs(corpusname, corpusvars):
 	:param corpusname:
 	:return:
 	"""
+
+	# to skip ahead to resetbininfo() for debugging purposes
+	# iamdebugging = False
+	# if iamdebugging:
+	# 	return
 
 	workercount = setworkercount()
 
@@ -283,7 +289,7 @@ def initialworkparsing(authorobject, language, datapath):
 
 	initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
 	greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode, restoreromanwithingreek]
-	latinmiddle = [replacegreekkupinalatintext, replacelatinbetacode]
+	latinmiddle = [replacegreekmarkupinalatintext, replacelatinbetacode]
 	final = [hmufontshiftsintospans, cleanuplingeringmesses, purgehybridgreekandlatinwords]
 
 	if language == 'G' and authorobject.language == 'G':
@@ -333,4 +339,3 @@ def databaseloading(dbreadyversion, authorobject,  dbconnection, cursor):
 
 	# to debug return dbreadyversion
 	return
-

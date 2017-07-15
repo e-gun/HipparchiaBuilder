@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'LAT0400'
+debugauthor = 'TLG0063'
 
 """
 use this script to build and insert a single author into the database
@@ -25,7 +25,7 @@ this can be fixed by dodging builddbremappers() and instead deriving the ids fro
 import configparser
 from builder.file_io.filereaders import findauthors
 from builder.corpus_builder import addoneauthor, buildauthorobject
-from builder.dbinteraction.db import setconnection
+from builder.dbinteraction.connection import setconnection
 from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
 from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
 from builder.postbuild.postbuildmetadata import boundaryfinder, insertboundaries, calculatewordcounts, insertcounts

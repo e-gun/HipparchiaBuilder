@@ -101,7 +101,7 @@ def latinfontlinemarkupparser(match):
 	return returnline
 
 
-def replacegreekkupinalatintext(texttoclean):
+def replacegreekmarkupinalatintext(texttoclean):
 	"""
 	turn &NN into markup
 

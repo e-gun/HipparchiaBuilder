@@ -11,7 +11,8 @@ import re
 from multiprocessing import Manager, Process
 
 from builder.builder_classes import dbAuthor, MPCounter
-from builder.dbinteraction.db import setconnection, dbauthorandworkloader, authortablemaker
+from builder.dbinteraction.db import dbauthorandworkloader, authortablemaker
+from builder.dbinteraction.connection import setconnection
 from builder.parsers.regex_substitutions import latindiacriticals
 from builder.postbuild.postbuilddating import convertdate
 from builder.postbuild.postbuildhelperfunctions import rebasedcounter

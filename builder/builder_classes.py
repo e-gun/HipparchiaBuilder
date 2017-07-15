@@ -8,8 +8,9 @@
 
 
 import re
-from collections import namedtuple
 from multiprocessing import Value
+
+from builder.dbinteraction.connection import setconnection
 from builder.parsers import regex_substitutions
 
 class Author(object):
@@ -294,6 +295,13 @@ class dbOpus(object):
 
 	def later(self, other):
 		return float(self.converted_date) > other
+
+	def alllevels(self):
+		levels = []
+		for l in [self.levellabels_00, self.levellabels_01, self.levellabels_02, self.levellabels_03, self.levellabels_04, self.levellabels_05]:
+			levels.append(l)
+
+		return levels
 
 
 class dbWorkLine(object):
@@ -658,3 +666,51 @@ class MPCounter(object):
 	@property
 	def value(self):
 		return self.val.value
+
+
+def loadallauthorsasobjects(config):
+	"""
+
+	return a dict of all possible author objects
+
+	:return:
+	"""
+
+	dbconnection = setconnection(config)
+	curs = dbconnection.cursor()
+
+	q = 'SELECT * FROM authors'
+
+	curs.execute(q)
+	results = curs.fetchall()
+
+	authorsdict = {r[0]:dbAuthor(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]) for r in results}
+
+	return authorsdict
+
+
+def loadallworksasobjects(config):
+	"""
+
+	return a dict of all possible work objects
+
+	:return:
+	"""
+
+	dbconnection = setconnection(config)
+	curs = dbconnection.cursor()
+
+	q = 'SELECT universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02, levellabels_03, ' \
+	        'levellabels_04, levellabels_05, workgenre, transmission, worktype, provenance, recorded_date, converted_date, wordcount, ' \
+			'firstline, lastline, authentic FROM works'
+	curs.execute(q)
+	results = curs.fetchall()
+
+	worksdict = {r[0]:dbOpus(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8],
+						 r[9], r[10], r[11], r[12], r[13], r[14], r[15], r[16],
+						 r[17], r[18], r[19]) for r in results}
+
+	dbconnection.commit()
+	curs.close()
+
+	return worksdict

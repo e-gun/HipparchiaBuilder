@@ -9,7 +9,7 @@ import re
 import configparser
 
 from builder.builder_classes import dbWordCountObject, dbLemmaObject, dbWorkLine
-from builder.dbinteraction.db import setconnection
+from builder.dbinteraction.connection import setconnection
 
 config = configparser.ConfigParser()
 config.read('config.ini')

@@ -9,7 +9,7 @@
 import configparser
 import re
 
-from builder.dbinteraction.db import setconnection
+from builder.dbinteraction.connection import setconnection
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
 from builder.parsers.lexica import latinvowellengths, greekwithvowellengths, betaconvertandsave, greekwithoutvowellengths, \
 	lsjgreekswapper

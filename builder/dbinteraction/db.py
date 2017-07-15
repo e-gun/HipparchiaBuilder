@@ -7,22 +7,17 @@
 """
 
 
-import json
 import configparser
+import json
+import re
+from builder.dbinteraction.connection import setconnection
+from builder.builder_classes import dbOpus, dbAuthor
+
 try:
-	# python3
-	# latin buid: Build took 4.0 minutes
 	import psycopg2
 except ImportError:
-	# pypy3
-	# pypy3 support is EXPERIMENTAL (and unlikely to be actively pursued)
-	# latin buid: Build took 3.67 minutes
-	# greek will fail: too many connections to the db
-	# wordcounts will fail unless you increase the ulimit: Too many open files in system
 	import psycopg2cffi as psycopg2
 
-from builder.parsers.parse_binfiles import peekatcanon
-from builder.builder_classes import dbOpus, dbAuthor
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -95,12 +90,13 @@ def insertworksintoauthortable(authorobject, dbreadyversion, cursor, dbconnectio
 						'could not find top level; workobject level list is empty: anum=' + authorobject.universalid + ' wn=' + str(
 							wk.worknumber) + ' tit=' + wk.title)
 					if authorobject.universalid[0] == 'g':
-						print('\tin a cold sweat i am attempting to derive work structure from canon file')
-						labels = peekatcanon(wkuniversalid)
-						toplvl = len(labels)
-						for i in range(0, toplvl):
-							wk.structure[i] = labels[i]
-						print('\tstructure set to', wk.structure)
+						print('\twork structure empty')
+						# labels = peekatcanon(wkuniversalid)
+						labels = []
+						# toplvl = len(labels)
+						# for i in range(0, toplvl):
+						# 	wk.structure[i] = labels[i]
+						# print('\tstructure set to', wk.structure)
 
 				tups = line[1]
 
@@ -212,11 +208,6 @@ def tablenamer(authorobject, indexedat):
 		nn = '0' + str(wn)
 	else:
 		nn = str(wn)
-	try:
-		lg = wk.language
-	except:
-		lg = authorobject.language
-	# how many bilingual authors are there again?
 
 	pr = authorobject.universalid[0:2]
 
@@ -342,15 +333,6 @@ def workmaker(authorobject, indexedat, cursor):
 	return
 
 
-def setconnection(config):
-	dbconnection = psycopg2.connect(user=config['db']['DBUSER'], host=config['db']['DBHOST'],
-									port=config['db']['DBPORT'], database=config['db']['DBNAME'],
-									password=config['db']['DBPASS'])
-	# dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-
-	return dbconnection
-
-
 def resetauthorsandworksdbs(tmpprefix, prefix):
 	"""
 	clean out any old info before insterting new info
@@ -390,6 +372,7 @@ def resetauthorsandworksdbs(tmpprefix, prefix):
 				dbc.commit()
 			if count % 10000 == 0:
 				print('\t', count, zap, 'tables dropped')
+		dbc.commit()
 
 		q = 'DELETE FROM authors WHERE universalid LIKE %s'
 		d = (zap + '%',)
@@ -403,67 +386,52 @@ def resetauthorsandworksdbs(tmpprefix, prefix):
 	return
 
 
-"""
-
-cloned from HipparchiaServer
-
-"""
-
-def loadallauthorsasobjects():
+def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
 	"""
 
-	return a dict of all possible author objects
+	avoid a long run of UPDATE statements: use a tmp table
 
+	countdict:
+		{ uid1: count1, uid2: count2, ... }
+
+
+	:param countdict:
 	:return:
 	"""
 
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
 
-	dbconnection = setconnection(config)
-	curs = dbconnection.cursor()
+	q = 'CREATE TEMP TABLE tmp_{t} AS SELECT * FROM {t} LIMIT 0'.format(t=table)
+	cursor.execute(q)
+	dbc.commit()
 
-	authorsdict = {}
+	targetcolumns = ', '.join(targetcolumnlist)
+	blankvals = ['%s' for i in range(0,len(targetcolumnlist)+1)]
+	vv = ', '.join(blankvals)
+	count = 0
+	for k in insertiondict.keys():
+		count += 1
+		q = 'INSERT INTO tmp_{t} ({s}, {c}) VALUES ({vv} )'.format(t=table, c=targetcolumns, s=sharedcolumn, vv=vv)
+		d = tuple([k] + insertiondict[k])
+		cursor.execute(q, d)
+		if count % 100 == 0:
+			dbc.commit()
 
-	q = 'SELECT * FROM authors'
+	dbc.commit()
 
-	curs.execute(q)
-	results = curs.fetchall()
+	tc = targetcolumns.split(',')
+	tc = [re.sub('\s', '', c) for c in tc]
 
+	targs = ['{c}=tmp_{t}.{c}'.format(t=table,c=c) for c in tc]
+	targs = ', '.join(targs)
 
-	for r in results:
-		# (universalid, language, idxname, akaname, shortname, cleanname, genres, recorded_date, converted_date, location)
-		newauthor = dbAuthor(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9])
-		authorsdict[newauthor.universalid] = newauthor
+	q = 'UPDATE {t} SET {targs} FROM tmp_{t} WHERE {t}.{s}=tmp_{t}.{s}'.format(t=table, targs=targs, s=sharedcolumn)
+	cursor.execute(q)
+	dbc.commit()
 
-	return authorsdict
+	q = 'DROP TABLE tmp_{t}'.format(t=table)
+	cursor.execute(q)
+	dbc.commit()
 
-
-def loadallworksasobjects():
-	"""
-
-	return a dict of all possible work objects
-
-	:return:
-	"""
-
-
-	dbconnection = setconnection(config)
-	curs = dbconnection.cursor()
-
-	worksdict = {}
-
-	q = 'SELECT universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02, levellabels_03, ' \
-	        'levellabels_04, levellabels_05, workgenre, transmission, worktype, provenance, recorded_date, converted_date, wordcount, ' \
-			'firstline, lastline, authentic FROM works'
-	curs.execute(q)
-	results = curs.fetchall()
-
-	for r in results:
-		newwork = dbOpus(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8],
-						 r[9], r[10], r[11], r[12], r[13], r[14], r[15], r[16],
-						 r[17], r[18], r[19])
-		worksdict[newwork.universalid] = newwork
-
-	dbconnection.commit()
-	curs.close()
-
-	return worksdict
+	return

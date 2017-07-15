@@ -333,6 +333,10 @@ def capitalgrave(match):
 
 	just return the capitals instead
 
+	NB, you are still going to get stuck with ΠΕΡΙ ἈΝΑΓΝΩϹΕΩϹ because you can't turn off
+	the 'Ἀ' to handle this situation without producing chaos throughout every other text
+	(unless you are willing to waste precious cycles in order to do some sort of BLANK+CAP+CAP check)
+
 	:param match:
 	:return:
 	"""
