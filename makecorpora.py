@@ -10,7 +10,7 @@ import configparser
 import time
 
 from builder import corpus_builder
-from builder.dbinteraction.build_lexica import formatgklexicon, formatlatlexicon, analysisloader
+from builder.dbinteraction.build_lexica import formatgklexicon, formatlatlexicon, analysisloader, grammarloader
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.postbuild.databasewordcounts import headwordcounts, wordcounter
@@ -126,9 +126,9 @@ if buildlex == 'y':
 
 if buildgram == 'y':
 	print('building grammar dbs')
-	#grammarloader('greek')
+	grammarloader('greek')
 	analysisloader('greek')
-	#grammarloader('latin')
+	grammarloader('latin')
 	analysisloader('latin')
 	timestampthebuild('lm', dbconnection, cursor)
 	dbconnection.commit()
