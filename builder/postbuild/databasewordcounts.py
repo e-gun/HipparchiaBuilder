@@ -45,7 +45,7 @@ def wordcounter(restriction=None):
 			dbs = [key for key in authordict.keys() if authordict[key].converted_date and tr[0] < int(authordict[key].converted_date) < tr[1]]
 			dbs += [key for key in workdict.keys() if workdict[key].converted_date and tr[0] < int(workdict[key].converted_date) < tr[1]]
 			# mostly lots of little dicts: notifications get spammy
-			chunksize = 1500
+			chunksize = 1000
 		except KeyError:
 			# no such restriction
 			pass
@@ -53,12 +53,15 @@ def wordcounter(restriction=None):
 			restriction['genre']
 			# restriction will be an item from the list of known genres
 			dbs = [key for key in workdict.keys() if workdict[key].workgenre == restriction['genre']]
-			chunksize = 30
+			if restriction['genre'] in ['Inscr.', 'Docu.']:
+				chunksize = 300
+			else:
+				chunksize = 30
 		except KeyError:
 			# no such restriction
 			pass
 	else:
-		chunksize = 225
+		chunksize = 300
 		dbs = list(authordict.keys())
 
 	# limit to NN for testing purposes
@@ -218,6 +221,8 @@ def concordancechunk(enumerateddbdict):
 
 	print('\tfinished chunk',chunknumber+1)
 
+	del dbc
+	
 	return concordance
 
 
@@ -793,5 +798,3 @@ knownauthorgenres = [
 	'Theologici',
 	'Tragici'
 	]
-
-

@@ -303,7 +303,7 @@ def quarterspacer(matchgroup):
 	"""
 	digit = int(matchgroup.group(1))
 	# used to do 4, but the indentations could pile up
-	spaces = divmod(digit,6)[0]
+	spaces = divmod(digit,5)[0]
 	substitution = ''
 	for i in range(0,spaces):
 		substitution += '&nbsp;'

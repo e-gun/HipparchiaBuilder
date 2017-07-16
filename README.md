@@ -22,15 +22,16 @@ there you will find starter files for installing hipparchia onto macOS or into a
 in addition to the build environment itself, you will need:
 
 data to insert into the builder:
-
+```
     the TLG_E and PHI00005 and PHI7 files (presumably from cd-rom disks)
         your config file will need to point to this data properly
 
     the lexical data 
         see HipparchiaBSD on how to acquire the lexical data
         [00_FreeBSD_initial_setup.txt or 01_macOS_hipparchia_installation.txt under 'ACQUIRING THE LEXICA']
-
+```
 minimum software requirements:
+```
     python 3.6
         pip
         flask
@@ -38,3 +39,11 @@ minimum software requirements:
         bs4
         websockets
     postgresql9.6
+```
+hardware recommendations:
+```
+	a multicore processor
+	c. 1G RAM per thread 
+	SSD with 10G spare space
+	
+```
