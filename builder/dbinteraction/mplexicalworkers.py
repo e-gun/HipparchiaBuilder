@@ -69,11 +69,16 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			key = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
 			key = re.sub(r' \((\d)\)', superscripterone, key)
 			key = latinvowellengths(key)
-			
+
+			# 'n1000' --> 1000
+			id = int(re.sub(r'^n', '', id))
+
 			# do some quickie greek replacements
 			body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
-			
-			query = 'INSERT INTO ' + dictdb + ' (entry_name, metrical_entry, id_number, entry_type, entry_key, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s, %s)'
+			qtemplate="""
+			INSERT INTO {d} (entry_name, metrical_entry, id_number, entry_type, entry_key, entry_options, entry_body)
+				VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+			query = qtemplate.format(d=dictdb)
 			data = (entry, metricalentry, id, type, key, opt, body)
 			curs.execute(query, data)
 			commitcount.increment()
@@ -152,10 +157,15 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			body = re.sub(restorea, r'<gen lang="greek" opt="n">\1\2', body)
 			body = re.sub(restoreb, r'<pron extent="full">\1\2', body)
 			body = re.sub(restorec, r'<itype lang="greek" opt="n">\1\2', body)
-			
+
+			# 'n1000' --> 1000
+			id = int(re.sub(r'^n', '', id))
+
 			stripped = cleanaccentsandvj(entry)
-			
-			query = 'INSERT INTO ' + dictdb + ' (entry_name, metrical_entry, unaccented_entry, id_number, entry_type, entry_options, entry_body) VALUES (%s, %s, %s, %s, %s, %s, %s)'
+			qtemplate = """
+			INSERT INTO {d} (entry_name, metrical_entry, unaccented_entry, id_number, entry_type, entry_options, entry_body)
+				VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+			query = qtemplate.format(d=dictdb)
 			data = (entry, metrical, stripped, id, type, opt, body)
 			try:
 				curs.execute(query, data)

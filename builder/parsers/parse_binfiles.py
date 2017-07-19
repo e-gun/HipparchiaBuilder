@@ -104,6 +104,7 @@ def listoflabels(rbl):
 		string = intostring(string)
 		labels.append(string)
 		heads.append(head)
+
 	return labels, heads, rbl
 
 
@@ -111,6 +112,7 @@ def intostring(listofchars):
 	str = ''
 	for c in listofchars:
 		str += chr(c)
+
 	return str
 
 
@@ -118,6 +120,7 @@ def grabaunum(bytebundle):
 	num, bytebundle = npop(2, bytebundle)
 	anum = (num[0] * 256 + num[1]) & int('7fff', 16)  # dec 32767
 	anum = '%(n)04d' % {'n': anum}
+
 	return anum, bytebundle
 
 
