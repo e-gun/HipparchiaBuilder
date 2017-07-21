@@ -84,8 +84,8 @@ def singletonsubstitutes(match):
 		'#': u'\u0374',
 		'%': u'\u2020', # dagger: †
 		'@': r'<hmu_standalone_tabbedtext />',
-		'{': r'<span class="speaker">',
-		'}': r'</span>'
+		'{': r'<speaker>',
+		'}': r'</speaker>'
 	}
 
 	try:
@@ -800,7 +800,7 @@ def percentsubstitutes(match):
 		15: u'\u02c8',
 		16: u'\u00a6',
 		17: u'\u2016',
-		18: u'\u0025',  # look out for future problems: '
+		18: u'\u0027',  # look out for future problems: '
 		19: u'\u2013',
 		20: u'\u0301',
 		21: u'\u0300',
@@ -1096,7 +1096,7 @@ def ltcurlybracketsubstitutes(match):
 		37: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_37 />',
 		38: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_38 />',
 		39: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_39 />',
-		40: r'<span class="speaker">',
+		40: r'<speaker>',
 		41: r'<span class="stagedirection">',
 		43: r'<span class="serviusformatting">',
 	}
@@ -1138,7 +1138,7 @@ def rtcurlybracketsubstitutes(match):
 		27: u'\u0359',
 		28: r'</span>', # hmu_date_or_numeric_equivalent_of_date
 		29: r'</span>', # hmu_emendation_by_editor_of_text_not_obviously_incorrect
-		40: r'</span>',  # hmu_speaker
+		40: r'</speaker>',  # hmu_speaker
 		41: r'</span>',  # hmu_stage_direction
 		43: r'</span>',  # hmu_servius_bracket
 	}

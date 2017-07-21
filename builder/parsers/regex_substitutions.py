@@ -37,17 +37,21 @@ def earlybirdsubstitutions(texttoclean):
 	:return:
 	"""
 
-	betacodetuples = (
+	if config['buildoptions']['smartsinglequotes'] == 'y':
+		# 'smart' single quotes; but this produces an intial elision problem for something like ’κείνων which will be ‘κείνων instead
+		supplement = [
+			(r'\s\'', r' ‘'),
+			(r'\'( |\.|,|;)', r'’\1')
+			]
+	else:
+		# single quotes are a problem because OTOH, we have elision at the first letter of the word and, OTOH, we have plain old quotes
+		# full width variant for now
+		supplement = [(r'\'', r'＇')]
+
+	betacodetuples = [
 		(r'<(?!\d)',r'‹'),  # '<': this one is super-dangerous: triple-check
 		(r'>(?!\d)', u'›'),  # '>': this one is super-dangerous: triple-check
 		(r'_', u' \u2014 '),  # doing this without spaces was producing problems with giant 'hyphenated' line ends
-
-		# 'smart' single quotes; but this produces an intial elision problem for something like ’κείνων which will be ‘κείνων instead
-		# (r'\s\'', r' ‘'),
-		# (r'\'( |\.|,|;)', r'’\1'),
-		# single quotes are a problem because OTOH, we have elision at the first letter of the word and, OTOH, we have plain old quotes
-		(r'\'', r'＇'), # full width variant for now
-
 		(r'\\\{', r'❴'),
 		(r'\\\}', r'❵'),
 
@@ -65,7 +69,9 @@ def earlybirdsubstitutions(texttoclean):
 		(r'&c\s\?(.*?)\$', r'&c ﹖\1$'), # the question mark needs to be preserved, so we substitute a small question mark
 		(r'\[\sc\s\?(.*?)\$', r'[ c ﹖\1$'), # try to catch '&{10m4}10 [ c ? ]$I' without doing any damage
 		(r'&\?(.*?)\](.*?)\$',r'&﹖\1]\2$') # some stray lonely '?' cases remain
-	)
+	]
+
+	betacodetuples += supplement
 
 	for i in range(0, len(betacodetuples)):
 		texttoclean = re.sub(betacodetuples[i][0], betacodetuples[i][1], texttoclean)
@@ -192,9 +198,16 @@ def lastsecondsubsitutions(texttoclean):
 	# misbalanced punctuation in something like ’αὐλῶνεϲ‘: a trivial issue that will add a lot of time to builds if you do all of the variants
 	# easy enough to turn this off
 
-	# if you enable the next a problem arises with initial elision: ‘κείνων instead of ’κείνων
-	# you will get bitten by this more often than you will be fixing a problem?
-	# texttoclean = re.sub(r'(\W)’(\w)', r'\1‘\2', texttoclean)
+	if config['buildoptions']['smartsinglequotes'] == 'y':
+		# if you enable the next a problem arises with initial elision: ‘κείνων instead of ’κείνων
+		texttoclean = re.sub(r'(\W)’(\w)', r'\1‘\2', texttoclean)
+		# now we try to undo the mess we just created by looking for vowel+space+quote+char
+		# the assumption is that an actual quotation will have a punctuation mark that will invalidate this check
+		# Latin is a mess, and you will get too many bad mathces: De uerbo ’quiesco’
+		# but the following will still be wrong: τὰ ϲπέρματα· ‘κείνων γὰρ
+		# it is unfixable? how do I know that a proper quote did not just start?
+		previousendswithvowel = re.compile(r'([aeiouαειουηωᾳῃῳᾶῖῦῆῶάέίόύήώὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]\s)‘(\w)')
+		texttoclean = re.sub(previousendswithvowel, r'\1’\2', texttoclean)
 	resized = re.compile(r'[﹖﹡／﹗│﹦﹢﹪﹠﹕＇]')
 	texttoclean = re.sub(resized, sizeshifter, texttoclean)
 	texttoclean = re.sub(r'([\w\.,;])‘([\W])', r'\1’\2', texttoclean)
@@ -383,68 +396,6 @@ def bracketspacer(matchgroup):
 #
 # matchgroup substitutions
 #
-
-
-#
-# language interchanges
-#
-
-
-def replacelatinbetacode(texttoclean):
-	"""
-	first look for greek inside of a latin string
-
-	the add in latin accents
-
-	currently only called by cleanworkname()
-
-	:param texttoclean:
-	:return:
-	"""
-	# on but not off again: Plautus, Bacchides, 1163 + Gellius NA pr.
-	# a line should turn things off; but what if it does not?
-	# so we do this in two parts: first grab the whole line, then make sure there is not a section with a $ in it
-	# if there is: turn off roman at the $; if there is not turn of roman at line end
-
-	search = re.compile(r'(\$\d{0,2})(.*?)(\s{0,1}█)')
-	texttoclean = re.sub(search, doublecheckgreekwithinlatin, texttoclean)
-
-	search = r'<hmu_greek_in_a_latin_text>.*?</hmu_greek_in_a_latin_text>'
-	texttoclean = re.sub(search, parsegreekinsidelatin, texttoclean)
-
-	texttoclean = latindiacriticals(texttoclean)
-
-	return texttoclean
-
-
-def doublecheckgreekwithinlatin(match):
-	"""
-	only works in conjunction with replacelatinbetacode()
-
-	still plenty of trouble with something like Scholia In Aristophanem, (TLG5014):
-
-		█⑧⓪ DEUTE/RA I(STAME/NOU &3lb,$ ⌈TRI/TH I(STAME/NOU &Va&3b ... ❨&c2$❩ ME/XRI ⌈KAI\ &3l$ TW=N ...█
-
-
-	:param match:
-	:return:
-	"""
-
-	linetermination = re.compile(r'(\$\d{0,2})(.*?)(\s{0,1}$)')
-	internaltermination = re.compile(r'(\$\d{0,2})(.*?)\&(\d{0,2})')
-	if re.search(internaltermination, match.group(1) + match.group(2)) is not None:
-		substitution = re.sub(internaltermination, r'<hmu_greek_in_a_latin_text>\2</hmu_greek_in_a_latin_text>',
-		                      match.group(1) + match.group(2))
-		# OK, you got the internal ones, but a final $xxx can remain at the end of the line
-		substitution = re.sub(linetermination, r'<hmu_greek_in_a_latin_text>\2</hmu_greek_in_a_latin_text>\3', substitution)
-	else:
-		substitution = r'<hmu_greek_in_a_latin_text>' + match.group(2) + r'</hmu_greek_in_a_latin_text>'
-
-	substitution += match.group(3)
-	# print(match.group(1) + match.group(2),'\n\t',substitution)
-
-	return substitution
-
 
 #
 # cleanup of the cleaned up: generative citeable texts
@@ -686,3 +637,67 @@ def insertnewlines(txt):
 	txt = txt.split('\n')
 
 	return txt
+
+
+# slated for removal
+
+#
+# language interchanges
+#
+
+
+def replacelatinbetacode(texttoclean):
+	"""
+	first look for greek inside of a latin string
+
+	the add in latin accents
+
+	currently only called by cleanworkname()?
+
+	:param texttoclean:
+	:return:
+	"""
+	# on but not off again: Plautus, Bacchides, 1163 + Gellius NA pr.
+	# a line should turn things off; but what if it does not?
+	# so we do this in two parts: first grab the whole line, then make sure there is not a section with a $ in it
+	# if there is: turn off roman at the $; if there is not turn of roman at line end
+
+	search = re.compile(r'(\$\d{0,2})(.*?)(\s{0,1}█)')
+	texttoclean = re.sub(search, doublecheckgreekwithinlatin, texttoclean)
+
+	search = r'<hmu_greek_in_a_latin_text>.*?</hmu_greek_in_a_latin_text>'
+	texttoclean = re.sub(search, parsegreekinsidelatin, texttoclean)
+
+	texttoclean = latindiacriticals(texttoclean)
+
+	return texttoclean
+
+
+def doublecheckgreekwithinlatin(match):
+	"""
+	only works in conjunction with replacelatinbetacode()
+
+	still plenty of trouble with something like Scholia In Aristophanem, (TLG5014):
+
+		█⑧⓪ DEUTE/RA I(STAME/NOU &3lb,$ ⌈TRI/TH I(STAME/NOU &Va&3b ... ❨&c2$❩ ME/XRI ⌈KAI\ &3l$ TW=N ...█
+
+
+	:param match:
+	:return:
+	"""
+
+	linetermination = re.compile(r'(\$\d{0,2})(.*?)(\s{0,1}$)')
+	internaltermination = re.compile(r'(\$\d{0,2})(.*?)\&(\d{0,2})')
+	if re.search(internaltermination, match.group(1) + match.group(2)) is not None:
+		substitution = re.sub(internaltermination, r'<hmu_greek_in_a_latin_text>\2</hmu_greek_in_a_latin_text>',
+		                      match.group(1) + match.group(2))
+		# OK, you got the internal ones, but a final $xxx can remain at the end of the line
+		substitution = re.sub(linetermination, r'<hmu_greek_in_a_latin_text>\2</hmu_greek_in_a_latin_text>\3', substitution)
+	else:
+		substitution = r'<hmu_greek_in_a_latin_text>' + match.group(2) + r'</hmu_greek_in_a_latin_text>'
+
+	substitution += match.group(3)
+	# print(match.group(1) + match.group(2),'\n\t',substitution)
+
+	return substitution
+

@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'TLG2200'
+debugauthor = 'LAT1254'
 
 """
 
@@ -23,7 +23,7 @@ from builder.file_io.filereaders import highunicodefileload
 from builder.corpus_builder import buildauthorobject
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, hmufontshiftsintospans, \
-	replacegreekmarkupinalatintext
+	replacegreekmarkupinalatintext, latinauthorlinemarkupprober
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
 from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacelatinbetacode, \
 	replacequotationmarks, addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
@@ -105,7 +105,7 @@ htmlfoot = """
 initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
 greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode,
                restoreromanwithingreek]
-latinmiddle = [replacegreekmarkupinalatintext, replacelatinbetacode]
+latinmiddle = [latinauthorlinemarkupprober]
 final = [hmufontshiftsintospans, cleanuplingeringmesses, purgehybridgreekandlatinwords]
 
 

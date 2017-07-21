@@ -8,6 +8,7 @@
 
 import re
 import configparser
+from builder.parsers.betacodeandunicodeinterconversion import parsegreekinsidelatin
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -101,29 +102,91 @@ def latinfontlinemarkupparser(match):
 	return returnline
 
 
-def replacegreekmarkupinalatintext(texttoclean):
+def latinauthorlinemarkupprober(texttoclean):
 	"""
-	turn &NN into markup
 
-	note that we have to do some of this in order so that &3 has been taken care of before we get to &
+	a steamlined version of the greek author equivalent [sorry, DRY fetishists...]
 
-	:param texttoclean:
+	take line-like segments of the text: only works with LAT authors
+
+	then hand them off to another function to check them for '&' escapes
+
+	if you find them, do the substitutions
+
+	:param txt:
+	:return:
+	"""
+	grabaline = re.compile(r'(.*?)(\s{0,1}█)')
+	texttoclean = re.sub(grabaline, latinauthordollarshiftparser, texttoclean)
+	insetgreek = re.compile(r'<hmu_fontshift_greek_.*?>(.*?)</hmu_fontshift_greek_.*?>')
+	texttoclean = re.sub(insetgreek, parsegreekinsidelatin, texttoclean)
+	texttoclean = re.sub(grabaline, latinauthordollarshiftparser, texttoclean)
+	texttoclean = re.sub(grabaline, latinauthorandshiftparser, texttoclean)
+
+	return texttoclean
+
+
+def latinauthordollarshiftparser(match):
+	"""
+
+	check a quasi-line for '$' escapes
+
+	gellius is a good test case:
+		procul dubio $A)KW/LUTOS&, $A)NANA/GKASTOS&, $A)PARAPO/DISTOS&, $E)LEU/-
+
+	:param match:
 	:return:
 	"""
 
-	# $...$
-	texttoclean = replacegreekmarkup(texttoclean)
+	m = match.group(1)
+	tail = match.group(2)
 
-	# the simplest case: &Va$
-	loneandlonedollar = re.compile(r'$(.*?)\&')
-	texttoclean = re.sub(loneandlonedollar, lambda x: dollarssubstitutes(0, x.group(1)), texttoclean)
+	dollars = m.split('$')
+	if len(dollars) == 1:
+		# the line does not actually have any escapes: we are done
+		return match.group(0)
 
-	# the most stupid case: a line should turn things off; but what if it does not?
-	onbutnotoff = re.compile(r'($)(\d{0,2})(.*?)(\s{0,1}█)')
-	texttoclean = re.sub(onbutnotoff, lambda x: dollarssubstitutes(x.group(1), x.group(2), extra=x.group(3)), texttoclean)
+	newline = [dollars[0]]
+	whichdollar = re.compile(r'^(\d{0,})(.*?)(&|$)')
+
+	appendix = [re.sub(whichdollar, lambda x: dollarssubstitutes(x.group(1), x.group(2), ''), d) for d in dollars[1:]]
+
+	newline = ''.join(newline+appendix)
+
+	returnline = '{n}{t}'.format(n=newline, t=tail)
+
+	return returnline
 
 
-	return texttoclean
+def latinauthorandshiftparser(match):
+	"""
+
+	check a quasi-line for '&' escapes
+
+	only appropriate for latin authors where you can find '&7...&', etc.
+
+	:param match:
+	:return:
+	"""
+
+	m = match.group(1)
+	tail = match.group(2)
+
+	ands = m.split('&')
+	if len(ands) == 1:
+		# the line does not actually have any escapes: we are done
+		return match.group(0)
+
+	newline = [ands[0]]
+	whichand = re.compile(r'^(\d{0,})(.*?)$')
+
+	appendix = [re.sub(whichand, lambda x: andsubstitutes(x.group(1), x.group(2), ''), a) for a in ands[1:]]
+
+	newline = ''.join(newline+appendix)
+
+	returnline = '{n}{t}'.format(n=newline, t=tail)
+
+	return returnline
 
 
 def dollarssubstitutes(val, core, extra=''):
@@ -240,3 +303,30 @@ def hmufontshiftsintospans(texttoclean):
 	texttoclean = re.sub(shiftcleaner, r'</span>', texttoclean)
 
 	return texttoclean
+
+
+# slated for removal
+def replacegreekmarkupinalatintext(texttoclean):
+	"""
+	turn &NN into markup
+
+	note that we have to do some of this in order so that &3 has been taken care of before we get to &
+
+	:param texttoclean:
+	:return:
+	"""
+
+	# $...$
+	texttoclean = replacegreekmarkup(texttoclean)
+
+	# the simplest case: &Va$
+	loneandlonedollar = re.compile(r'$(.*?)\&')
+	texttoclean = re.sub(loneandlonedollar, lambda x: dollarssubstitutes(0, x.group(1)), texttoclean)
+
+	# the most stupid case: a line should turn things off; but what if it does not?
+	onbutnotoff = re.compile(r'($)(\d{0,2})(.*?)(\s{0,1}█)')
+	texttoclean = re.sub(onbutnotoff, lambda x: dollarssubstitutes(x.group(1), x.group(2), extra=x.group(3)), texttoclean)
+
+
+	return texttoclean
+

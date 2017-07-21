@@ -270,13 +270,30 @@ def getlexicaltablestructuredict(tablename):
 
 	find out what to send resettable()
 
+	unique indices are only available to the latin dictionary
+
+		hipparchiaDB=# CREATE UNIQUE INDEX greek_dictionary_idx ON greek_dictionary (entry_name);
+		ERROR:  could not create unique index "greek_dictionary_idx"
+		DETAIL:  Key (entry_name)=(δέλτοϲ) is duplicated.
+
+		hipparchiaDB=# CREATE UNIQUE INDEX latin_dictionary_idx ON latin_dictionary (entry_name);
+		CREATE INDEX
+
+		CREATE UNIQUE INDEX greek_lemmata_idx on greek_lemmata (dictionary_entry);
+		ERROR:  could not create unique index "greek_lemmata_idx"
+		DETAIL:  Key (dictionary_entry)=(ϲκάφοϲ) is duplicated.
+
+		hipparchiaDB=# CREATE UNIQUE INDEX greek_morphology_idx on public.greek_morphology (observed_form);
+		ERROR:  could not create unique index "greek_morphology_idx"
+		DETAIL:  Key (observed_form)=(Ἀιδωνῆοϲ) is duplicated.
+
 	:return:
 	"""
 
 	options = {
 		'lemma': {
 			'columns': ['dictionary_entry character varying(64)', 'xref_number integer', 'derivative_forms text'],
-			'index': 'dictionary_entry' },
+			'index': 'dictionary_entry'},
 		'analysis': {
 			'columns': ['observed_form character varying(64)', 'xrefs character varying(128)', 'prefixrefs character varying(128)', 'possible_dictionary_forms text'],
 			'index': 'observed_form'},
