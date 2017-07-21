@@ -25,9 +25,9 @@ from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetaco
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, hmufontshiftsintospans, \
 	latinauthorlinemarkupprober
-from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacelatinbetacode, \
-	replacequotationmarks, addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
-	totallemmatization, colonshift, insertnewlines
+from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
+	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, totallemmatization, \
+	colonshift, insertnewlines
 from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
 from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks

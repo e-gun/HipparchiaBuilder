@@ -601,7 +601,7 @@ def cleanworkname(betacodeworkname):
 	if '*' in betacodeworkname and '$' not in betacodeworkname:
 		re.sub(r'\*',r'$*',betacodeworkname)
 
-	workname = replacelatinbetacode(betacodeworkname)
+	workname = latindiacriticals(betacodeworkname)
 
 	percents = re.compile(r'%(\d{1,3})')
 	workname = re.sub(percents, percentsubstitutes, workname)

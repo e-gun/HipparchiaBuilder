@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'LAT1254'
+debugauthor = 'LAT1248'
 
 """
 
@@ -23,10 +23,10 @@ from builder.file_io.filereaders import highunicodefileload
 from builder.corpus_builder import buildauthorobject
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, hmufontshiftsintospans, \
-	replacegreekmarkupinalatintext, latinauthorlinemarkupprober
+	latinauthorlinemarkupprober
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
-from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacelatinbetacode, \
-	replacequotationmarks, addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
+from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
+	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
 	totallemmatization
 
 config = configparser.ConfigParser()
