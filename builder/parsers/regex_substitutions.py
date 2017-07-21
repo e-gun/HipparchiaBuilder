@@ -10,8 +10,8 @@
 import configparser
 import re
 
-from builder.parsers.betacodeandunicodeinterconversion import parsegreekinsidelatin
 from builder.parsers.betacodeescapedcharacters import percentsubstitutes, quotesubstitutesa, quotesubstitutesb
+from builder.parsers.betacodefontshifts import latinauthorandshiftparser
 from builder.parsers.citation_builder import citationbuilder
 from builder.parsers.swappers import highunicodetohex, hutohxgrouper, hextohighunicode, bitswapchars
 
@@ -601,15 +601,18 @@ def cleanworkname(betacodeworkname):
 	if '*' in betacodeworkname and '$' not in betacodeworkname:
 		re.sub(r'\*',r'$*',betacodeworkname)
 
-	workname = latindiacriticals(betacodeworkname)
-
 	percents = re.compile(r'%(\d{1,3})')
-	workname = re.sub(percents, percentsubstitutes, workname)
+	workname = re.sub(percents, percentsubstitutes, betacodeworkname)
+	ands = re.compile(r'&(\d{1,})(.*?)')
+	workname = re.sub(ands, latinauthorandshiftparser, betacodeworkname)
+
 	workname = re.sub(r'\[2(.*?)]2', r'⟨\1⟩',workname)
 	workname = re.sub(r'<.*?>','', workname)
 	workname = re.sub(r'&\d{1,}(`|)', '', workname) # e.g.: IG I&4`2&
 	workname = re.sub(r'&', '', workname)
 	workname = re.sub(r'`', '', workname)
+
+	# nb latin diacriticals still potentially here
 
 	return workname
 

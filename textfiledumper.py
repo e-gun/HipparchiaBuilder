@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'LAT1248'
+debugauthor = 'LAT0119'
 
 """
 
@@ -26,7 +26,7 @@ from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontline
 	latinauthorlinemarkupprober
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
 from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
-	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, \
+	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, latindiacriticals, \
 	totallemmatization
 
 config = configparser.ConfigParser()
@@ -105,7 +105,7 @@ htmlfoot = """
 initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
 greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode,
                restoreromanwithingreek]
-latinmiddle = [latinauthorlinemarkupprober]
+latinmiddle = [latinauthorlinemarkupprober, latindiacriticals]
 final = [hmufontshiftsintospans, cleanuplingeringmesses, purgehybridgreekandlatinwords]
 
 

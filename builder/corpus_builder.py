@@ -27,7 +27,7 @@ from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontline
 	latinauthorlinemarkupprober
 from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
 	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, totallemmatization, \
-	colonshift, insertnewlines
+	colonshift, insertnewlines, latindiacriticals
 from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
 from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
@@ -289,8 +289,7 @@ def initialworkparsing(authorobject, language, datapath):
 
 	initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
 	greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode, restoreromanwithingreek]
-	latinmiddle = [latinauthorlinemarkupprober]
-	# latinmiddle = [replacegreekmarkupinalatintext, latinauthorlinemarkupprober, replacelatinbetacode]
+	latinmiddle = [latinauthorlinemarkupprober, latindiacriticals]
 	final = [hmufontshiftsintospans, cleanuplingeringmesses, purgehybridgreekandlatinwords]
 
 	if language == 'G' and authorobject.language == 'G':

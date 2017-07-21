@@ -8,10 +8,9 @@
 
 import re
 from builder.builder_classes import Author, Opus
-
-# from builder.parsers import *
-from builder.parsers.regex_substitutions import cleanworkname
-
+from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
+from builder.parsers.betacodefontshifts import latinauthorlinemarkupprober
+from builder.parsers.regex_substitutions import latindiacriticals
 
 def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 	"""
@@ -86,7 +85,13 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 						bytecount += 2
 						workname = getpascalstr(idtfiledatastream, bytecount)
 						bytecount = bytecount + len(workname)
-						workname = cleanworkname(workname)
+						grabitall = re.compile(r'(.*?)($)')
+						#workname = cleanworkname(workname)
+						workname = latinauthorlinemarkupprober(workname, grabber=grabitall)
+						workname = replaceaddnlchars(workname)
+						# <hmu_fontshift_greek_normal>, etc. might still be in here
+						workname = re.sub(r'<.*?>', '', workname)
+						workname = latindiacriticals(workname)
 						# not going to use this block info
 						workstartblock = startblock
 						# skipped some code for CIV texts

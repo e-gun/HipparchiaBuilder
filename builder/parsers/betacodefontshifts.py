@@ -102,7 +102,7 @@ def latinfontlinemarkupparser(match):
 	return returnline
 
 
-def latinauthorlinemarkupprober(texttoclean):
+def latinauthorlinemarkupprober(texttoclean, grabber=None):
 	"""
 
 	a steamlined version of the greek author equivalent [sorry, DRY fetishists...]
@@ -116,7 +116,11 @@ def latinauthorlinemarkupprober(texttoclean):
 	:param txt:
 	:return:
 	"""
-	grabaline = re.compile(r'(.*?)(\s{0,1}█)')
+
+	if not grabber:
+		grabaline = re.compile(r'(.*?)(\s{0,1}█)')
+	else:
+		grabaline = grabber
 	texttoclean = re.sub(grabaline, latinauthordollarshiftparser, texttoclean)
 	insetgreek = re.compile(r'<hmu_fontshift_greek_.*?>(.*?)</hmu_fontshift_greek_.*?>')
 	texttoclean = re.sub(insetgreek, parsegreekinsidelatin, texttoclean)

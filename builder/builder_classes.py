@@ -11,7 +11,8 @@ import re
 from multiprocessing import Value
 
 from builder.dbinteraction.connection import setconnection
-from builder.parsers import regex_substitutions
+from builder.parsers.betacodefontshifts import dollarssubstitutes
+from builder.parsers.regex_substitutions import latindiacriticals
 
 class Author(object):
 	"""
@@ -59,13 +60,16 @@ class Author(object):
 		focus = re.compile('^(.*?)(&1.*?&)')
 		nick = re.compile(r'\x80(\w.*?)($)')
 		if '$' in name:
-			search = re.compile(r'(\$\d{0,2})(.*?)(&)')
-			name = re.sub(search, regex_substitutions.doublecheckgreekwithinlatin, name)
-			search = r'<hmu_greek_in_a_latin_text>.*?</hmu_greek_in_a_latin_text>'
-			name = re.sub(search, regex_substitutions.parsegreekinsidelatin, name)
-			name = re.sub(r'<(/|)hmu_greek_in_a_latin_text>', '', name)
+			# cf latinauthordollarshiftparser()
+			dollars = name.split('$')
+			name = [dollars[0]]
+			whichdollar = re.compile(r'^(\d{0,})(.*?)(&|$)')
+			appendix = [re.sub(whichdollar, lambda x: dollarssubstitutes(x.group(1), x.group(2), ''), d) for d in
+			            dollars[1:]]
+			name = ''.join(name + appendix)
+			name = re.sub(r'<.*?>', '', name)
 		name = re.sub(r'2', '', name)
-		name = regex_substitutions.latindiacriticals(name)
+		name = latindiacriticals(name)
 		segments = re.search(focus, name)
 		nn = re.search(nick, name)
 		
@@ -638,12 +642,7 @@ class Opus(object):
 		self.authornumber = authornumber
 		self.language = language
 		self.worknumber = int(worknumber)
-		if '$' in title:
-			title = regex_substitutions.replacelatinbetacode(title)
-			title = re.sub(r'<(/|)hmu_greek_in_a_latin_text>','',title)
-			self.title = re.sub(r'(\$|\&|\d)', '', title)
-		else:
-			self.title = title
+		self.title = title
 		self.structure = structure
 		self.contentlist = []
 		self.name = title
