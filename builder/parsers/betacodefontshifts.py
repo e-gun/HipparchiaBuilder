@@ -304,29 +304,3 @@ def hmufontshiftsintospans(texttoclean):
 
 	return texttoclean
 
-
-# slated for removal
-def replacegreekmarkupinalatintext(texttoclean):
-	"""
-	turn &NN into markup
-
-	note that we have to do some of this in order so that &3 has been taken care of before we get to &
-
-	:param texttoclean:
-	:return:
-	"""
-
-	# $...$
-	texttoclean = replacegreekmarkup(texttoclean)
-
-	# the simplest case: &Va$
-	loneandlonedollar = re.compile(r'$(.*?)\&')
-	texttoclean = re.sub(loneandlonedollar, lambda x: dollarssubstitutes(0, x.group(1)), texttoclean)
-
-	# the most stupid case: a line should turn things off; but what if it does not?
-	onbutnotoff = re.compile(r'($)(\d{0,2})(.*?)(\s{0,1}█)')
-	texttoclean = re.sub(onbutnotoff, lambda x: dollarssubstitutes(x.group(1), x.group(2), extra=x.group(3)), texttoclean)
-
-
-	return texttoclean
-
