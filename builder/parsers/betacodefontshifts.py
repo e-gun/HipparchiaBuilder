@@ -25,6 +25,14 @@ def replacegreekmarkup(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
+
+	# notice 'unlatin + unsmall' in:
+	# █⑧⓪ *(ISTORIW=N [&10fr. 93 FHG I 215]$10 [2LE/GEI PROSISTORW=N]2 E)PI/SHMON A)/NDRA GEGONE/NAI TO\N @1
+	# just make this 'unlatin' since 'unsmall' happens automatically after &10
+	unun = re.compile(r'&(\d{1,2})([^█]*?)\$(\d{1,2})')
+
+	texttoclean = re.sub(unun, lambda x: removeshiftsymmetry(x.group(1), x.group(2), x.group(3)), texttoclean)
+
 	dollars = re.compile(r'\$(\d{1,2})([^\&█]*?)(\$\d{0,1})')
 	texttoclean = re.sub(dollars, lambda x: dollarssubstitutes(int(x.group(1)), x.group(2)), texttoclean)
 
@@ -92,6 +100,8 @@ def latinfontlinemarkupparser(match):
 			# note that we are killing off whatever special thing happens with the '$' because of (\$\d{0,2})
 			# see Aeschylus, Fragmenta for '█⑨⑥ &10❨Dionysos tritt auf﹕❩$8'
 			# it is not clear what we are supposed to do with a trailing '8' like that...: 'greek vertical'
+			# notice 'unlatin + unsmall' in:
+			# █⑧⓪ *(ISTORIW=N [&10fr. 93 FHG I 215]$10 [2LE/GEI PROSISTORW=N]2 E)PI/SHMON A)/NDRA GEGONE/NAI TO\N @1
 			newand = re.sub(yesdollar, lambda x: andsubstitutes(x.group(1), x.group(2), x.group(4)), a)
 		newline.append(newand)
 
@@ -287,6 +297,31 @@ def andsubstitutes(groupone, grouptwo, groupthree):
 			print('\t',substitute)
 
 	return substitute
+
+
+def removeshiftsymmetry(groupone, grouptwo, groupthree):
+	"""
+
+	notice that we are requesting 'unlatin + unsmall' in:
+
+	*(ISTORIW=N [&10fr. 93 FHG I 215]$10 [2LE/GEI PROSISTORW=N]2
+
+	turn this into '&10... $'
+
+	otherwise you will get 'small latin span' + 'small greek span'
+
+	:param groupone:
+	:param grouptwo:
+	:param groupthree:
+	:return:
+	"""
+
+	value = '&' + groupone + grouptwo + '$'
+
+	if groupone != groupthree:
+		value += groupthree
+
+	return value
 
 
 def hmufontshiftsintospans(texttoclean):

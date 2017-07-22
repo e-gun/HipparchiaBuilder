@@ -12,6 +12,7 @@ from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import latinauthorlinemarkupprober
 from builder.parsers.regex_substitutions import latindiacriticals
 
+
 def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 	"""
 	read and IDT file's contents and extract author and work info for it
@@ -189,6 +190,9 @@ def getpascalstr(filearray, offset):
 
 def idthexparser(filearray, offset, code):
 	"""
+
+	BROKEN FUNCTION: SHOULD BE REMOVED
+
 	hexrunner is smarter? but how much value is there in merging the code?
 
 	parse a non-ascii bookmark that sets or increments one of the counters that keep track of what line, chapter, book, etc. we are currently at
@@ -207,7 +211,6 @@ def idthexparser(filearray, offset, code):
 	:param code:
 	:return: a tuple - see above
 	"""
-
 
 	# left nybble: usually gives the level of the counter being modified.
 	# right nybble: dictates the form of the upcoming data (when > 8).
@@ -319,6 +322,9 @@ def idthexparser(filearray, offset, code):
 		newbytecountoffset += len(newLeftval)
 	else:
 		sys.exit('Impossible value for right: ', right)
+
+	# newLeftval = None
+	# newbytecountoffset = None
 
 	return newLeftval, newbytecountoffset
 
