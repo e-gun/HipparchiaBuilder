@@ -268,7 +268,8 @@ def convertbinfiledates(stringdate):
 	bc = re.compile(r'B\.C\.')
 	ad = re.compile(r'A\.D\.')
 	dontcare = re.compile(r'\?')
-	split = re.compile(r'(\d{1,}).*?[–/].*?(\d{1,})')
+	# oops: need '／' and not '/' because the regex will avoid the normal backslash
+	split = re.compile(r'(\d{1,}).*?[–/／].*?(\d{1,})')
 	add = re.compile(r'^p\. ')
 	subtract = re.compile(r'^a\. ')
 

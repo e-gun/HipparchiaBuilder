@@ -8,7 +8,6 @@
 
 import re
 
-
 def convertdate(date, passvalue=0):
 	"""
 
