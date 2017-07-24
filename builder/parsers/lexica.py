@@ -6,8 +6,11 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-
-from builder.parsers.betacodeandunicodeinterconversion import *
+import re
+from string import punctuation
+from bs4 import BeautifulSoup
+from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode
+from builder.parsers.regex_substitutions import swapregexbrackets
 
 #
 # lexica parser helpers
@@ -122,3 +125,49 @@ def lsjgreekswapper(match):
 	substitute = match.group(1) + substitute + match.group(4)
 	
 	return substitute
+
+
+def translationsummary(fullentry, translationlabel):
+	"""
+
+	adapted from hserver
+
+	return a list of all senses to be found in an entry
+
+	if re.search(r'[a-z]', seekingentry):
+		usedictionary = 'latin'
+		translationlabel = 'hi'
+	else:
+		usedictionary = 'greek'
+		translationlabel = 'tr'
+
+	:param fullentry:
+	:return:
+
+	"""
+
+	soup = BeautifulSoup(fullentry, 'html.parser')
+	tr = soup.find_all(translationlabel)
+	exclude = ['ab', 'de', 'ex', 'ut', 'nihil', 'quam', 'quid']
+
+	translations = ''
+
+	try:
+		tr = [t.string for t in tr]
+		tr = [t for t in tr if '.' not in t]
+		tr = [t for t in tr if t not in exclude]
+	except TypeError:
+		# argument of type 'NoneType' is not iterable
+		tr = []
+
+	# so 'go' and 'go,' are not both on the list
+	depunct = '[{p}]$'.format(p=re.escape(punctuation))
+	tr = [re.sub(depunct, '',t) for t in tr]
+	tr = [re.sub(r'^To', 'to', t) for t in tr]
+	# brackets = re.compile(r'[\]\[\(\)\{\}]')
+	# tr = [re.sub(brackets, swapregexbrackets, t) for t in tr]
+	tr = list(set(tr))
+	tr.sort()
+	translations = ' ‖ '.join(tr)
+
+	return translations

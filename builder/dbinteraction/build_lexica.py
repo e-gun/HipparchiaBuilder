@@ -41,6 +41,9 @@ def formatgklexicon():
 
 	print('formatting Liddell and Scott.',len(entries),'entries to parse')
 
+	# testing
+	# entries = entries[10000:10010]
+
 	manager = Manager()
 	entries = manager.list(entries)
 	commitcount = MPCounter()
@@ -299,11 +302,13 @@ def getlexicaltablestructuredict(tablename):
 			'index': 'observed_form'},
 		'latin_dictionary': {
 			'columns': [ 'entry_name character varying(64)', 'metrical_entry character varying(64)', 'id_number integer',
-						 'entry_type character varying(8)', 'entry_key character varying(64)', 'entry_options "char"', 'entry_body text' ],
+						 'entry_type character varying(8)', 'entry_key character varying(64)', 'entry_options "char"',
+						 'translations text', 'entry_body text' ],
 			'index': 'entry_name'},
 		'greek_dictionary': {
 			'columns': ['entry_name character varying(64)', 'metrical_entry character varying(64)', 'unaccented_entry character varying(64)',
-						'id_number integer', 'entry_type character varying(8)', 'entry_options "char"', 'entry_body text'],
+						'id_number integer', 'entry_type character varying(8)', 'entry_options "char"',
+						'translations text', 'entry_body text'],
 			'index': 'entry_name'}
 	}
 

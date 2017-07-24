@@ -303,6 +303,38 @@ def bracketsimplifier(match):
 	return substitute
 
 
+def swapregexbrackets(match):
+	"""
+
+	get rid of [](){}
+
+	insert safe substitutes
+
+	currently unused
+
+	:param match:
+	:return:
+	"""
+
+	val = match.group(0)
+
+	substitutions = {
+		'(': '❨',
+		')': '❩',
+		'{': '❴',
+		'}': '❵',
+		'[': '⟦',
+		']': '⟧',
+	}
+
+	try:
+		substitute = substitutions[val]
+	except KeyError:
+		substitute = val
+
+	return substitute
+
+
 def debughostilesubstitutions(texttoclean):
 	"""
 	all sorts of things will be hard to figure out if you run this suite

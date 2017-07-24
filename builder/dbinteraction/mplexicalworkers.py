@@ -12,7 +12,7 @@ import re
 from builder.dbinteraction.connection import setconnection
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
 from builder.parsers.lexica import latinvowellengths, greekwithvowellengths, betaconvertandsave, greekwithoutvowellengths, \
-	lsjgreekswapper
+	lsjgreekswapper, translationsummary
 from builder.parsers.swappers import superscripterzero, superscripterone
 
 config = configparser.ConfigParser()
@@ -29,7 +29,7 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 	"""
 	dbc = setconnection(config)
 	curs = dbc.cursor()
-	
+
 	bodyfinder = re.compile(r'(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	defectivebody = re.compile(r'(<entryFree(.*?)>)(.*?)')
 	greekfinder = re.compile(r'(<foreign lang="greek">)(.*?)(</foreign>)')
@@ -37,7 +37,7 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 	while len(entries) > 0:
 		try: entry = entries.pop()
 		except: entry = ''
-	
+
 		if entry[0:10] != "<entryFree":
 			# print(entry[0:25])
 			pass
@@ -63,7 +63,7 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			# this pattern interrupts the std parsedinfo flow
 			metricalentry = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
 			metricalentry = re.sub(r' \((\d)\)',superscripterone, metricalentry)
-			entry = re.sub('(_|\^)', '', metricalentry)
+			entryname = re.sub('(_|\^)', '', metricalentry)
 			metricalentry = latinvowellengths(metricalentry)
 			
 			key = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
@@ -73,18 +73,21 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			# 'n1000' --> 1000
 			id = int(re.sub(r'^n', '', id))
 
+			translationlist = translationsummary(entry, 'hi')
 			# do some quickie greek replacements
 			body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
 			qtemplate="""
-			INSERT INTO {d} (entry_name, metrical_entry, id_number, entry_type, entry_key, entry_options, entry_body)
-				VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+			INSERT INTO {d} 
+				(entry_name, metrical_entry, id_number, entry_type, entry_key, entry_options, 
+				translations, entry_body)
+				VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
 			query = qtemplate.format(d=dictdb)
-			data = (entry, metricalentry, id, type, key, opt, body)
+			data = (entryname, metricalentry, id, type, key, opt, translationlist, body)
 			curs.execute(query, data)
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
-				print('\tat',id, entry)
+				print('\tat',id, entryname)
 	
 	dbc.commit()
 	curs.close()
@@ -101,7 +104,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	:param entry:
 	:return:
 	"""
-	
+
 	dbc = setconnection(config)
 	curs = dbc.cursor()
 	
@@ -147,8 +150,8 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 				key = ''
 				type = ''
 				opt = ''
-			entry = re.sub(r'"(.*?)"', lambda x: greekwithoutvowellengths(x.group(1)), key.upper())
-			entry = re.sub(r'(\d{1,})', superscripterone, entry)
+			entryname = re.sub(r'"(.*?)"', lambda x: greekwithoutvowellengths(x.group(1)), key.upper())
+			entryname = re.sub(r'(\d{1,})', superscripterone, entryname)
 			metrical = re.sub(r'(")(.*?)(")', lambda x: greekwithvowellengths(x.group(2)), key.upper())
 			metrical = re.sub(r'(\d{1,})', superscripterone, metrical)
 			metrical = re.sub(r'"', r'', metrical)
@@ -160,22 +163,27 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 
 			# 'n1000' --> 1000
 			id = int(re.sub(r'^n', '', id))
-
-			stripped = cleanaccentsandvj(entry)
-			qtemplate = """
-			INSERT INTO {d} (entry_name, metrical_entry, unaccented_entry, id_number, entry_type, entry_options, entry_body)
-				VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+			translationlist = translationsummary(entry, 'tr')
+			stripped = cleanaccentsandvj(entryname)
+			qtemplate="""
+			INSERT INTO {d} 
+				(entry_name, metrical_entry, unaccented_entry, id_number, entry_type,
+				entry_options, translations, entry_body)
+				VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
 			query = qtemplate.format(d=dictdb)
-			data = (entry, metrical, stripped, id, type, opt, body)
+			data = (entryname, metrical, stripped, id, type, opt, translationlist, body)
+
 			try:
 				curs.execute(query, data)
 			except:
-				print('failed insert:',data)
+				# psycopg2.DataError
+				print('failed to insert',data)
+
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
 				try:
-					print('\tat', id, entry)
+					print('\tat', id, entryname)
 				except:
 					# UnicodeEncodeError
 					print('\tat', id)
