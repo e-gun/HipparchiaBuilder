@@ -23,8 +23,8 @@ from builder.parsers import idtfiles, parse_binfiles
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, \
 	purgehybridgreekandlatinwords
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
-from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, hmufontshiftsintospans, \
-	latinauthorlinemarkupprober
+from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, \
+	latinauthorlinemarkupprober, greekhmufontshiftsintospans, latinhmufontshiftsintospans
 from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
 	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, totallemmatization, \
 	colonshift, insertnewlines, latindiacriticals
@@ -288,9 +288,10 @@ def initialworkparsing(authorobject, language, datapath):
 	txt = filereaders.highunicodefileload(datapath + authorobject.dataprefix+authorobject.number + '.TXT')
 
 	initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
-	greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode, restoreromanwithingreek]
-	latinmiddle = [latinauthorlinemarkupprober, latindiacriticals]
-	final = [hmufontshiftsintospans, cleanuplingeringmesses, purgehybridgreekandlatinwords]
+	greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode,
+	               restoreromanwithingreek, greekhmufontshiftsintospans]
+	latinmiddle = [latinauthorlinemarkupprober, latindiacriticals, latinhmufontshiftsintospans]
+	final = [cleanuplingeringmesses, purgehybridgreekandlatinwords]
 
 	if language == 'G' and authorobject.language == 'G':
 		functionlist = initial + greekmiddle + final

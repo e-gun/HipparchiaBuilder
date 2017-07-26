@@ -324,7 +324,7 @@ def removeshiftsymmetry(groupone, grouptwo, groupthree):
 	return value
 
 
-def hmufontshiftsintospans(texttoclean):
+def hmufontshiftsintospans(texttoclean, language):
 	"""
 
 	turn '<hmu_fontshift_latin_italic>b </hmu_fontshift_latin_italic>'
@@ -338,8 +338,60 @@ def hmufontshiftsintospans(texttoclean):
 	shiftfinder = re.compile(r'<hmu_fontshift_(.*?)_(.*?)>')
 	shiftcleaner = re.compile(r'</hmu_fontshift_.*?>')
 
-	texttoclean = re.sub(shiftfinder, r'<span class="\1 \2">', texttoclean)
+	texttoclean = re.sub(shiftfinder, lambda x: matchskipper(x.group(1), x.group(2), language), texttoclean)
 	texttoclean = re.sub(shiftcleaner, r'</span>', texttoclean)
 
 	return texttoclean
 
+
+def latinhmufontshiftsintospans(texttoclean):
+	"""
+
+	needed just so you can pass language to hmufontshiftsintospans
+
+	:param texttoclean:
+	:return:
+	"""
+
+	return hmufontshiftsintospans(texttoclean, 'latin')
+
+
+def greekhmufontshiftsintospans(texttoclean):
+	"""
+
+	needed just so you can pass language to hmufontshiftsintospans
+
+	:param texttoclean:
+	:return:
+	"""
+
+
+	return hmufontshiftsintospans(texttoclean, 'greek')
+
+
+def matchskipper(groupone, grouptwo, language):
+	"""
+
+	r'<span class="\1 \2">'
+
+	or
+
+	r'<span class="\2">'
+
+	skip a matchgroup if it matches language
+
+	this is useful because "latin normal" in a latin author can lead to
+	a color shift, vel sim. when you really don't need to flag 'latinity' in this
+	context
+
+	:param match:
+	:param language:
+	:return:
+	"""
+
+	if groupone != language:
+		spanner = '<span class="{a} {b}">'.format(a=groupone, b=grouptwo)
+	else:
+		spanner = '<span class="{b}">'.format(a=groupone, b=grouptwo)
+
+	return spanner

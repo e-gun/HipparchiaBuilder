@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'TLG1342'
+debugauthor = 'LAT0474'
 
 """
 
@@ -22,8 +22,8 @@ import configparser
 from builder.file_io.filereaders import highunicodefileload
 from builder.corpus_builder import buildauthorobject
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
-from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, hmufontshiftsintospans, \
-	latinauthorlinemarkupprober
+from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, \
+	latinauthorlinemarkupprober, latinhmufontshiftsintospans, greekhmufontshiftsintospans
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
 from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
 	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, latindiacriticals, \
@@ -104,9 +104,9 @@ htmlfoot = """
 # functions need to match initialworkparsing() in corpus_builder.py
 initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
 greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode,
-               restoreromanwithingreek]
-latinmiddle = [latinauthorlinemarkupprober, latindiacriticals]
-final = [hmufontshiftsintospans, cleanuplingeringmesses, purgehybridgreekandlatinwords]
+               restoreromanwithingreek, greekhmufontshiftsintospans]
+latinmiddle = [latinauthorlinemarkupprober, latindiacriticals, latinhmufontshiftsintospans]
+final = [cleanuplingeringmesses, purgehybridgreekandlatinwords]
 
 
 if lg == 'G':
