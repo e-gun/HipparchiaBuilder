@@ -624,6 +624,8 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 	:return:
 	"""
 
+	worktitle = re.sub(r'`', '', worktitle)
+
 	idx = worktitle
 	clean = worktitle
 
