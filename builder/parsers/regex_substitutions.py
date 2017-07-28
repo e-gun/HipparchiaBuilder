@@ -386,18 +386,6 @@ def cleanuplingeringmesses(texttoclean):
 	:return:
 	"""
 
-	# many papyrus lines start like: '[ &c ? ]$'
-	# this ends up as: '[ <hmu_latin_normal>c ̣ ]</hmu_latin_normal>'
-	# good luck geting re to find that pattern, though: some sort of bug in re?
-	# restoremissing(matchgroup) will not work!
-	# let's address the '?' in earlybirds...
-	# see also: '[*MESORH\ &c `12 ] `302$'
-	# this failed without the second
-
-	# missing = re.compile(r'\[(\s{1,})<hmu_latin_normal>c(.*?)\](.*?)</hmu_latin_normal>')
-	# texttoclean = re.sub(missing, r'[\1c \2 ]', texttoclean)
-	# texttoclean = re.sub(missing, bracketspacer, texttoclean)
-
 	return texttoclean
 
 

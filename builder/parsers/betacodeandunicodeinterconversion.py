@@ -157,6 +157,8 @@ def unmixer(matchgroup):
 
 	fixes: ξonstantino
 
+	10 of these will be found in CHR
+
 	:param matchgroup:
 	:return:
 	"""
@@ -177,6 +179,8 @@ def unbreather(matchgroup):
 	another helper for purgehybridgreekandlatinwords()
 
 	fixes: s(anctae) ῥomanae
+
+	c. 35 of these will be found in CHR
 
 	:param matchgroup:
 	:return:
@@ -210,6 +214,8 @@ def unpunctuated(matchgroup):
 
 		fixes: λ. Pomponius
 		fixes: ξ[apitoli]o or ξ(apitolio)
+
+	0 of these will be found in CHR
 
 	:param matchgroup:
 	:return:
@@ -245,7 +251,7 @@ def multipledots(matchgroup):
 		pass
 
 	lotsofdots = []
-	for d in range(0,dotcount):
+	for d in range(0, dotcount):
 		lotsofdots.append('∙')
 
 	# '∙ ' for the sake of line spacing
