@@ -22,6 +22,7 @@ there you will find starter files for installing hipparchia onto macOS or into a
 in addition to the build environment itself, you will need:
 
 data to insert into the builder:
+
 ```
     the TLG_E and/or PHI00005 and/or PHI7 files (presumably from cd-rom disks)
         your config file will need to point to this data properly
