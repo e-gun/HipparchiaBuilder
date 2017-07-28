@@ -23,8 +23,10 @@ def convertdate(date, passvalue=0):
 	:param date:
 	:return:
 	"""
-
 	original = date
+
+	# "Editor's date:  33⟨8⟩/7" --> '33' unless you purge the brackets
+	date = re.sub(r'[⟨⟩]', '', date)
 	numericaldate = 9999
 
 	german = re.compile(r'(n\.|v\.Chr\.)')
@@ -57,7 +59,6 @@ def convertdate(date, passvalue=0):
 	# and so we pass through the old convertdate() code in a desperate last attempt
 
 	numericaldate = datemapper(date)
-
 
 	# failed all of the tests, right?
 	# print(original)

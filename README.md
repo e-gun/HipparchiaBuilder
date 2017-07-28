@@ -59,3 +59,15 @@ hardware recommendations:
 	minimum requirements are not presently known, but 512MB of RAM is probably required to run HipparchiaServer with 1 thread
 
 ```
+
+sample input and output:
+
+TLG:
+![Alt Text](readmeimages/scholia_input.png)
+![Alt Text](readmeimages/scholia_output.png)
+LAT:
+![Alt Text](readmeimages/accius_input.png)
+![Alt Text](readmeimages/accius_output.png)
+INS:
+![Alt Text](readmeimages/inscriptions_input.png)
+![Alt Text](readmeimages/inscriptions_output.png)
