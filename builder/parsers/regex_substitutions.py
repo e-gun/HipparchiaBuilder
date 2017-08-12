@@ -200,6 +200,9 @@ def lastsecondsubsitutions(texttoclean):
 	bracketandspan = re.compile(r'([❨❩❴❵⟦⟧⟪⟫《》‹›⦅⦆₍₎⟨⟩\[\](){}])(</span>)')
 	texttoclean = re.sub(bracketandspan, r'\2\1', texttoclean)
 
+	spanandbracket = re.compile(r'(<span class="[^"]*?">)([❨❩❴❵⟦⟧⟪⟫《》‹›⦅⦆₍₎⟨⟩\[\](){}])')
+	texttoclean = re.sub(spanandbracket, r'\2\1', texttoclean)
+
 	# be careful not to delete whole lines: [^"]*? vs .*?
 	voidspan = re.compile(r'<span class="[^"]*?"></span> ')
 	texttoclean = re.sub(voidspan, r'', texttoclean)
