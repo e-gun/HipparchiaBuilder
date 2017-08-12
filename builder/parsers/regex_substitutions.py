@@ -192,6 +192,18 @@ def lastsecondsubsitutions(texttoclean):
 		tosimplify = re.compile(r'[❨❩❴❵⟦⟧⟪⟫《》‹›⦅⦆₍₎]')
 		texttoclean = re.sub(tosimplify, bracketsimplifier, texttoclean)
 
+	# change:
+	#   <span class="latin smallerthannormal">Gnom. Vatic. 743 [</span>
+	# into:
+	#   <span class="latin smallerthannormal">Gnom. Vatic. 743 </span>[
+
+	bracketandspan = re.compile(r'([❨❩❴❵⟦⟧⟪⟫《》‹›⦅⦆₍₎⟨⟩\[\](){}])(</span>)')
+	texttoclean = re.sub(bracketandspan, r'\2\1', texttoclean)
+
+	# be careful not to delete whole lines: [^"]*? vs .*?
+	voidspan = re.compile(r'<span class="[^"]*?"></span> ')
+	texttoclean = re.sub(voidspan, r'', texttoclean)
+
 	# combining breve is misplaced
 	texttoclean = re.sub(r'(.)(\u035c)', r'\2\1', texttoclean)
 
