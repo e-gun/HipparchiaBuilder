@@ -63,11 +63,16 @@ hardware recommendations:
 sample input and output:
 
 TLG:
-![Alt Text](readmeimages/scholia_input.png)
-![Alt Text](readmeimages/scholia_output.png)
+
+![scholia input](readmeimages/scholia_input.png)
+![scholia output](readmeimages/scholia_output.png)
+
 LAT:
-![Alt Text](readmeimages/accius_input.png)
-![Alt Text](readmeimages/accius_output.png)
+
+![accius input](readmeimages/accius_input.png)
+![accius output](readmeimages/accius_output.png)
+
 INS:
-![Alt Text](readmeimages/inscriptions_input.png)
-![Alt Text](readmeimages/inscriptions_output.png)
+
+![inscriptions input](readmeimages/inscriptions_input.png)
+![inscriptions output](readmeimages/inscriptions_output.png)

@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'CHR0012'
+debugauthor = 'TLG1304'
 
 """
 

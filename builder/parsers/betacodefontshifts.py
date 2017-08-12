@@ -225,19 +225,19 @@ def dollarssubstitutes(val, core, extra=''):
 		30: [r'<hmu_fontshift_greek_extrasmall>', r'</hmu_fontshift_greek_extrasmall>'],
 		20: [r'<hmu_fontshift_greek_largerthannormal>', r'</hmu_fontshift_greek_largerthannormal>'],
 		18: [r'<hmu_fontshift_greek_smallerthannormal>', r'</hmu_fontshift_greek_smallerthannormal>'],  # + 'vertical', but deprecated
-		16: [r'<hmu_fontshift_greek_smallerthannormalsuperscriptbold>', r'</hmu_fontshift_greek_smallerthannormalsuperscriptbold>'],
-		15: [r'<hmu_fontshift_greek_smallerthannormalsubscript>', r'</hmu_fontshift_greek_smallerthannormalsubscript>'],
-		14: [r'<hmu_fontshift_greek_smallerthannormalsuperscript>', r'</hmu_fontshift_greek_smallerthannormalsuperscript>'],
-		13: [r'<hmu_fontshift_greek_smallerthannormalitalic>', r'</hmu_fontshift_greek_smallerthannormalitalic>'],
-		11: [r'<hmu_fontshift_greek_smallerthannormalbold>', r'</hmu_fontshift_greek_smallerthannormalbold>'],
+		16: [r'<hmu_fontshift_greek_smallerthannormal_superscript_bold>', r'</hmu_fontshift_greek_smallerthannormal_superscript_bold>'],
+		15: [r'<hmu_fontshift_greek_smallerthannormal_subscript>', r'</hmu_fontshift_greek_smallerthannormal_subscript>'],
+		14: [r'<hmu_fontshift_greek_smallerthannormal_superscript>', r'</hmu_fontshift_greek_smallerthannormal_superscript>'],
+		13: [r'<hmu_fontshift_greek_smallerthannormal_italic>', r'</hmu_fontshift_greek_smallerthannormal_italic>'],
+		11: [r'<hmu_fontshift_greek_smallerthannormal_bold>', r'</hmu_fontshift_greek_smallerthannormal_bold>'],
 		10: [r'<hmu_fontshift_greek_smallerthannormal>', r'</hmu_fontshift_greek_smallerthannormal>'],
 		9: [r'<hmu_fontshift_greek_regular>', r'</hmu_fontshift_greek_regular>'],
 		8: [r'<hmu_fontshift_greek_vertical>', r'</hmu_fontshift_greek_vertical>'],
-		6: [r'<hmu_fontshift_greek_superscriptbold>', r'</hmu_fontshift_greek_superscriptbold>'],
+		6: [r'<hmu_fontshift_greek_superscript_bold>', r'</hmu_fontshift_greek_superscript_bold>'],
 		5: [r'<hmu_fontshift_greek_subscript>', r'</hmu_fontshift_greek_subscript>'],
 		4: [r'<hmu_fontshift_greek_superscript>', r'</hmu_fontshift_greek_superscript>'],
 		3: [r'<hmu_fontshift_greek_italic>', r'</hmu_fontshift_greek_italic>'],
-		2: [r'<hmu_fontshift_greek_bolditalic>', r'</hmu_fontshift_greek_bolditalic>'],
+		2: [r'<hmu_fontshift_greek_bold_italic>', r'</hmu_fontshift_greek_bold_italic>'],
 		1: [r'<hmu_fontshift_greek_bold>', r'</hmu_fontshift_greek_bold>'],
 		0: [r'<hmu_fontshift_greek_normal>', r'</hmu_fontshift_greek_normal>']
 	}
@@ -269,22 +269,22 @@ def andsubstitutes(groupone, grouptwo, groupthree):
 	groupthree = re.sub(r'\$','', groupthree)
 
 	substitutions = {
-		91: [r'<hmu_fontshift_latin_undocumented_font_shift_AND91>',r'</hmu_fontshift_latin_undocumented_font_shift_AND91>'],
-		90: [r'<hmu_fontshift_latin_undocumented_font_shift_AND90>', r'</hmu_fontshift_latin_undocumented_font_shift_AND90>'],
-		82: [r'<hmu_fontshift_latin_undocumented_font_shift_AND82>', r'</hmu_fontshift_latin_undocumented_font_shift_AND82>'],
-		81: [r'<hmu_fontshift_latin_undocumented_font_shift_AND81>', r'</hmu_fontshift_latin_undocumented_font_shift_AND81>'],
+		91: [r'<hmu_fontshift_latin_undocumentedfontshift_AND91>',r'</hmu_fontshift_latin_undocumentedfontshift_AND91>'],
+		90: [r'<hmu_fontshift_latin_undocumentedfontshift_AND90>', r'</hmu_fontshift_latin_undocumentedfontshift_AND90>'],
+		82: [r'<hmu_fontshift_latin_undocumentedfontshift_AND82>', r'</hmu_fontshift_latin_undocumentedfontshift_AND82>'],
+		81: [r'<hmu_fontshift_latin_undocumentedfontshift_AND81>', r'</hmu_fontshift_latin_undocumentedfontshift_AND81>'],
 		20: [r'<hmu_fontshift_latin_largerthannormal>',r'</hmu_fontshift_latin_largerthannormal>'],
-		14: [r'<hmu_fontshift_latin_smallerthannormalsuperscript>',r'</hmu_fontshift_latin_smallerthannormalsuperscript>'],
-		13: [r'<hmu_fontshift_latin_smallerthannormalitalic>', r'</hmu_fontshift_latin_smallerthannormalitalic>'],
+		14: [r'<hmu_fontshift_latin_smallerthannormal_superscript>',r'</hmu_fontshift_latin_smallerthannormal_superscript>'],
+		13: [r'<hmu_fontshift_latin_smallerthannormal_italic>', r'</hmu_fontshift_latin_smallerthannormal_italic>'],
 		10: [r'<hmu_fontshift_latin_smallerthannormal>', r'</hmu_fontshift_latin_smallerthannormal>'],
 		9: [r'<hmu_fontshift_latin_normal>', r'</hmu_fontshift_latin_normal>'],
-		8: [r'<hmu_fontshift_latin_smallcapitalsitalic>', r'</hmu_fontshift_latin_smallcapitalsitalic>'],
+		8: [r'<hmu_fontshift_latin_smallcapitals_italic>', r'</hmu_fontshift_latin_smallcapitals_italic>'],
 		7: [r'<hmu_fontshift_latin_smallcapitals>', r'</hmu_fontshift_latin_smallcapitals>'],
 		6: [r'<hmu_fontshift_latin_romannumerals>', r'</hmu_fontshift_latin_romannumerals>'],
 		5: [r'<hmu_fontshift_latin_subscript>', r'</hmu_fontshift_latin_subscript>'],
 		4: [r'<hmu_fontshift_latin_superscript>', r'</hmu_fontshift_latin_superscript>'],
 		3: [r'<hmu_fontshift_latin_italic>', r'</hmu_fontshift_latin_italic>'],
-		2: [r'<hmu_fontshift_latin_bolditalic>', r'</hmu_fontshift_latin_bolditalic>'],
+		2: [r'<hmu_fontshift_latin_bold_italic>', r'</hmu_fontshift_latin_bold_italic>'],
 		1: [r'<hmu_fontshift_latin_bold>', r'</hmu_fontshift_latin_bold>'],
 		0: [r'<hmu_fontshift_latin_normal>', r'</hmu_fontshift_latin_normal>'],
 	}
@@ -384,10 +384,14 @@ def matchskipper(groupone, grouptwo, language):
 	a color shift, vel sim. when you really don't need to flag 'latinity' in this
 	context
 
+	also convert 'smallerthannormal_italic' into 'smallerthannormal italic'
+
 	:param match:
 	:param language:
 	:return:
 	"""
+
+	grouptwo = re.sub(r'_', ' ', grouptwo)
 
 	if groupone != language:
 		spanner = '<span class="{a} {b}">'.format(a=groupone, b=grouptwo)
