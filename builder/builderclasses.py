@@ -12,7 +12,7 @@ from multiprocessing import Value
 
 from builder.dbinteraction.connection import setconnection
 from builder.parsers.betacodefontshifts import dollarssubstitutes
-from builder.parsers.regex_substitutions import latindiacriticals
+from builder.parsers.regexsubstitutions import latindiacriticals
 
 class Author(object):
 	"""

@@ -24,7 +24,7 @@ this can be fixed by dodging builddbremappers() and instead deriving the ids fro
 
 import configparser
 from builder.file_io.filereaders import findauthors
-from builder.corpus_builder import addoneauthor, buildauthorobject
+from builder.corpusbuilder import addoneauthor, buildauthorobject
 from builder.dbinteraction.connection import setconnection
 from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
 from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs

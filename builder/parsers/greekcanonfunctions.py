@@ -9,12 +9,12 @@ import configparser
 import re
 
 from builder import file_io
-from builder.builder_classes import loadallauthorsasobjects, loadallworksasobjects
+from builder.builderclasses import loadallauthorsasobjects, loadallworksasobjects
 from builder.dbinteraction.db import updatedbfromtemptable
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode
 from builder.parsers.betacodeescapedcharacters import percentsubstitutes
 from builder.parsers.betacodefontshifts import andsubstitutes
-from builder.parsers.regex_substitutions import latindiacriticals
+from builder.parsers.regexsubstitutions import latindiacriticals
 
 config = configparser.ConfigParser()
 config.read('config.ini')

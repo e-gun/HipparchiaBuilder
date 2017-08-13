@@ -9,7 +9,7 @@
 import configparser
 from multiprocessing import Process, Manager
 from builder.dbinteraction.connection import setconnection
-from builder.builder_classes import MPCounter
+from builder.builderclasses import MPCounter
 from builder.workers import setworkercount
 
 config = configparser.ConfigParser()

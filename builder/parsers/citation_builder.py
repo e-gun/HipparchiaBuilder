@@ -10,7 +10,7 @@ import re
 
 import builder.parsers.betacodeescapedcharacters
 from builder.parsers.swappers import highunicodetohex
-from builder.parsers import regex_substitutions
+from builder.parsers import regexsubstitutions
 
 
 def citationbuilder(hexsequence):

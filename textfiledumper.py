@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'TLG1304'
+debugauthor = 'TLG1344'
 
 """
 
@@ -20,12 +20,12 @@ import time
 import configparser
 
 from builder.file_io.filereaders import highunicodefileload
-from builder.corpus_builder import buildauthorobject
+from builder.corpusbuilder import buildauthorobject
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, \
 	latinauthorlinemarkupprober, latinhmufontshiftsintospans, greekhmufontshiftsintospans
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
-from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
+from builder.parsers.regexsubstitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
 	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, latindiacriticals, \
 	totallemmatization
 
@@ -101,7 +101,7 @@ htmlfoot = """
 </html>
 """
 
-# functions need to match initialworkparsing() in corpus_builder.py
+# functions need to match initialworkparsing() in corpusbuilder.py
 initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
 greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode,
                restoreromanwithingreek, greekhmufontshiftsintospans]
@@ -114,7 +114,7 @@ if lg == 'G':
 else:
 	initialworkparsing = initial + latinmiddle + final
 
-# functions need to match secondaryworkparsing() in corpus_builder.py
+# functions need to match secondaryworkparsing() in corpusbuilder.py
 secondaryworkparsing = [
 	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, levelbreak, finalsplit,
 	totallemmatization

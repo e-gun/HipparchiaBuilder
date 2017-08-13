@@ -207,8 +207,13 @@ def lastsecondsubsitutions(texttoclean):
 	voidspan = re.compile(r'<span class="[^"]*?"></span> ')
 	texttoclean = re.sub(voidspan, r'', texttoclean)
 
-	# combining breve is misplaced
-	texttoclean = re.sub(r'(.)(\u035c)', r'\2\1', texttoclean)
+	# combining double inverted breve is misplaced: <3 >3
+	# combining breve below is misplaced: <4 >4
+	# combining breve (035d) ?: <5 >5
+
+	swaps = re.compile(u'(.)([\u035c\u035d\u0361])')
+
+	texttoclean = re.sub(swaps, r'\2\1', texttoclean)
 
 	# misbalanced punctuation in something like ’αὐλῶνεϲ‘: a trivial issue that will add a lot of time to builds if you do all of the variants
 	# easy enough to turn this off

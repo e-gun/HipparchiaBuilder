@@ -10,7 +10,7 @@ import re
 from string import punctuation
 from bs4 import BeautifulSoup
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode
-from builder.parsers.regex_substitutions import swapregexbrackets
+from builder.parsers.regexsubstitutions import swapregexbrackets
 
 #
 # lexica parser helpers

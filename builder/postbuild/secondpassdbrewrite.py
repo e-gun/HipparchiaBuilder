@@ -10,10 +10,10 @@ import configparser
 import re
 from multiprocessing import Manager, Process
 
-from builder.builder_classes import dbAuthor, MPCounter
+from builder.builderclasses import dbAuthor, MPCounter
 from builder.dbinteraction.db import dbauthorandworkloader, authortablemaker
 from builder.dbinteraction.connection import setconnection
-from builder.parsers.regex_substitutions import latindiacriticals
+from builder.parsers.regexsubstitutions import latindiacriticals
 from builder.postbuild.postbuilddating import convertdate
 from builder.postbuild.postbuildhelperfunctions import rebasedcounter
 from builder.workers import setworkercount
@@ -231,13 +231,13 @@ def registernewworks(newworktuples):
 
 	# insert new works into the works table: deletetemporarydbs() means that this is INSERT and not UPDATE
 
-	print('registering',len(workinfodict),'new works')
+	print('registering', len(workinfodict),'new works')
 
 	count = 0
 	for w in workinfodict.keys():
 		count += 1
 		columns = ['universalid', 'levellabels_00', 'levellabels_01']
-		vals = [w, 'line', ' '] # the whitesapce matters for levellabels_01
+		vals = [w, 'line', ' ']  # the whitesapce matters for levellabels_01
 		valstring = ['%s', '%s', '%s']
 		# set genres: not elegant, but...
 		if w[0:2] in ['in', 'ch']:
@@ -300,7 +300,7 @@ def findnewtitles(newworktuples):
 	:return:
 	"""
 
-	print('collecting info about new works: building',len(newworktuples),'titles')
+	print('collecting info about new works: building', len(newworktuples), 'titles')
 
 	oldprefix = newworktuples[0][1][0:2]
 	newprefix = newworktuples[0][0][0:2]
@@ -337,7 +337,7 @@ def findnewtitles(newworktuples):
 		# prolix titles are not helpful?
 		# thetitle = newauthornames[newauid] + ' - ' + newworkdict[wk][1]
 		thetitle = newworkdict[wk][1]
-		workandtitletuplelist.append((wk,thetitle))
+		workandtitletuplelist.append((wk, thetitle))
 
 	return workandtitletuplelist
 
@@ -419,7 +419,7 @@ def parallelnewworkworker(workpile, newworktuples):
 
 			try:
 				print(a.universalid, a.idxname)
-			except:
+			except UnicodeEncodeError:
 				# it is your shell/terminal who is to blame for this
 				# UnicodeEncodeError: 'ascii' codec can't encode character '\xe1' in position 19: ordinal not in range(128)
 				print(a.universalid)
@@ -521,7 +521,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			dt = re.search(date,ln)
 			try:
 				dt = dt.group(1)
-				dt = re.sub(r'(^\s{1,}|\s{1,}$)', '', dt)
+				dt = re.sub(r'(^\s+|\s+$)', '', dt)
 			except:
 				dt = '[unknown]'
 
@@ -536,11 +536,11 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 				pr = '[unknown]'
 
 			# necessary because of the check for bad chars in HipparchiaServer's makeselection parser
-			pr = re.sub(r'\*⟪',' ', pr)
-			pr = re.sub(r':',' - ', pr)
-			pr = re.sub(r'\s\?','?', pr)
-			pr = re.sub(r'\s{2,}',' ',pr)
-			pr = re.sub(r'(^\s|\s)$','',pr)
+			pr = re.sub(r'\*⟪', ' ', pr)
+			pr = re.sub(r':', ' - ', pr)
+			pr = re.sub(r'\s\?', '?', pr)
+			pr = re.sub(r'\s{2,}', ' ', pr)
+			pr = re.sub(r'(^\s|\s)$', '', pr)
 
 			rg = re.search(region, ln)
 			try:
@@ -584,13 +584,13 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 
 			td = re.search(textdirection, ln)
 			try:
-				td = 'textdirection: '+td.group(1)
+				td = 'textdirection: {d}'.format(d=td.group(1))
 			except:
 				td = ''
 
 			dn = re.search(doc, ln)
 			try:
-				dn = 'documentnumber: '+dn.group(1)
+				dn = 'documentnumber: {n}'.format(n=dn.group(1))
 			except:
 				dn = ''
 
@@ -604,7 +604,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 				notes = ''
 
 			# managed dict was a hassle; we have to do this in order and remember the order
-			metadatalist.append((wkid, pi,pr,dt,cd,tr,ty,(notes,idx)))
+			metadatalist.append((wkid, pi, pr, dt, cd, tr, ty, (notes, idx)))
 
 	dbc.commit()
 	del dbc
@@ -629,7 +629,7 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 	idx = worktitle
 	clean = worktitle
 
-	if 	newentryname[0:2] == 'dp':
+	if newentryname[0:2] == 'dp':
 		aka = worktitle
 	else:
 		aka = re.search(r'\((.*?)\)$', worktitle)
@@ -638,7 +638,7 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 		except:
 			aka = worktitle
 
-	if 	newentryname[0:2] == 'dp':
+	if newentryname[0:2] == 'dp':
 		short = worktitle
 	else:
 		short = re.search(r'\[(.*?)\]\)$', worktitle)
@@ -698,11 +698,11 @@ def insertnewworksintonewauthor(newwkuid, results, cursor):
 		# level04 will yield things like: 'face C, right'
 		# this material will get merged with level01; but what sort of complications will arise?
 
-		r[2] = '-1' # level05
-		if r[6] == '1': # level 01
+		r[2] = '-1'  # level05
+		if r[6] == '1':  # level 01
 			r[6] = 'recto'
 
-		for level in [3,4,5]: # levels 04, 03, 02
+		for level in [3, 4, 5]:  # levels 04, 03, 02
 			if r[level] != '1':
 				if level != 4:
 					# print('unusual level data:', db,r[0],level,r[level])

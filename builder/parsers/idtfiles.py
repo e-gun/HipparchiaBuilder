@@ -7,10 +7,10 @@
 """
 
 import re
-from builder.builder_classes import Author, Opus
+from builder.builderclasses import Author, Opus
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import latinauthorlinemarkupprober
-from builder.parsers.regex_substitutions import latindiacriticals
+from builder.parsers.regexsubstitutions import latindiacriticals
 
 
 def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):

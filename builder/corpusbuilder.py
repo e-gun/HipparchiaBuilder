@@ -25,7 +25,7 @@ from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetaco
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, \
 	latinauthorlinemarkupprober, greekhmufontshiftsintospans, latinhmufontshiftsintospans
-from builder.parsers.regex_substitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
+from builder.parsers.regexsubstitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
 	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, totallemmatization, \
 	colonshift, insertnewlines, latindiacriticals
 from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs

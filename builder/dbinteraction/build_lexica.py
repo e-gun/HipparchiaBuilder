@@ -10,7 +10,7 @@
 import configparser
 from multiprocessing import Process, Manager
 
-from builder.builder_classes import MPCounter
+from builder.builderclasses import MPCounter
 from builder.dbinteraction.mplexicalworkers import mplatindictionaryinsert, mpgreekdictionaryinsert, mplemmatainsert, mpanalysisinsert
 from builder.dbinteraction.connection import setconnection
 from builder.workers import setworkercount

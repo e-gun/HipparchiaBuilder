@@ -11,7 +11,7 @@ import configparser
 import json
 import re
 from builder.dbinteraction.connection import setconnection
-from builder.builder_classes import dbOpus, dbAuthor
+from builder.builderclasses import dbOpus, dbAuthor
 
 try:
 	import psycopg2

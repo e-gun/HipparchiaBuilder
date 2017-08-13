@@ -9,7 +9,7 @@
 import configparser
 import time
 
-from builder import corpus_builder
+from builder import corpusbuilder
 from builder.dbinteraction.build_lexica import formatgklexicon, formatlatlexicon, analysisloader, grammarloader
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.versioning import timestampthebuild
@@ -108,9 +108,9 @@ if buildchristians == 'y':
 	corporatobuild.append('christians')
 
 for corpusname in corporatobuild:
-	corpus_builder.buildcorpusdbs(corpusname, corpusvars)
-	corpus_builder.remaptables(corpusname, corpusvars)
-	corpus_builder.buildcorpusmetadata(corpusname, corpusvars)
+	corpusbuilder.buildcorpusdbs(corpusname, corpusvars)
+	corpusbuilder.remaptables(corpusname, corpusvars)
+	corpusbuilder.buildcorpusmetadata(corpusname, corpusvars)
 
 
 #
