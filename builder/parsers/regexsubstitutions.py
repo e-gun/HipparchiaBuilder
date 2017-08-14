@@ -49,7 +49,7 @@ def earlybirdsubstitutions(texttoclean):
 		supplement = [(r'\'', r'＇')]
 
 	betacodetuples = [
-		(r'<(?!\d)',r'‹'),  # '<': this one is super-dangerous: triple-check
+		(r'<(?!\d)', r'‹'),  # '<': this one is super-dangerous: triple-check
 		(r'>(?!\d)', u'›'),  # '>': this one is super-dangerous: triple-check
 		(r'_', u' \u2014 '),  # doing this without spaces was producing problems with giant 'hyphenated' line ends
 		(r'\\\{', r'❴'),
@@ -105,7 +105,7 @@ def latindiacriticals(texttoclean):
 	:return:
 	"""
 
-	finder = re.compile(r'[aeiouyAEIOUV][\+\\=/]')
+	finder = re.compile(r'[aeiouyAEIOUV][+\\=/]')
 
 	texttoclean = re.sub(finder, latinsubstitutes, texttoclean)
 
@@ -180,8 +180,8 @@ def lastsecondsubsitutions(texttoclean):
 	betacodetuples = (
 		# a format shift code like '[3' if followed by a number that is supposed to print has an intervening ` to stop the TLG parser
 		# if you do this prematurely you will generate spurious codes by joining numbers that should be kept apart
-		(r'`(\d)',r'\1'),
-		(r'\\\(',r'('),
+		(r'`(\d)', r'\1'),
+		(r'\\\(', r'('),
 		(r'\\\)', r')'),
 	)
 
@@ -229,12 +229,12 @@ def lastsecondsubsitutions(texttoclean):
 		previousendswithvowel = re.compile(r'([aeiouαειουηωᾳῃῳᾶῖῦῆῶάέίόύήώὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]\s)‘(\w)')
 		texttoclean = re.sub(previousendswithvowel, r'\1’\2', texttoclean)
 	resized = re.compile(r'[﹖﹡／﹗│﹦﹢﹪﹠﹕＇]')
-	texttoclean = re.sub(resized, sizeshifter, texttoclean)
-	texttoclean = re.sub(r'([\w\.,;])‘([\W])', r'\1’\2', texttoclean)
+	texttoclean = re.sub(resized, makepunctuationnormalsized, texttoclean)
+	texttoclean = re.sub(r'([\w.,;])‘([\W])', r'\1’\2', texttoclean)
 	texttoclean = re.sub(r'(\W)”(\w)', r'\1“\2', texttoclean)
-	texttoclean = re.sub(r'([\w\.,;])“([\W])', r'\1”\2', texttoclean)
+	texttoclean = re.sub(r'([\w.,;])“([\W])', r'\1”\2', texttoclean)
 	# ['‵', '′'], # reversed prime and prime (for later fixing)
-	texttoclean = re.sub(r'([\w\.,])‵([\W])', r'\1′\2', texttoclean)
+	texttoclean = re.sub(r'([\w.,])‵([\W])', r'\1′\2', texttoclean)
 	texttoclean = re.sub(r'(\W)′(\w)', r'\1‵\2', texttoclean)
 	texttoclean = re.sub(r'‵', r'‘', texttoclean)
 	texttoclean = re.sub(r'′', r'’', texttoclean)
@@ -242,10 +242,10 @@ def lastsecondsubsitutions(texttoclean):
 	return texttoclean
 
 
-def sizeshifter(match):
+def makepunctuationnormalsized(match):
 	"""
 
-	swap a little and (﹠) for a big one (&), etc.
+	swap a normal and (﹠) for a little one (&), etc.
 
 	:param match:
 	:return:
@@ -266,6 +266,37 @@ def sizeshifter(match):
 		'﹕': ':',
 		'＇': u'\u0027',  # simple apostrophe
 		}
+
+	try:
+		substitute = substitutions[val]
+	except KeyError:
+		substitute = ''
+
+	return substitute
+
+
+def makepunctuationsmall(val):
+	"""
+
+	swap a little and (﹠) for a big one (&), etc.
+
+	:param val:
+	:return:
+	"""
+
+	substitutions = {
+		'?': '﹖',
+		'*': '﹡',
+		'/': '／',
+		'!': '﹗',
+		'|': '│',
+		'=': '﹦',
+		'+': '﹢',
+		'%': '﹪',
+		'&': '﹠',
+		':': '﹕',
+		u'\u0027': '＇'  # simple apostrophe
+	}
 
 	try:
 		substitute = substitutions[val]
@@ -323,7 +354,7 @@ def bracketsimplifier(match):
 	return substitute
 
 
-def swapregexbrackets(match):
+def swapregexbrackets(val):
 	"""
 
 	get rid of [](){}
@@ -335,8 +366,6 @@ def swapregexbrackets(match):
 	:param match:
 	:return:
 	"""
-
-	val = match.group(0)
 
 	substitutions = {
 		'(': '❨',

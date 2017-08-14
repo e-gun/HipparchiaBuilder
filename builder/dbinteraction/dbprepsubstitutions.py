@@ -10,6 +10,7 @@ import re
 import configparser
 from collections import deque
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj, buildhipparchiatranstable
+from builder.parsers.regexsubstitutions import swapregexbrackets, makepunctuationsmall
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -50,6 +51,7 @@ def dbprepper(dbunreadyversion):
 	dbunreadyversion = cleanblanks(dbunreadyversion)
 	dbunreadyversion = dbpdeincrement(dbunreadyversion)
 	dbunreadyversion = dbstrippedliner(dbunreadyversion)
+	dbunreadyversion = dbswapoutbadcharsfromcitations(dbunreadyversion)
 	dbunreadyversion = dbfindhypens(dbunreadyversion)
 	dbunreadyversion = dbfindannotations(dbunreadyversion)
 	dbunreadyversion = hmutonbsp(dbunreadyversion)
@@ -199,6 +201,43 @@ def dbstrippedliner(dbunreadyversion):
 	return dbreadyversion
 
 
+def dbswapoutbadcharsfromcitations(dbunreadyversion):
+	"""
+
+	sample in:
+		['2', [('0', '6'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')], 'ἀγῶϲι πρόνοιαν· ὃϲ καὶ τότε περαιούμενοϲ ναυϲὶν ἐϲ Ἰτα-', 'ἀγῶϲι πρόνοιαν ὃϲ καὶ τότε περαιούμενοϲ ναυϲὶν ἐϲ ἰτα-', 'αγωϲι προνοιαν οϲ και τοτε περαιουμενοϲ ναυϲιν εϲ ιτα-']
+
+	but not everybody looks like in column 1:
+		[('0', '6'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1'), ('5', '1')]
+
+	instead of '1' at level01, some of these can have:
+		'Right/Left F,11(1)'
+
+	HipparchiaServer *hates* that: the '/' will call a different URL; the '(' makes the regex engine sad; usw.
+
+	So we will swap out the relevant chars...
+
+	:param dbunreadyversion:
+	:return:
+	"""
+
+	dbreadyversion = deque()
+	workingcolumn = 1
+
+	brackets = re.compile(r'[\]\[\(\)\{\}]')
+	punct = re.compile(r'[?*/!|=+%&:\']')
+
+	while dbunreadyversion:
+		line = dbunreadyversion.popleft()
+		citation = line[workingcolumn]
+		newcitation = [(c[0], re.sub(brackets, lambda x: swapregexbrackets(x.group(0)), c[1])) for c in citation]
+		newcitation = [(c[0], re.sub(punct, lambda x: makepunctuationsmall(x.group(0)), c[1])) for c in newcitation]
+		newrow = line[0:workingcolumn] + [newcitation] + line[workingcolumn+1:]
+		dbreadyversion.append(newrow)
+
+	return dbreadyversion
+
+
 def dbfindhypens(dbunreadyversion):
 	"""
 
@@ -303,9 +342,9 @@ def quarterspacer(matchgroup):
 	"""
 	digit = int(matchgroup.group(1))
 	# used to do 4, but the indentations could pile up
-	spaces = divmod(digit,5)[0]
+	spaces = divmod(digit, 5)[0]
 	substitution = ''
-	for i in range(0,spaces):
+	for i in range(0, spaces):
 		substitution += '&nbsp;'
 
 	return substitution
@@ -321,8 +360,8 @@ def noleadingortrailingwhitespace(dbunreadyversion):
 	dbreadyversion = deque()
 	
 	for line in dbunreadyversion:
-		for column in [2,3,4]:
-			line[column] = re.sub(r'(^\s|\s$)','',line[column])
+		for column in [2, 3, 4]:
+			line[column] = re.sub(r'(^\s|\s$)', '', line[column])
 		dbreadyversion.append(line)
 	
 	return dbreadyversion

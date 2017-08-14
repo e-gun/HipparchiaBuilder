@@ -165,7 +165,7 @@ def translationsummary(fullentry, translationlabel):
 	tr = [re.sub(depunct, '',t) for t in tr]
 	tr = [re.sub(r'^To', 'to', t) for t in tr]
 	# brackets = re.compile(r'[\]\[\(\)\{\}]')
-	# tr = [re.sub(brackets, swapregexbrackets, t) for t in tr]
+	# tr = [re.sub(brackets, lambda x: swapregexbrackets(x.group(0)), t) for t in tr]
 	tr = list(set(tr))
 	tr.sort()
 	translations = ' ‖ '.join(tr)
