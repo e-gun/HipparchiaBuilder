@@ -18,7 +18,6 @@ def replacehebrew(texttoclean):
 		<hmu_fontshift_greek_hebrew>SRNYH &pro$</hmu_fontshift_greek_hebrew>
 		<hmu_fontshift_greek_hebrew>'DNYH</hmu_fontshift_greek_hebrew>
 
-
 	:param texttoclean:
 	:return:
 	"""

@@ -13,7 +13,7 @@ from multiprocessing import Manager, Process
 from builder.builderclasses import dbAuthor, MPCounter
 from builder.dbinteraction.db import dbauthorandworkloader, authortablemaker
 from builder.dbinteraction.connection import setconnection
-from builder.parsers.regexsubstitutions import latindiacriticals
+from builder.parsers.latinsubstitutions import latindiacriticals
 from builder.parsers.swappers import forceregexsafevariants
 from builder.postbuild.postbuilddating import convertdate
 from builder.postbuild.postbuildhelperfunctions import rebasedcounter
@@ -513,11 +513,6 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			if pr == '?':
 				pr = '[unknown]'
 
-			# necessary because of the check for bad chars in HipparchiaServer's makeselection parser
-			pr = re.sub(r'\*⟪', ' ', pr)
-			pr = re.sub(r':', ' - ', pr)
-			pr = re.sub(r'\s\?', '?', pr)
-			pr = re.sub(r'\s{2,}', ' ', pr)
 			pr = re.sub(r'(^\s|\s)$', '', pr)
 
 			rg = re.search(region, ln)
@@ -543,9 +538,9 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			if len(pr) > 64:
 				pr = pr[0:63]
 
-			pi = latindiacriticals(pi)
-			pr = latindiacriticals(pr)
-			dt = latindiacriticals(dt)
+			# pi = forceregexsafevariants(latindiacriticals(pi))
+			# pr = forceregexsafevariants(latindiacriticals(pr))
+			# dt = forceregexsafevariants(latindiacriticals(dt))
 
 			if db[0:2] in ['in', 'ch']:
 				tr = 'inscription'

@@ -8,9 +8,9 @@
 
 import re
 
-import builder.parsers.betacodeescapedcharacters
-from builder.parsers.swappers import highunicodetohex
-from builder.parsers import regexsubstitutions
+from builder.parsers.swappers import highunicodetohex, forceregexsafevariants
+from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
+from builder.parsers.latinsubstitutions import latindiacriticals
 
 
 def citationbuilder(hexsequence):
@@ -103,17 +103,17 @@ def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
 		1: 'newwork',
 		2: 'workabbrev',
 		3: 'authabbrev',
-		97: 'region', # 'a'
-		98: 'city', # 'b'
-		99: 'notes', # 'c' (will be textdirection in INS/DDP)
-		100: 'date', # 'd'
-		101: 'publicationinfo', # 'e'
-		102: 'additionalpubinfo', # 'f'
-		103: 'stillfurtherpubinfo', # 'g'
-		108: 'provenance', # 'l'
-		114: 'reprints', # 'r'
-		116: 'unknownmetadata116', # 't'
-		122: 'documentnumber' # 'z'
+		97: 'region',  # 'a'
+		98: 'city',  # 'b'
+		99: 'notes',  # 'c' (will be textdirection in INS/DDP)
+		100: 'date',  # 'd'
+		101: 'publicationinfo',  # 'e'
+		102: 'additionalpubinfo',  # 'f'
+		103: 'stillfurtherpubinfo',  # 'g'
+		108: 'provenance',  # 'l'
+		114: 'reprints',  # 'r'
+		116: 'unknownmetadata116',  # 't'
+		122: 'documentnumber'  # 'z'
 		}
 
 	try:
@@ -129,24 +129,15 @@ def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
 	else:
 		citation, hexsequence = actionmapper[action](hexsequence)
 
+	citation = forceregexsafevariants(latindiacriticals(replaceaddnlchars(citation)))
+	citation = re.sub(r'`', '', citation)
+
 	metadata[metadatacategories[category]] = citation
 
 	for key in metadata.keys():
 		# should actually only be one key, but we don't know which one it is in advance
 		if len(metadata[key]) > 0:
-			v = builder.parsers.betacodeescapedcharacters.replaceaddnlchars(metadata[key])
-			v = re.sub(r'`','', v)
-			# things with parentheses/brackets will be visible in the html later:
-			#   in line: '<hmu_metadata_publicationinfo value="IG II(2) 1366" />'
-			#   will see: '2) 1366" />'
-			#   in line: '...[W.]"'
-			#   will see: 'W.]"'
-			v = re.sub(r'\(', r'﹙', v)
-			v = re.sub(r'\)', r'﹚', v)
-			v = re.sub(r'\]', r'⦘', v)
-			v = re.sub(r'\[', r'⦗', v)
-			# print('<hmu_metadata_{k} value="{v}" />'.format(k=key,v=v))
-			fullcitation += '<hmu_metadata_{k} value="{v}" />'.format(k=key,v=v)
+			fullcitation += '<hmu_metadata_{k} value="{v}" />'.format(k=key, v=metadata[key])
 
 	return fullcitation, hexsequence
 

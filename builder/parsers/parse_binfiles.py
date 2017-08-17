@@ -19,7 +19,7 @@ except ImportError:
 	import psycopg2cffi as psycopg2
 
 from builder import file_io
-from builder.parsers.regexsubstitutions import latindiacriticals
+from builder.parsers.latinsubstitutions import latindiacriticals
 from builder.parsers.betacodeescapedcharacters import percentsubstitutes
 from builder.parsers.greekcanonfunctions import loadgkcanon
 from builder.dbinteraction.db import updatedbfromtemptable

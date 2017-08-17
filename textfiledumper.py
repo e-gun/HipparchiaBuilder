@@ -24,11 +24,11 @@ from builder.corpusbuilder import buildauthorobject
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, \
 	latinauthorlinemarkupprober, latinhmufontshiftsintospans, greekhmufontshiftsintospans
-from builder.parsers.coptic import replacecoptic
+from builder.parsers.copticsubstitutions import replacecoptic
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
 from builder.parsers.regexsubstitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
-	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, latindiacriticals, \
-	totallemmatization
+	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, totallemmatization
+from builder.parsers.latinsubstitutions import latindiacriticals
 
 config = configparser.ConfigParser()
 config.read('config.ini')

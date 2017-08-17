@@ -27,8 +27,9 @@ from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontline
 	latinauthorlinemarkupprober, greekhmufontshiftsintospans, latinhmufontshiftsintospans
 from builder.parsers.regexsubstitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
 	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, totallemmatization, \
-	colonshift, insertnewlines, latindiacriticals
-from builder.parsers.coptic import replacecoptic
+	colonshift, insertnewlines
+from builder.parsers.latinsubstitutions import latindiacriticals
+from builder.parsers.copticsubstitutions import replacecoptic
 from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
 from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks

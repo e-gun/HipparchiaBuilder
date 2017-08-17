@@ -14,7 +14,7 @@ from builder.dbinteraction.db import updatedbfromtemptable
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode
 from builder.parsers.betacodeescapedcharacters import percentsubstitutes
 from builder.parsers.betacodefontshifts import andsubstitutes
-from builder.parsers.regexsubstitutions import latindiacriticals
+from builder.parsers.latinsubstitutions import latindiacriticals
 
 config = configparser.ConfigParser()
 config.read('config.ini')
