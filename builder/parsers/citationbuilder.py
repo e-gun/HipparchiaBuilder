@@ -17,12 +17,12 @@ def citationbuilder(hexsequence):
 	"""
 	NOTE: this function expects a call from re.sub and so you need a match.group()
 
-	parse the sequence of bytes for instructions on how to build a citatation
+	parse the sequence of bytes for instructions on how to build a citation
 	"0xab 0x82 0xff 0x9f 0xe1 0xff" ==> <set_level_2_to_383>\n<set_level_1_to_a>\n
 
 	this is very fiddly since each instruction requires different actions upon the data
 	that follows; furthermore 'level6' is its own world of metadata rather than being a
-	simple hierarchy like level00==>verse# and level01==>poem# and level02==>book#
+	simple hierarchy like 'level00 ==> verse#' and 'level01 ==> poem#' and 'level02 ==> book#'
 
 	everything happens byte-by-byte: that means that if you botch one set of instructions
 	you will be left with the wrong bytesequence going forward and the next 'instruction'

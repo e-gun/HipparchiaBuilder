@@ -124,9 +124,9 @@ secondaryworkparsing = [
 
 
 if lg == 'G':
-	functions = {key: val for (key,val) in enumerate(initialworkparsing + secondaryworkparsing)}
+	functions = {key: val for (key, val) in enumerate(initialworkparsing + secondaryworkparsing)}
 else:
-	functions = {key: val for (key,val) in enumerate(initialworkparsing + secondaryworkparsing)}
+	functions = {key: val for (key, val) in enumerate(initialworkparsing + secondaryworkparsing)}
 
 n = debugauthor
 

@@ -7,18 +7,19 @@
 """
 
 import re
+from builder.parsers.swappers import avoidregexsafevariants
 
 def convertdate(date, passvalue=0):
 	"""
 
-	there are 21584 distinct recorded_date values in the works table
+	there are 21915 distinct recorded_date values in the works table
 	[q = 'select distinct recorded_date from works order by recorded_date']
 
 	take a string date and try to assign a number to it: IV AD --> 450, etc.
 
 	a very messy way to achieve highly suspect results
 
-	this is IN PROGRESS and likely to remain so for a while longer
+	this is IN PROGRESS and likely to remain so for a good while longer
 
 	:param date:
 	:return:
@@ -27,6 +28,7 @@ def convertdate(date, passvalue=0):
 
 	# "Editor's date:  33⟨8⟩/7" --> '33' unless you purge the brackets
 	date = re.sub(r'[⟨⟩]', '', date)
+	date = avoidregexsafevariants(date)
 	numericaldate = 9999
 
 	german = re.compile(r'(n\.|v\.Chr\.)')
@@ -37,7 +39,7 @@ def convertdate(date, passvalue=0):
 
 	if re.search(german, date) is not None and passvalue == 0:
 		numericaldate = germandate(date)
-	elif re.search(arabic, date) is not None and re.search(ordinal,date) is not None and passvalue < 2:
+	elif re.search(arabic, date) is not None and re.search(ordinal, date) is not None and passvalue < 2:
 		numericaldate = numberedcenturydate(date, ordinal)
 	elif re.search(ages, date) is not None and passvalue < 3:
 		numericaldate = aetatesdates(date)
@@ -95,8 +97,8 @@ def germandate(stringdate):
 	stringdate = re.sub(misleadingmiddles, '-', stringdate)
 	# stringdate = re.sub(collapse,'/', stringdate)
 
-	if re.search(r'v\.Chr\.',stringdate) is not None and re.search(r'n\.Chr\.',stringdate) is not None:
-		parts = re.search(r'\d\s{0,1}v\.Chr(.*?)\d\s{0,1}n\.Chr(.*?)',stringdate)
+	if re.search(r'v\.Chr\.', stringdate) is not None and re.search(r'n\.Chr\.', stringdate) is not None:
+		parts = re.search(r'\d\s?v\.Chr(.*?)\d\s?n\.Chr(.*?)', stringdate)
 		try:
 			one = int(parts.group(1))
 			two = int(parts.group(3))
@@ -118,7 +120,7 @@ def germandate(stringdate):
 			# failed zw. 1 v.Chr. und 4 n.Chr.
 			numericaldate = convertdate(original, passvalue=1)
 		return numericaldate
-	elif re.search(r'v\.Chr\.',stringdate) is not None:
+	elif re.search(r'v\.Chr\.', stringdate) is not None:
 		modifier = -1
 
 	stringdate = re.sub(r'(v\.|n\.)Chr\.', '', stringdate)
@@ -144,7 +146,7 @@ def germandate(stringdate):
 	stringdate = re.sub(dontcare, '', stringdate)
 	stringdate = re.sub(r'\.', '', stringdate)
 
-	if re.search(split,stringdate) is not None:
+	if re.search(split, stringdate) is not None:
 		parts = re.search(split, stringdate)
 		one = int(parts.group(1))
 		two = int(parts.group(2))
@@ -228,7 +230,7 @@ def numberedcenturydate(stringdate, ordinalregexfinder):
 	if re.search(r'bc$', stringdate) is not None:
 		modifier = modifier * -1
 		fudge = fudge + 100
-	elif re.search(r'ac$', stringdate) is None and re.search(r'(1st|2nd) half',stringdate) is not None:
+	elif re.search(r'ac$', stringdate) is None and re.search(r'(1st|2nd) half', stringdate) is not None:
 		# 2nd half Antonine
 		numericaldate = convertdate(original, passvalue=2)
 		return numericaldate
@@ -247,8 +249,8 @@ def numberedcenturydate(stringdate, ordinalregexfinder):
 	firstdigit = int(firstdigit[0])
 
 	if twodigit:
-		if re.search(r'bc(.*?)ac$',stringdate) is None:
-			numericaldate = (((firstdigit + seconddigit) / 2) * modifier ) + fudge
+		if re.search(r'bc(.*?)ac$', stringdate) is None:
+			numericaldate = (((firstdigit + seconddigit) / 2) * modifier) + fudge
 			if modifier > 0:
 				numericaldate += 50
 			else:
@@ -276,7 +278,7 @@ def aetatesdates(stringdate):
 	original = stringdate
 	fudge = 0
 
-	map = {
+	datemapper = {
 		'Ant': 150,
 		'August fere': 1,
 		'Ant/Aur': 160,
@@ -363,7 +365,7 @@ def aetatesdates(stringdate):
 	stringdate = re.sub(r'(^\s|\s$)', '', stringdate)
 
 	if re.search(add, stringdate) is not None:
-		stringdate = re.sub(add,'',stringdate)
+		stringdate = re.sub(add, '', stringdate)
 		fudge = 25
 
 	if re.search(subtr, stringdate) is not None:
@@ -371,7 +373,7 @@ def aetatesdates(stringdate):
 		fudge = -25
 
 	try:
-		numericaldate = map[stringdate] + fudge
+		numericaldate = datemapper[stringdate] + fudge
 	except:
 		numericaldate = convertdate(original, passvalue=3)
 
@@ -383,11 +385,11 @@ def romannumeraldate(stringdate):
 
 	V -> 450
 
-	:param datestring:
+	:param stringdate:
 	:return:
 	"""
 
-	map = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10, 'XI': 11,
+	datemapper = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10, 'XI': 11,
 			'XII': 12, 'XIII': 13, 'XIV': 14, 'XV': 15, 'XVI': 16, 'XVII': 17, 'XVIII': 18, 'XIX': 19}
 
 	original = stringdate
@@ -404,7 +406,7 @@ def romannumeraldate(stringdate):
 		numericaldate = convertdate(original, passvalue=4)
 		return numericaldate
 
-	stringdate = re.sub(fixone,r'I/',stringdate)
+	stringdate = re.sub(fixone, r'I/', stringdate)
 	stringdate = re.sub(fixtwo, r'a/', stringdate)
 
 	dontcare = re.compile(r'^(p med |s |p |c.med s |c med |med s |mid- |mid |fere s )|( ut vid| p|p\?|p)$')
@@ -437,14 +439,14 @@ def romannumeraldate(stringdate):
 		fudge = 25
 
 	if re.search(r'( bc$|bc$| a$|a$)', stringdate) is not None:
-		stringdate = re.sub(r'( bc| BC|bc| sac| ac| a|a)$','',stringdate)
+		stringdate = re.sub(r'( bc| BC|bc| sac| ac| a|a)$', '', stringdate)
 		modifier = modifier * -1
 		fudge = fudge + 100
 
 	if re.search(r'(ac.*?[/-].*?pc|bc.*?[/-].*?ac)$', original) is not None:
 		# I sac - I spc
 		numerals = re.findall(r'[IVX]+', original)
-		digits = [map[n] for n in numerals]
+		digits = [datemapper[n] for n in numerals]
 		digits[0] = digits[0] * -1
 		numericaldate = (((digits[0] + digits[1]) / 2) * modifier) + fudge
 	elif re.search(splitter, stringdate) is not None:
@@ -452,15 +454,15 @@ def romannumeraldate(stringdate):
 		centuries = re.search(splitter, stringdate)
 		first = centuries.group(1)
 		second = centuries.group(2)
-		first = map[first]
-		second = map[second]
+		first = datemapper[first]
+		second = datemapper[second]
 		if first > second and modifier > 0:
 			modifier = modifier * -1
 		numericaldate = (((first + second) / 2) * modifier) + fudge + midcentury
 	elif re.search(r'[IVX]+', stringdate) is not None:
 		numeral = re.search(r'[IVX]+', stringdate)
 		try:
-			numeral = map[numeral.group(0)]
+			numeral = datemapper[numeral.group(0)]
 			numericaldate = (numeral * modifier) + fudge + midcentury
 		except:
 			# no key
@@ -527,7 +529,7 @@ def numericdate(stringdate):
 				newtwo = ''
 				strone = str(one)
 				strtwo = str(two)
-				for i in range(0,len(strone) - len(strtwo)):
+				for i in range(0, len(strone) - len(strtwo)):
 					newtwo += strone[i]
 				newtwo += strtwo
 				two = int(newtwo)
@@ -553,11 +555,11 @@ def numericdate(stringdate):
 		return numericaldate
 
 	if re.search(tinysubtract, stringdate) is not None:
-		stringdate = re.sub(tinysubtract,'',stringdate)
+		stringdate = re.sub(tinysubtract, '', stringdate)
 		fudge = -10
 
 	if re.search(littleadd, stringdate) is not None:
-		stringdate = re.sub(littleadd,'',stringdate)
+		stringdate = re.sub(littleadd, '', stringdate)
 		fudge = 10
 
 	digits = re.search(r'\d+', stringdate)
@@ -579,7 +581,7 @@ def datemapper(stringdate):
 	original = stringdate
 	numericaldate = 9999
 
-	datemapper = {
+	mapper = {
 		'1. HÄLFTE 2. JH. V.CHR.': -175,
 		'1. HÄLFTE 4. JH. V.CHR.': -375,
 		'1. HÄLFTE 4.JH. V.CHR.': -375,
@@ -732,8 +734,8 @@ def datemapper(stringdate):
 
 	date = date.upper()
 
-	if date in datemapper:
-		numericaldate = datemapper[date]
+	if date in mapper:
+		numericaldate = mapper[date]
 	else:
 		# for debugging...
 		# print(original.upper())
@@ -744,215 +746,195 @@ def datemapper(stringdate):
 
 """
 
-still clueless re:
+select distinct recorded_date from works where converted_date = '9999';
 
-(SPÄT)RÖMISCH
-1.JH.V.CHR.-1.JH.N.CHR.
-12 V.CHR./3 N.CHR./87 N.CHR.?
-2.JH.N.CHR.? / 2.JH.V.CHR.?
-62 N.CHR. [75 V.CHR.]
-?
-ANF. 1.JH.V.CHR./1.JH.N.CHR.?
-ANT. PIUS
-ANT. PIUS  M. AUR.
-ANTONINE OR LATER
-ANTONINE OR SH.AFTER
-ANTONINUS PIUS?
-ARAB.?
-BYZ./ARAB.
-CALIGULA
-CARACALLA?
-CHR./BYZ.
-CLAUDIAN?
-CLAUDIUS?
-COPT.
-EARLY BYZ
-EARLY CHRIST.
-EARLY CHRISTIAN
-ENDE REPUBLIK/BEG. KAISERZEIT
-ERSTE KAISERZEIT
-FLAVIAN (OR EARLIER)
-FRANKISH
-GEOMETRIC/SUB-GEOMETRIC
-HADRIAN OR LATER
-HADRIAN+
-HADRIAN, OR LATER
-HADRIANIC OR ANTONINE
-HELL. OR LATER
-HELLENIST.
-HERM
-HERODIAN
-HIGH IMP.
-HIGH IMP.
-HIGH IMP.?
-HIGH IMP.?
-IIA-AET ROM?
-IIA-AET ROM?
-IIA-AET ROM?
-IMP.-BYZ.
-IMP.-BYZ.
-KOPT.
-LATE CHR.
-LATE EMPIRE
-LATE HELL./EARLY IMP.
-LATE HELL./EARLY IMP.
-LATE HELLENIST
-LATE IMP.-EARLY BYZ.
-LATE IMP.-EARLY BYZ.
-LATE PTOL./ROM.
-LATE ROMAN
-LATER CHR.
-M. AUR.?
-M. AURELIUS, OR LATER
-MARCUS AURELIUS/COMMODUS
-MID BYZ
-MID/LATE BYZ
-PTOL.-ROM.
-PTOL.-ROM.?
-PTOL./EARLY IMP.
-PTOL./EARLY IMP.
-PTOLEMAIC
-ROM. OR HELL.?
-ROM.-BYZ.
-SEPTIMIUS SEVERUS
-SEPTIMIUS SEVERUS (OR LATER)
-SEVERUS-GALLIENUS
-SPÄTZEIT?
-THEB
-TRAJAN, OR SH. BEF.
-TRAJANIC OR LATER
-TRAJANIC-ANTONINE
-TURKISH?
-ZEIT HADRIANS? / ERHEBLICH FRU
-[WILIGELMO]
-[ANT.]
-[ANTIQUE]
-[FORGERY]
-[FRÜHE KAISERZEIT]
-[MODERN FORGERY]
-AC
-AET HELL/AET ROM
-AET HELL/AET ROM
-AET IMP/AET CHR
-AET IMP/AET CHR
-AET IMP/AET CHR
-AET ROM ANTIQ
-AET ROM ANTIQ
-AET ROMANA
-AET ROMANA
-AET TRÁP POST
-AET TRÁP POST
-AET VES-AET DOM
-AET VES-AET DOM
-AET VES-AET DOM
-AET CHR
-AET CHR
-AET IMP INF
-AET IMP INF
-AET REC
-AET REC
-AET TARDAE
-AET TARDAE
-AET. IMP. ROM.
-AET. IMP. ROM.
-AETATE ROMANA
-AETATE ROMANA
-AETATIS INFIMAE
-AETATIS INFIMAE
-ANTE CHR NAT?
-ANTE CHR?
-ARCHAISCH
-ARCHAISCH?
-ARCHAISCHER SCHRIFTCHARAKTER
-ARCHAISCHES?
-AUGUSTEISCH
-AUGUSTEISCHE ZEIT
-BEG ROM IMP
-BEG. ANTONINE
-BETW. TRAJAN  SEVERUS
-EARLY ANTONINE
-EARLY ANTONINE OR LATER
-EARLY BYZ
-EARLY HADRIANIC
-EARLY MEDIEVAL
-END HELLENIST.
-END PTOL.(?)
-END PTOL./ROM.
-END PTOL./BEG. ROM.
-ERSTE KAISERZEIT
-FORGERY?
-FORGERÝMOD.?
-FRUHE BIS MITTLERE KAISERZEIT
-FRÜHBYZANTINISCH
-FRÜHHELLENISTISCH
-FRÜHHELLENISTISCH?
-HELLENISTISCH - SPÄTRÖMISCH
-HELLENISTISCH-FRÜHE KAISERZEIT
-HELLENISTISCH/RÖMISCH
-HIGH IMP.
-HIGH IMP.
-HOHE KAISERZEIT
-HOHE HELLENISTISCHE ZEIT
-IMP ROM
-INIT PRINCIPAT
-INIT(?) AET IMP
-INIT(?) AET IMP
-INIT(?) AET IMP
-KAISERZEITLICH/SPÄTRÖMISCH
-LATE
-LATE ATTIC
-LATE HADRIANIC-EARLY ANTONINE
-LATE PTOL.-EARLY ROM.?
-LATE ROM.
-LATE ROMAN
-LATE SEVERAN
-LATE SEVERAN OR SH.AFT.
-LATE CLASSIC
-LATE PERIOD
-LATER SEVERAN?
-LATER IMPERIAL
-MED./MOD.?
-MEDIEVAL
-MEDIEVAL?
-MID BYZ
-MITTELHELLENISTISCH
-MITTLERE KAISERZEIT?
-MOD.
-NOCH ENDE DER REPUBLIK?
-NOCH HELLENISTISCH?
-NON POST AUGUST
-NOT BEF. MIDDLE ANTONINE
-POSS. ANTONINE
-POSS. LATE HADRIANIC
-POST HADRIAN
-POST PRINC AUG
-POST-BYZ?
-POST-HADRIANIC
-PROB. EARLY ANTONINE
-PROB. MIDDLE ANTONINE
-PROB. SH.AFT. MIDDLE ANTONINE
-RELATIV SPÄT
-ROMISCH
-RÖMISCH (KAISERZEIT?)
-RÖMISCH (EHER SPÄT)
-RÖMISCH, CHRISTLICH?
-SPÄT
-SPÄTANTIK
-SPÄTANTIK?
-SPÄTE REPUBLIK ODER FRUHE KAIS
-SPÄTERE HELLENISTISCHE ZEIT
-SPÄTHELL. - FRÜHE KAISERZEIT
-SPÄTRÖMISCH
-TEMP MACEDONICA
-TRAIANISCH-HADRIANISCHE ZEIT
-ULT TEMP ROMANO
-UNTER AUGUSTUS
-UNTER NERVÁHADRIAN/TRAJAN
-VERMUTLICH FRÜHE KAISERZEIT
-WOHL ERSTE KAISERZEIT
-WOHL NOCH HELLENISTISCH
-WOHL NOCH RÖMISCH
-ZIEMLICH SPÄT
-ZW. 1 V.CHR. UND 4 N.CHR.
+          recorded_date           
+----------------------------------
+ 1.Jh.v.Chr.-1.Jh.n.Chr.
+ 12 v.Chr.／3 n.Chr.／87 n.Chr.﹖
+ 2.Jh.n.Chr.﹖ ／ 2.Jh.v.Chr.﹖
+ 62 n.Chr. ⟦75 v.Chr.⟧
+ Anf. 1.Jh.v.Chr.／1.Jh.n.Chr.﹖
+ Ant. Pius
+ Ant. Pius ﹠ M. Aur.
+ Antonine or later
+ Antonine or sh.after
+ Antoninus Pius﹖
+ Arab.﹖
+ Byz.／Arab.
+ Caligula
+ Caracalla﹖
+ Chr.／Byz.
+ Claudian﹖
+ Claudius﹖
+ Copt.
+ Early Byz
+ Early Christ.
+ Early Christian
+ Early／Mid. Imp.
+ Ende Republik／Beg. Kaiserzeit
+ Erste Kaiserzeit
+ Flavian ❨or earlier❩
+ Frankish
+ Geometric／Sub-Geometric
+ Hadrian or later
+ Hadrian, or later
+ Hadrianic or Antonine
+ Hadrian﹢
+ Hell. or later
+ Hellenist.
+ Herm
+ Herodian
+ High Imp.
+ High Imp.﹖
+ IIa-aet Rom﹖
+ Ia／aet Imp
+ Ia／aet Imp﹖
+ Imp.-Byz.
+ Kopt.
+ Late Chr.
+ Late Empire
+ Late Hell.／Early Imp.
+ Late Hellenist
+ Late Imp.-Early Byz.
+ Late Ptol.／Rom.
+ Late Roman
+ Later Chr.
+ M. Aur.﹖
+ M. Aurelius, or later
+ Marcus Aurelius／Commodus
+ Mid Byz
+ Mid／Late Byz
+ Ptol.-Rom.
+ Ptol.-Rom.﹖
+ Ptol.／Early Imp.
+ Ptolemaic
+ Rom. or Hell.﹖
+ Rom.-Byz.
+ Septimius Severus
+ Septimius Severus ❨or later❩
+ Severus-Gallienus
+ Spätzeit﹖
+ Theb
+ Trajan, or sh. bef.
+ Trajanic or later
+ Trajanic-Antonine
+ Turkish﹖
+ Zeit Hadrians﹖ ／ erheblich fru
+ ac
+ aet Hell／aet Rom
+ aet Imp／aet Chr
+ aet Rom antiq
+ aet Romana
+ aet Ves-aet Dom
+ aet chr
+ aet imp inf
+ aet rec
+ aet tardae
+ aet. imp. Rom.
+ aetate Romana
+ aetatis infimae
+ ante Chr nat﹖
+ ante Chr﹖
+ archaisch
+ archaischer Schriftcharakter
+ archaisches﹖
+ archaisch﹖
+ augusteisch
+ augusteische Zeit
+ beg Rom imp
+ beg. Antonine
+ betw. Trajan ﹠ Severus
+ early Antonine
+ early Antonine or later
+ early Byz
+ early Hadrianic
+ early medieval
+ end Hellenist.
+ end Ptol.／Rom.
+ end Ptol.／beg. Rom.
+ end Ptol.❨﹖❩
+ erste Kaiserzeit
+ forgery﹖
+ forgery／mod.﹖
+ fruhe bis mittlere Kaiserzeit
+ frühbyzantinisch
+ frühhellenistisch
+ frühhellenistisch﹖
+ hellenistisch - spätrömisch
+ hellenistisch-frühe Kaiserzeit
+ hellenistisch／römisch
+ high Imp.
+ hohe Kaiserzeit
+ hohe hellenistische Zeit
+ imp Rom
+ init principat
+ init❨﹖❩ aet Imp
+ kaiserzeitlich／spätrömisch
+ late
+ late Attic
+ late Hadrianic-early Antonine
+ late Ptol.-early Rom.﹖
+ late Rom.
+ late Roman
+ late Severan
+ late Severan or sh.aft.
+ late classic
+ late period
+ later Severan﹖
+ later imperial
+ med.／mod.﹖
+ medieval
+ medieval﹖
+ mid Byz
+ mittelhellenistisch
+ mittlere Kaiserzeit﹖
+ mod.
+ noch Ende der Republik﹖
+ noch hellenistisch﹖
+ non post August
+ not bef. middle Antonine
+ poss. Antonine
+ poss. late Hadrianic
+ post Hadrian
+ post princ Aug
+ post-Byz﹖
+ post-Hadrianic
+ prob. early Antonine
+ prob. middle Antonine
+ prob. sh.aft. middle Antonine
+ relativ spät
+ romisch
+ römisch ❨Kaiserzeit﹖❩
+ römisch ❨eher spät❩
+ römisch, christlich﹖
+ spät
+ spätantik
+ spätantik﹖
+ späte Republik oder fruhe Kais
+ spätere hellenistische Zeit
+ späthell. - frühe Kaiserzeit
+ spätrömisch
+ temp Macedonica
+ traianisch-hadrianische Zeit
+ ult temp Romano
+ unter Augustus
+ unter Nerva／Hadrian／Trajan
+ vermutlich frühe Kaiserzeit
+ wohl erste Kaiserzeit
+ wohl noch hellenistisch
+ wohl noch römisch
+ ziemlich spät
+ zw. 1 v.Chr. und 4 n.Chr.
+ ﹖
+ ⟦Wiligelmo⟧
+ ⟦ant.⟧
+ ⟦antique⟧
+ ⟦forgery⟧
+ ⟦frühe Kaiserzeit⟧
+ ⟦modern forgery⟧
+ ❨spät❩römisch
+(184 rows)
+
 
 """

@@ -13,7 +13,6 @@ from multiprocessing import Manager, Process
 from builder.builderclasses import dbAuthor, MPCounter
 from builder.dbinteraction.db import dbauthorandworkloader, authortablemaker
 from builder.dbinteraction.connection import setconnection
-from builder.parsers.latinsubstitutions import latindiacriticals
 from builder.parsers.swappers import forceregexsafevariants
 from builder.postbuild.postbuilddating import convertdate
 from builder.postbuild.postbuildhelperfunctions import rebasedcounter
@@ -538,6 +537,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			if len(pr) > 64:
 				pr = pr[0:63]
 
+			# this should already happen in 'citationbuilder.py'
 			# pi = forceregexsafevariants(latindiacriticals(pi))
 			# pr = forceregexsafevariants(latindiacriticals(pr))
 			# dt = forceregexsafevariants(latindiacriticals(dt))

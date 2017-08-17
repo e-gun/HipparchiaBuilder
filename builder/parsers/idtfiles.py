@@ -91,6 +91,9 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 						workname = latinauthorlinemarkupprober(workname, grabber=grabitall)
 						workname = replaceaddnlchars(workname)
 						# <hmu_fontshift_greek_normal>, etc. might still be in here
+						markupfinder = re.compile(r'<.*?>')
+						if re.search(markupfinder, workname):
+							print('marked up title:',workname)
 						workname = re.sub(r'<.*?>', '', workname)
 						workname = latindiacriticals(workname)
 						# not going to use this block info
