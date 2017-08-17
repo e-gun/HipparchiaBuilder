@@ -13,7 +13,7 @@ import re
 from builder.parsers.betacodeescapedcharacters import percentsubstitutes, quotesubstitutesa, quotesubstitutesb
 from builder.parsers.betacodefontshifts import latinauthorandshiftparser
 from builder.parsers.citation_builder import citationbuilder
-from builder.parsers.swappers import highunicodetohex, hutohxgrouper, hextohighunicode, bitswapchars
+from builder.parsers.swappers import bitswapchars, hextohighunicode, highunicodetohex, hutohxgrouper
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -672,12 +672,12 @@ def cleanworkname(betacodeworkname):
 
 	percents = re.compile(r'%(\d{1,3})')
 	workname = re.sub(percents, percentsubstitutes, betacodeworkname)
-	ands = re.compile(r'&(\d{1,})(.*?)')
+	ands = re.compile(r'&(\d+)(.*?)')
 	workname = re.sub(ands, latinauthorandshiftparser, betacodeworkname)
 
-	workname = re.sub(r'\[2(.*?)]2', r'⟨\1⟩',workname)
-	workname = re.sub(r'<.*?>','', workname)
-	workname = re.sub(r'&\d{1,}(`|)', '', workname) # e.g.: IG I&4`2&
+	workname = re.sub(r'\[2(.*?)]2', r'⟨\1⟩', workname)
+	workname = re.sub(r'<.*?>', '', workname)
+	workname = re.sub(r'&\d+(`|)', '', workname)  # e.g.: IG I&4`2&
 	workname = re.sub(r'&', '', workname)
 	workname = re.sub(r'`', '', workname)
 

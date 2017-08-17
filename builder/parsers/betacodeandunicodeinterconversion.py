@@ -26,8 +26,8 @@ def replacegreekbetacode(texttoclean):
 	# note that runs of individual '!' can be found: '∙∙∙'
 	# but if you see '!21`45' you are supposed to print
 	# 21 of them and then '45'
-	texttoclean = re.sub(r'\!(\d{1,})', multipledots, texttoclean)
-	texttoclean = re.sub(r'\!', u'\u2219', texttoclean)
+	texttoclean = re.sub(r'!(\d+)', multipledots, texttoclean)
+	texttoclean = re.sub(r'!', u'\u2219', texttoclean)
 
 	return texttoclean
 

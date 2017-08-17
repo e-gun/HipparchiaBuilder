@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'TLG1344'
+debugauthor = 'INS0180'
 
 """
 
@@ -24,6 +24,7 @@ from builder.corpusbuilder import buildauthorobject
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, \
 	latinauthorlinemarkupprober, latinhmufontshiftsintospans, greekhmufontshiftsintospans
+from builder.parsers.coptic import replacecoptic
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, purgehybridgreekandlatinwords
 from builder.parsers.regexsubstitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
 	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, latindiacriticals, \
@@ -38,13 +39,14 @@ tlg = config['io']['tlg']
 phi = config['io']['phi']
 ddp = config['io']['ddp']
 ins = config['io']['ins']
+xhr = config['io']['chr']
 
 mapper = {
 	'TLG': {'lg': 'G', 'db': tlg, 'uidprefix': 'gr'},
 	'LAT': {'lg': 'L', 'db': phi, 'uidprefix': 'lt'},
 	'DDP': {'lg': 'G', 'db': ddp, 'uidprefix': 'dp'},
 	'INS': {'lg': 'G', 'db': ins, 'uidprefix': 'in'},
-	'CHR': {'lg': 'G', 'db': chr, 'uidprefix': 'ch'},
+	'CHR': {'lg': 'G', 'db': xhr, 'uidprefix': 'ch'},
 	}
 
 def streamout(txt,outfile):
@@ -103,8 +105,8 @@ htmlfoot = """
 
 # functions need to match initialworkparsing() in corpusbuilder.py
 initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
-greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode,
-               restoreromanwithingreek, greekhmufontshiftsintospans]
+greekmiddle = [colonshift, replacegreekmarkup, replacecoptic, latinfontlinemarkupprober,
+               replacegreekbetacode, restoreromanwithingreek, greekhmufontshiftsintospans]
 latinmiddle = [latinauthorlinemarkupprober, latindiacriticals, latinhmufontshiftsintospans]
 final = [cleanuplingeringmesses, purgehybridgreekandlatinwords]
 

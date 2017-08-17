@@ -14,6 +14,7 @@ from builder.builderclasses import dbAuthor, MPCounter
 from builder.dbinteraction.db import dbauthorandworkloader, authortablemaker
 from builder.dbinteraction.connection import setconnection
 from builder.parsers.regexsubstitutions import latindiacriticals
+from builder.parsers.swappers import forceregexsafevariants
 from builder.postbuild.postbuilddating import convertdate
 from builder.postbuild.postbuildhelperfunctions import rebasedcounter
 from builder.workers import setworkercount
@@ -72,25 +73,24 @@ level00 = line
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-dbconnection = setconnection(config)
-cursor = dbconnection.cursor()
-
+# dbconnection = setconnection(config)
+# cursor = dbconnection.cursor()
 
 def builddbremappers(oldprefix, newprefix):
 
 	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	pgsqlcursor = dbc.cursor()
 
 	q = 'SELECT universalid FROM authors WHERE universalid LIKE %s ORDER BY universalid ASC'
 	d = (oldprefix+'%',)
-	cursor.execute(q,d)
-	results = cursor.fetchall()
+	pgsqlcursor.execute(q, d)
+	results = pgsqlcursor.fetchall()
 
-	olddbs = []
+	olddbs = list()
 	for r in results:
 		olddbs.append(r[0])
 
-	aumapper = {}
+	aumapper = dict()
 	counter = -1
 	for db in olddbs:
 		counter += 1
@@ -100,12 +100,12 @@ def builddbremappers(oldprefix, newprefix):
 			hx = '0'+hx
 		aumapper[newprefix+hx] = db
 
-	wkmapper = {}
+	wkmapper = dict()
 	for key in aumapper.keys():
 		q = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid ASC'
 		d = (aumapper[key]+'%',)
-		cursor.execute(q, d)
-		results = cursor.fetchall()
+		pgsqlcursor.execute(q, d)
+		results = pgsqlcursor.fetchall()
 
 		counter = 0
 		for r in results:
@@ -127,36 +127,35 @@ def compilenewauthors(aumapper, wkmapper):
 
 	:param aumapper:
 	:param wkmapper:
-	:param cursor:
 	:return: newauthors
 	"""
 
 	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	pgsqlcursor = dbc.cursor()
 
-	newauthors = []
+	newauthors = list()
 
 	for key in aumapper.keys():
-		author = dbauthorandworkloader(aumapper[key], cursor)
+		author = dbauthorandworkloader(aumapper[key], pgsqlcursor)
 		for w in author.listofworks:
-			suffix = ' (' + w.title +')'
+			suffix = ' ({t})'.format(t=w.title)
 			newuniversalid = wkmapper[w.universalid]
 			newlanguage = author.language
 			if w.title != ' ':
 				# the papyri are not very good at setting their titles
-				newidxname = re.sub(r'\s{1,}$', '', author.idxname + suffix)
-				newakaname = re.sub(r'\s{1,}$', '', author.akaname + suffix)
-				newshortname = re.sub(r'\s{1,}$', '', author.shortname + suffix)
-				newcleanname = re.sub(r'\s{1,}$', '', author.cleanname + suffix)
+				newidxname = re.sub(r'\s+$', '', author.idxname + suffix)
+				newakaname = re.sub(r'\s+$', '', author.akaname + suffix)
+				newshortname = re.sub(r'\s+$', '', author.shortname + suffix)
+				newcleanname = re.sub(r'\s+$', '', author.cleanname + suffix)
 			else:
-				newidxname = re.sub(r'\s{1,}$', '', author.idxname)
+				newidxname = re.sub(r'\s+$', '', author.idxname)
 				newcleanname, newshortname, newakaname = newidxname, newidxname, newidxname
 
 			newgenres = author.genres
 			newrecdate = author.recorded_date
 			newconvdate = author.converted_date
 			# "Aegean Islands [general]", "Mysia and Troas [Munich]", "Varia [Sacred Laws]"
-			aloc = re.sub(r'\[.*?\]','', author.location)
+			aloc = re.sub(r'\[.*?\]', '', author.location)
 			newlocation = aloc
 			newauthor = dbAuthor(newuniversalid, newlanguage, newidxname, newakaname, newshortname, newcleanname, newgenres, newrecdate, newconvdate, newlocation)
 			newauthors.append(newauthor)
@@ -177,19 +176,19 @@ def compilenewworks(newauthors, wkmapper):
 	"""
 
 	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	pgsqlcursor = dbc.cursor()
 
-	remapper = { }
+	remapper = dict()
 	for key in wkmapper:
 		remapper[wkmapper[key]] = key
 
 	# remapper: {'in0009': 'ZZ0080w009', 'in0014': 'ZZ0080w020', 'in0002': 'ZZ0080w002', ... }
 
-	thework = []
+	thework = list()
 
 	for a in newauthors:
 		db = remapper[a.universalid]
-		modifyauthorsdb(a.universalid, a.idxname, cursor)
+		modifyauthorsdb(a.universalid, a.idxname, pgsqlcursor)
 		thework.append((a, db))
 	dbc.commit()
 
@@ -199,8 +198,10 @@ def compilenewworks(newauthors, wkmapper):
 
 	workers = setworkercount()
 	jobs = [Process(target=parallelnewworkworker, args=(workpile, newworktuples)) for i in range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
+	for j in jobs:
+		j.start()
+	for j in jobs:
+		j.join()
 
 	# newworktuples = [(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
 
@@ -220,7 +221,7 @@ def registernewworks(newworktuples):
 	:return:
 	"""
 	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	curs = dbc.cursor()
 
 	workandtitletuplelist = findnewtitles(newworktuples)
 	workinfodict = buildnewworkmetata(workandtitletuplelist)
@@ -255,16 +256,17 @@ def registernewworks(newworktuples):
 				valstring.append('%s')
 		columns = ', '.join(columns)
 		valstring = ', '.join(valstring)
+		vals = [forceregexsafevariants(v) for v in vals]
 		vals = tuple(vals)
 
 		q = 'INSERT INTO works ( {c} ) VALUES ( {v} ) '.format(c=columns, v=valstring)
-		d = (vals)
-		cursor.execute(q, d)
+		d = vals
+		curs.execute(q, d)
 		if count % 2500 == 0:
 			dbc.commit()
 	dbc.commit()
 
-	print('updating the notations in', len(workinfodict),'works')
+	print('updating the notations in {w} works'.format(w=len(workinfodict)))
 
 	count = 0
 	for w in workinfodict:
@@ -276,11 +278,11 @@ def registernewworks(newworktuples):
 
 			q = 'UPDATE {db} SET annotations=%s WHERE index=%s'.format(db=db)
 			d = (notes, idx)
-			cursor.execute(q, d)
+			curs.execute(q, d)
 		if count % 2500 == 0:
 			dbc.commit()
 		if count % 5000 == 0:
-			print('\t',count,'works updated')
+			print('\t', count, 'works updated')
 	dbc.commit()
 	del dbc
 
@@ -302,40 +304,10 @@ def findnewtitles(newworktuples):
 
 	print('collecting info about new works: building', len(newworktuples), 'titles')
 
-	oldprefix = newworktuples[0][1][0:2]
-	newprefix = newworktuples[0][0][0:2]
-	newworkdict = { t[0]: (t[1], t[2]) for t in newworktuples}
-	# newworklist = [t[0] for t in newworktuples]
-
-	# [a] get all of the information you will need
-	# this first set is not actually needed?
-	q = 'SELECT universalid,title FROM works WHERE universalid LIKE %s'
-	d = (oldprefix+'%',)
-	cursor.execute(q, d)
-	results = cursor.fetchall()
-	# [('YY0002w050', 'Vol 5'), ('YY0002w060', 'Vol 6'), ('YY0002w070', 'Vol 7'), ...]
-
-	oldworktitles = {r[0]: r[1] for r in results}
-	# {'YY0002w050': 'Vol 5', 'YY0002w060': 'Vol 6', 'YY0002w070': 'Vol 7', ...}
-
-
-	q = 'SELECT universalid,idxname FROM authors WHERE universalid LIKE %s'
-	d = (newprefix+'%',)
-	cursor.execute(q, d)
-	results = cursor.fetchall()
-	# [('dp0001', 'BGU (Vol 1)'), ('dp0002', 'BGU (Vol 2)'), ('dp0003', 'BGU (Vol 3)'), ...]
-
-	newauthornames = {r[0]: r[1] for r in results}
-	# { 'dp0001': 'BGU (Vol 1)', ... }
-
-	# [b] construct the titles from that information
-	workandtitletuplelist = []
+	newworkdict = {t[0]: (t[1], t[2]) for t in newworktuples}
+	workandtitletuplelist = list()
 
 	for wk in newworkdict.keys():
-		# oldwkdb = newworkdict[wk][0]
-		newauid = wk[0:6]
-		# prolix titles are not helpful?
-		# thetitle = newauthornames[newauid] + ' - ' + newworkdict[wk][1]
 		thetitle = newworkdict[wk][1]
 		workandtitletuplelist.append((wk, thetitle))
 
@@ -347,7 +319,7 @@ def buildnewworkmetata(workandtitletuplelist):
 
 	supplement the workinfodict with more information about the works
 
-	:param workinfodict:
+	:param workandtitletuplelist:
 	:return:
 	"""
 
@@ -362,8 +334,10 @@ def buildnewworkmetata(workandtitletuplelist):
 
 	workers = setworkercount()
 	jobs = [Process(target=buildworkmetadatatuples, args=(workpile, count, metadatalist)) for i in range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
+	for j in jobs:
+		j.start()
+	for j in jobs:
+		j.join()
 
 	# manager was not populating the manager.dict()
 	# so we are doing this
@@ -376,7 +350,7 @@ def buildnewworkmetata(workandtitletuplelist):
 	# newworkinfodict[wkid]['annotationsatindexvalue'] = (idx, notes)
 	# metadatalist.append((wkid, pi,pr,dt,cd,tr,ty,(notes,idx)))
 
-	resultsdict = { w[0]: {
+	resultsdict = {w[0]: {
 		'publication_info': w[1],
 		'provenance': w[2],
 		'recorded_date': w[3],
@@ -384,7 +358,7 @@ def buildnewworkmetata(workandtitletuplelist):
 		'transmission': w[5],
 		'worktype': w[6],
 		'annotationsatindexvalue': w[7]
-		} for w in metadatalist }
+		} for w in metadatalist}
 
 	# merge with previous results
 	for key in resultsdict.keys():
@@ -399,12 +373,13 @@ def parallelnewworkworker(workpile, newworktuples):
 	compile new works in parallel to go faster
 	the loop inside of this is where the real speed gains would lie: 'for document in results:...'
 
-	:param authoranddbtuple: (authorobject, wkid)
+	:param workpile:
+	:param newworktuples:
 	:return:
 	"""
 
 	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	cur = dbc.cursor()
 
 	while len(workpile) > 0:
 		try:
@@ -423,13 +398,13 @@ def parallelnewworkworker(workpile, newworktuples):
 				# it is your shell/terminal who is to blame for this
 				# UnicodeEncodeError: 'ascii' codec can't encode character '\xe1' in position 19: ordinal not in range(128)
 				print(a.universalid)
-			authortablemaker(a.universalid, cursor)
+			authortablemaker(a.universalid, cur)
 			dbc.commit()
 
 			q = 'SELECT DISTINCT level_05_value FROM {db} WHERE wkuniversalid=%s ORDER BY level_05_value'.format(db=db)
 			d = (wkid,)
-			cursor.execute(q, d)
-			results = cursor.fetchall()
+			cur.execute(q, d)
+			results = cur.fetchall()
 
 			wknum = 0
 			for document in results:
@@ -444,11 +419,11 @@ def parallelnewworkworker(workpile, newworktuples):
 
 				q = 'SELECT * FROM {db} WHERE (wkuniversalid=%s AND level_05_value=%s) ORDER BY index'.format(db=db)
 				d = (wkid, document[0])
-				cursor.execute(q, d)
-				results = cursor.fetchall()
+				cur.execute(q, d)
+				results = cur.fetchall()
 
 				newwkid = a.universalid + 'w' + dbstring
-				insertnewworksintonewauthor(newwkid, results, cursor)
+				insertnewworksintonewauthor(newwkid, results, cur)
 				docname = document[0]
 				newworktuples.append((newwkid, db, docname))
 
@@ -466,16 +441,19 @@ def parallelnewworkworker(workpile, newworktuples):
 
 def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 	"""
+
 	marked_up_line where level_00_value == 1 ought to contain metadata about the document
 	example: "<hmu_metadata_provenance value="Oxy" /><hmu_metadata_date value="AD 224" /><hmu_metadata_documentnumber value="10" />[ <hmu_latin_normal>c ̣]</hmu_latin_normal>∙τ̣ε̣[∙4]ε[∙8]"
 
-	:param db:
-	:param cursor:
+	:param workpile:
+	:param commitcount:
+	:param metadatalist:
 	:return:
 	"""
 
+
 	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	cur = dbc.cursor()
 
 	prov = re.compile(r'<hmu_metadata_provenance value="(.*?)" />')
 	date = re.compile(r'<hmu_metadata_date value="(.*?)" />')
@@ -494,7 +472,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 		except:
 			wkid = False
 
-		if wkid != False:
+		if wkid:
 			commitcount.increment()
 			if commitcount.value % 1000 == 0:
 				dbc.commit()
@@ -503,22 +481,22 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 
 			q = 'SELECT index, marked_up_line, annotations FROM {db} WHERE wkuniversalid=%s ORDER BY index LIMIT 1'.format(db=db)
 			d = (wkid,)
-			cursor.execute(q,d)
-			r = cursor.fetchone()
+			cur.execute(q,d)
+			r = cur.fetchone()
 			idx = r[0]
 			ln = r[1]
 			an = r[2]
 
 			pi = []
 			for info in [publicationinfo, additionalpubinfo, stillfurtherpubinfo, reprints]:
-				p = re.search(info,ln)
+				p = re.search(info, ln)
 				if p is not None:
 					pi.append(p.group(1))
 			pi = '; '.join(pi)
 			if pi != '':
 				pi = '<volumename>{pi}<volumename>'.format(pi=pi)
 
-			dt = re.search(date,ln)
+			dt = re.search(date, ln)
 			try:
 				dt = dt.group(1)
 				dt = re.sub(r'(^\s+|\s+$)', '', dt)
@@ -612,7 +590,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 	return metadatalist
 
 
-def modifyauthorsdb(newentryname, worktitle, cursor):
+def modifyauthorsdb(newentryname, worktitle, pgsqlcursor):
 	"""
 	the idxname of something like "ZZ0080" will be "Black Sea and Scythia Minor"
 	the title of "in0001" should be set to "Black Sea and Scythia Minor IosPE I(2) [Scythia]"
@@ -620,7 +598,7 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 	:param tempentryname:
 	:param newentryname:
 	:param worktitle:
-	:param cursor:
+	:param pgsqlcursor:
 	:return:
 	"""
 
@@ -652,20 +630,21 @@ def modifyauthorsdb(newentryname, worktitle, cursor):
 		# inscription 'authors' can set their location via their idxname
 		loc = re.search(r'(.*?)\s\(', worktitle)
 		loc = loc.group(1)
+		loc = forceregexsafevariants(loc)
 		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, location, recorded_date) ' \
 				' VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
 		d = (newentryname, 'G', idx, aka, short, clean, loc, 'Varia')
-		cursor.execute(q, d)
+		pgsqlcursor.execute(q, d)
 	else:
 		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, recorded_date) ' \
 				' VALUES (%s, %s, %s, %s, %s, %s, %s)'
 		d = (newentryname, 'G', idx, aka, short, clean, 'Varia')
-		cursor.execute(q, d)
+		pgsqlcursor.execute(q, d)
 
 	return
 
 
-def insertnewworksintonewauthor(newwkuid, results, cursor):
+def insertnewworksintonewauthor(newwkuid, results, pgsqlcursor):
 	"""
 
 	send me all of the matching lines from one db and i will build a new workdb with only these lines
@@ -674,8 +653,10 @@ def insertnewworksintonewauthor(newwkuid, results, cursor):
 
 	(3166, 'YY0071w007', '411', '1', '1', '1', 'r', '1', '<hmu_metadata_provenance value="Herm nome?" /><hmu_metadata_date value="VII spc" /><hmu_metadata_documentnumber value="25" />☧ ἐὰν ϲχολάϲῃϲ <hmu_unconventional_form_written_by_scribe>ϲχολαϲειϲ</hmu_unconventional_form_written_by_scribe> θέλειϲ ἀπ̣ελθεῖν κα̣ὶ̣ ∙ε∙∙[ <hmu_latin_normal>c ̣ ]</hmu_latin_normal>', '☧ ἐὰν ϲχολάϲῃϲ ϲχολαϲειϲ θέλειϲ ἀπελθεῖν καὶ ∙ε∙∙ c  ', '☧ εαν ϲχολαϲηϲ ϲχολαϲειϲ θελειϲ απελθειν και ∙ε∙∙ c  ', '', '')
 
-	:param docname:
+
+	:param newwkuid:
 	:param results:
+	:param pgsqlcursor:
 	:return:
 	"""
 
@@ -717,7 +698,7 @@ def insertnewworksintonewauthor(newwkuid, results, cursor):
 		d = tuple(r)
 
 		q = qtemplate.format(db=db)
-		cursor.execute(q, d)
+		pgsqlcursor.execute(q, d)
 
 	return
 

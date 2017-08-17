@@ -51,6 +51,7 @@ def dbprepper(dbunreadyversion):
 	dbunreadyversion = cleanblanks(dbunreadyversion)
 	dbunreadyversion = dbpdeincrement(dbunreadyversion)
 	dbunreadyversion = dbstrippedliner(dbunreadyversion)
+	# you will have problems browsing to 'Left/Right (1b:2)' if you don't do something here
 	dbunreadyversion = dbswapoutbadcharsfromcitations(dbunreadyversion)
 	dbunreadyversion = dbfindhypens(dbunreadyversion)
 	dbunreadyversion = dbfindannotations(dbunreadyversion)
@@ -154,7 +155,7 @@ def dbstrippedliner(dbunreadyversion):
 	# ['1', [('0', '5'), ('1', '1'), ('2', '4'), ('3', 'Milt'), ('4', '1')], 'hostem esse Atheniensibus, quod eorum auxilio Iones Sardis expugnas-']
 	# be careful: the next will kill even editorial insertions 'do <ut> des': you have to be sure that no 'pure' angled brackets made it this far
 	# ⟨abc⟩ should be all that you see
-	markup = re.compile(r'\<.*?\>')
+	markup = re.compile(r'<.*?>')
 	combininglowerdot = u'\u0323'
 	straydigits = r'\d'
 	sigmas = re.compile(r'[σς]')
@@ -323,7 +324,7 @@ def hmutonbsp(dbunreadyversion):
 	"""
 	workingcolumn = 2
 	dbreadyversion = deque()
-	bqs = re.compile(r'<hmu_blank_quarter_spaces quantity="(\d{1,})" />')
+	bqs = re.compile(r'<hmu_blank_quarter_spaces quantity="(\d+)" />')
 	
 	for line in dbunreadyversion:
 		line[workingcolumn] = re.sub(bqs, quarterspacer, line[workingcolumn])
@@ -407,9 +408,8 @@ def consolidatecontiguouslines(previousline, thisline, hypenatedword, transtable
 	
 	pl = pl + [p]
 	tl = tl + [t]
-	
-	
-	newlines = {}
+
+	newlines = dict()
 	newlines['p'] = pl
 	newlines['l'] = tl
 

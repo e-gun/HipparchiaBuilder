@@ -31,7 +31,7 @@ def convertdate(date, passvalue=0):
 
 	german = re.compile(r'(n\.|v\.Chr\.)')
 	arabic = re.compile(r'\d')
-	ordinal = re.compile(r'((\d)st|(\d)nd|(\d)rd|(\d{1,})th)')
+	ordinal = re.compile(r'((\d)st|(\d)nd|(\d)rd|(\d+)th)')
 	roman = re.compile(r'[IVX]')
 	ages = re.compile(r'aet')
 
@@ -82,9 +82,9 @@ def germandate(stringdate):
 	tinysubtract = re.compile(r'^(einige Zeit vor |\(kurz\) vor |kurz vor |vor |2. Viertel |2.Viertel )')
 	add = re.compile(r'^(nicht früher als |term\.post |nach |letztes Drittel |letztes Viertel |3\. Viertel |3\.Viertel |4. Viertel |2\. Hälfte |2\.Hälfte |2 Hälfte |2\.Hālfte |spätes |ausgehendes |später als |späteres |\(Ende\) |Ende )')
 	century = re.compile(r'(Jh\. |Jh\.| Jhdts\. |Jhdt\. )')
-	split = re.compile(r'(\d{1,})[-/](\d{1,})')
+	split = re.compile(r'(\d+)[-/](\d+)')
 	misleadingmiddles = re.compile(r'(-ca\.|-vor )')
-	oder = re.compile(r'(\d{1,})( od | oder )(\d{1,})')
+	oder = re.compile(r'(\d+)( od | oder )(\d+)')
 
 	modifier = 1
 	midcentury = -50
@@ -95,7 +95,6 @@ def germandate(stringdate):
 	stringdate = re.sub(misleadingmiddles, '-', stringdate)
 	# stringdate = re.sub(collapse,'/', stringdate)
 
-
 	if re.search(r'v\.Chr\.',stringdate) is not None and re.search(r'n\.Chr\.',stringdate) is not None:
 		parts = re.search(r'\d\s{0,1}v\.Chr(.*?)\d\s{0,1}n\.Chr(.*?)',stringdate)
 		try:
@@ -105,15 +104,15 @@ def germandate(stringdate):
 		except:
 			numericaldate = 9999
 		return numericaldate
-	elif re.search(r'zw.',stringdate) is not None:
-		parts = re.search(r'^zw.(\d{1,})\s{0,1}und(\d{1,})',stringdate)
+	elif re.search(r'zw.', stringdate) is not None:
+		parts = re.search(r'^zw.(\d+)\s?und(\d+)', stringdate)
 		if re.search(r'v\.Chr\.', stringdate) is not None:
 			modifier = -1
 			fudge += 100
 		try:
 			one = int(parts.group(1))
 			two = int(parts.group(2))
-			numericaldate = (((-1 * one ) + (two )) / 2) * modifier + fudge
+			numericaldate = (((-1 * one) + (two)) / 2) * modifier + fudge
 		except:
 			# AttributeError: 'NoneType' object has no attribute 'group'
 			# failed zw. 1 v.Chr. und 4 n.Chr.
@@ -125,28 +124,28 @@ def germandate(stringdate):
 	stringdate = re.sub(r'(v\.|n\.)Chr\.', '', stringdate)
 
 	if re.search(subtract, stringdate) is not None:
-		stringdate = re.sub(subtract,'',stringdate)
+		stringdate = re.sub(subtract, '', stringdate)
 		fudge = -25
 
 	if re.search(tinysubtract, stringdate) is not None:
-		stringdate = re.sub(tinysubtract,'',stringdate)
+		stringdate = re.sub(tinysubtract, '', stringdate)
 		fudge = -10
 
 	if re.search(add, stringdate) is not None:
-		stringdate = re.sub(add,'',stringdate)
+		stringdate = re.sub(add, '', stringdate)
 		fudge = 25
 
 	if re.search(century, stringdate) is not None:
 		stringdate = re.sub(century, '', stringdate)
 		modifier = modifier * 100
 
-	re.sub(r'(^\s|\s$)','',stringdate)
+	re.sub(r'(^\s|\s$)', '', stringdate)
 
-	stringdate = re.sub(dontcare,'', stringdate)
+	stringdate = re.sub(dontcare, '', stringdate)
 	stringdate = re.sub(r'\.', '', stringdate)
 
 	if re.search(split,stringdate) is not None:
-		parts = re.search(split,stringdate)
+		parts = re.search(split, stringdate)
 		one = int(parts.group(1))
 		two = int(parts.group(2))
 		if modifier < 100:
@@ -155,8 +154,8 @@ def germandate(stringdate):
 			numericaldate = (((one + two) / 2) * modifier) + fudge
 		return numericaldate
 
-	if re.search(oder,stringdate) is not None:
-		parts = re.search(oder,stringdate)
+	if re.search(oder, stringdate) is not None:
+		parts = re.search(oder, stringdate)
 		one = int(parts.group(1))
 		two = int(parts.group(3))
 		if modifier < 100:
@@ -166,7 +165,7 @@ def germandate(stringdate):
 		return numericaldate
 
 	try:
-		if abs(modifier) != 1: # i.e., = 100 or -100
+		if abs(modifier) != 1:  # i.e., = 100 or -100
 			numericaldate = int(stringdate) * modifier + fudge + midcentury
 		else:
 			numericaldate = int(stringdate) * modifier + fudge
@@ -181,7 +180,7 @@ def numberedcenturydate(stringdate, ordinalregexfinder):
 
 	try to parse a date that has something like '5th' in it
 
-	ordinal = re.compile(r'((\d)st|(\d)nd|(\d)rd|(\d{1,})th)')
+	ordinal = re.compile(r'((\d)st|(\d)nd|(\d)rd|(\d+)th)')
 
 	:param stringdate:
 	:return:
@@ -198,7 +197,7 @@ def numberedcenturydate(stringdate, ordinalregexfinder):
 	tinyadd = re.compile(r'^(end |later |late |ex |sh\. aft\. mid\. )')
 	add = re.compile(r' or later$')
 	eb = re.compile(r'^end (.*?)[/-]beg(\.|) (.*?)')
-	embedded = re.compile(r'(\(.*?\d{1,}.*?[ab]c\))')
+	embedded = re.compile(r'(\(.*?\d+.*?[ab]c\))')
 
 	stringdate = re.sub(dontcare, '', stringdate)
 	stringdate = re.sub(r'\?', '', stringdate)
@@ -210,26 +209,26 @@ def numberedcenturydate(stringdate, ordinalregexfinder):
 		return numericaldate
 
 	if re.search(subtract, stringdate) is not None:
-		stringdate = re.sub(subtract,'',stringdate)
+		stringdate = re.sub(subtract, '', stringdate)
 		fudge = -75
 
 	if re.search(tinysubtract, stringdate) is not None:
-		stringdate = re.sub(tinysubtract,'',stringdate)
+		stringdate = re.sub(tinysubtract, '', stringdate)
 		fudge = -25
 
 	if re.search(tinyadd, stringdate) is not None:
-		stringdate = re.sub(tinyadd,'',stringdate)
+		stringdate = re.sub(tinyadd, '', stringdate)
 		fudge = 25
 
 	if re.search(add, stringdate) is not None:
-		stringdate = re.sub(add,'',stringdate)
+		stringdate = re.sub(add, '', stringdate)
 		# note that 75 was not chosen because the candidate did not look right for it
 		fudge = 25
 
-	if re.search(r'bc$',stringdate) is not None:
+	if re.search(r'bc$', stringdate) is not None:
 		modifier = modifier * -1
 		fudge = fudge + 100
-	elif re.search(r'ac$',stringdate) is None and re.search(r'(1st|2nd) half',stringdate) is not None:
+	elif re.search(r'ac$', stringdate) is None and re.search(r'(1st|2nd) half',stringdate) is not None:
 		# 2nd half Antonine
 		numericaldate = convertdate(original, passvalue=2)
 		return numericaldate
@@ -358,17 +357,17 @@ def aetatesdates(stringdate):
 	subtr = re.compile(r'^a |^ante ')
 	kill = re.compile(r'(\[.*?\]|^c |/p post)')
 
-	stringdate = re.sub(r'(aetate |aetats |aetat |aet )','',stringdate)
-	stringdate = re.sub(kill, '',stringdate)
+	stringdate = re.sub(r'(aetate |aetats |aetat |aet )', '', stringdate)
+	stringdate = re.sub(kill, '', stringdate)
 	stringdate = re.sub(r'\?', '', stringdate)
-	stringdate = re.sub(r'(^\s|\s$)','',stringdate)
+	stringdate = re.sub(r'(^\s|\s$)', '', stringdate)
 
 	if re.search(add, stringdate) is not None:
 		stringdate = re.sub(add,'',stringdate)
 		fudge = 25
 
 	if re.search(subtr, stringdate) is not None:
-		stringdate = re.sub(subtr,'',stringdate)
+		stringdate = re.sub(subtr, '', stringdate)
 		fudge = -25
 
 	try:
@@ -414,43 +413,43 @@ def romannumeraldate(stringdate):
 	tinysubtract = re.compile(r'(^(ante med |ante md |beg\. |beg |a med |early |init/med |init |latest )| p prior$)')
 	bigadd = re.compile(r'^(post fin s|post )')
 	add = re.compile(r'(^(ante fin |ant fin|ex s |ex |end |med/fin |late |post med s )|(/postea|/paullo post)$)')
-	splitter = re.compile(r'([IVX]{1,})[-/]([IVX]{1,})')
+	splitter = re.compile(r'([IVX]+)[-/]([IVX]+)')
 
 	stringdate = re.sub(dontcare, '', stringdate)
-	stringdate = re.sub(fi, r'\1/\2',stringdate)
+	stringdate = re.sub(fi, r'\1/\2', stringdate)
 
 	stringdate = re.sub(r'\?', '', stringdate)
 
 	if re.search(tinysubtract, stringdate) is not None:
-		stringdate = re.sub(tinysubtract,'',stringdate)
+		stringdate = re.sub(tinysubtract, '', stringdate)
 		fudge = -25
 
 	if re.search(r'/init ', stringdate) is not None:
-		stringdate = re.sub(tinysubtract,'/',stringdate)
+		stringdate = re.sub(tinysubtract, '/', stringdate)
 		fudge = -25
 
 	if re.search(bigadd, stringdate) is not None:
-		stringdate = re.sub(bigadd,'',stringdate)
+		stringdate = re.sub(bigadd, '', stringdate)
 		fudge = 75
 
 	if re.search(add, stringdate) is not None:
-		stringdate = re.sub(add,'',stringdate)
+		stringdate = re.sub(add, '', stringdate)
 		fudge = 25
 
-	if re.search(r'( bc$|bc$| a$|a$)',stringdate) is not None:
+	if re.search(r'( bc$|bc$| a$|a$)', stringdate) is not None:
 		stringdate = re.sub(r'( bc| BC|bc| sac| ac| a|a)$','',stringdate)
 		modifier = modifier * -1
 		fudge = fudge + 100
 
-	if re.search(r'(ac.*?[/-].*?pc|bc.*?[/-].*?ac)$',original) is not None:
+	if re.search(r'(ac.*?[/-].*?pc|bc.*?[/-].*?ac)$', original) is not None:
 		# I sac - I spc
-		numerals = re.findall(r'[IVX]{1,}',original)
+		numerals = re.findall(r'[IVX]+', original)
 		digits = [map[n] for n in numerals]
 		digits[0] = digits[0] * -1
 		numericaldate = (((digits[0] + digits[1]) / 2) * modifier) + fudge
-	elif re.search(splitter,stringdate) is not None:
+	elif re.search(splitter, stringdate) is not None:
 		# II-III spc
-		centuries = re.search(splitter,stringdate)
+		centuries = re.search(splitter, stringdate)
 		first = centuries.group(1)
 		second = centuries.group(2)
 		first = map[first]
@@ -458,8 +457,8 @@ def romannumeraldate(stringdate):
 		if first > second and modifier > 0:
 			modifier = modifier * -1
 		numericaldate = (((first + second) / 2) * modifier) + fudge + midcentury
-	elif re.search(r'[IVX]{1,}',stringdate) is not None:
-		numeral = re.search(r'[IVX]{1,}',stringdate)
+	elif re.search(r'[IVX]+', stringdate) is not None:
+		numeral = re.search(r'[IVX]+', stringdate)
 		try:
 			numeral = map[numeral.group(0)]
 			numericaldate = (numeral * modifier) + fudge + midcentury
@@ -500,8 +499,8 @@ def numericdate(stringdate):
 	tinysubtract = re.compile(r'^(sh\. bef\. |sh\.bef\. |before |bef\. )')
 	littleadd = re.compile(r'^(sh\. aft\. c\.|sh\. aft\. |sh\.aft\. |sh\.aft\.|sht\. after )')
 	# add = re.compile(r'')
-	splitter = re.compile(r'(\d{1,})[/-](\d{1,})')
-	bcad = re.compile(r'(\d{1,}) BC-AD (\d{1,})')
+	splitter = re.compile(r'(\d+)[/-](\d+)')
+	bcad = re.compile(r'(\d+) BC-AD (\d+)')
 	nearestdecade = re.compile(r'^(post |ante )')
 	fix = re.compile(r'⟪⟫\[\]')
 
@@ -532,7 +531,7 @@ def numericdate(stringdate):
 					newtwo += strone[i]
 				newtwo += strtwo
 				two = int(newtwo)
-			numericaldate = (one + two ) / 2 * modifier
+			numericaldate = (one + two) / 2 * modifier
 			return numericaldate
 		except:
 			# 'AD 199/III spc'
@@ -540,11 +539,11 @@ def numericdate(stringdate):
 				one = int(digits[0][0])
 				numericaldate = one * modifier
 			except:
-				print('repass',digits[0][0])
+				print('repass', digits[0][0])
 				numericaldate = convertdate(digits[0][0], passvalue=4)
 
 	if re.search(nearestdecade, stringdate) is not None:
-		digits = re.search(r'\d{1,}',stringdate)
+		digits = re.search(r'\d+', stringdate)
 		year = int(digits.group(0))
 		decade = year % 10
 		if ('post' in stringdate and modifier == 1) or ('ante' in stringdate and modifier == -1):
@@ -561,7 +560,7 @@ def numericdate(stringdate):
 		stringdate = re.sub(littleadd,'',stringdate)
 		fudge = 10
 
-	digits = re.search(r'\d{1,}', stringdate)
+	digits = re.search(r'\d+', stringdate)
 	year = int(digits.group(0))
 	numericaldate = (year * modifier) + fudge
 

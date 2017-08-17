@@ -28,6 +28,7 @@ from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontline
 from builder.parsers.regexsubstitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
 	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, totallemmatization, \
 	colonshift, insertnewlines, latindiacriticals
+from builder.parsers.coptic import replacecoptic
 from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
 from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
@@ -45,6 +46,7 @@ def buildcorpusdbs(corpusname, corpusvars):
 	will take all files that match a set of criteria and compile them into a set of tables under a given rubric
 
 	:param corpusname:
+	:param corpusvars:
 	:return:
 	"""
 
@@ -64,14 +66,14 @@ def buildcorpusdbs(corpusname, corpusvars):
 		abbrev = corpusvars[corpusname]['corpusabbrev']
 		resetauthorsandworksdbs(abbrev, abbrev)
 
-	print('\n',workercount,'workers dispatched to build the', corpusname, 'dbs')
+	print('\n', workercount, 'workers dispatched to build the', corpusname, 'dbs')
 
 	dataprefix = corpusvars[corpusname]['dataprefix']
 	datapath = corpusvars[corpusname]['datapath']
 	lang = corpusvars[corpusname]['languagevalue']
 
-	min = corpusvars[corpusname]['minfilenumber']
-	max = corpusvars[corpusname]['maxfilenumber']
+	minfn = corpusvars[corpusname]['minfilenumber']
+	maxfn = corpusvars[corpusname]['maxfilenumber']
 	exclusions = corpusvars[corpusname]['exclusionlist']
 
 	allauthors = filereaders.findauthors(datapath)
@@ -81,10 +83,10 @@ def buildcorpusdbs(corpusname, corpusvars):
 	# prune other dbs
 	aa = [x for x in aa if dataprefix in x]
 	aa.sort()
-	thework = []
+	thework = list()
 	# aa = []
 	for a in aa:
-		if min < int(a[3:]) < max and int(a[3:]) not in exclusions:
+		if minfn < int(a[3:]) < maxfn and int(a[3:]) not in exclusions:
 			if lang != 'B':
 				thework.append(({a: allauthors[a]}, lang, abbrev, datapath, dataprefix))
 			else:
@@ -116,11 +118,11 @@ def remaptables(corpusname, corpusvars):
 	else:
 		needsremapping = False
 
-	if needsremapping == True:
+	if needsremapping:
 		tmpprefix = corpusvars[corpusname]['tmpprefix']
 		permprefix = corpusvars[corpusname]['corpusabbrev']
 
-		print('\nremapping the',corpusname,'data: turning works into authors and embedded documents into individual works')
+		print('\nremapping the', corpusname, 'data: turning works into authors and embedded documents into individual works')
 		aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 		newauthors = compilenewauthors(aumapper, wkmapper)
 		newworktuples = compilenewworks(newauthors, wkmapper)
@@ -178,12 +180,18 @@ def parallelworker(thework):
 	return
 
 
-def checkextant(authorlist,datapath):
+def checkextant(authorlist, datapath):
 	"""
+
 	make sure that the names on the list correspond to files that are available
+
+	:param authorlist:
+	:param datapath:
+	:return:
 	"""
-	pruneddict = {}
-	for key,value in authorlist.items():
+	pruneddict = dict()
+
+	for key, value in authorlist.items():
 		try:
 			open(datapath+key+'.TXT', 'rb')
 			pruneddict[key] = value
@@ -196,23 +204,27 @@ def checkextant(authorlist,datapath):
 
 def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection, cursor):
 	"""
+
 	I need an authtab pair within a one-item dict: {'0022':'Marcus Porcius &1Cato&\x80Cato'}
 	Then I will go to work and run the full suite
+
 	:param authordict:
-	:param language: 'greek' or 'latin'
+	:param language:
+	:param uidprefix:
 	:param datapath:
+	:param dataprefix:
 	:param dbconnection:
 	:param cursor:
 	:return:
 	"""
 
 	starttime = time.time()
-	(number,name), = authordict.items()
+	(number, name), = authordict.items()
 	authorobj = buildauthorobject(number, language, datapath, uidprefix, dataprefix)
 	authorobj.addauthtabname(name)
 	authorobj.language = language
 	thecollectedworksof(authorobj, language, datapath,  dbconnection, cursor)
-	buildtime =  round(time.time() - starttime,2)
+	buildtime = round(time.time() - starttime,2)
 	success = number+' '+authorobj.cleanname+' '+str(buildtime)+'s'
 	
 	return success
@@ -236,6 +248,7 @@ def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor)
 
 def buildauthorobject(authortabnumber, language, datapath, uidprefix, dataprefix):
 	"""
+
 	construct an author object
 
 	example input values
@@ -258,9 +271,12 @@ def buildauthorobject(authortabnumber, language, datapath, uidprefix, dataprefix
 	# >>> e.works[1].structure
 	# {0: 'line', 1: 'Fragment'}
 
-	:param authortabnumber: something like '0007'
-	:param language: 'greek' or 'latin'
-	:return: a populated author object
+	:param authortabnumber:
+	:param language:
+	:param datapath:
+	:param uidprefix:
+	:param dataprefix:
+	:return:
 	"""
 
 	authoridt = filereaders.loadidt(datapath+authortabnumber+'.IDT')
@@ -271,6 +287,7 @@ def buildauthorobject(authortabnumber, language, datapath, uidprefix, dataprefix
 
 def initialworkparsing(authorobject, language, datapath):
 	"""
+
 	grab a raw file and start cleaning it up; the order of files and of items within files usually matters
 	for example, do '%20' searches before '%2' searches unless you want to write more regex
 
@@ -279,17 +296,17 @@ def initialworkparsing(authorobject, language, datapath):
 	mostly done pulling it out of the native format
 	seek in the files you can produce at this juncture for 'unhandled' items, etc if you want to make things look prettier later
 
-	:param authortabnumber:
+	:param authorobject:
 	:param language:
 	:param datapath:
-	:return: a parsed stream
+	:return:
 	"""
 
 	txt = filereaders.highunicodefileload(datapath + authorobject.dataprefix+authorobject.number + '.TXT')
 
 	initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
-	greekmiddle = [colonshift, replacegreekmarkup, latinfontlinemarkupprober, replacegreekbetacode,
-	               restoreromanwithingreek, greekhmufontshiftsintospans]
+	greekmiddle = [colonshift, replacegreekmarkup, replacecoptic, latinfontlinemarkupprober,
+	               replacegreekbetacode, restoreromanwithingreek, greekhmufontshiftsintospans]
 	latinmiddle = [latinauthorlinemarkupprober, latindiacriticals, latinhmufontshiftsintospans]
 	final = [cleanuplingeringmesses, purgehybridgreekandlatinwords]
 
@@ -306,11 +323,13 @@ def initialworkparsing(authorobject, language, datapath):
 
 def secondaryworkparsing(authorobject, txt):
 	"""
+
 	the next big step is turning the datastream into a citeable text
 	this requires the magical turning of the hex control codes into tags that will themselves get reparsed
 	the datastream is about to start having 'lines' and these are going to be counted and sorted, etc.
 
-	:param parserdata:
+	:param authorobject:
+	:param txt:
 	:return:
 	"""
 
@@ -326,12 +345,17 @@ def secondaryworkparsing(authorobject, txt):
 
 def databaseloading(dbreadyversion, authorobject,  dbconnection, cursor):
 	"""
+
 	a little more cleaning, then insert this material into the database
 	time to hand things off to HipparchiaServer
 
-	:param parserdata:
+	:param dbreadyversion:
+	:param authorobject:
+	:param dbconnection:
+	:param cursor:
 	:return:
 	"""
+
 	dbreadyversion = builder.dbinteraction.dbprepsubstitutions.dbprepper(dbreadyversion)
 	# pickle.dump(dbreadyversion, outputfile, open( "wb"))
 	db.dbauthoradder(authorobject, cursor)

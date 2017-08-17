@@ -8,6 +8,7 @@
 import configparser
 import csv
 import re
+from builder.parsers.swappers import forceregexsafevariants
 
 try:
 	# python3
@@ -85,7 +86,7 @@ def resetbininfo(relativepath, cursor, dbconnection):
 
 
 def npop(numbertopop, listtopop):
-	ret = []
+	ret = list()
 	for i in range(0, numbertopop):
 		ret.append(listtopop.pop())
 
@@ -94,8 +95,8 @@ def npop(numbertopop, listtopop):
 
 def listoflabels(rbl):
 	rv = 999
-	labels = []
-	heads = []
+	labels = list()
+	heads = list()
 	head, rbl = npop(4, rbl)
 	while rv != 0:
 		head, rbl = npop(4, rbl)
@@ -134,7 +135,7 @@ def findlabelbytestart(headerset):
 
 def findbundledauthors(bytebundle):
 	bytebundle.reverse()
-	authlist = []
+	authlist = list()
 	while len(bytebundle) > 4:
 		anum, bytebundle = grabaunum(bytebundle)
 		poppedbyte = bytebundle.pop()
@@ -153,7 +154,7 @@ def findbundledauthors(bytebundle):
 def findbundledworks(bytebundle):
 	# nothing really happens here?
 	# does that matter?
-	worklist = []
+	worklist = list()
 	bytememory = 0
 	poppedbyte = bytebundle.pop()
 	while (poppedbyte & 128 is False) and (poppedbyte != 0):
@@ -190,12 +191,12 @@ def cleanlabels(labellist):
 	"""
 	dates have betacode in them
 	"""
-	clean = []
+	clean = list()
 	
 	percents = re.compile(r'\%(\d{1,3})')
 	
 	for l in labellist:
-		l = re.sub(r'%3%19ae','',l) # Epigrammatici%3%19ae
+		l = re.sub(r'%3%19ae', '', l)  # Epigrammatici%3%19ae
 		l = re.sub(percents, percentsubstitutes, l)
 		l = re.sub('^ ', '', l)
 		l = re.sub(' $','',l)
@@ -280,24 +281,24 @@ def convertbinfiledates(stringdate):
 
 	stringdate = re.sub(dontcare,'',stringdate)
 
-	if re.search(bc,stringdate) is not None:
+	if re.search(bc, stringdate) is not None:
 		modifier = -1
 		fudge += 100
 
-	if re.search(add,stringdate) is not None:
+	if re.search(add, stringdate) is not None:
 		fudge = 75
 		if modifier < 0:
 			fudge += 100
 
-	if re.search(subtract,stringdate) is not None:
+	if re.search(subtract, stringdate) is not None:
 		fudge = -75
 
-	if re.search(split,stringdate) is not None:
+	if re.search(split, stringdate) is not None:
 		digits = re.search(split, stringdate)
 		one = int(digits.group(1))
 		two = int(digits.group(2))
 
-		if re.search(ad,stringdate) is not None and re.search(bc,stringdate) is not None:
+		if re.search(ad, stringdate) is not None and re.search(bc, stringdate) is not None:
 			modifier = 1
 			fudge -= 50
 			one = one * -1
@@ -314,7 +315,7 @@ def convertbinfiledates(stringdate):
 		elif stringdate == 'Incertum':
 			date = 2500
 		else:
-			stringdate = re.sub(r'\D','',stringdate)
+			stringdate = re.sub(r'\D', '', stringdate)
 			date = (int(stringdate) * modifier * 100) + fudge + midcentury
 
 	if date == 0:
@@ -390,6 +391,8 @@ def dbloadlist(labellist, column, cursor, dbconnection):
 							newinfo = newinfo[1:]
 					else:
 						newinfo = key
+					# location = 'Caloe+' is a problem
+					newinfo = forceregexsafevariants(newinfo)
 					# irritating to handle Epici/-ae later
 					query = 'UPDATE authors SET {c}=%s WHERE universalid=%s'.format(c=column)
 					data = (newinfo, 'gr' + author)

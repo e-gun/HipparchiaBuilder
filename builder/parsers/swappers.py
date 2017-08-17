@@ -26,6 +26,7 @@ def hutohxgrouper(matchgroup):
 	
 	return x
 
+
 def hextohighunicode(twocharhexstring):
 	"""
 	detransform the hexruns
@@ -85,3 +86,22 @@ def superscripterzero(digitmatch):
 	transformed = digit.translate(str.maketrans(invals, outvals))
 
 	return transformed
+
+
+def forceregexsafevariants(text):
+	"""
+
+	get rid of small variants of '+', etc.
+	:return:
+	"""
+
+	invals = "?*/!|=+%&:'(){}[]"
+	outvals = "﹖﹡／﹗│﹦﹢﹪﹠﹕＇❨❩❴❵⟦⟧"
+
+	try:
+		cleantext = text.translate(str.maketrans(invals, outvals))
+	except AttributeError:
+		# did you send me an int instead of a string?
+		cleantext = text
+
+	return cleantext
