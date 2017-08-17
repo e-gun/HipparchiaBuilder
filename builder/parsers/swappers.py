@@ -105,3 +105,18 @@ def forceregexsafevariants(text):
 		cleantext = text
 
 	return cleantext
+
+
+def avoidregexsafevariants(text):
+	"""
+
+	get rid of small variants of '+', etc.
+	:return:
+	"""
+
+	invals = "﹖﹡／﹗│﹦﹢﹪﹠﹕＇❨❩❴❵⟦⟧"
+	outvals = "?*/!|=+%&:'(){}[]"
+
+	cleantext = text.translate(str.maketrans(invals, outvals))
+
+	return cleantext

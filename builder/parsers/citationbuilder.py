@@ -8,7 +8,7 @@
 
 import re
 
-from builder.parsers.swappers import highunicodetohex, forceregexsafevariants
+from builder.parsers.swappers import highunicodetohex, forceregexsafevariants, avoidregexsafevariants
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.latinsubstitutions import latindiacriticals
 
@@ -56,9 +56,9 @@ def citationbuilder(hexsequence):
 		12: nyb12,
 		13: nyb13,
 		14: nyb14,
-		15: nyb15 }
+		15: nyb15}
 
-	while (len(hexsequence) > 0):
+	while hexsequence:
 		# left is the first digit and the level marker: 0x8N, 0x9N, 0xAN
 		# 8 --> level00; 9 --> level01; A--> level02; ...
 		# right is the "action to take"
@@ -78,7 +78,7 @@ def citationbuilder(hexsequence):
 				fullcitation += '<hmu_set_level_{tl}_to_{a} />'.format(tl=textlevel, a=action)
 			else:
 				citation, hexsequence = actionmapper[action](hexsequence)
-				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel,c=citation)
+				fullcitation += '<hmu_set_level_{tl}_to_{c} />'.format(tl=textlevel, c=citation)
 		elif textlevel == 6:
 			fullcitation, hexsequence = levelsixparsing(action, actionmapper, fullcitation, hexsequence)
 
@@ -97,7 +97,8 @@ def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
 	:return:
 	"""
 
-	metadata = {}
+	metadata = dict()
+
 	metadatacategories = {
 		0: 'newauthor',
 		1: 'newwork',
@@ -113,13 +114,14 @@ def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
 		108: 'provenance',  # 'l'
 		114: 'reprints',  # 'r'
 		116: 'unknownmetadata116',  # 't'
-		122: 'documentnumber'  # 'z'
+		122: 'documentnumber',  # 'z'
 		}
 
 	try:
 		category = int(hexsequence.pop(), 16) & int('7f', 16)
 	except:
-		category = ''
+		category = None
+
 	if action == 0:
 		if category == 1:
 			fullcitation += '\n<hmu_increment_work_number_by_1 />'
@@ -129,8 +131,17 @@ def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
 	else:
 		citation, hexsequence = actionmapper[action](hexsequence)
 
-	citation = forceregexsafevariants(latindiacriticals(replaceaddnlchars(citation)))
+	citation = replaceaddnlchars(citation)
+	citation = latindiacriticals(citation)
+
+	if category != 100:
+		# dates need '?', etc. unless you want to rewrite that parser
+		citation = forceregexsafevariants(citation)
+	else:
+		citation = avoidregexsafevariants(citation)
+
 	citation = re.sub(r'`', '', citation)
+	# print(metadatacategories[category], citation)
 
 	metadata[metadatacategories[category]] = citation
 
@@ -150,7 +161,7 @@ def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
 def nybbler(singlehexval):
 	"""
 	take a character and split it into two chunks of info: 'textlevel' on left and 'action' on right
-	:param singlehexstring:
+	:param singlehexval:
 	:return: textlevel, action
 	"""
 	
@@ -164,7 +175,7 @@ def nybbler(singlehexval):
 def nyb08(hexsequence):
 	# 8 -> read 7 bits of next number [& int('7f', 16)]
 	if len(hexsequence) > 0:
-		citation = str(int(hexsequence.pop(),16) & int('7f', 16))
+		citation = str(int(hexsequence.pop(), 16) & int('7f', 16))
 	else:
 		citation = '[unk_nyb_08]'
 
@@ -190,9 +201,9 @@ def nyb10(hexsequence):
 	if len(hexsequence) > 0:
 		citation = str(int(hexsequence.pop(), 16) & int('7f', 16))
 		stop = False
-		while hexsequence and stop == False:
+		while hexsequence and not stop:
 			popped = hexsequence.pop()
-			if int(popped,16) != int('ff',16):
+			if int(popped, 16) != int('ff', 16):
 				citation += chr(int(popped, 16) & int('7f', 16))
 			else:
 				stop = True
@@ -205,8 +216,8 @@ def nyb10(hexsequence):
 def nyb11(hexsequence):
 	# 11 -> next two bytes are a 14 bit number
 	if len(hexsequence) > 1:
-		firstbyte = int(hexsequence.pop(),16) & int('7f', 16)
-		secondbyte = int(hexsequence.pop(),16) & int('7f', 16)
+		firstbyte = int(hexsequence.pop(), 16) & int('7f', 16)
+		secondbyte = int(hexsequence.pop(), 16) & int('7f', 16)
 		citation = str((firstbyte << 7) + secondbyte)
 	else:
 		citation = '[unk_nyb_11]'
@@ -218,11 +229,11 @@ def nyb12(hexsequence):
 	# 12 -> a 2-byte number, then a character
 	citation = ''
 	if len(hexsequence) > 0:
-		firstbyte = int(hexsequence.pop(),16) & int('7f', 16)
+		firstbyte = int(hexsequence.pop(), 16) & int('7f', 16)
 	else:
 		citation += '[unk_nyb_12a]'
 	if len(hexsequence) > 0:
-		secondbyte = int(hexsequence.pop(),16) & int('7f', 16)
+		secondbyte = int(hexsequence.pop(), 16) & int('7f', 16)
 		citation = str((firstbyte << 7) + secondbyte)
 	else:
 		citation += '[unk_nyb_12b]'
@@ -237,11 +248,11 @@ def nyb13(hexsequence):
 	# 13 -> a 2-byte number, then a string
 	citation = ''
 	if len(hexsequence) > 0:
-		firstbyte = int(hexsequence.pop(),16) & int('7f', 16)
+		firstbyte = int(hexsequence.pop(), 16) & int('7f', 16)
 	else:
 		citation += '[unk_nyb_13a]'
 	if len(hexsequence) > 0:
-		secondbyte = int(hexsequence.pop(),16) & int('7f', 16)
+		secondbyte = int(hexsequence.pop(), 16) & int('7f', 16)
 		citation = str((firstbyte << 7) + secondbyte)
 	else:
 		citation += '[unk_nyb_13b]'
@@ -272,7 +283,7 @@ def nyb15(hexsequence):
 	# 15 -> an ascii string follows
 	citation = ''
 	stop = False
-	while hexsequence and stop == False:
+	while hexsequence and not stop:
 		popped = hexsequence.pop()
 		if int(popped, 16) != int('ff', 16):
 			citation += chr(int(popped, 16) & int('7f', 16))
