@@ -35,8 +35,10 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 	greekfinder = re.compile(r'(<foreign lang="greek">)(.*?)(</foreign>)')
 	
 	while len(entries) > 0:
-		try: entry = entries.pop()
-		except: entry = ''
+		try:
+			entry = entries.pop()
+		except IndexError:
+			entry = ''
 
 		if entry[0:10] != "<entryFree":
 			# print(entry[0:25])
@@ -62,7 +64,9 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			# handle words like abactus which have key... n... opt... where n is the variant number
 			# this pattern interrupts the std parsedinfo flow
 			metricalentry = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
-			metricalentry = re.sub(r' \((\d)\)',superscripterone, metricalentry)
+			metricalentry = re.sub(r' \((\d)\)', superscripterone, metricalentry)
+			# kill off the tail if you still have one: fĭber" n="1
+			metricalentry = re.sub(r'(.*?)"\s.*?$', r'\1', metricalentry)
 			entryname = re.sub('(_|\^)', '', metricalentry)
 			metricalentry = latinvowellengths(metricalentry)
 			
@@ -87,8 +91,13 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
-				print('\tat',id, entryname)
-	
+				print('\tat', id, entryname)
+
+			# if id == 18069:
+			# 	items = [entryname, metricalentry, id, type, key, opt, translationlist, body]
+			# 	for i in items:
+			# 		print(i)
+
 	dbc.commit()
 	curs.close()
 	del dbc

@@ -34,7 +34,6 @@ def formatgklexicon():
 
 	resettable(dictdb, sqldict['columns'], sqldict['index'])
 
-
 	f = open(dictfile, encoding='utf-8', mode='r')
 	entries = f.readlines()
 	f.close()
@@ -72,12 +71,11 @@ def formatlatlexicon():
 
 	resettable(dictdb, sqldict['columns'], sqldict['index'])
 
-
 	f = open(dictfile, encoding='utf-8', mode='r')
 	entries = f.readlines()
 	f.close()
 
-	print('formatting Lewis and Short.',len(entries),'entries to parse')
+	print('formatting Lewis and Short.', len(entries), 'entries to parse')
 
 	manager = Manager()
 	entries = manager.list(entries)
@@ -86,8 +84,10 @@ def formatlatlexicon():
 	workers = setworkercount()
 	jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, commitcount)) for i in
 			range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
+	for j in jobs:
+		j.start()
+	for j in jobs:
+		j.join()
 
 	return
 
@@ -121,7 +121,7 @@ def grammarloader(language):
 		lemmafile = ''
 		table = 'no_such_table'
 		islatin = False
-		print('I do not know',language,'\nBad things are about to happen.')
+		print('I do not know', language, '\nBad things are about to happen.')
 
 	sqldict = getlexicaltablestructuredict('lemma')
 
@@ -131,7 +131,7 @@ def grammarloader(language):
 	entries = f.readlines()
 	f.close()
 
-	print('loading', language, 'lemmata.',len(entries),'items to load')
+	print('loading', language, 'lemmata.', len(entries), 'items to load')
 
 	manager = Manager()
 	entries = manager.list(entries)
@@ -140,8 +140,10 @@ def grammarloader(language):
 	workers = setworkercount()
 	jobs = [Process(target=mplemmatainsert, args=(table, entries, islatin, commitcount)) for i in
 	        range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
+	for j in jobs:
+		j.start()
+	for j in jobs:
+		j.join()
 	
 	return
 
@@ -214,8 +216,10 @@ def analysisloader(language):
 		workers = setworkercount()
 		jobs = [Process(target=mpanalysisinsert, args=(table, items, islatin, commitcount)) for i in
 		        range(workers)]
-		for j in jobs: j.start()
-		for j in jobs: j.join()
+		for j in jobs:
+			j.start()
+		for j in jobs:
+			j.join()
 		if bundlecount * chunksize < len(forms):
 			# this check prevents saying '950000 forms inserted' at the end when there are only '911871 items to load'
 			print('\t', str(bundlecount * chunksize), 'forms inserted')

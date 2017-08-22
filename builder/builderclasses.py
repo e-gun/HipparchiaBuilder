@@ -109,9 +109,9 @@ class Author(object):
 		
 		tail = re.sub(short, '', remainder)
 		
-		short = re.sub(whiteout,r'\1',short)
-		tail = re.sub(whiteout,r'\1',tail)
-		full = re.sub(whiteout,r'\1',full)
+		short = re.sub(whiteout, r'\1', short)
+		tail = re.sub(whiteout, r'\1', tail)
+		full = re.sub(whiteout, r'\1', full)
 			
 		if 'g' in self.universalid:
 			if short != '' and len(tail) > 1:
@@ -389,12 +389,12 @@ class dbWorkLine(object):
 		useful for tagging level shifts without constantly seeling 'line 1'
 		:return:
 		"""
-		loc = []
+		loc = list()
 		for lvl in [self.l1, self.l2, self.l3, self.l4, self.l5]:
 			if str(lvl) != '-1' and (self.wkuinversalid[0:2] not in ['in', 'dp', 'ch'] and lvl != 'recto'):
 				loc.append(lvl)
 		loc.reverse()
-		if loc == []:
+		if not loc:
 			citation = self.locus()
 		else:
 			citation = '.'.join(loc)
@@ -457,7 +457,7 @@ class dbWorkLine(object):
 		:return:
 		"""
 
-		markup = re.compile(r'(\<.*?\>)')
+		markup = re.compile(r'(<.*?>)')
 		nbsp = re.compile(r'&nbsp;')
 
 		unformatted = re.sub(markup, r'', self.accented)
@@ -529,7 +529,7 @@ class dbWorkLine(object):
 		if version in ['accented', 'stripped']:
 			line = getattr(self, version)
 			if version == 'accented':
-				line = re.sub(r'(\<.*?\>)', r'', line)
+				line = re.sub(r'(<.*?>)', r'', line)
 			line = line.split(' ')
 			allbutfirst = line[1:]
 			allbutfirstword = ' '.join(allbutfirst)
@@ -546,7 +546,7 @@ class dbWorkLine(object):
 		if version in ['accented', 'stripped']:
 			line = getattr(self, version)
 			if version == 'accented':
-				line = re.sub(r'(\<.*?\>)', r'', line)
+				line = re.sub(r'(<.*?>)', r'', line)
 			line = line.split(' ')
 			middle = line[1:-1]
 			allbutfirstandlastword = ' '.join(middle)
@@ -615,7 +615,7 @@ class dbLemmaObject(object):
 		self.xref = xref
 		self.formandidentificationlist = [f for f in derivativeforms.split('\t') if f]
 		self.formlist = [f.split(' ')[0] for f in self.formandidentificationlist]
-		self.formlist = [re.sub(r'\'','',f) for f in self.formlist]
+		self.formlist = [re.sub(r'\'', '', f) for f in self.formlist]
 		self.formlist = [re.sub(r'v', 'u', f) for f in self.formlist]
 
 	def getformdict(self):
@@ -645,7 +645,7 @@ class Opus(object):
 		self.worknumber = int(worknumber)
 		self.title = title
 		self.structure = structure
-		self.contentlist = []
+		self.contentlist = list()
 		self.name = title
 
 	def addcontents(self, toplevelobject):
@@ -684,7 +684,8 @@ def loadallauthorsasobjects(config):
 	curs.execute(q)
 	results = curs.fetchall()
 
-	authorsdict = {r[0]:dbAuthor(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]) for r in results}
+	authorsdict = {r[0]: dbAuthor(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9])
+	               for r in results}
 
 	return authorsdict
 
@@ -706,7 +707,7 @@ def loadallworksasobjects(config):
 	curs.execute(q)
 	results = curs.fetchall()
 
-	worksdict = {r[0]:dbOpus(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8],
+	worksdict = {r[0]: dbOpus(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8],
 						 r[9], r[10], r[11], r[12], r[13], r[14], r[15], r[16],
 						 r[17], r[18], r[19]) for r in results}
 

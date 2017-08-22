@@ -12,6 +12,7 @@ from os import cpu_count
 config = configparser.ConfigParser()
 config.read('config.ini')
 
+
 def setworkercount():
 	"""
 

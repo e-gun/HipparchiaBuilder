@@ -144,5 +144,4 @@ if buildcounts == 'y':
 
 stop = time.time()
 took = round((stop-start)/60, 2)
-print('\nBuild took',str(took),'minutes')
-
+print('\nBuild took', str(took), 'minutes')
