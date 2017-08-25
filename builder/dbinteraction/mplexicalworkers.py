@@ -160,9 +160,9 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 				type = ''
 				opt = ''
 			entryname = re.sub(r'"(.*?)"', lambda x: greekwithoutvowellengths(x.group(1)), key.upper())
-			entryname = re.sub(r'(\d{1,})', superscripterone, entryname)
+			entryname = re.sub(r'(\d+)', superscripterone, entryname)
 			metrical = re.sub(r'(")(.*?)(")', lambda x: greekwithvowellengths(x.group(2)), key.upper())
-			metrical = re.sub(r'(\d{1,})', superscripterone, metrical)
+			metrical = re.sub(r'(\d+)', superscripterone, metrical)
 			metrical = re.sub(r'"', r'', metrical)
 			
 			body = re.sub(greekfinder, lsjgreekswapper, body)
@@ -303,7 +303,7 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 			if re.search(bracketrefs,entry) is not None:
 				bracketed = re.findall(bracketrefs,entry)
 				bracketed = list(set(bracketed))
-				bracketed = (', ').join(bracketed)
+				bracketed = ', '.join(bracketed)
 				bracketed = re.sub(r'[\[\]]','',bracketed)
 				entry = re.sub(bracketrefs, '', entry)
 			segments = re.search(formfinder, entry)

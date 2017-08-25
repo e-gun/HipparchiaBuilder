@@ -82,7 +82,7 @@ def singletonsubstitutes(match):
 
 	substitutions = {
 		'#': u'\u0374',
-		'%': u'\u2020', # dagger: †
+		'%': u'\u2020',  # dagger: †
 		'@': r'<hmu_standalone_tabbedtext />',
 		'{': r'<speaker>',
 		'}': r'</speaker>'
@@ -112,10 +112,10 @@ def poundsubstitutes(match):
 		# but, if you want to get the codes as HTML, this is what you need to do...
 
 		1: u'\u03df',
-		2: u'\u03da', # stigma; supposed to be able to handle '*#2' and not just '#2'
-		3: u'\u03d9', # koppa; supposed to be able to handle '*#3' and not just '#3'
-		4: u'\u03d9', # koppa, variant
-		5: u'\u03e1', # sampi; supposed to be able to handle '*#5' and not just '#5'
+		2: u'\u03da',  # stigma; supposed to be able to handle '*#2' and not just '#2'
+		3: u'\u03d9',  # koppa; supposed to be able to handle '*#3' and not just '#3'
+		4: u'\u03d9',  # koppa, variant
+		5: u'\u03e1',  # sampi; supposed to be able to handle '*#5' and not just '#5'
 		6: u'\u2e0f',
 		7: r'<hmu_idiosyncratic_char betacodeval="7">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		8: u'\u2e10',
@@ -125,11 +125,11 @@ def poundsubstitutes(match):
 		12: u'\u2014',
 		13: u'\u203b',
 		14: u'\u2e16',
-		15: r'⟩', # officially: u'\u003e', greater than sign, diple
+		15: r'⟩',  # officially: u'\u003e', greater than sign, diple
 		16: u'\u03fe',
 		# 17: u'002f',  # careful: '/' is dangerous
-		17: r'／', # fulwidth solidus instead
-		18: r'⟨', # officially: u'\u003c', less than sign, reversed diple
+		17: r'／',  # fulwidth solidus instead
+		18: r'⟨',  # officially: u'\u003c', less than sign, reversed diple
 		19: u'\u0300',
 		20: r'𐅵',
 		21: r'𐅵',
@@ -138,21 +138,21 @@ def poundsubstitutes(match):
 		24: r'𐅵',
 		25: r'𐅶',
 		26: u'\u2e0f',
-		27: r'𐄂', # 'check mark'; non tlg; and so - AEGEAN CHECK MARK; Unicode: U+10102, UTF-8: F0 90 84 82
+		27: r'𐄂',  # 'check mark'; non tlg; and so - AEGEAN CHECK MARK; Unicode: U+10102, UTF-8: F0 90 84 82
 		28: r'<hmu_mark_deleting_entry />␥',
-		29: u'\u00b7', # middle dot: ·
+		29: u'\u00b7',  # middle dot: ·
 		30: r'<hmu_idiosyncratic_char betacodeval="30">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		31: r'<hmu_idiosyncratic_char betacodeval="31">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		# 48: r'<hmu_undocumented_poundsign betacodeval="48">⊚</hmu_undocumented_poundsign>',
 		# 50: r'<hmu_undocumented_poundsign betacodeval="50">⊚</hmu_undocumented_poundsign>',
-		51: u'\u00b7', # middle dot: ·
+		51: u'\u00b7',  # middle dot: ·
 		52: u'\u205a',
 		53: u'\u205d',
 		# 54: r'<hmu_undocumented_poundsign betacodeval="54">⊚</hmu_undocumented_poundsign>',
 		55: u'\u2059',
-		56: r'∣', # 'dividers of other forms'; not a helpful description: trying u2223 for now
-		57: r'﹤', # small variant;  as per http://noapplet.epigraphy.packhum.org/text/3292?&bookid=5&location=7
-		58: r'﹥', # cf #57
+		56: r'∣',  # 'dividers of other forms'; not a helpful description: trying u2223 for now
+		57: r'﹤',  # small variant;  as per http://noapplet.epigraphy.packhum.org/text/3292?&bookid=5&location=7
+		58: r'﹥',  # cf #57
 		59: u'\u03fd',
 		60: u'\u0399',
 		61: r'𐅂',
@@ -274,12 +274,12 @@ def poundsubstitutes(match):
 		303: u'›',
 		304: u'\u2e0e',  # but supposed to be just part of a coronis
 		305: u'\u2e0e',
-		306: u'\u2e0f', # but supposed to be a double paragraphos
+		306: u'\u2e0f',  # but supposed to be a double paragraphos
 		307: u'\u2e0e',  # but supposed to be just part of a coronis
-		308: u'\u2e0e', # but supposed to be just part of a coronis
+		308: u'\u2e0e',  # but supposed to be just part of a coronis
 		310: u'\u2e0e',
-		311: u'\u2e0e', # but supposed to be just lower half of a coronis
-		312: u'\u2e0e', # but supposed to be just upper half of a coronis
+		311: u'\u2e0e',  # but supposed to be just lower half of a coronis
+		312: u'\u2e0e',  # but supposed to be just upper half of a coronis
 		313: u'\u2e0e',
 		314: r'<hmu_idiosyncratic_char betacodeval="314">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		315: u'\u2e0e',
@@ -304,8 +304,8 @@ def poundsubstitutes(match):
 		335: r'<span class="strikethrough">N</span>',
 		336: r'<hum_redundant_s-type_sign />',
 		337: r'<span class="hmu_seal_attached_to_papyrus">❊</span>',
-		400: r'ͱ', # heta; supposed to know how to do capital too: *#400
-		401: r'ϳ', # yot; supposed to know how to do capital too: *#401
+		400: r'ͱ',  # heta; supposed to know how to do capital too: *#400
+		401: r'ϳ',  # yot; supposed to know how to do capital too: *#401
 		451: u'\u0283',
 		452: u'\u2310',
 		453: u'\u2e11',
@@ -326,7 +326,7 @@ def poundsubstitutes(match):
 		# 500: r'<hmu_undocumented_poundsign betacodeval="500">⊚</hmu_undocumented_poundsign>',
 		501: r'π<6ιθ6>',  # abbreviation for πιθανόν: added own betacode - <6...6>
 		502: r'🜚',  # listed as idiosyncratic; but looks like 'alchemical symbol for gold': U+1F71A
-		503: r'ΡΠ', # but supposed to be on top of one another
+		503: r'ΡΠ',  # but supposed to be on top of one another
 		504: u'\u2e0e',
 		505: u'\u205c',
 		506: u'\u2e15',
@@ -598,15 +598,15 @@ def poundsubstitutes(match):
 		# PHI will show you glyphs, but 'private use area' means that they are feeding them to you
 		# it seems that there is no official support for these characters
 		# 875: r'', # see http://noapplet.epigraphy.packhum.org/text/247092?&bookid=489&location=1689; private use area
-		875: r'<hmu_unsupported_poundsign betacodeval="875">●</hmu_undocumented_poundsign>', # u'\ue022', # private use area
-		876: r'<hmu_unsupported_poundsign betacodeval="876">●</hmu_undocumented_poundsign>', # u'\ue023', # private use area
-		877: r'<hmu_unsupported_poundsign betacodeval="877">●</hmu_undocumented_poundsign>', # u'\ue024', # inferred; private use area
-		878: r'<hmu_unsupported_poundsign betacodeval="878">●</hmu_undocumented_poundsign>', # u'\ue025', # inferred; private use area
-		879: r'<hmu_unsupported_poundsign betacodeval="879">●</hmu_undocumented_poundsign>', # u'\ue026',  # inferred; private use area
-		880: r'<hmu_unsupported_poundsign betacodeval="880">●</hmu_undocumented_poundsign>', # u'\ue027',  # inferred; private use area
-		881: r'<hmu_unsupported_poundsign betacodeval="881">●</hmu_undocumented_poundsign>', # u'\ue028',  # inferred; private use area
-		882: r'<hmu_unsupported_poundsign betacodeval="882">●</hmu_undocumented_poundsign>', # u'\ue029',  # inferred; private use area
-		883: r'<hmu_unsupported_poundsign betacodeval="883">●</hmu_undocumented_poundsign>', # u'\ue02a', # private use area
+		875: r'<hmu_unsupported_poundsign betacodeval="875">●</hmu_undocumented_poundsign>',  # u'\ue022', # private use area
+		876: r'<hmu_unsupported_poundsign betacodeval="876">●</hmu_undocumented_poundsign>',  # u'\ue023', # private use area
+		877: r'<hmu_unsupported_poundsign betacodeval="877">●</hmu_undocumented_poundsign>',  # u'\ue024', # inferred; private use area
+		878: r'<hmu_unsupported_poundsign betacodeval="878">●</hmu_undocumented_poundsign>',  # u'\ue025', # inferred; private use area
+		879: r'<hmu_unsupported_poundsign betacodeval="879">●</hmu_undocumented_poundsign>',  # u'\ue026',  # inferred; private use area
+		880: r'<hmu_unsupported_poundsign betacodeval="880">●</hmu_undocumented_poundsign>',  # u'\ue027',  # inferred; private use area
+		881: r'<hmu_unsupported_poundsign betacodeval="881">●</hmu_undocumented_poundsign>',  # u'\ue028',  # inferred; private use area
+		882: r'<hmu_unsupported_poundsign betacodeval="882">●</hmu_undocumented_poundsign>',  # u'\ue029',  # inferred; private use area
+		883: r'<hmu_unsupported_poundsign betacodeval="883">●</hmu_undocumented_poundsign>',  # u'\ue02a', # private use area
 		# 898: [not known by PHI]
 		898: r'<hmu_undocumented_poundsign betacodeval="898">⊚</hmu_undocumented_poundsign>',
 		899: r'<hmu_unknown_numeral>',
@@ -654,12 +654,12 @@ def poundsubstitutes(match):
 		1002: r'𐅾',
 		1003: r'𐅿',
 		1004: r'𐆀',
-		1009: r'', # http://noapplet.epigraphy.packhum.org/text/247092?&bookid=489&location=1689
+		1009: r'',  # http://noapplet.epigraphy.packhum.org/text/247092?&bookid=489&location=1689
 		# a huge run of undocumented poundsigns in the inscriptions: this only scratches the surface
 		# packhum.org has representations of many of them
 		# see especially: http://noapplet.epigraphy.packhum.org/text/260603?&bookid=509&location=1035
 		1012: u'\ue036',
-		1023: r'ηʹ', # http://noapplet.epigraphy.packhum.org/text/247092?&bookid=489&location=1689
+		1023: r'ηʹ',  # http://noapplet.epigraphy.packhum.org/text/247092?&bookid=489&location=1689
 		# 1045: [not known by PHI]
 		1045: r'<hmu_undocumented_poundsign betacodeval="1045">⊚</hmu_undocumented_poundsign>',
 		1053: r'<hmu_undocumented_poundsign betacodeval="1053">⊚</hmu_undocumented_poundsign>',
@@ -741,9 +741,9 @@ def poundsubstitutes(match):
 		1327: r'<hmu_idiosyncratic_char betacodeval="1327">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1328: r'<hmu_idiosyncratic_char betacodeval="1328">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1334: r'<hmu_idiosyncratic_char betacodeval="1334">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		1335: r'／／', # fulwidth solidus instead
+		1335: r'／／',  # fulwidth solidus instead
 		1336: r'<hmu_unsupported_hebrew_character>□</hmu_unsupported_hebrew_character>',
-		1337: r'﹥', # supposed to be 003e, ie simple angle bracket ; this is fe65
+		1337: r'﹥',  # supposed to be 003e, ie simple angle bracket ; this is fe65
 		1338: r'𐅾',
 		1341: r'<hmu_idiosyncratic_char betacodeval="1341">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1500: u'\u03b3\u030a',
@@ -753,8 +753,8 @@ def poundsubstitutes(match):
 		1504: r'<hmu_idiosyncratic_char betacodeval="1504">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		1505: r'<hmu_unknown_abbreviation betacodeval="1505">◦</hmu_unknown_abbreviation>',
 		1506: u'\u0300\u0306',
-		1509: r'πληθ', # supposed to be a symbol
-		1510: u'Α\u0338<6\u0304ν\u002f>6', # A%162<6E%26N%3>6 [!]
+		1509: r'πληθ',  # supposed to be a symbol
+		1510: u'Α\u0338<6\u0304ν\u002f>6',  # A%162<6E%26N%3>6 [!]
 		1511: r'π<span class="superscript">ε:`</span>',
 		# 1806: [not known by PHI]
 		1806: r'<hmu_undocumented_poundsign betacodeval="1806">⊚</hmu_undocumented_poundsign>'
@@ -766,7 +766,7 @@ def poundsubstitutes(match):
 		# substitute = '<span class="unhandledpound">﹟{v}</span>'.format(v=val)
 		substitute = '<hmu_unhandled_pound_sign betacodeval="{v}" /><span class="unhandledpound">﹟</span>'.format(v=val)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute
 
@@ -784,16 +784,16 @@ def percentsubstitutes(match):
 		# u'\u',
 		# many of these early items can look like betacode accents, etc.
 		# using small variants now; then lastpass can restore them
-		1: r'﹖', # '?' (003f), but using small variant instead: fe56
-		2: r'﹡', # '*' (u002a), but using small variant instead: fe61
-		3: u'／', # '/' (u002f), but using fullwidth variant instead: ff0f
-		4: u'﹗', # '!' (u0021), but using small variant instead: ff57
-		5: u'│', # '|' (u007c), but using box drawings light vertical instead: 2502
-		6: u'﹦', # '=' (u003d); but using small variant instead: fe66
-		7: u'﹢', # '+' (u002b); but using small variant instead: fe62
-		8: u'﹪', # '%' (u0025), but using small variant instead: fe6a
-		9: u'﹠', # '&' (0026) is also a control character; using small version instead (fe60); can swap it out in the end
-		10: r'﹕', # ':' (003a); samll variant instead: fe55
+		1: r'﹖',  # '?' (003f), but using small variant instead: fe56
+		2: r'﹡',  # '*' (u002a), but using small variant instead: fe61
+		3: u'／',  # '/' (u002f), but using fullwidth variant instead: ff0f
+		4: u'﹗',  # '!' (u0021), but using small variant instead: ff57
+		5: u'│',  # '|' (u007c), but using box drawings light vertical instead: 2502
+		6: u'﹦',  # '=' (u003d); but using small variant instead: fe66
+		7: u'﹢',  # '+' (u002b); but using small variant instead: fe62
+		8: u'﹪',  # '%' (u0025), but using small variant instead: fe6a
+		9: u'﹠',  # '&' (0026) is also a control character; using small version instead (fe60); can swap it out in the end
+		10: r'﹕',  # ':' (003a); samll variant instead: fe55
 		11: u'\u2022',
 		12: u'﹡',  # '*' (u002a) might lead to future problems: small version instead (fe61); can swap it out in the end
 		14: u'\u00a7',
@@ -867,15 +867,15 @@ def percentsubstitutes(match):
 		99: u'\u2248',
 		100: u'\u003b',
 		# 101: u'\u0023',  # had best do pounds before percents since this is '#'
-		101: r'﹟', # small number sign instead (ufe5f)
-		102: r'’', # single quotation mark
+		101: r'﹟',  # small number sign instead (ufe5f)
+		102: r'’',  # single quotation mark
 		# 103: u'\u005c',  # backslash: careful
-		103: r'﹨', # small reverse solidus instead: ufe68
+		103: r'﹨',  # small reverse solidus instead: ufe68
 		105: u'\u007c\u007c\u007c',
 		106: u'\u224c',
-		107: u'\u007e', # '~'
-		108: u'\u00b1', # '±'
-		109: u'\u00b7', # middle dot: '·'
+		107: u'\u007e',  # '~'
+		108: u'\u00b1',  # '±'
+		109: u'\u00b7',  # middle dot: '·'
 		110: u'\u25cb',
 		127: u'\u032f',
 		128: u'\u0302',
@@ -894,8 +894,8 @@ def percentsubstitutes(match):
 		149: u'\u0328',
 		150: u'\u007c',
 		157: u'\u2e38',
-		159: u'\u00d7', # multiplication sign: '×'
-		160: u'\u002d', # hyphen-minus: '-'
+		159: u'\u00d7',  # multiplication sign: '×'
+		160: u'\u002d',  # hyphen-minus: '-'
 		162: u'\u0338'
 	}
 
@@ -905,7 +905,7 @@ def percentsubstitutes(match):
 		# substitute = '<span class="unhandledpercent">﹪{v}</span>'.format(v=val)
 		substitute = '<hmu_unhandled_percent_sign betacodeval="{v}" /><span class="unhandledpercent">﹪</span>'.format(v=val)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute
 
@@ -959,7 +959,7 @@ def leftbracketsubstitutions(match):
 	except KeyError:
 		substitute = '<hmu_unhandled_left_bracket betacodeval="{v}" />'.format(v=val)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 
 	return substitute
@@ -976,7 +976,7 @@ def rightbracketsubstitutions(match):
 
 	substitutions = {
 		# u'\u',
-		1: '❩', # swapped for ')'
+		1: '❩',  # swapped for ')'
 		# 2: u'\u232a', # '〉'
 		2: '⟩',
 		3: '❵',
@@ -990,21 +990,21 @@ def rightbracketsubstitutions(match):
 		11: u'\u208e',
 		12: u'\u2190',
 		13: u'\u005d</span>',  # supposed to be italic as well
-		14: u'\u003a\u007c', # ':|'
-		17: u'\u230b\u230b', # '⌋⌋'
-		18: u'\u27eb', # '⟫'
-		20: u'\u23ab', # '⎫'
-		21: u'\u23aa', # '⎪'
-		22: u'\u23ac', # '⎬'
-		23: u'\u23ad', # '⎭'
-		30: u'\u239e', # '⎞' typo in betacode manual: should say 239e and not 329e (㊞)
+		14: u'\u003a\u007c',  # ':|'
+		17: u'\u230b\u230b',  # '⌋⌋'
+		18: u'\u27eb',  # '⟫'
+		20: u'\u23ab',  # '⎫'
+		21: u'\u23aa',  # '⎪'
+		22: u'\u23ac',  # '⎬'
+		23: u'\u23ad',  # '⎭'
+		30: u'\u239e',  # '⎞' typo in betacode manual: should say 239e and not 329e (㊞)
 		31: u'\u239f',
-		32: u'\u23a0', # '⎠' typo in betacode manual: should say 23a0 and not 32a0 (㊠)
+		32: u'\u23a0',  # '⎠' typo in betacode manual: should say 23a0 and not 32a0 (㊠)
 		33: r'｠</hmu_parenthesis_ancient_punctuation>',
-		34: r'⸩</span>', # parenthesis_deletion_marker
+		34: r'⸩</span>',  # parenthesis_deletion_marker
 		35: r'<hmu_papyrological_project_rt_bracket_35 />',
 		49: r'<hmu_papyrological_project_rt_bracket_49 />',  # 49-35
-		51: r'</span>', # erasedepigraphicaltext
+		51: r'</span>',  # erasedepigraphicaltext
 	}
 
 	try:
@@ -1012,7 +1012,7 @@ def rightbracketsubstitutions(match):
 	except KeyError:
 		substitute = '<hmu_unhandled_right_bracket betacodeval="{v}" />'.format(v=val)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute
 
@@ -1056,7 +1056,7 @@ def atsignsubstitutions(match):
 	except KeyError:
 		substitute = '<hmu_unhandled_atsign betacodeval="{v}" />'.format(v=val)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute
 
@@ -1106,7 +1106,7 @@ def ltcurlybracketsubstitutes(match):
 	except KeyError:
 		substitute = '<hmu_unhandled_ltcurlybracket betacodeval="{v}" />'.format(v=val)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute
 
@@ -1121,23 +1121,23 @@ def rtcurlybracketsubstitutes(match):
 	val = int(match.group(1))
 
 	substitutions = {
-		1: r'</span>', # hmu_title
+		1: r'</span>',  # hmu_title
 		2: r'</span>',  # hmu_marginal_text
 		3: r'</span>',  # hmu_reference_in_scholium
-		4: r'</span>', # hmu_unconventional_form_written_by_scribe
-		5: r'</span>', # hmu_form_altered_by_scribe
-		6: r'</span>', # hmu_discarded_form
-		7: r'</span>', # hmu_reading_discarded_in_another_source
-		8: r'</span>', # hmu_numerical_equivalent
-		9: r'</span>', # hmu_alternative_reading
+		4: r'</span>',  # hmu_unconventional_form_written_by_scribe
+		5: r'</span>',  # hmu_form_altered_by_scribe
+		6: r'</span>',  # hmu_discarded_form
+		7: r'</span>',  # hmu_reading_discarded_in_another_source
+		8: r'</span>',  # hmu_numerical_equivalent
+		9: r'</span>',  # hmu_alternative_reading
 		# 10: u'\u0332',
 		# cf. ltanglebracketsubstitutes() #1
 		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
 		10: r'⟩', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
-		26: r'</span>', # hmu_rectified_form
+		26: r'</span>',  # hmu_rectified_form
 		27: u'\u0359',
-		28: r'</span>', # hmu_date_or_numeric_equivalent_of_date
-		29: r'</span>', # hmu_emendation_by_editor_of_text_not_obviously_incorrect
+		28: r'</span>',  # hmu_date_or_numeric_equivalent_of_date
+		29: r'</span>',  # hmu_emendation_by_editor_of_text_not_obviously_incorrect
 		40: r'</speaker>',  # hmu_speaker
 		41: r'</span>',  # hmu_stage_direction
 		43: r'</span>',  # hmu_servius_bracket
@@ -1148,7 +1148,7 @@ def rtcurlybracketsubstitutes(match):
 	except KeyError:
 		substitute = '<hmu_unhandled_rtcurlybracket betacodeval="{v}" />'.format(v=val)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute
 
@@ -1220,7 +1220,7 @@ def ltanglebracketsubstitutes(match):
 	except KeyError:
 		substitute = '<hmu_unhandled_ltangle betacodeval="{v}" />'.format(v=val)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute
 
@@ -1267,11 +1267,11 @@ def rtanglebracketsubstitutes(match):
 		51: r'</hmu_undocumented_anglebracketspan51>',
 		52: r'</hmu_undocumented_anglebracketspan52>',
 		53: r'</hmu_undocumented_anglebracketspan53>',
-		60: r'</span>', # hmu_preferred_epigraphical_text_used
-		61: r'</span>', # hmu_epigraphical_text_inserted_after_erasure
-		62: r'</span>', # epigraphical line over letters
-		63: r'</span>', # hmu_epigraphical_text_after_correction
-		64: r'</span>', # letters in a box
+		60: r'</span>',  # hmu_preferred_epigraphical_text_used
+		61: r'</span>',  # hmu_epigraphical_text_inserted_after_erasure
+		62: r'</span>',  # epigraphical line over letters
+		63: r'</span>',  # hmu_epigraphical_text_after_correction
+		64: r'</span>',  # letters in a box
 		65: r'</hmu_epigraphical_letters_enclosed_in_wreath>',
 		66: r'</hmu_epigraphical_project_escape_66>',
 		67: r'</hmu_epigraphical_project_escape_67>',
@@ -1290,7 +1290,7 @@ def rtanglebracketsubstitutes(match):
 	except KeyError:
 		substitute = '<hmu_unhandled_rtangle betacodeval="{v}" />'.format(v=val)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute
 
@@ -1333,7 +1333,7 @@ def quotesubstitutesa(match):
 	except KeyError:
 		substitute = '<hmu_unhandled_quote_markup betacodeval="{v}" />'.format(v=val)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute
 
@@ -1351,15 +1351,15 @@ def quotesubstitutesb(match):
 	if simplequotes:
 		substitutions = {
 			2: ['“', '”'],
-			3: ['‵', '′'], # reversed prime and prime (for later fixing)
+			3: ['‵', '′'],  # reversed prime and prime (for later fixing)
 			6: ['“', '”'],
-			7: ['‵', '′'], # reversed prime and prime (for later fixing)
+			7: ['‵', '′'],  # reversed prime and prime (for later fixing)
 			8: ['“', '”'],
 		}
 	else:
 		substitutions = {
 			2: ['“', '”'],
-			3: ['‵', '′'], # reversed prime and prime (for later fixing)
+			3: ['‵', '′'],  # reversed prime and prime (for later fixing)
 			6: ['«', '»'],
 			7: ['‹', '›'],
 			8: ['“', '„'],
@@ -1370,6 +1370,6 @@ def quotesubstitutesb(match):
 	except KeyError:
 		substitute = '<hmu_unhandled_quote_markup betacodeval="{v}" />{c}'.format(v=val, c=core)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute

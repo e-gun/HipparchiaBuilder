@@ -330,8 +330,7 @@ def debughostilesubstitutions(texttoclean):
 	if config['buildoptions']['hideknownblemishes'] != 'y':
 		return texttoclean
 
-	betacodetuples = [ (r'[\$]', r'') ,
-	                   ]
+	betacodetuples = [(r'[\$]', r''),]
 
 
 	# note that '&' will return to the text via the hexrunner: it can be embedded in the annotations
@@ -377,8 +376,8 @@ def bracketspacer(matchgroup):
 	:return:
 	"""
 
-	grpone = re.sub(r'\s',u'\u00a0', matchgroup.group(1))
-	grptwo = re.sub(r'\s',u'\u00a0', matchgroup.group(2))
+	grpone = re.sub(r'\s', u'\u00a0', matchgroup.group(1))
+	grptwo = re.sub(r'\s', u'\u00a0', matchgroup.group(2))
 	grpthree = re.sub(r'\s', u'\u00a0', matchgroup.group(3))
 
 	substitute = '[{x}c{y}]{z}'.format(x=grpone, y=grptwo, z=grpthree)
@@ -416,7 +415,7 @@ def totallemmatization(parsedtextfile):
 		5: 1
 	}
 
-	dbready = []
+	dbready = list()
 
 	work = 1
 
@@ -468,7 +467,7 @@ def totallemmatization(parsedtextfile):
 					levelmapper[l] = 1
 
 		# db version: list of tuples + the line
-		tups = [('0',str(levelmapper[0])),('1',str(levelmapper[1])),('2',str(levelmapper[2])),('3',str(levelmapper[3])),('4',str(levelmapper[4])), ('5',str(levelmapper[5]))]
+		tups = [('0', str(levelmapper[0])), ('1', str(levelmapper[1])), ('2', str(levelmapper[2])), ('3', str(levelmapper[3])), ('4', str(levelmapper[4])), ('5', str(levelmapper[5]))]
 		dbready.append([str(work), tups, line])
 
 	return dbready
@@ -592,7 +591,7 @@ def cleanworkname(betacodeworkname):
 	"""
 
 	if '*' in betacodeworkname and '$' not in betacodeworkname:
-		re.sub(r'\*',r'$*',betacodeworkname)
+		re.sub(r'\*', r'$*', betacodeworkname)
 
 	percents = re.compile(r'%(\d{1,3})')
 	workname = re.sub(percents, percentsubstitutes, betacodeworkname)
@@ -629,7 +628,7 @@ def insertnewlines(txt):
 	:param txt:
 	:return:
 	"""
-	txt =  re.sub(r'(<hmu_set_level)', r'\n\1', txt)
+	txt = re.sub(r'(<hmu_set_level)', r'\n\1', txt)
 	txt = txt.split('\n')
 
 	return txt

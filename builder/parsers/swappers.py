@@ -46,10 +46,10 @@ def bitswapchars(valuelist):
 	:param valuelist:
 	:return:
 	"""
-	ascii = ''
+	asciival = ''
 	for hv in valuelist:
-		ascii += chr(int(hv, 16) & int('7f', 16))
-	return ascii
+		asciival += chr(int(hv, 16) & int('7f', 16))
+	return asciival
 
 
 def superscripterone(digitmatch):
@@ -57,7 +57,7 @@ def superscripterone(digitmatch):
 
 	turn 1 into ¹ and 2 into ²
 
-	:param digit:
+	:param digitmatch:
 	:return:
 	"""
 
@@ -75,7 +75,7 @@ def superscripterzero(digitmatch):
 
 	turn 1 into ¹ and 2 into ²
 
-	:param digit:
+	:param digitmatch:
 	:return:
 	"""
 

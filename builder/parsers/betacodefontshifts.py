@@ -33,10 +33,10 @@ def replacegreekmarkup(texttoclean):
 
 	texttoclean = re.sub(unun, lambda x: removeshiftsymmetry(x.group(1), x.group(2), x.group(3)), texttoclean)
 
-	dollars = re.compile(r'\$(\d{1,2})([^\&█]*?)(\$\d{0,1})')
+	dollars = re.compile(r'\$(\d{1,2})([^&█]*?)(\$\d?)')
 	texttoclean = re.sub(dollars, lambda x: dollarssubstitutes(int(x.group(1)), x.group(2)), texttoclean)
 
-	straydollars = re.compile(r'\$(\d{1,2})(.*?)(\s{0,1}█)')
+	straydollars = re.compile(r'\$(\d{1,2})(.*?)(\s?█)')
 	texttoclean = re.sub(straydollars, lambda x: dollarssubstitutes(int(x.group(1)), x.group(2), extra=x.group(3)), texttoclean)
 
 	return texttoclean
@@ -51,10 +51,10 @@ def latinfontlinemarkupprober(texttoclean):
 
 	if you find them, do the substitutions
 
-	:param txt:
+	:param texttoclean:
 	:return:
 	"""
-	grabaline = re.compile(r'(.*?)(\s{0,1}█)')
+	grabaline = re.compile(r'(.*?)(\s?█)')
 	texttoclean = re.sub(grabaline, latinfontlinemarkupparser, texttoclean)
 
 	return texttoclean
@@ -128,7 +128,7 @@ def latinauthorlinemarkupprober(texttoclean, grabber=None):
 	"""
 
 	if not grabber:
-		grabaline = re.compile(r'(.*?)(\s{0,1}█)')
+		grabaline = re.compile(r'(.*?)(\s?█)')
 	else:
 		grabaline = grabber
 	texttoclean = re.sub(grabaline, latinauthordollarshiftparser, texttoclean)
@@ -247,7 +247,7 @@ def dollarssubstitutes(val, core, extra=''):
 	except KeyError:
 		substitute = '<hmu_unhandled_greek_font_shift betacodeval="{v}" />{c}{e}'.format(v=val, c=core, e=extra)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute
 
@@ -269,12 +269,12 @@ def andsubstitutes(groupone, grouptwo, groupthree):
 	groupthree = re.sub(r'\$','', groupthree)
 
 	substitutions = {
-		91: [r'<hmu_fontshift_latin_undocumentedfontshift_AND91>',r'</hmu_fontshift_latin_undocumentedfontshift_AND91>'],
+		91: [r'<hmu_fontshift_latin_undocumentedfontshift_AND91>', r'</hmu_fontshift_latin_undocumentedfontshift_AND91>'],
 		90: [r'<hmu_fontshift_latin_undocumentedfontshift_AND90>', r'</hmu_fontshift_latin_undocumentedfontshift_AND90>'],
 		82: [r'<hmu_fontshift_latin_undocumentedfontshift_AND82>', r'</hmu_fontshift_latin_undocumentedfontshift_AND82>'],
 		81: [r'<hmu_fontshift_latin_undocumentedfontshift_AND81>', r'</hmu_fontshift_latin_undocumentedfontshift_AND81>'],
-		20: [r'<hmu_fontshift_latin_largerthannormal>',r'</hmu_fontshift_latin_largerthannormal>'],
-		14: [r'<hmu_fontshift_latin_smallerthannormal_superscript>',r'</hmu_fontshift_latin_smallerthannormal_superscript>'],
+		20: [r'<hmu_fontshift_latin_largerthannormal>', r'</hmu_fontshift_latin_largerthannormal>'],
+		14: [r'<hmu_fontshift_latin_smallerthannormal_superscript>', r'</hmu_fontshift_latin_smallerthannormal_superscript>'],
 		13: [r'<hmu_fontshift_latin_smallerthannormal_italic>', r'</hmu_fontshift_latin_smallerthannormal_italic>'],
 		10: [r'<hmu_fontshift_latin_smallerthannormal>', r'</hmu_fontshift_latin_smallerthannormal>'],
 		9: [r'<hmu_fontshift_latin_normal>', r'</hmu_fontshift_latin_normal>'],
@@ -294,7 +294,7 @@ def andsubstitutes(groupone, grouptwo, groupthree):
 	except KeyError:
 		substitute = '<hmu_unhandled_greek_font_shift betacodeval="{v}" />{c}'.format(v=val, c=core)
 		if warnings:
-			print('\t',substitute)
+			print('\t', substitute)
 
 	return substitute
 
@@ -386,7 +386,9 @@ def matchskipper(groupone, grouptwo, language):
 
 	also convert 'smallerthannormal_italic' into 'smallerthannormal italic'
 
-	:param match:
+
+	:param groupone:
+	:param grouptwo:
 	:param language:
 	:return:
 	"""

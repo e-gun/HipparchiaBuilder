@@ -124,7 +124,6 @@ def lowercaseletters(betacode):
 	# short = re.compile(r'[AIU]\^')
 	# long = re.compile(r'[AIU]_')
 
-
 	if config['buildoptions']['lunate'] == 'n':
 		sig = re.compile(r'S([1-3]){0,1}')
 		unicode = re.sub(sig, lowercasesigmassubsitutes, unicode)

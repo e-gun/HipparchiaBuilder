@@ -28,8 +28,8 @@ def languagesubstitutes(opentag, foundtext, closetag):
 	:return:
 	"""
 
-	clean = re.sub(r'(\&1){0,1}\[2',r'⟨', foundtext)
-	clean = re.sub(r'(\&1){0,1}\]2', r'⟩', clean)
+	clean = re.sub(r'(&1){0,1}\[2', r'⟨', foundtext)
+	clean = re.sub(r'(&1){0,1}\]2', r'⟩', clean)
 
 	# need to put the '$' back on at the end because some titles are '$...$3...'
 	dollars = re.compile(r'\$(\d{1,2})([^<]*?)(\$\d{0,1})')
@@ -47,7 +47,7 @@ def languagesubstitutes(opentag, foundtext, closetag):
 	andand = re.compile(r'&(\d{0,2})(.*?)&\d{0,1}')
 	# clean = re.sub(andand,lambda x: andsubstitutes(x.group(1), x.group(2), ''), clean)
 	clean = re.sub(andand, r'\2', clean)
-	clean = re.sub(r'&',r'',clean)
+	clean = re.sub(r'&', r'', clean)
 	clean = re.sub(r'`', r'', clean)
 	# clean = hmufontshiftsintospans(clean)
 
@@ -86,7 +86,7 @@ def loadgkcanon(canonfile):
 	works = [w for w in txt if re.search(r'^\t<work>', w)]
 	worklines = [temptableworkline(l, allworks) for l in works]
 	workdatadict = {w[0]: w[1:] for w in worklines}
-	workcolumns = [ 'title','language','publication_info','levellabels_00','levellabels_01','levellabels_02',
+	workcolumns = ['title', 'language', 'publication_info', 'levellabels_00', 'levellabels_01', 'levellabels_02',
 	                'levellabels_03','levellabels_04','levellabels_05','workgenre','transmission','worktype','provenance',
 	                'recorded_date','converted_date','wordcount','firstline','lastline', 'authentic']
 
@@ -291,8 +291,8 @@ def temptableworkline(newworkinfo, allworks):
 	"""
 
 	# pounds = re.compile(r'\#(\d{1,4})')
-	percents = re.compile(r'\%(\d{1,3})')
-	ands = re.compile(r'\&(\d{1,2})(.*?)(\&\d{0,1})')
+	percents = re.compile(r'%(\d{1,3})')
+	ands = re.compile(r'&(\d{1,2})(.*?)(&\d{0,1})')
 
 	newworkinfo = re.sub(r'\s{2,}', r' ', newworkinfo)
 
@@ -445,10 +445,10 @@ def peekatcanon(workdbname):
 	for line in txt:
 		if line[0:6] == '\t<work':
 			if re.search(workdbname[2:],line) is not None:
-				structure = re.sub(citfinder,r'\1',line)
+				structure = re.sub(citfinder, r'\1', line)
 				# 'Book%3section%3line' has been turned into book/section/line
 				# but volume%3 has become "volume + /" which then turns into "volumé"
-				structure = re.sub(r'é',r'e/',structure)
+				structure = re.sub(r'é', r'e/', structure)
 				structure = structure.split('/')
 
 	structure.reverse()

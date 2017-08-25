@@ -1,43 +1,43 @@
 cloc --not-match-f='^j' HipparchiaBuilder/
-      56 text files.
-      56 unique files.
+      60 text files.
+      60 unique files.
       13 files ignored.
 
-github.com/AlDanial/cloc v 1.72  T=0.52 s (86.4 files/s, 28732.5 lines/s)
+github.com/AlDanial/cloc v 1.72  T=0.35 s (139.6 files/s, 43571.4 lines/s)
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Python                          36           2449           2900           7277
-XML                              4              0              0           1764
+Python                          39           2603           3052           7534
+XML                              5              0              0           1475
 SQL                              2             68             40            254
-INI                              2             38              0            137
-Markdown                         1             12              0             28
+INI                              2             38              0            147
+Markdown                         1             24              0             54
 -------------------------------------------------------------------------------
-SUM:                            45           2567           2940           9460
+SUM:                            49           2733           3092           9464
+-------------------------------------------------------------------------------
 
 HipparchiaBuilder/ $ grep "^class" */*.py && grep "^def " */*.py && grep "^def " */*/*.py
-
-builder/builder_classes.py:class Author(object):
-builder/builder_classes.py:class dbAuthor(object):
-builder/builder_classes.py:class dbOpus(object):
-builder/builder_classes.py:class dbWorkLine(object):
-builder/builder_classes.py:class dbWordCountObject(object):
-builder/builder_classes.py:class dbLemmaObject(object):
-builder/builder_classes.py:class Opus(object):
-builder/builder_classes.py:class MPCounter(object):
-builder/builder_classes.py:def loadallauthorsasobjects(config):
-builder/builder_classes.py:def loadallworksasobjects(config):
-builder/corpus_builder.py:def buildcorpusdbs(corpusname, corpusvars):
-builder/corpus_builder.py:def remaptables(corpusname, corpusvars):
-builder/corpus_builder.py:def buildcorpusmetadata(corpusname, corpusvars):
-builder/corpus_builder.py:def parallelworker(thework):
-builder/corpus_builder.py:def checkextant(authorlist,datapath):
-builder/corpus_builder.py:def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection, cursor):
-builder/corpus_builder.py:def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor):
-builder/corpus_builder.py:def buildauthorobject(authortabnumber, language, datapath, uidprefix, dataprefix):
-builder/corpus_builder.py:def initialworkparsing(authorobject, language, datapath):
-builder/corpus_builder.py:def secondaryworkparsing(authorobject, txt):
-builder/corpus_builder.py:def databaseloading(dbreadyversion, authorobject,  dbconnection, cursor):
+builder/builderclasses.py:class Author(object):
+builder/builderclasses.py:class dbAuthor(object):
+builder/builderclasses.py:class dbOpus(object):
+builder/builderclasses.py:class dbWorkLine(object):
+builder/builderclasses.py:class dbWordCountObject(object):
+builder/builderclasses.py:class dbLemmaObject(object):
+builder/builderclasses.py:class Opus(object):
+builder/builderclasses.py:class MPCounter(object):
+builder/builderclasses.py:def loadallauthorsasobjects(config):
+builder/builderclasses.py:def loadallworksasobjects(config):
+builder/corpusbuilder.py:def buildcorpusdbs(corpusname, corpusvars):
+builder/corpusbuilder.py:def remaptables(corpusname, corpusvars):
+builder/corpusbuilder.py:def buildcorpusmetadata(corpusname, corpusvars):
+builder/corpusbuilder.py:def parallelworker(thework):
+builder/corpusbuilder.py:def checkextant(authorlist, datapath):
+builder/corpusbuilder.py:def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection, cursor):
+builder/corpusbuilder.py:def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor):
+builder/corpusbuilder.py:def buildauthorobject(authortabnumber, language, datapath, uidprefix, dataprefix):
+builder/corpusbuilder.py:def initialworkparsing(authorobject, language, datapath):
+builder/corpusbuilder.py:def secondaryworkparsing(authorobject, txt):
+builder/corpusbuilder.py:def databaseloading(dbreadyversion, authorobject,  dbconnection, cursor):
 builder/workers.py:def setworkercount():
 builder/dbinteraction/build_lexica.py:def formatgklexicon():
 builder/dbinteraction/build_lexica.py:def formatlatlexicon():
@@ -59,6 +59,7 @@ builder/dbinteraction/dbprepsubstitutions.py:def dbprepper(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def cleanblanks(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def dbpdeincrement(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def dbstrippedliner(dbunreadyversion):
+builder/dbinteraction/dbprepsubstitutions.py:def dbswapoutbadcharsfromcitations(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def dbfindhypens(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def dbfindannotations(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def hmutonbsp(dbunreadyversion):
@@ -106,10 +107,16 @@ builder/parsers/betacodeescapedcharacters.py:def quotesubstitutesb(match):
 builder/parsers/betacodefontshifts.py:def replacegreekmarkup(texttoclean):
 builder/parsers/betacodefontshifts.py:def latinfontlinemarkupprober(texttoclean):
 builder/parsers/betacodefontshifts.py:def latinfontlinemarkupparser(match):
-builder/parsers/betacodefontshifts.py:def replacegreekmarkupinalatintext(texttoclean):
+builder/parsers/betacodefontshifts.py:def latinauthorlinemarkupprober(texttoclean, grabber=None):
+builder/parsers/betacodefontshifts.py:def latinauthordollarshiftparser(match):
+builder/parsers/betacodefontshifts.py:def latinauthorandshiftparser(match):
 builder/parsers/betacodefontshifts.py:def dollarssubstitutes(val, core, extra=''):
 builder/parsers/betacodefontshifts.py:def andsubstitutes(groupone, grouptwo, groupthree):
-builder/parsers/betacodefontshifts.py:def hmufontshiftsintospans(texttoclean):
+builder/parsers/betacodefontshifts.py:def removeshiftsymmetry(groupone, grouptwo, groupthree):
+builder/parsers/betacodefontshifts.py:def hmufontshiftsintospans(texttoclean, language):
+builder/parsers/betacodefontshifts.py:def latinhmufontshiftsintospans(texttoclean):
+builder/parsers/betacodefontshifts.py:def greekhmufontshiftsintospans(texttoclean):
+builder/parsers/betacodefontshifts.py:def matchskipper(groupone, grouptwo, language):
 builder/parsers/betacodeletterscapitals.py:def capitalletters(betacode):
 builder/parsers/betacodeletterscapitals.py:def capitalsigmassubsitutes(match):
 builder/parsers/betacodeletterscapitals.py:def capitalsmoothgraveadscript(match):
@@ -162,33 +169,41 @@ builder/parsers/betacodeletterslowercase.py:def lowercasediaresis(match):
 builder/parsers/betacodeletterslowercase.py:def lowercasesubscript(match):
 builder/parsers/betacodeletterslowercase.py:def lowercases(match):
 builder/parsers/betacodeletterslowercase.py:def alternatelowercases(match, g=0):
-builder/parsers/citation_builder.py:def citationbuilder(hexsequence):
-builder/parsers/citation_builder.py:def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
-builder/parsers/citation_builder.py:def nybbler(singlehexval):
-builder/parsers/citation_builder.py:def nyb08(hexsequence):
-builder/parsers/citation_builder.py:def nyb09(hexsequence):
-builder/parsers/citation_builder.py:def nyb10(hexsequence):
-builder/parsers/citation_builder.py:def nyb11(hexsequence):
-builder/parsers/citation_builder.py:def nyb12(hexsequence):
-builder/parsers/citation_builder.py:def nyb13(hexsequence):
-builder/parsers/citation_builder.py:def nyb14(hexsequence):
-builder/parsers/citation_builder.py:def nyb15(hexsequence):
+builder/parsers/citationbuilder.py:def citationbuilder(hexsequence):
+builder/parsers/citationbuilder.py:def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
+builder/parsers/citationbuilder.py:def nybbler(singlehexval):
+builder/parsers/citationbuilder.py:def nyb08(hexsequence):
+builder/parsers/citationbuilder.py:def nyb09(hexsequence):
+builder/parsers/citationbuilder.py:def nyb10(hexsequence):
+builder/parsers/citationbuilder.py:def nyb11(hexsequence):
+builder/parsers/citationbuilder.py:def nyb12(hexsequence):
+builder/parsers/citationbuilder.py:def nyb13(hexsequence):
+builder/parsers/citationbuilder.py:def nyb14(hexsequence):
+builder/parsers/citationbuilder.py:def nyb15(hexsequence):
+builder/parsers/copticsubstitutions.py:def replacecoptic(texttoclean):
+builder/parsers/copticsubstitutions.py:def copticprobe(match):
+builder/parsers/copticsubstitutions.py:def copticuppercases(val):
+builder/parsers/copticsubstitutions.py:def copticlowercases(val):
 builder/parsers/greekcanonfunctions.py:def languagesubstitutes(opentag, foundtext, closetag):
 builder/parsers/greekcanonfunctions.py:def loadgkcanon(canonfile):
 builder/parsers/greekcanonfunctions.py:def gkcanoncleaner(txt):
 builder/parsers/greekcanonfunctions.py:def temptableauthorline(newauthorinfo, allauthors):
 builder/parsers/greekcanonfunctions.py:def temptableworkline(newworkinfo, allworks):
 builder/parsers/greekcanonfunctions.py:def peekatcanon(workdbname):
+builder/parsers/hebrewsubstitutions.py:def replacehebrew(texttoclean):
 builder/parsers/idtfiles.py:def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 builder/parsers/idtfiles.py:def getasciistring(filearray, offset):
 builder/parsers/idtfiles.py:def getpascalstr(filearray, offset):
 builder/parsers/idtfiles.py:def idthexparser(filearray, offset, code):
 builder/parsers/idtfiles.py:def findlabelsforlevels(filearray, offset):
+builder/parsers/latinsubstitutions.py:def latindiacriticals(texttoclean):
+builder/parsers/latinsubstitutions.py:def latinsubstitutes(matchgroup):
 builder/parsers/lexica.py:def greekwithoutvowellengths(betagreek):
 builder/parsers/lexica.py:def greekwithvowellengths(ttc):
 builder/parsers/lexica.py:def latinvowellengths(texttoclean):
 builder/parsers/lexica.py:def betaconvertandsave(convertme):
 builder/parsers/lexica.py:def lsjgreekswapper(match):
+builder/parsers/lexica.py:def translationsummary(fullentry, translationlabel):
 builder/parsers/parse_binfiles.py:def resetbininfo(relativepath, cursor, dbconnection):
 builder/parsers/parse_binfiles.py:def npop(numbertopop, listtopop):
 builder/parsers/parse_binfiles.py:def listoflabels(rbl):
@@ -207,31 +222,31 @@ builder/parsers/parse_binfiles.py:def latinloadcanon(canonfile, cursor):
 builder/parsers/parse_binfiles.py:def insertlatingenres(cursor, dbc):
 builder/parsers/parse_binfiles.py:def citationreformatter(matchgroups):
 builder/parsers/parse_binfiles.py:def streamout(txt,outfile):
-builder/parsers/regex_substitutions.py:def earlybirdsubstitutions(texttoclean):
-builder/parsers/regex_substitutions.py:def replacequotationmarks(texttoclean):
-builder/parsers/regex_substitutions.py:def latindiacriticals(texttoclean):
-builder/parsers/regex_substitutions.py:def latinsubstitutes(matchgroup):
-builder/parsers/regex_substitutions.py:def lastsecondsubsitutions(texttoclean):
-builder/parsers/regex_substitutions.py:def sizeshifter(match):
-builder/parsers/regex_substitutions.py:def bracketsimplifier(match):
-builder/parsers/regex_substitutions.py:def debughostilesubstitutions(texttoclean):
-builder/parsers/regex_substitutions.py:def cleanuplingeringmesses(texttoclean):
-builder/parsers/regex_substitutions.py:def bracketspacer(matchgroup):
-builder/parsers/regex_substitutions.py:def replacelatinbetacode(texttoclean):
-builder/parsers/regex_substitutions.py:def doublecheckgreekwithinlatin(match):
-builder/parsers/regex_substitutions.py:def totallemmatization(parsedtextfile):
-builder/parsers/regex_substitutions.py:def addcdlabels(texttoclean, authornumber):
-builder/parsers/regex_substitutions.py:def hexrunner(texttoclean):
-builder/parsers/regex_substitutions.py:def converthextoascii(hextoasciimatch):
-builder/parsers/regex_substitutions.py:def cleanworkname(betacodeworkname):
-builder/parsers/regex_substitutions.py:def colonshift(txt):
-builder/parsers/regex_substitutions.py:def insertnewlines(txt):
+builder/parsers/regexsubstitutions.py:def earlybirdsubstitutions(texttoclean):
+builder/parsers/regexsubstitutions.py:def replacequotationmarks(texttoclean):
+builder/parsers/regexsubstitutions.py:def lastsecondsubsitutions(texttoclean):
+builder/parsers/regexsubstitutions.py:def makepunctuationnormalsized(match):
+builder/parsers/regexsubstitutions.py:def makepunctuationsmall(val):
+builder/parsers/regexsubstitutions.py:def bracketsimplifier(match):
+builder/parsers/regexsubstitutions.py:def swapregexbrackets(val):
+builder/parsers/regexsubstitutions.py:def debughostilesubstitutions(texttoclean):
+builder/parsers/regexsubstitutions.py:def cleanuplingeringmesses(texttoclean):
+builder/parsers/regexsubstitutions.py:def bracketspacer(matchgroup):
+builder/parsers/regexsubstitutions.py:def totallemmatization(parsedtextfile):
+builder/parsers/regexsubstitutions.py:def addcdlabels(texttoclean, authornumber):
+builder/parsers/regexsubstitutions.py:def hexrunner(texttoclean):
+builder/parsers/regexsubstitutions.py:def converthextoascii(hextoasciimatch):
+builder/parsers/regexsubstitutions.py:def cleanworkname(betacodeworkname):
+builder/parsers/regexsubstitutions.py:def colonshift(txt):
+builder/parsers/regexsubstitutions.py:def insertnewlines(txt):
 builder/parsers/swappers.py:def highunicodetohex(highunicode):
 builder/parsers/swappers.py:def hutohxgrouper(matchgroup):
 builder/parsers/swappers.py:def hextohighunicode(twocharhexstring):
 builder/parsers/swappers.py:def bitswapchars(valuelist):
 builder/parsers/swappers.py:def superscripterone(digitmatch):
 builder/parsers/swappers.py:def superscripterzero(digitmatch):
+builder/parsers/swappers.py:def forceregexsafevariants(text):
+builder/parsers/swappers.py:def avoidregexsafevariants(text):
 builder/postbuild/databasewordcounts.py:def wordcounter(restriction=None):
 builder/postbuild/databasewordcounts.py:def concordancechunk(enumerateddbdict):
 builder/postbuild/databasewordcounts.py:def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
@@ -278,5 +293,5 @@ builder/postbuild/secondpassdbrewrite.py:def findnewtitles(newworktuples):
 builder/postbuild/secondpassdbrewrite.py:def buildnewworkmetata(workandtitletuplelist):
 builder/postbuild/secondpassdbrewrite.py:def parallelnewworkworker(workpile, newworktuples):
 builder/postbuild/secondpassdbrewrite.py:def buildworkmetadatatuples(workpile, commitcount, metadatalist):
-builder/postbuild/secondpassdbrewrite.py:def modifyauthorsdb(newentryname, worktitle, cursor):
-builder/postbuild/secondpassdbrewrite.py:def insertnewworksintonewauthor(newwkuid, results, cursor):
+builder/postbuild/secondpassdbrewrite.py:def modifyauthorsdb(newentryname, worktitle, pgsqlcursor):
+builder/postbuild/secondpassdbrewrite.py:def insertnewworksintonewauthor(newwkuid, results, pgsqlcursor):
