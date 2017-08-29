@@ -92,8 +92,6 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 						workname = replaceaddnlchars(workname)
 						# <hmu_fontshift_greek_normal>, etc. might still be in here
 						markupfinder = re.compile(r'<.*?>')
-						if re.search(markupfinder, workname):
-							print('marked up title:',workname)
 						workname = re.sub(r'<.*?>', '', workname)
 						workname = latindiacriticals(workname)
 						# not going to use this block info
@@ -106,10 +104,10 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 						# print(workname, '\n\tbcc',idtfiledatastream[bytecount], idtfiledatastream[bytecount+1], idtfiledatastream[bytecount+2])
 						if idtfiledatastream[bytecount] != 17 and idtfiledatastream[bytecount+1] == 17:
 							bytecount += 1
-							print(authornumber,authorname,'\n\twarning: idtparser skipped 1 byte inside of',workname,'in order to find its structure')
+							print(authornumber, authorname, '\n\twarning: idtparser skipped 1 byte inside of',workname,'in order to find its structure')
 						elif idtfiledatastream[bytecount] != 17 and idtfiledatastream[bytecount+2] == 17:
 							bytecount += 2
-							print(authornumber,authorname,'\n\twarning: idtparser skipped 2 bytes inside of', workname, 'in order to find its structure')
+							print(authornumber, authorname, '\n\twarning: idtparser skipped 2 bytes inside of', workname, 'in order to find its structure')
 						while idtfiledatastream[bytecount] == 17:
 							# ick: a while-loop that might not exit properly, but we need to descend to sublevels
 							# each one is set off with an 0x11 at its head
