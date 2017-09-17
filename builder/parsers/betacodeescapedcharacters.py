@@ -91,7 +91,7 @@ def singletonsubstitutes(match):
 	try:
 		substitute = substitutions[val]
 	except KeyError:
-		print('\tsingletonsubstitutes() sent an invalid value:',val)
+		print('\tsingletonsubstitutes() sent an invalid value:', val)
 		substitute = val
 
 	return substitute
@@ -171,7 +171,7 @@ def poundsubstitutes(match):
 		74: u'\u205d',
 		75: u'\u002e',
 		80: u'\u0308',
-		81: r'＇', #fullwidth apostrophe instead of the dangerous simple apostrophe
+		81: r'＇', # fullwidth apostrophe instead of the dangerous simple apostrophe
 		82: u'\u02ca',
 		83: u'\u02cb',
 		84: u'\u1fc0',
@@ -181,7 +181,7 @@ def poundsubstitutes(match):
 		90: u'\u2014',
 		99: r'<hmu_undocumented_poundsign betacodeval="99">⊚</hmu_undocumented_poundsign>',
 		100: r'𐆆',
-		101: u'𐅻',  #trouble with the four character unicode codes: uh oh
+		101: u'𐅻',  # trouble with the four character unicode codes: uh oh
 		102: u'𐆂<6\u03c56>',  # upsilon supposed to be superscript too: add betacode for that <6...6>
 		103: u'\u039b\u0338',
 		104: u'𐆂<6\u03bf6>',  # the omicron is supposed to be superscript too: add betacode for that <6...6>
@@ -206,12 +206,12 @@ def poundsubstitutes(match):
 		124: r'<hmu_idiosyncratic_char betacodeval="124">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		125: u'𐆂<6\u03c56>',  # the upsilon is supposed to be superscript too: add betacode for that <6...6>
 		126: r'<hmu_idiosyncratic_char betacodeval="126">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		127: u'\u039b\u0325', # 'ΛΕ'
+		127: u'\u039b\u0325',  # 'ΛΕ'
 		128: u'\u03fc',
-		129: u'\u039b\u0325', # 'ΛΕ'
+		129: u'\u039b\u0325',  # 'ΛΕ'
 		130: r'𐆊',
 		131: r'𐅷',
-		132: u'\u03b2\u0388', # 'βΈ'
+		132: u'\u03b2\u0388',  # 'βΈ'
 		133: u'u\0393<6\u03b26>',
 		134: u'\u0393<6\u03b26>',  # the beta is supposed to be superscript too: add betacode for that <6...6>
 		135: u'\u02d9',
@@ -631,19 +631,19 @@ def poundsubstitutes(match):
 		936: r'<hmu_undocumented_poundsign betacodeval="936">⊚</hmu_undocumented_poundsign>',
 		937: r'<hmu_miscellaneous_illustrations>',
 		# 938: r'', # http://noapplet.epigraphy.packhum.org/text/260647?&bookid=509&location=1035; private use area?
-		938: r'Ƨ', # 01a7
+		938: r'Ƨ',  # 01a7
 		939: r'~',
 		940: r'<hmu_idiosyncratic_char betacodeval="940">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		943: r'﹥', # PHI
+		943: r'﹥',  # PHI
 		# 947: [not known by PHI]
 		947: r'<hmu_undocumented_poundsign betacodeval="947">⊚</hmu_undocumented_poundsign>',
 		# 948: [not known by PHI]
 		948: r'<hmu_undocumented_poundsign betacodeval="948">⊚</hmu_undocumented_poundsign>',
-		949: r'—', # http://noapplet.epigraphy.packhum.org/text/251612?&bookid=491&location=1689
+		949: r'—',  # http://noapplet.epigraphy.packhum.org/text/251612?&bookid=491&location=1689
 		961: r'<hmu_line_on_stone_stops_but_edition_continues_line />',
 		# 973: [not known by PHI]
 		973: r'<hmu_undocumented_poundsign betacodeval="973">⊚</hmu_undocumented_poundsign>',
-		977: r'§', # Caria (Stratonikeia), 8 2, line 12; http://noapplet.epigraphy.packhum.org/text/262496?&bookid=526&location=1035
+		977: r'§',  # Caria (Stratonikeia), 8 2, line 12; http://noapplet.epigraphy.packhum.org/text/262496?&bookid=526&location=1035
 		# 990: r'<hmu_undocumented_poundsign betacodeval="990">⊚</hmu_undocumented_poundsign>',
 		# 981: [not known by PHI]
 		981: r'<hmu_undocumented_poundsign betacodeval="981">⊚</hmu_undocumented_poundsign>',
@@ -1236,11 +1236,11 @@ def rtanglebracketsubstitutes(match):
 
 	substitutions = {
 		#1: u'\u0332',
-		1: r'⟩', # see note in ltanglebracketsubstitutes()
+		1: r'⟩',  # see note in ltanglebracketsubstitutes()
 		2: u'\u2032',
-		3: u'\u0361', # Combining Inverted Breve
-		4: u'\u035c', # Combining Breve Below
-		5: u'\u035d', # Combining Breve
+		3: u'\u0361',  # Combining Inverted Breve
+		4: u'\u035c',  # Combining Breve Below
+		5: u'\u035d',  # Combining Breve
 		6: r'</span>',  # hmu_shift_font_to_superscript
 		7: r'</span>',  # hmu_shift_font_to_subscript
 		8: u'\u0333',

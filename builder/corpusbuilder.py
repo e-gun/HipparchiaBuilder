@@ -10,7 +10,7 @@
 import configparser
 import re
 import time
-from multiprocessing import Pool
+from multiprocessing import Pool, Manager, Process
 
 import builder.dbinteraction.dbprepsubstitutions
 import builder.parsers.betacodefontshifts
@@ -96,8 +96,17 @@ def buildcorpusdbs(corpusname, corpusvars):
 				else:
 					thework.append(({a: allauthors[a]}, 'G', abbrev, datapath, dataprefix))
 
-	pool = Pool(processes=workercount)
-	pool.map(parallelworker, thework)
+	# pool = Pool(processes=workercount)
+	# pool.map(parallelworker, thework)
+
+	manager = Manager()
+	managedwork = manager.list(thework)
+	jobs = [Process(target=managedworker, args=[managedwork]) for i in range(workercount)]
+
+	for j in jobs:
+		j.start()
+	for j in jobs:
+		j.join()
 
 	return
 
@@ -169,6 +178,43 @@ def buildcorpusmetadata(corpusname, corpusvars):
 
 	return
 
+
+def managedworker(managedwork):
+	"""
+
+	build individual authors in parallel via multiprocessing manager
+
+	doing this via a Pool will break the list into N chunks of identical sizes
+
+	BUT there is a radical disparity between the sizes of authors; the result
+	is that with a large number of workers you will see that only 2 or 3 are
+	really working in the end: they got stuck with a sequence of 'long' authors
+	while some others had runs of short ones
+
+	accordingly this version is signifcantly faster if you have, say, 12 threads
+	available to you
+
+	:param managedwork:
+	:return:
+	"""
+	dbc = setconnection(config)
+	cur = dbc.cursor()
+
+	while managedwork:
+		try:
+			thework = managedwork.pop()
+		except IndexError:
+			thework = None
+
+		if thework:
+			result = addoneauthor(thework[0], thework[1], thework[2], thework[3], thework[4], dbc, cur)
+			print(re.sub(r'[^\x00-\x7F]+', ' ', result))
+			dbc.commit()
+
+	dbc.commit()
+	del dbc
+
+	return
 
 def parallelworker(thework):
 	dbc = setconnection(config)

@@ -266,7 +266,7 @@ def andsubstitutes(groupone, grouptwo, groupthree):
 
 	core = grouptwo
 
-	groupthree = re.sub(r'\$','', groupthree)
+	groupthree = re.sub(r'\$', '', groupthree)
 
 	substitutions = {
 		91: [r'<hmu_fontshift_latin_undocumentedfontshift_AND91>', r'</hmu_fontshift_latin_undocumentedfontshift_AND91>'],
