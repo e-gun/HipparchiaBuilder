@@ -11,6 +11,7 @@ import configparser
 import re
 import time
 from multiprocessing import Pool, Manager, Process
+from os import path
 
 import builder.dbinteraction.dbprepsubstitutions
 import builder.parsers.betacodefontshifts
@@ -68,6 +69,8 @@ def buildcorpusdbs(corpusname, corpusvars):
 		resetauthorsandworksdbs(abbrev, abbrev)
 
 	print('\n', workercount, 'workers dispatched to build the', corpusname, 'dbs')
+	if config['buildlongestfirst'] == 'y':
+		print('building the longest items first')
 
 	dataprefix = corpusvars[corpusname]['dataprefix']
 	datapath = corpusvars[corpusname]['datapath']
@@ -98,6 +101,24 @@ def buildcorpusdbs(corpusname, corpusvars):
 
 	# pool = Pool(processes=workercount)
 	# pool.map(parallelworker, thework)
+
+	# now sort by size: do the long ones first
+
+	# the work looks like:
+	# ({'LAT9254': '&1Titius&, gram.'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9500': '&1Anonymi& Epici et Lyrici'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9505': '&1Anonymi& Comici et Tragici'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9510': '&1Anonymi& Grammatici'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9969': '&1Vita& Iuvenalis'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT')
+
+	if config['buildlongestfirst'] == 'y':
+		sorter = dict()
+		count = 0
+		for w in thework:
+			count += 1
+			c = w[0].copy()
+			s = path.getsize('{p}{id}.TXT'.format(p=w[3], id=c.popitem()[0]))
+			# avoid key collisions by adding a unique fraction to the size
+			sorter[s+(1/count)] = w
+
+		# don't reverse the keys because popping from the stack later is itself a reversal
+		thework = [sorter[sz] for sz in sorted(sorter.keys())]
 
 	manager = Manager()
 	managedwork = manager.list(thework)
