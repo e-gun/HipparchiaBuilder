@@ -68,8 +68,9 @@ def buildcorpusdbs(corpusname, corpusvars):
 		abbrev = corpusvars[corpusname]['corpusabbrev']
 		resetauthorsandworksdbs(abbrev, abbrev)
 
-	print('\n', workercount, 'workers dispatched to build the', corpusname, 'dbs')
-	if config['buildlongestfirst'] == 'y':
+	print()
+	print(workercount, 'workers dispatched to build the', corpusname, 'dbs')
+	if config['buildoptions']['buildlongestfirst'] == 'y':
 		print('building the longest items first')
 
 	dataprefix = corpusvars[corpusname]['dataprefix']
@@ -107,7 +108,7 @@ def buildcorpusdbs(corpusname, corpusvars):
 	# the work looks like:
 	# ({'LAT9254': '&1Titius&, gram.'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9500': '&1Anonymi& Epici et Lyrici'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9505': '&1Anonymi& Comici et Tragici'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9510': '&1Anonymi& Grammatici'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9969': '&1Vita& Iuvenalis'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT')
 
-	if config['buildlongestfirst'] == 'y':
+	if config['buildoptions']['buildlongestfirst'] == 'y':
 		sorter = dict()
 		count = 0
 		for w in thework:

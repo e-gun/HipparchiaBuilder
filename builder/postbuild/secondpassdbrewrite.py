@@ -231,7 +231,7 @@ def registernewworks(newworktuples):
 
 	# insert new works into the works table: deletetemporarydbs() means that this is INSERT and not UPDATE
 
-	print('registering', len(workinfodict),'new works')
+	print('registering', len(workinfodict), 'new works')
 
 	count = 0
 	for w in workinfodict.keys():
@@ -426,10 +426,8 @@ def parallelnewworkworker(workpile, newworktuples):
 				docname = document[0]
 				newworktuples.append((newwkid, db, docname))
 
-				if wknum % 100 == 0:
+				if wknum % 100 == 0 or wknum == len(results):
 					dbc.commit()
-
-			dbc.commit()
 
 	dbc.commit()
 
