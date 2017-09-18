@@ -110,11 +110,11 @@ def listoflabels(rbl):
 
 
 def intostring(listofchars):
-	str = ''
+	s = ''
 	for c in listofchars:
-		str += chr(c)
+		s += chr(c)
 
-	return str
+	return s
 
 
 def grabaunum(bytebundle):
@@ -209,7 +209,7 @@ def cleanlabels(labellist):
 
 def buildlabellist(binfilepath):
 	binfile = file_io.filereaders.loadbin(binfilepath)
-	bl = []
+	bl = list()
 	for byte in binfile:
 		bl.append(byte)
 
@@ -231,12 +231,8 @@ def buildlabellist(binfilepath):
 	# switch direction again
 	authinfo = trimmedrbl[::-1]
 
-	labelcount = 0
-	labellists = {}
-	authlist = []
-
 	# cut at the points indicated by the heads
-	authorbytebundles = {}
+	authorbytebundles = dict()
 	count = -1
 	for lab in labels:
 		count += 1
@@ -249,7 +245,7 @@ def buildlabellist(binfilepath):
 			secondsnip = len(authinfo)
 		authorbytebundles[lab] = authinfo[firstsnip:secondsnip]
 
-	decodedauthors = {}
+	decodedauthors = dict()
 	for key in authorbytebundles:
 		decodedauthors[key] = findbundledauthors(authorbytebundles[key])
 
@@ -415,20 +411,19 @@ def latinloadcanon(canonfile, cursor):
 	txt = file_io.filereaders.highunicodefileload(canonfile)
 	txt = re.sub(r'@', r'', txt)
 	txt = re.sub(r'█⑧⓪ ', r'', txt)
-	txt = re.sub(r'\{.(\d\d\d\d)\.(\d\d\d)\}', r'<authornumber>\1</authornumber><worknumber>\2</worknumber><end>\n',
-	             txt)
+	txt = re.sub(r'{.(\d\d\d\d)\.(\d\d\d)}', r'<authornumber>\1</authornumber><worknumber>\2</worknumber><end>\n', txt)
 	txt = re.sub(r'\((.*?)\)', r'<publicationinfo>\1</publicationinfo>', txt)
 	txt = re.sub(r'█[⓪①②③④⑤⑥⑦⑧⑨ⓐⓑⓒⓓⓔⓕ][⓪①②③④⑤⑥⑦⑧⑨ⓐⓑⓒⓓⓔⓕ]\s', r'', txt)
 	txt = re.sub(r'█⓪\s', r'', txt)
 	# txt = parsers.regex_substitutions.replacemarkup(txt)
 	# txt = parsers.regex_substitutions.replaceaddnlchars(txt)
-	txt = re.sub(r'\&3(.*?)\&', r'<work>\1</work>', txt)
+	txt = re.sub(r'&3(.*?)&', r'<work>\1</work>', txt)
 	txt = re.sub(r'</work> <work>', r' ', txt)
 	txt = re.sub(r'<publicationinfo>(.*?)<work>(.*?)</work>(.*?)</publicationinfo>', r'<publicationinfo>\1<volumename>\2</volumename>\3</publicationinfo>', txt)
-	txt = re.sub(r'\&1(.*?)\&', r'<author>\1</author>', txt)
-	txt = re.sub(r'\s\s<author>',r'<author>',txt)
+	txt = re.sub(r'&1(.*?)&', r'<author>\1</author>', txt)
+	txt = re.sub(r'\s\s<author>', r'<author>', txt)
 	txt = re.sub(r'<author>(.*?)<publicationinfo>(.*?)</publicationinfo>(.*?)</author>', r'<author>\1(\2)\3</author>', txt)
-	txt = re.sub(r'</volumename>.*?ed\.\s(.*?),\s(\d\d\d\d)(</publicationinfo>)',r'</volumename><editor>\1</editor><year>\2</year>\3',txt)
+	txt = re.sub(r'</volumename>.*?ed\.\s(.*?),\s(\d\d\d\d)(</publicationinfo>)', r'</volumename><editor>\1</editor><year>\2</year>\3',txt)
 	txt = re.sub('</italic> <italic>', ' ', txt)
 	txt = txt.split('\n')
 	# linesout(txt, outfile)
@@ -586,7 +581,7 @@ def citationreformatter(matchgroups):
 	:param match:
 	:return:
 	"""
-	core = re.sub(r'%3',r'|',matchgroups.group(2))
+	core = re.sub(r'%3', r'|', matchgroups.group(2))
 	core = core.split('|')
 	core.remove('')
 	core = '|'.join(core)

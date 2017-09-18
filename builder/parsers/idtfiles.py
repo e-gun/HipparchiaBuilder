@@ -30,7 +30,7 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 	"""
 
 	bytecount = -1
-	leveldict = {}
+	leveldict = dict()
 
 	for byte in range(0, len(idtfiledatastream) - 1):
 		# avoid allowing bytecount to get bigger than l and then attempting to read o[bytelcount]
@@ -130,8 +130,7 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 			else:
 				# not clear that we care at all about this / it's consequences
 				# work names that get 'shortened' by one bye because you turn E/ into 'é' seem to kick this up
-				print(authornumber,authorname,'\n\twarning: I see a new author or a new work but it is not followed after 5 bytes by EF. bytecount is: ',
-				      bytecount)
+				# print(authornumber, authorname, '\n\twarning: I see a new author or a new work but it is not followed after 5 bytes by EF. bytecount is: ', bytecount)
 				pass
 		elif (idtfiledatastream[bytecount] == 3):
 			# starting blocks for top-level subsections
@@ -140,7 +139,9 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 			if idtfiledatastream[bytecount + 3] == 8:
 				block = (idtfiledatastream[bytecount + 1] << 8) + idtfiledatastream[bytecount + 2]
 			else:
-				print(authornumber,authorname,'\n\twarning: New section not followed by beginning ID. Byetecount is:',bytecount)
+				# 2x in cicero
+				# print(authornumber,authorname,'\n\twarning: New section not followed by beginning ID. Byetecount is:',bytecount)
+				pass
 			bytecount += 4
 			if idtfiledatastream[bytecount] >> 7:
 				leftval, offset = idthexparser(idtfiledatastream, bytecount, idtfiledatastream[bytecount] >> 7)

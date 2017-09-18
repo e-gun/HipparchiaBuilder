@@ -36,6 +36,7 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 		firstline integer,
         lastline integer,
 
+	:param workcategoryprefix:
 	:param cursor:
 	:return:
 	"""
@@ -74,12 +75,12 @@ def boundaryfinder(uids):
 	# instead ask for it all at once and then sort it on this end
 
 	# find all authors
-	authors = {}
-	for id in uids:
+	authors = dict()
+	for uid in uids:
 		try:
-			authors[id[0:6]].append(id)
+			authors[uid[0:6]].append(uid)
 		except KeyError:
-			authors[id[0:6]] = [id]
+			authors[uid[0:6]] = [uid]
 
 	# get all line values for all works
 	workmapper = {}
@@ -143,8 +144,11 @@ def insertboundaries(boundariestuplelist):
 
 def findwordcounts(cursor, dbconnection):
 	"""
+
 	if you don't already have an official wordcount, generate one
+
 	:param cursor:
+	:param dbconnection:
 	:return:
 	"""
 	print('inserting work db metatata: wordcounts')
@@ -180,12 +184,12 @@ def calculatewordcounts(uids):
 	# instead ask for it all at once and then sort it on this end
 
 	# find all authors
-	authors = {}
-	for id in uids:
+	authors = dict()
+	for uid in uids:
 		try:
-			authors[id[0:6]].append(id)
+			authors[uid[0:6]].append(uid)
 		except KeyError:
-			authors[id[0:6]] = [id]
+			authors[uid[0:6]] = [uid]
 
 	# get all line values for all works
 	countdict = {}
@@ -196,7 +200,7 @@ def calculatewordcounts(uids):
 
 		while lines:
 			l = lines.pop()
-			id = l[0]
+			uid = l[0]
 			stripped = l[1]
 			hyphens = l[2]
 			h = 0
@@ -204,12 +208,12 @@ def calculatewordcounts(uids):
 				h = 1
 
 			try:
-				countdict[id]
+				countdict[uid]
 			except:
-				countdict[id] = 0
+				countdict[uid] = 0
 			words = stripped.split(' ')
 			words = [x for x in words if x]
-			countdict[id] += len(words) + h
+			countdict[uid] += len(words) + h
 
 	return countdict
 
@@ -277,12 +281,14 @@ def buildtrigramindices(workcategoryprefix, cursor):
 	for r in results:
 		uids.append(r[0])
 
-	print('\t',len(uids),'items to index')
+	print('\t', len(uids), 'items to index')
 
 	workers = setworkercount()
 	jobs = [Process(target=mpindexbuilder, args=(uids, commitcount)) for i in range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
+	for j in jobs:
+		j.start()
+	for j in jobs:
+		j.join()
 
 
 	return

@@ -225,7 +225,7 @@ def gkcanoncleaner(txt):
 	# txt = re.sub(r'\s</', r'</', txt)
 	# txt = re.sub(r'\t', r'', txt)
 
-	percents = re.compile(r'\%(\d{1,3})')
+	percents = re.compile(r'%(\d{1,3})')
 	txt = re.sub(percents, percentsubstitutes, txt)
 	txt = re.sub(r'`', r'', txt)
 
@@ -247,7 +247,7 @@ def temptableauthorline(newauthorinfo, allauthors):
 
 	sh = re.compile(r'<short>(.*?)</short>')
 	an = re.compile(r'<authorentry>(.*?)</authorentry>')
-	percents = re.compile(r'\%(\d{1,3})')
+	percents = re.compile(r'%(\d{1,3})')
 	au = re.search(an, newauthorinfo)
 
 	try:
@@ -257,7 +257,7 @@ def temptableauthorline(newauthorinfo, allauthors):
 
 	short = re.search(sh, newauthorinfo)
 	try:
-		s = re.sub(' {1,}$', '', short.group(1))
+		s = re.sub('/s+$', '', short.group(1))
 		s = re.sub(percents, percentsubstitutes, s)
 	except:
 		s = ''
@@ -269,7 +269,7 @@ def temptableauthorline(newauthorinfo, allauthors):
 		name = ''
 
 	try:
-		name = re.sub(' {1,}$', '', name)
+		name = re.sub('/s+$', '', name)
 	except:
 		name = ''
 
@@ -398,7 +398,6 @@ def temptableworkline(newworkinfo, allworks):
 				alllevels.append(cite.pop())
 			except:
 				alllevels.append('')
-
 
 	# what we need to match:
 	# INSERT INTO tmp_works (universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02, levellabels_03, levellabels_04, levellabels_05,
