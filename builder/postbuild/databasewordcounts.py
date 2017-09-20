@@ -68,11 +68,11 @@ def wordcounter(restriction=None):
 	# dbs = dbs[101:102]
 
 	datasets = set([db[0:2] for db in dbs])
-	dbswithranges = {}
+	dbswithranges = dict()
 	for db in dbs:
 		if len(db) == 6:
 			# we are reading a full author
-			dbswithranges[db] = (-1,-1)
+			dbswithranges[db] = (-1, -1)
 		else:
 			# we are reading an individual work
 			dbswithranges[db] = (workdict[db].starts, workdict[db].ends)
@@ -87,7 +87,7 @@ def wordcounter(restriction=None):
 	# when we run through again with the time restriction there will be a massive number of chunks
 
 	# chunksize = 200
-	chunked = []
+	chunked = list()
 
 	for l in listofworkdicts:
 		keys = list(l.keys())
@@ -127,7 +127,7 @@ def wordcounter(restriction=None):
 	try:
 		masterconcorcdance = listofconcordancedicts.pop()
 	except IndexError:
-		masterconcorcdance = {}
+		masterconcorcdance = dict()
 
 	for cd in listofconcordancedicts:
 		# find the 'gr' in something like {'τότοιν': {'gr': 1}}
@@ -155,8 +155,8 @@ def wordcounter(restriction=None):
 
 		wordkeys = list(masterconcorcdance.keys())
 		wordkeys = sorted(wordkeys)
-		print(len(wordkeys),'unique items to catalog (nb: plenty of these are word fragments and not whole words)')
-		chunksize = 150000
+		print(len(wordkeys), 'unique items to catalog (nb: plenty of these are word fragments and not whole words)')
+		chunksize = 15000
 		chunkedkeys = [wordkeys[i:i + chunksize] for i in range(0, len(wordkeys), chunksize)]
 		argmap = [(c, masterconcorcdance, wordcounttable) for c in enumerate(chunkedkeys)]
 		print('breaking up the lists and parallelizing:', len(chunkedkeys), 'chunks to insert')
@@ -514,7 +514,7 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 		common = d[250:2500]
 		remainder = d[2500:]
 		veryrare = [x for x in remainder if x.t < 5]
-		rare = [x for x in remainder if x.t < 51 and x.t > 5]
+		rare = [x for x in remainder if 5 < x.t < 51]
 		core = [x for x in remainder if x.t > 50 and (x not in common or x not in mostcommon)]
 		explorecore = False
 		if explorecore:
@@ -536,7 +536,7 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 			]:
 			if printstats:
 				if item == ('full set', d):
-					print('\n',label)
+					print('\n', label)
 				prettyprintcohortdata(item[0], cohortstats(item[1]))
 			if item[0] != 'full set':
 				for entry in item[1]:
@@ -562,7 +562,7 @@ def derivechronologicalmetadata(metadata, lemmataobjectlist, cursor):
 	eras = { 'early': (-850, -300), 'middle': (-299, 300), 'late': (301,1500)}
 
 	for era in eras:
-		print('calculating use by era:',era)
+		print('calculating use by era:', era)
 		eraconcordance = wordcounter(restriction={'time': eras[era]})
 		# close, but we need to match the template above:
 		# countdict = {word.entryname: word for word in countobjectlist}
@@ -574,7 +574,7 @@ def derivechronologicalmetadata(metadata, lemmataobjectlist, cursor):
 			try:
 				metadata[entry]
 			except:
-				metadata[entry] = {}
+				metadata[entry] = dict()
 			metadata[entry][era] = lexiconentrycounts[entry]['total']
 
 	return metadata
@@ -601,7 +601,7 @@ def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres, 
 			try:
 				metadata[entry]
 			except:
-				metadata[entry] = {}
+				metadata[entry] = dict()
 			metadata[entry][genre] = lexiconentrycounts[entry]['total']
 		print('inserting metadata for', genre)
 		insertgenremetadata(metadata, genre, thetable)
@@ -699,7 +699,7 @@ def insertgenremetadata(metadatadict, genrename, thetable):
 	"""
 
 	# a clash between the stored genre names 'Alchem.' and names that are used for columns (which can't include period or whitespace)
-	thecolumn = re.sub(r'[\.\s]','',genrename).lower()
+	thecolumn = re.sub(r'[\.\s]', '', genrename).lower()
 
 	dbc = setconnection(config)
 	cursor = dbc.cursor()
