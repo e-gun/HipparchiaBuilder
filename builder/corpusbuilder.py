@@ -100,12 +100,9 @@ def buildcorpusdbs(corpusname, corpusvars):
 				else:
 					thework.append(({a: allauthors[a]}, 'G', abbrev, datapath, dataprefix))
 
-	# pool = Pool(processes=workercount)
-	# pool.map(parallelworker, thework)
-
 	# now sort by size: do the long ones first
 
-	# the work looks like:
+	# thework looks like:
 	# ({'LAT9254': '&1Titius&, gram.'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9500': '&1Anonymi& Epici et Lyrici'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9505': '&1Anonymi& Comici et Tragici'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9510': '&1Anonymi& Grammatici'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT'), ({'LAT9969': '&1Vita& Iuvenalis'}, 'L', 'lt', '../HipparchiaData/latin/', 'LAT')
 
 	if config['buildoptions']['buildlongestfirst'] == 'y':
@@ -233,16 +230,6 @@ def managedworker(managedwork):
 			print(re.sub(r'[^\x00-\x7F]+', ' ', result))
 			dbc.commit()
 
-	dbc.commit()
-	del dbc
-
-	return
-
-def parallelworker(thework):
-	dbc = setconnection(config)
-	cur = dbc.cursor()
-	result = addoneauthor(thework[0], thework[1], thework[2], thework[3], thework[4], dbc, cur)
-	print(re.sub(r'[^\x00-\x7F]+', ' ', result))
 	dbc.commit()
 	del dbc
 

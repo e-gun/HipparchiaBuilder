@@ -45,7 +45,7 @@ def wordcounter(restriction=None):
 			dbs = [key for key in authordict.keys() if authordict[key].converted_date and tr[0] < int(authordict[key].converted_date) < tr[1]]
 			dbs += [key for key in workdict.keys() if workdict[key].converted_date and tr[0] < int(workdict[key].converted_date) < tr[1]]
 			# mostly lots of little dicts: notifications get spammy
-			chunksize = 1000
+			chunksize = 333
 		except KeyError:
 			# no such restriction
 			pass
@@ -54,14 +54,14 @@ def wordcounter(restriction=None):
 			# restriction will be an item from the list of known genres
 			dbs = [key for key in workdict.keys() if workdict[key].workgenre == restriction['genre']]
 			if restriction['genre'] in ['Inscr.', 'Docu.']:
-				chunksize = 300
+				chunksize = 100
 			else:
-				chunksize = 30
+				chunksize = 10
 		except KeyError:
 			# no such restriction
 			pass
 	else:
-		chunksize = 300
+		chunksize = 100
 		dbs = list(authordict.keys())
 
 	# limit to NN for testing purposes
@@ -77,7 +77,7 @@ def wordcounter(restriction=None):
 			# we are reading an individual work
 			dbswithranges[db] = (workdict[db].starts, workdict[db].ends)
 
-	dictofdbdicts = {dset:{db: dbswithranges[db] for db in dbswithranges if db[0:2] == dset} for dset in datasets}
+	dictofdbdicts = {dset: {db: dbswithranges[db] for db in dbswithranges if db[0:2] == dset} for dset in datasets}
 	listofworkdicts = [dictofdbdicts[key] for key in dictofdbdicts]
 
 
@@ -94,8 +94,8 @@ def wordcounter(restriction=None):
 		count = 0
 		while keys:
 			count += 1
-			chunk = {}
-			for p in range(0,chunksize):
+			chunk = dict()
+			for p in range(0, chunksize):
 				try:
 					k = keys.pop()
 					chunk[k] = l[k]
@@ -114,7 +114,7 @@ def wordcounter(restriction=None):
 	# Invectiv.
 	# [{'gr2022w019': (22221, 23299), 'gr2022w018': (19678, 22220), 'gr0062w049': (28525, 29068), 'gr0062w038': (20977, 22028), 'gr0062w042': (23956, 24575), 'gr0062w028': (14516, 15055)}]
 
-	print('breaking up the lists and parallelizing:', len(chunked),'chunks to analyze')
+	print('breaking up the lists and parallelizing:', len(chunked), 'chunks to analyze')
 	# safe to almost hit number of cores here since we are not doing both db and regex simultaneously in each thread
 	# here's hoping that the workers number was not over-ambitious to begin with
 
