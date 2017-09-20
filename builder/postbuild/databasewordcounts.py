@@ -162,7 +162,7 @@ def wordcounter(restriction=None):
 		print('breaking up the lists and parallelizing:', len(chunkedkeys), 'chunks to insert')
 
 		# lots of swapping if you go high: wordcounttable is huge and you are making multiple copies of it
-		notsobigpool = min(6, setworkercount())
+		notsobigpool = min(4, setworkercount())
 		with Pool(processes=int(notsobigpool)) as pool:
 			# starmap: Like map() except that the elements of the iterable are expected to be iterables that are unpacked as arguments.
 			pool.starmap(dbchunkloader, argmap)
