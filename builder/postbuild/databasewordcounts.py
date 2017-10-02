@@ -26,11 +26,9 @@ config.read('config.ini')
 def wordcounter(restriction=None):
 	"""
 
-	count all of the words in all of the dbs or a subset thereof: 'restriction' will do subsets
-
 	restriction is either a list of time tuples or a list of genre names associated with a dict key
 
-	:param timerestriction:
+	:param restriction:
 	:return:
 	"""
 	wordcounttable = 'wordcounts'
@@ -79,7 +77,6 @@ def wordcounter(restriction=None):
 
 	dictofdbdicts = {dset: {db: dbswithranges[db] for db in dbswithranges if db[0:2] == dset} for dset in datasets}
 	listofworkdicts = [dictofdbdicts[key] for key in dictofdbdicts]
-
 
 	# parallelize by sending each db to its own worker: 291 ch tables to check; 463 in tables to check; 1823 gr tables to check; 362 lt tables to check; 516 dp tables to check
 	# 'gr' is much bigger than the others, though let's split that one up
@@ -144,12 +141,12 @@ def wordcounter(restriction=None):
 				masterconcorcdance[word][db] = 0
 		masterconcorcdance[word]['total'] = sum([masterconcorcdance[word][x] for x in masterconcorcdance[word]])
 
-	if restriction == None:
+	if not restriction:
 		# no restriction: then this is our first pass and we should write the results to the master counts
 		# restriction implies subsequent passes that are for metadata derived from unrestricted data;
 		# these passes should not overwrite that data
 
-		letters= '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+		letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
 		for l in letters:
 			createwordcounttable(wordcounttable + '_' + l)
 
@@ -162,6 +159,7 @@ def wordcounter(restriction=None):
 		print('breaking up the lists and parallelizing:', len(chunkedkeys), 'chunks to insert')
 
 		# lots of swapping if you go high: wordcounttable is huge and you are making multiple copies of it
+		# 16G of RAM will swap at 5 workers or so
 		notsobigpool = min(4, setworkercount())
 		with Pool(processes=int(notsobigpool)) as pool:
 			# starmap: Like map() except that the elements of the iterable are expected to be iterables that are unpacked as arguments.
@@ -178,7 +176,7 @@ def concordancechunk(enumerateddbdict):
 
 	it would be possible to do a where clause via the univesalid, but it should be (a lot) faster to do it by index
 
-	:param dblist:
+	:param enumerateddbdict:
 	:return:
 	"""
 
@@ -195,7 +193,7 @@ def concordancechunk(enumerateddbdict):
 	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
 	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
 
-	concordance = {}
+	concordance = dict()
 	count = 0
 	for db in dblist:
 		count += 1
@@ -206,7 +204,7 @@ def concordancechunk(enumerateddbdict):
 			words = line.wordlist('polytonic')
 			words = [cleanwords(w, punct) for w in words]
 			words = [re.sub(graves, acuteforgrave, w) for w in words]
-			words = [re.sub('v','u', w) for w in words]
+			words = [re.sub('v', 'u', w) for w in words]
 			words[:] = [x.lower() for x in words]
 			prefix = line.universalid[0:2]
 			for w in words:
@@ -215,11 +213,11 @@ def concordancechunk(enumerateddbdict):
 				# 	print(line.universalid,line.unformattedline())
 				try:
 					concordance[w][prefix] += 1
-				except:
-					concordance[w] = {}
+				except KeyError:
+					concordance[w] = dict()
 					concordance[w][prefix] = 1
 
-	print('\tfinished chunk',chunknumber+1)
+	print('\tfinished chunk', chunknumber+1)
 
 	del dbc
 	
@@ -245,7 +243,7 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 
 	# 'v' should be empty, though; ϙ will go to 0
 	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
-	letters = {letters[l] for l in range(0,len(letters))}
+	letters = {letters[l] for l in range(0, len(letters))}
 
 	chunknumber = enumeratedchunkedkeys[0]
 	chunkedkeys = enumeratedchunkedkeys[1]
@@ -279,7 +277,7 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 			dbc.commit()
 
 	#print('\t', str(len(chunkedkeys)), 'words inserted into the wordcount tables')
-	print('\tfinished chunk',chunknumber+1)
+	print('\tfinished chunk', chunknumber+1)
 
 	dbc.commit()
 	return
@@ -305,9 +303,9 @@ def headwordcounts():
 	lemmataobjectslist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
 
 	# 'v' should be empty, though; ϙ will go to 0
-	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
-	letters = {letters[l] for l in range(0, len(letters))}
-	countobjectlist = []
+	allletters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+	letters = {allletters[l] for l in range(0, len(allletters))}
+	countobjectlist = list()
 	for l in letters:
 		countobjectlist += graballcountsasobjects('wordcounts_' + l, cursor)
 	countdict = {word.entryname: word for word in countobjectlist}
@@ -403,8 +401,9 @@ def headwordcounts():
 		'Theol.',
 		'Trag.'
 	]
+
 	cleanedknownworkgenres = [g.lower() for g in knownworkgenres]
-	cleanedknownworkgenres = [re.sub(r'[\.\s]','',g) for g in cleanedknownworkgenres]
+	cleanedknownworkgenres = [re.sub(r'[\.\s]', '', g) for g in cleanedknownworkgenres]
 
 	thetable = 'dictionary_headword_wordcounts'
 	createwordcounttable(thetable, extracolumns=cleanedknownworkgenres)
@@ -420,7 +419,7 @@ def headwordcounts():
 		                            'VALUES (%s, %s, %s, %s, %s, %s, %s)'.format(tb=thetable)
 		d = (word, dictionarycounts[word]['total'], dictionarycounts[word]['gr'], dictionarycounts[word]['lt'],
 		     dictionarycounts[word]['dp'], dictionarycounts[word]['in'], dictionarycounts[word]['ch'])
-		cursor.execute(q,d)
+		cursor.execute(q, d)
 		if commitcount % 2500 == 0:
 			dbc.commit()
 	dbc.commit()
@@ -465,12 +464,12 @@ def buildcountsfromlemmalist(lemmataobjectslist, wordcountdict):
 	:return:
 	"""
 
-	lexiconentrycounts = {}
+	lexiconentrycounts = dict()
 
 	for lem in lemmataobjectslist:
 		thewordtolookfor = lem.dictionaryentry
 		# comprehensions would be nice, but they fail because of exceptions
-		lexiconentrycounts[thewordtolookfor] = {}
+		lexiconentrycounts[thewordtolookfor] = dict()
 		for item in ['total', 'gr', 'lt', 'dp', 'in', 'ch']:
 			sum = 0
 			for form in lem.formlist:
@@ -496,7 +495,7 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 	:return:
 	"""
 
-	metadata = {}
+	metadata = dict()
 
 	extrasql = ' ORDER BY total_count DESC'
 	greekvowel = re.compile(r'[άέίόύήώἄἔἴὄὔἤὤᾅᾕᾥᾄᾔᾤαειουηω]')
@@ -529,7 +528,7 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 		for item in [
 			('full set', d),
 			('top 250', mostcommon),
-			('top 2500',common),
+			('top 2500', common),
 			('core (>50 occurrences; not in top 2500)', core),
 			('rare (between 50 and 5 occurrences)', rare),
 			('very rare (fewer than 5 occurrences)', veryrare),
@@ -559,7 +558,7 @@ def derivechronologicalmetadata(metadata, lemmataobjectlist, cursor):
 	:return:
 	"""
 
-	eras = { 'early': (-850, -300), 'middle': (-299, 300), 'late': (301,1500)}
+	eras = {'early': (-850, -300), 'middle': (-299, 300), 'late': (301, 1500)}
 
 	for era in eras:
 		print('calculating use by era:', era)
@@ -591,7 +590,7 @@ def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres, 
 	"""
 
 	for genre in knownworkgenres:
-		print('compiling metadata for',genre)
+		print('compiling metadata for', genre)
 		genrecordance = wordcounter(restriction={'genre': genre})
 		countobjectlist = [dbWordCountObject(w, genrecordance[w]['total'], genrecordance[w]['gr'], genrecordance[w]['lt'],
 							genrecordance[w]['dp'], genrecordance[w]['in'], genrecordance[w]['ch']) for w in genrecordance]
