@@ -90,7 +90,7 @@ corpusvars = {
 # corpora
 #
 
-corporatobuild = []
+corporatobuild = list()
 
 if buildlatinauthors == 'y':
 	corporatobuild.append('latin')

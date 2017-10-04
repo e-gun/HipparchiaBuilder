@@ -10,7 +10,7 @@ import configparser
 import re
 from multiprocessing import Manager, Process
 
-from builder.builderclasses import dbAuthor, MPCounter
+from builder.builderclasses import dbAuthor, MPCounter, dbOpus
 from builder.dbinteraction.db import dbauthorandworkloader, authortablemaker
 from builder.dbinteraction.connection import setconnection
 from builder.parsers.swappers import forceregexsafevariants
@@ -383,7 +383,7 @@ def parallelnewworkworker(workpile, newworktuples):
 	while len(workpile) > 0:
 		try:
 			authoranddbtuple = workpile.pop()
-		except:
+		except IndexError:
 			authoranddbtuple = (False, False)
 
 		if authoranddbtuple is not False:
@@ -466,7 +466,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 	while workpile:
 		try:
 			wkid = workpile.pop()
-		except:
+		except IndexError:
 			wkid = False
 
 		if wkid:
@@ -556,13 +556,14 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			td = re.search(textdirection, ln)
 			try:
 				td = 'textdirection: {d}'.format(d=td.group(1))
-			except:
+			except AttributeError:
+				# 'NoneType' object has no attribute 'group'
 				td = ''
 
 			dn = re.search(doc, ln)
 			try:
 				dn = 'documentnumber: {n}'.format(n=dn.group(1))
-			except:
+			except AttributeError:
 				dn = ''
 
 			if td != '' or dn != '':
@@ -695,3 +696,127 @@ def insertnewworksintonewauthor(newwkuid, results, pgsqlcursor):
 
 	return
 
+
+def assignlanguagetonewworks(dbprefix):
+	"""
+
+	look at every work of the format 'inXXXX'
+
+	determine the language of the work
+
+	assign the language to the work
+
+	painful/costly since most dbs are not swapping languages very often
+
+	but the works table needs to know this if you are going to count genre weights properly
+
+	:param dbprefix:
+	:return:
+	"""
+
+	print('assigning language value to new works')
+
+	dbc = setconnection(config)
+	pgsqlcursor = dbc.cursor()
+
+	q = 'SELECT * FROM works WHERE universalid ~ %s'
+	d = ('^{p}'.format(p=dbprefix),)
+	pgsqlcursor.execute(q, d)
+	results = pgsqlcursor.fetchall()
+
+	workslist = [dbOpus(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12], r[13], r[14], r[15], r[16], r[17], r[18], r[19]) for r in results]
+
+	count = 0
+	for w in workslist:
+		count += 1
+		q = 'SELECT stripped_line FROM {w} WHERE wkuniversalid=%s'.format(w=w.universalid[0:6])
+		d = (w.universalid,)
+		pgsqlcursor.execute(q, d)
+		results = pgsqlcursor.fetchall()
+		lines = [r[0] for r in results]
+		w.language = determineworklanguage(lines)
+		if count % 2000 == 0:
+			dbc.commit()
+		if count % 5000 == 0:
+			print('\t{c} works parsed'.format(c=count))
+
+	print('updating works table')
+	languagetuplelist = [(w.universalid, w.language) for w in workslist]
+	insertlanguagedata(languagetuplelist)
+
+	return
+
+
+def determineworklanguage(strippedlines):
+	"""
+
+	read a collection of lines
+
+	determine their language by figuring out what character set most of the words are encoded in
+
+	chh='abcdefghijklmnopqrstuvwxyz'
+	timeit.timeit('sum([1 for l in "Traceback (most recent call last):" if l in chh])', globals=globals(), number=10000)
+	0.04032713099149987
+
+	islatin = re.compile(r'[a-z]')
+	timeit.timeit('sum([1 for l in "Traceback (most recent call last):" if re.search(islatin, l)])', globals=globals(), number=10000)
+	0.6780298129888251
+
+	:param strippedline:
+	:return:
+	"""
+
+	islatin = 'abcdefghijklmnopqrstuvwxyz'
+	isgreek = 'αβψδεφγηιξκλμνοπϙρϲτυωςχθζ'
+
+	greekchars = 0
+	latinchars = 0
+
+	for line in strippedlines:
+		greekchars += sum([1 for g in line if g in isgreek])
+		latinchars += sum([1 for l in line if l in islatin])
+
+	if greekchars > latinchars:
+		return 'G'
+	else:
+		return 'L'
+
+
+def insertlanguagedata(languagetuplelist):
+	"""
+
+	avoid a long run of UPDATE statements: use a tmp table
+
+	boundariestuplelist:
+		[(universalid1, language1), (universalid2, language2), ...]
+
+
+	:param boundariestuplelist:
+	:return:
+	"""
+
+	dbc = setconnection(config)
+	cursor = dbc.cursor()
+
+	q = 'CREATE TEMP TABLE tmp_works AS SELECT * FROM works LIMIT 0'
+	cursor.execute(q)
+
+	count = 0
+	for l in languagetuplelist:
+		count += 1
+		q = 'INSERT INTO tmp_works (universalid, language) VALUES ( %s, %s)'
+		d = l
+		cursor.execute(q, d)
+		if count % 5000 == 0:
+			dbc.commit()
+
+	dbc.commit()
+	q = 'UPDATE works SET language = tmp_works.language FROM tmp_works WHERE works.universalid = tmp_works.universalid'
+	cursor.execute(q)
+	dbc.commit()
+
+	q = 'DROP TABLE tmp_works'
+	cursor.execute(q)
+	dbc.commit()
+
+	return

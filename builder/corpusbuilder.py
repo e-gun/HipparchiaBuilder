@@ -33,7 +33,8 @@ from builder.parsers.latinsubstitutions import latindiacriticals
 from builder.parsers.copticsubstitutions import replacecoptic
 from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
 from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
-from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
+from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks, \
+	assignlanguagetonewworks
 from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
@@ -156,6 +157,7 @@ def remaptables(corpusname, corpusvars):
 		newauthors = compilenewauthors(aumapper, wkmapper)
 		newworktuples = compilenewworks(newauthors, wkmapper)
 		registernewworks(newworktuples)
+		assignlanguagetonewworks(permprefix)
 		deletetemporarydbs(tmpprefix)
 
 	return
