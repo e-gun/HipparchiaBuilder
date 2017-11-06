@@ -6,6 +6,7 @@
 	License: GNU GENERAL PUBLIC LICENSE 3
 		(see LICENSE in the top level directory of the distribution)
 """
+
 import configparser
 import re
 from multiprocessing import Pool
@@ -405,6 +406,10 @@ def headwordcounts():
 		'Theol.',
 		'Trag.'
 	]
+
+	# test for a single genre
+	# knownworkgenres = ['Satura']
+
 	cleanedknownworkgenres = [g.lower() for g in knownworkgenres]
 	cleanedknownworkgenres = [re.sub(r'[\.\s]', '', g) for g in cleanedknownworkgenres]
 
@@ -437,7 +442,7 @@ def headwordcounts():
 	lemmataobjectslist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
 	metadata = derivechronologicalmetadata(metadata, lemmataobjectslist, cursor)
 	metadata = insertchronologicalmetadata(metadata, thetable)
-	metadata = derivegenremetadata(metadata, lemmataobjectslist, thetable, knownworkgenres, cursor)
+	metadata = derivegenremetadata(metadata, lemmataobjectslist, thetable, knownworkgenres)
 
 	# print('ἅρπαξ',metadata['ἅρπαξ'])
 	# ἅρπαξ {'frequency_classification': 'core vocabulary (more than 50)', 'early': 42, 'middle': 113, 'late': 468}
@@ -584,7 +589,7 @@ def derivechronologicalmetadata(metadata, lemmataobjectlist, cursor):
 	return metadata
 
 
-def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres, cursor):
+def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres):
 	"""
 
 	can/should do 'Inscr.' separately? It's just the sum of 'in' + 'ch'
@@ -805,3 +810,37 @@ knownauthorgenres = [
 	'Theologici',
 	'Tragici'
 ]
+
+"""
+manual testing/probing
+
+Python 3.6.2 (default, Jul 17 2017, 16:44:45)
+[GCC 4.2.1 Compatible Apple LLVM 8.1.0 (clang-802.0.42)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import configparser
+>>> config = configparser.ConfigParser()
+>>> config.read('config.ini')
+>>> from builder.dbinteraction.connection import setconnection
+>>> dbc = setconnection(config)
+>>> cursor = dbc.cursor()
+>>> from builder.postbuild.postbuildhelperfunctions import graballlinesasobjects, acuteforgrave, graballcountsasobjects, grablemmataasobjects, createwordcounttable, cleanwords, prettyprintcohortdata, dictmerger
+>>> lemmataobjectslist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
+>>> allletters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+>>> letters = {allletters[l] for l in range(0, len(allletters))}
+>>> countobjectlist = list()
+>>> for l in letters: countobjectlist += graballcountsasobjects('wordcounts_' + l, cursor)
+...
+>>> countdict = {word.entryname: word for word in countobjectlist}
+>>> del countobjectlist
+>>> from builder.postbuild.databasewordcounts import buildcountsfromlemmalist
+>>> dictionarycounts = buildcountsfromlemmalist(lemmataobjectslist, countdict)
+>>> from builder.postbuild.databasewordcounts import derivedictionaryentrymetadata
+>>> thetable = 'dictionary_headword_wordcounts'
+>>> metadata = derivedictionaryentrymetadata(thetable, cursor)
+>>> metadata['φεῦ']
+{'frequency_classification': 'core (>50 occurrences; not in top 2500)', 'Iamb.': 17}
+>>> x = {m for m in metadata if m['Iamb.'] > 0}
+
+
+
+"""

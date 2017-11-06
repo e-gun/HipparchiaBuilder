@@ -72,12 +72,12 @@ def loadgkcanon(canonfile):
 
 	allauthors = loadallauthorsasobjects(config)
 
-	#txt = file_io.filereaders.dirtyhexloader(canonfile)
+	# txt = file_io.filereaders.dirtyhexloader(canonfile)
 	txt = file_io.filereaders.highunicodefileload(canonfile)
 	txt += '\n<authorentry>'
 
 	txt = gkcanoncleaner(txt)
-	authors = [a for a in txt if re.search(r'^<authorentry>',a)]
+	authors = [a for a in txt if re.search(r'^<authorentry>', a)]
 	authorlines = [temptableauthorline(a, allauthors) for a in authors]
 	authordatadict = {a[0]: [a[1]] for a in authorlines if a[1]}
 	authorcolumns = ['shortname']
@@ -87,8 +87,8 @@ def loadgkcanon(canonfile):
 	worklines = [temptableworkline(l, allworks) for l in works]
 	workdatadict = {w[0]: w[1:] for w in worklines}
 	workcolumns = ['title', 'language', 'publication_info', 'levellabels_00', 'levellabels_01', 'levellabels_02',
-	                'levellabels_03','levellabels_04','levellabels_05','workgenre','transmission','worktype','provenance',
-	                'recorded_date','converted_date','wordcount','firstline','lastline', 'authentic']
+	                'levellabels_03', 'levellabels_04', 'levellabels_05', 'workgenre', 'transmission', 'worktype',
+	                'provenance', 'recorded_date', 'converted_date', 'wordcount', 'firstline', 'lastline', 'authentic']
 
 	updatedbfromtemptable('authors', 'universalid', authorcolumns, authordatadict)
 	updatedbfromtemptable('works', 'universalid', workcolumns, workdatadict)
@@ -287,6 +287,7 @@ def temptableworkline(newworkinfo, allworks):
 	sample: <work>1542w001</work><workname>Fragmenta</workname><workgenre>Phil.</workgenre><meansoftransmission>Q</meansoftransmission><typeofwork>Book</typeofwork><wordcount>10,516</wordcount><citationformat>Fragment/line</citationformat><publicationinfo><italic>Nume/nius. Fragments</italic> <press>Les Belles Lettres </press><city>Paris </city><year>1974</year><pages>42–94, 99–102 </pages><pagesintocitations>$Περὶ τἀγαθοῦ &(frr. 1–22): pp. 1–61</pagesintocitations><pagesintocitations>$Περὶ τῶν παρὰ Πλάτωνι ἀπορρήτων &(fr. 23): pp. 61–62</pagesintocitations><pagesintocitations>$Περὶ τῆϲ τῶν Ἀκαδημαϊκῶν πρὸϲ Πλάτωνα διαϲτάϲεωϲ &(frr.</pagesintocitations>     24–28): pp. 62–80 <pagesintocitations>$Περὶ ἀφθαρϲίαϲ ψυχῆϲ &(fr. 29): p. 80</pagesintocitations><pagesintocitations>Incertorum operum fragmenta (frr. 30–33, 35–51, 53–54, 56–59): pp. 80–94,</pagesintocitations>     99–101 <pagesintocitations>Fragmentum dubium (fr. 60): pp. 101–102</pagesintocitations><editor>des Places, E/.      </authorentry></editor></publicationinfo>
 
 	:param newworkinfo:
+	:param allworks:
 	:return:
 	"""
 

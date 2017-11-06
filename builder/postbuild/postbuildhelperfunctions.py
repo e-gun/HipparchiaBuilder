@@ -82,7 +82,7 @@ def graballlinesasobjects(db, linerangetuple, cursor):
 	:return:
 	"""
 
-	if linerangetuple == (-1,-1):
+	if linerangetuple == (-1, -1):
 		whereclause = ''
 	else:
 		whereclause = ' WHERE index >= %s and index <= %s'
@@ -102,11 +102,12 @@ def graballlinesasobjects(db, linerangetuple, cursor):
 	return lineobjects
 
 
-def graballcountsasobjects(db,cursor, extrasql=''):
+def graballcountsasobjects(db, cursor, extrasql=''):
 	"""
 
 	:param db:
 	:param cursor:
+	:param extrasql:
 	:return:
 	"""
 

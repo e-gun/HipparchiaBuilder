@@ -735,7 +735,7 @@ def datemapper(stringdate):
 	dontcare = re.compile(r'^(prob. |middle |not bef\. |Zeit des |wohl |frühestens |\(hohe\) |)|( od\. .*?| oder .*?| \(od\. .*?)$')
 
 	date = re.sub(r'\?', '', stringdate)
-	#date = re.sub(r'\.$', '', date)
+	# date = re.sub(r'\.$', '', date)
 	date = re.sub(dontcare, '', date)
 
 	date = date.upper()
