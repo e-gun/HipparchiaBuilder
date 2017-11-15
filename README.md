@@ -52,7 +52,8 @@ minimum software requirements:
 hardware recommendations:
 ```
 	a multicore processor
-	c. 1G RAM per thread (to be on the very, very safe side)
+	2G of RAM can accommodate 12 workers UNTIL you do the word counts
+	word counts can fill 16G or RAM very fast: wordcounter() is capped at 4 workers (and will use over 12GB)
 	SSD with 15G spare space: 12G for the output and 3G for the input.
 	[du -h -d 0 inside of /usr/local/var/postgres outputs '12G']
 

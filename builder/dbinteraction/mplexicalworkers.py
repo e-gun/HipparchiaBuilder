@@ -21,19 +21,24 @@ config.read('config.ini')
 
 def mplatindictionaryinsert(dictdb, entries, commitcount):
 	"""
+
 	work on dictdb entries
 	assignable to an mp worker
 	insert into db at end
-	:param entry:
+
+	:param dictdb:
+	:param entries:
+	:param commitcount:
 	:return:
 	"""
+
 	dbc = setconnection(config)
 	curs = dbc.cursor()
 
 	bodyfinder = re.compile(r'(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	defectivebody = re.compile(r'(<entryFree(.*?)>)(.*?)')
 	greekfinder = re.compile(r'(<foreign lang="greek">)(.*?)(</foreign>)')
-	
+
 	while len(entries) > 0:
 		try:
 			entry = entries.pop()
@@ -56,11 +61,11 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 					body = ''
 			info = segments.group(2)
 			parsedinfo = re.search('id="(.*?)"\stype="(.*?)"\skey="(.*?)" opt="(.*?)"', info)
-			id = parsedinfo.group(1)
-			type = parsedinfo.group(2)
+			idnum = parsedinfo.group(1)
+			etype = parsedinfo.group(2)
 			key = parsedinfo.group(3)
 			opt = parsedinfo.group(4)
-			
+
 			# handle words like abactus which have key... n... opt... where n is the variant number
 			# this pattern interrupts the std parsedinfo flow
 			metricalentry = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
@@ -69,73 +74,78 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			metricalentry = re.sub(r'(.*?)"\s.*?$', r'\1', metricalentry)
 			entryname = re.sub('(_|\^)', '', metricalentry)
 			metricalentry = latinvowellengths(metricalentry)
-			
+
 			key = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
 			key = re.sub(r' \((\d)\)', superscripterone, key)
 			key = latinvowellengths(key)
 
 			# 'n1000' --> 1000
-			id = int(re.sub(r'^n', '', id))
+			idnum = int(re.sub(r'^n', '', idnum))
 
 			translationlist = translationsummary(entry, 'hi')
 			# do some quickie greek replacements
 			body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
-			qtemplate="""
+			qtemplate = """
 			INSERT INTO {d} 
 				(entry_name, metrical_entry, id_number, entry_type, entry_key, entry_options, 
 				translations, entry_body)
 				VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
 			query = qtemplate.format(d=dictdb)
-			data = (entryname, metricalentry, id, type, key, opt, translationlist, body)
+			data = (entryname, metricalentry, idnum, etype, key, opt, translationlist, body)
 			curs.execute(query, data)
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
-				print('\tat', id, entryname)
+				print('\tat', idnum, entryname)
 
-			# if id == 18069:
-			# 	items = [entryname, metricalentry, id, type, key, opt, translationlist, body]
+			# if idnum == 18069:
+			# 	items = [entryname, metricalentry, idnum, type, key, opt, translationlist, body]
 			# 	for i in items:
 			# 		print(i)
 
 	dbc.commit()
 	curs.close()
 	del dbc
-	
+
 	return
 
 
 def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	"""
+
 	work on dictdb entries
 	assignable to an mp worker
 	insert into db at end
-	:param entry:
+
+	:param dictdb:
+	:param entries:
+	:param commitcount:
 	:return:
 	"""
 
 	dbc = setconnection(config)
 	curs = dbc.cursor()
-	
+
 	# places where you can find lang="greek"
 	# <foreign>; <orth>; <pron>; <quote>; <gen>; <itype>
 	# but there can be a nested tag: you can't convert its contents
 	# not clear how much one needs to care: but a search inside a match group could be implemented.
-	
+
 	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
-	greekfinder = re.compile('(<(foreign|orth|pron|quote|gen|itype|etym|ref).*?lang="greek".*?>)(.*?)(</(foreign|orth|pron|quote|gen|itype|etym|ref)>)')
+	greekfinder = re.compile(
+		'(<(foreign|orth|pron|quote|gen|itype|etym|ref).*?lang="greek".*?>)(.*?)(</(foreign|orth|pron|quote|gen|itype|etym|ref)>)')
 	# these arise from nested tags: a more elegant solution would be nice; some other day
 	restorea = re.compile(r'<γεν λανγ="γρεεκ" οπτ="ν">(.*?)(</gen>)')
 	restoreb = re.compile(r'<προν εχτεντ="φυλλ" λανγ="γρεεκ" οπτ="ν"(.*?)(</pron>)')
 	restorec = re.compile(r'<ιτψπε λανγ="γρεεκ" οπτ="ν">(.*?)(</itype>)')
-	
-	id = 0
+
+	idnum = 0
 	while len(entries) > 0:
 		try:
 			entry = entries.pop()
-		except:
+		except IndexError:
 			entry = ''
-		
+
 		if entry[0:10] != "<entryFree":
 			pass
 		else:
@@ -144,72 +154,77 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 				body = segments.group(3)
 			except:
 				body = ''
-				print('died at', id, entry)
+				print('died at', idnum, entry)
 			info = segments.group(2)
 			parsedinfo = re.search('id="(.*?)"\skey=(".*?")\stype="(.*?)"\sopt="(.*?)"', info)
 			try:
-				id = parsedinfo.group(1)
+				idnum = parsedinfo.group(1)
 				key = parsedinfo.group(2)
-				type = parsedinfo.group(3)
+				etype = parsedinfo.group(3)
 				opt = parsedinfo.group(4)
 			except:
 				# only one greek dictionary entry will throw an exception: n29246
-				# print('did not find key at', id, entry)
-				id = 'n29246'
+				# print('did not find key at', idnum, entry)
+				idnum = 'n29246'
 				key = ''
-				type = ''
+				etype = ''
 				opt = ''
 			entryname = re.sub(r'"(.*?)"', lambda x: greekwithoutvowellengths(x.group(1)), key.upper())
 			entryname = re.sub(r'(\d+)', superscripterone, entryname)
 			metrical = re.sub(r'(")(.*?)(")', lambda x: greekwithvowellengths(x.group(2)), key.upper())
 			metrical = re.sub(r'(\d+)', superscripterone, metrical)
 			metrical = re.sub(r'"', r'', metrical)
-			
+
 			body = re.sub(greekfinder, lsjgreekswapper, body)
 			body = re.sub(restorea, r'<gen lang="greek" opt="n">\1\2', body)
 			body = re.sub(restoreb, r'<pron extent="full">\1\2', body)
 			body = re.sub(restorec, r'<itype lang="greek" opt="n">\1\2', body)
 
 			# 'n1000' --> 1000
-			id = int(re.sub(r'^n', '', id))
+			idnum = int(re.sub(r'^n', '', idnum))
 			translationlist = translationsummary(entry, 'tr')
 			stripped = cleanaccentsandvj(entryname)
-			qtemplate="""
+			qtemplate = """
 			INSERT INTO {d} 
 				(entry_name, metrical_entry, unaccented_entry, id_number, entry_type,
 				entry_options, translations, entry_body)
 				VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
 			query = qtemplate.format(d=dictdb)
-			data = (entryname, metrical, stripped, id, type, opt, translationlist, body)
+			data = (entryname, metrical, stripped, idnum, etype, opt, translationlist, body)
 
 			try:
 				curs.execute(query, data)
 			except:
 				# psycopg2.DataError
-				print('failed to insert',data)
+				print('failed to insert', data)
 
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
 				try:
-					print('\tat', id, entryname)
+					print('\tat', idnum, entryname)
 				except:
 					# UnicodeEncodeError
-					print('\tat', id)
-	
+					print('\tat', idnum)
+
 	dbc.commit()
 	curs.close()
 	del dbc
-	
+
 	return
 
 
 def mplemmatainsert(grammardb, entries, islatin, commitcount):
 	"""
+
 	work on grammardb entries
 	assignable to an mp worker
 	insert into db at end
-	:param entry:
+
+	:param grammardb:
+	:param entries:
+	:param islatin:
+	:param commitcount:
 	:return:
 	"""
 	
@@ -222,8 +237,9 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 	while len(entries) > 0:
 		try:
 			entry = entries.pop()
-		except:
+		except IndexError:
 			entry = None
+
 		if entry:
 			segments = re.search(keywordfinder, entry)
 			dictionaryform = segments.group(1)
@@ -231,7 +247,7 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 				dictionaryform = re.sub(r'\t', '', dictionaryform)
 			else:
 				dictionaryform = re.sub(r'(.*?)\t', lambda x: greekwithoutvowellengths(x.group(1)), dictionaryform.upper())
-			dictionaryform = re.sub(r'\d',superscripterzero,dictionaryform)
+			dictionaryform = re.sub(r'\d', superscripterzero, dictionaryform)
 			dictionaryform = re.sub(r'%', '', dictionaryform)
 			otherforms = segments.group(3)
 			if islatin is not True:
@@ -256,6 +272,7 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 
 def mpanalysisinsert(grammardb, items, islatin, commitcount):
 	"""
+
 	work on grammardb entries
 	assignable to an mp worker
 	insert into db at end
@@ -270,8 +287,10 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 	each inset analysis is:
 		{xrefnumber digit ancientform1,ancientform2(TAB)translation(TAB)parsinginfo}
 
-
-	:param entry:
+	:param grammardb:
+	:param items:
+	:param islatin:
+	:param commitcount:
 	:return:
 	"""
 
@@ -296,21 +315,22 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 	while len(items) > 0:
 		try:
 			entry = items.pop()
-		except:
+		except IndexError:
 			entry = None
+
 		if entry:
 			bracketed = ''
 			if re.search(bracketrefs,entry) is not None:
-				bracketed = re.findall(bracketrefs,entry)
+				bracketed = re.findall(bracketrefs, entry)
 				bracketed = list(set(bracketed))
 				bracketed = ', '.join(bracketed)
-				bracketed = re.sub(r'[\[\]]','',bracketed)
+				bracketed = re.sub(r'[\[\]]', '', bracketed)
 				entry = re.sub(bracketrefs, '', entry)
 			segments = re.search(formfinder, entry)
 			try:
 				observedform = segments[1]
 			except TypeError:
-				print('\tfailed to find the observed form for',entry)
+				print('\tfailed to find the observed form for', entry)
 				observedform = None
 			if observedform:
 				if islatin is True:
@@ -333,7 +353,7 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 				possibilities = ''
 				number = 0
 				for found in analysislist:
-					elements = re.search(analysisfinder,found)
+					elements = re.search(analysisfinder, found)
 					number += 1
 					if islatin is True:
 						wd = latinvowellengths(elements.group(3))
@@ -360,4 +380,3 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 	del dbc
 
 	return
-
