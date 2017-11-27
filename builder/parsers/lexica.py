@@ -19,7 +19,8 @@ from builder.parsers.regexsubstitutions import swapregexbrackets
 def greekwithoutvowellengths(betagreek):
 	"""
 	quick vowel len stripper that then sends you to greek conversion
-	:param ttc:
+
+	:param betagreek:
 	:return:
 	"""
 
@@ -34,13 +35,13 @@ def greekwithvowellengths(ttc):
 	the non-documented long-and-short codes
 	this can/will confuse lexical lookups from greek passages
 	use the combining long/short so that you stand a chance of doing both accents and lengths
-	:param texttoclean: [ttc <class '_sre.SRE_Match'>]
+	:param ttc: [ttc <class '_sre.SRE_Match'>]
 	:return:
 	"""
 
 	# ttc = match.group(2)
 
-	if re.search(r'[a-z]',ttc) is not None:
+	if re.search(r'[a-z]', ttc) is not None:
 		# this will keep things that have already been turned into greek from turning into upper case greek
 		ttc = ttc.upper()
 	else:
@@ -49,9 +50,9 @@ def greekwithvowellengths(ttc):
 		# ttc = re.sub(r'\^', u'/\u0306', ttc)
 		pass
 	
-	ttc = re.sub(r'\^\/', u'/\u0306',ttc)
-	ttc = re.sub(r'\_\/', u'/\u0304',ttc)
-	ttc = re.sub(r'([AIU])\^',r'\1'+u'\u0306',ttc)
+	ttc = re.sub(r'\^\/', u'/\u0306', ttc)
+	ttc = re.sub(r'\_\/', u'/\u0304', ttc)
+	ttc = re.sub(r'([AIU])\^', r'\1'+u'\u0306',ttc)
 	ttc = re.sub(r'([AIU])\_', r'\1' + u'\u0304', ttc)
 
 	ttc = replacegreekbetacode(ttc)
@@ -142,8 +143,8 @@ def translationsummary(fullentry, translationlabel):
 		translationlabel = 'tr'
 
 	:param fullentry:
+	:param translationlabel:
 	:return:
-
 	"""
 
 	soup = BeautifulSoup(fullentry, 'html.parser')

@@ -253,7 +253,7 @@ def dbfindhypens(dbunreadyversion):
 
 	dbreadyversion = deque()
 	workingcolumn = 3
-	#previous = dbunreadyversion[0]
+	# previous = dbunreadyversion[0]
 	previous = dbunreadyversion.popleft()
 	lastline = dbunreadyversion[-1]
 

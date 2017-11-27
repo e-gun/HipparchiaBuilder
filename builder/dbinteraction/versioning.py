@@ -59,8 +59,20 @@ def timestampthebuild(corpusname, dbconnection, cursor):
 	:return:
 	"""
 
+	try:
+		# trying because you might not actually have the needed file, etc
+		# i.e. readgitdata() is liable to a FileNotFoundError
+		commit = readgitdata()
+	except:
+		commit = None
+
 	if stamp == 'y':
-		now = datetime.now().strftime("%Y-%m-%d %H:%M")
+		# d = datetime.now().strftime("%Y-%m-%d %H:%M")
+		d = datetime.now().strftime("%Y-%m-%d")
+		if commit:
+			now = '{c} @ {d}'.format(d=d, c=commit[0:6])
+		else:
+			now = d
 	else:
 		now = '[an undated build]'
 
@@ -90,3 +102,27 @@ def timestampthebuild(corpusname, dbconnection, cursor):
 	return
 
 
+def readgitdata():
+	"""
+
+	find the commit value for the code used for this build
+
+	a sample lastline:
+
+		'3b0c66079f7337928b02df429f4a024dafc80586 63e01ae988d2d720b65c1bf7db54236b7ad6efa7 EG <egun@antisigma> 1510756108 -0500\tcommit: variable name changes; code tidy-ups\n'
+
+	:return:
+	"""
+
+	gitfile = './.git/logs/HEAD'
+	line = ''
+
+	with open(gitfile) as fh:
+		for line in fh:
+			pass
+		lastline = line
+
+	gitdata = lastline.split(' ')
+	commit = gitdata[1]
+
+	return commit

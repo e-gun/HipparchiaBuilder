@@ -66,9 +66,9 @@ def earlybirdsubstitutions(texttoclean):
 		#	'&{10m4}10 [ c ? ]$IASNI#80 *)EZIKEH\ M[ARTURW= &c ? ]$'
 		# this one also fails to have '&c' because the '&' came earlier
 		# here's hoping there is no other way to achieve this pattern...
-		(r'&c\s\?(.*?)\$', r'&c ﹖\1$'), # the question mark needs to be preserved, so we substitute a small question mark
-		(r'\[\sc\s\?(.*?)\$', r'[ c ﹖\1$'), # try to catch '&{10m4}10 [ c ? ]$I' without doing any damage
-		(r'&\?(.*?)\](.*?)\$',r'&﹖\1]\2$') # some stray lonely '?' cases remain
+		(r'&c\s\?(.*?)\$', r'&c ﹖\1$'),  # the question mark needs to be preserved, so we substitute a small question mark
+		(r'\[\sc\s\?(.*?)\$', r'[ c ﹖\1$'),  # try to catch '&{10m4}10 [ c ? ]$I' without doing any damage
+		(r'&\?(.*?)\](.*?)\$', r'&﹖\1]\2$')  # some stray lonely '?' cases remain
 	]
 
 	betacodetuples += supplement
@@ -425,12 +425,12 @@ def totallemmatization(parsedtextfile):
 
 	for line in parsedtextfile:
 		gotwork = re.search(wnv, line)
-		if gotwork != None:
+		if gotwork:
 			work = int(gotwork.group(1))
 			for l in range(0, 6):
 				levelmapper[l] = 1
 		gotsetting = re.search(setter, line)
-		if gotsetting != None:
+		if gotsetting:
 			level = int(gotsetting.group(1))
 			setting = gotsetting.group(2)
 			# Euripides (0006) has <hmu_set_level_0_to_post 961 /> after πῶς οὖν ἔτ’ ἂν θνήισκοιμ’ ἂν ἐνδίκως, πόσι,
@@ -448,7 +448,7 @@ def totallemmatization(parsedtextfile):
 		gotincrement = re.search(adder, line)
 		# if you don't reset the lower counters, then you will get something like 'line 10' when you first initialize a new section
 
-		if gotincrement != None:
+		if gotincrement:
 			level = int(gotincrement.group(1))
 			setting = 1
 			try:
@@ -547,8 +547,6 @@ def hexrunner(texttoclean):
 	All of the heavy lifting happens there
 
 	:param texttoclean:
-	:param authornumber:
-	:param worklist:
 	:return: texttoclean
 	"""
 
@@ -569,9 +567,10 @@ def hexrunner(texttoclean):
 def converthextoascii(hextoasciimatch):
 	"""
 	undo the human readability stuff so you can decode the raw data
-	:param hextoascii:
+	:param hextoasciimatch:
 	:return:
 	"""
+
 	asciilevel = ''
 	hexlevel = hextoasciimatch.group(2)
 	hexlevel = highunicodetohex(hexlevel)

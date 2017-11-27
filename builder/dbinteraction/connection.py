@@ -13,7 +13,7 @@ try:
 except ImportError:
 	# pypy3
 	# pypy3 support is EXPERIMENTAL (and unlikely to be actively pursued)
-	# latin buid: Build took 3.67 minutes
+	# latin build: Build took 3.67 minutes
 	# greek will fail: too many connections to the db
 	# wordcounts will fail unless you increase the ulimit: Too many open files in system
 	import psycopg2cffi as psycopg2
