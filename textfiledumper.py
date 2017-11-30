@@ -49,18 +49,25 @@ mapper = {
 	'CHR': {'lg': 'G', 'db': xhr, 'uidprefix': 'ch'},
 	}
 
-def streamout(txt,outfile):
-	f = open(outfile, 'w')
-	f.write(txt)
-	f.close()
+def streamout(txt, outfile):
+	"""
+
+	:param txt:
+	:param outfile:
+	:return:
+	"""
+
+	thefile = open(outfile, 'w')
+	thefile.write(txt)
+	thefile.close()
 	return
 
 
-def linesout(txt,outfile):
-	f = open(outfile, 'w')
+def linesout(txt, outfile):
+	thefile = open(outfile, 'w')
 	for item in txt:
-		f.write("%s\n" % item)
-	f.close()
+		thefile.write("%s\n" % item)
+	thefile.close()
 	return
 
 
@@ -137,7 +144,7 @@ txt = highunicodefileload(db+n+'.TXT')
 
 
 streamout(txt,outputdir+'aa'+debugoutfile)
-streamout(re.sub(' █','\n█', txt),outputdir+'bb'+debugoutfile)
+streamout(re.sub(' █', '\n█', txt), outputdir+'bb'+debugoutfile)
 
 for f in sorted(functions.keys()):
 	try:
@@ -153,13 +160,13 @@ for f in sorted(functions.keys()):
 		linesout(txt, outputdir + n + '_' + fn + '.txt')
 
 txt = [ln[2] for ln in txt]
-linesout(txt,outputdir+'yy_'+debugauthor+'.txt')
+linesout(txt, outputdir+'yy_'+debugauthor+'.txt')
 
 txt = [ln+'<br \>' for ln in txt]
 txt = [re.sub(r'<hmu_increment_.*? />', '', ln) for ln in txt]
 txt = [re.sub(r'<hmu_set_level_.*? />', '', ln) for ln in txt]
 txt = [htmlthead.format(a=debugauthor, css=css)] + txt + [htmlfoot]
 
-linesout(txt,outputdir+'zz_'+debugauthor+'.html')
+linesout(txt, outputdir+'zz_'+debugauthor+'.html')
 
 print('textfile generation took:\n\t', str(time.time() - start))

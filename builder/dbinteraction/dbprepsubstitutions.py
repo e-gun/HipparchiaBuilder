@@ -298,7 +298,7 @@ def dbfindannotations(dbunreadyversion):
 		notes = [n for n in notes if n]
 		notes = list(set(notes))
 
-		line[workingcolumn] = re.sub(search,'',line[workingcolumn])
+		line[workingcolumn] = re.sub(search, '', line[workingcolumn])
 			
 		if len(notes) > 0:
 			notetext = ''
@@ -370,11 +370,15 @@ def noleadingortrailingwhitespace(dbunreadyversion):
 
 def consolidatecontiguouslines(previousline, thisline, hypenatedword, transtable):
 	"""
+
 	helper function for the stripped line column: if a previousline ends with a hypenated word:
 		put the whole word at line end
 		drop the half-word from the start of thisline
+
 	:param previousline:
 	:param thisline:
+	:param hypenatedword:
+	:param transtable:
 	:return:
 	"""
 	

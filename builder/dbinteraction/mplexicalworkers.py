@@ -308,11 +308,22 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 
 	# the number of items in bracketrefs corresponds to the number of prefix checks you will need to make to recompose the verb
 
-	bracketrefs = re.compile(r'\[\d\d{1,}\]')
+	bracketrefs = re.compile(r'\[\d\d+\]')
 	formfinder = re.compile(r'(.*?\t){(.*?)}$')
-	analysisfinder = re.compile(r'(\d{1,})\s(\d)\s(.*?)\t(.*?)\t(.*?$)')
+	analysisfinder = re.compile(r'(\d+)\s(\d)\s(.*?)\t(.*?)\t(.*?$)')
 
-	while len(items) > 0:
+	qtemplate = 'INSERT INTO {gdb} (observed_form, xrefs, prefixrefs, possible_dictionary_forms) VALUES (%s, %s, %s, %s)'
+
+	ptemplate = list()
+	ptemplate.append('<possibility_{p}>{wd}')
+	ptemplate.append('<xref_value>{xrv}</xref_value>')
+	ptemplate.append('<xref_kind>{xrk}</xref_kind>')
+	ptemplate.append('<transl>{t}</transl>')
+	ptemplate.append('<analysis>{a}</analysis>')
+	ptemplate.append('</possibility_{p}>\n')
+	ptemplate = ''.join(ptemplate)
+
+	while items:
 		try:
 			entry = items.pop()
 		except IndexError:
@@ -351,6 +362,9 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 				# i[5] = 'neut dat pl'
 
 				possibilities = ''
+				# example:
+				# <possibility_1>ἠχήϲαϲα, ἠχέω<xref_value>50902522</xref_value><xref_kind>9</xref_kind><transl>sound</transl><analysis>aor part act fem nom/voc sg (attic epic ionic)</analysis></possibility_1>
+
 				number = 0
 				for found in analysislist:
 					elements = re.search(analysisfinder, found)
@@ -362,12 +376,9 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 						wd = greekwithoutvowellengths(elements.group(3).upper())
 						wd = re.sub(r'\d', superscripterzero, wd)
 					wd = re.sub(r',', r', ', wd)
-					possibilities += '<possibility_' + str(number) + '>' + wd + '<xref_value>' + elements.group(1) + \
-					                 '</xref_value><xref_kind>'+ elements.group(2) +'</xref_kind><transl>' + elements.group(4) + \
-					                 '</transl>' + '<analysis>' + elements.group(5) + \
-					                 '</analysis></possibility_' + str(number) + '>\n'
-				query = 'INSERT INTO ' + grammardb + ' (observed_form, xrefs, prefixrefs, possible_dictionary_forms) ' \
-				                                     'VALUES (%s, %s, %s, %s)'
+					possibilities = ptemplate.format(p=number, wd=wd, xrv=elements.group(1), xrk=elements.group(2), t=elements.group(4), a=elements.group(5))
+
+				query = qtemplate.format(gdb=grammardb)
 				data = (observedform, xrefs, bracketed, possibilities)
 				# print(entry,'\n',observedform,xrefs,bracketed,'\n\t',possibilities)
 				curs.execute(query, data)

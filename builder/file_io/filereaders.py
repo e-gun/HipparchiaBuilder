@@ -36,7 +36,7 @@ def findauthors(pathtoauthtab):
 	
 	f = open(pathtoauthtab + 'AUTHTAB.DIR', 'rb')
 	o = f.read()
-	o = "".join(map(chr, o))
+	o = ''.join(map(chr, o))
 	f.close()
 
 	# authorparser = re.compile('(\w\w\w\d)\s+([\x01-\x7f]*[a-zA-Z][^\x83\xff]*)')
@@ -66,7 +66,7 @@ def highunicodefileload(filepath):
 		if (o[c] >= 128) or (o[c] <= 31):
 			x = hex(o[c])
 			# cumbersome and painful, but it prevents any possibility of confusing the ascii and the control sequences
-			x = '█' + hextohighunicode(x[2:4]) # FULL BLOCK Unicode: U+2588
+			x = '█' + hextohighunicode(x[2:4])  # FULL BLOCK Unicode: U+2588
 			txt.append(x + ' ')
 		else:
 			txt.append(utf[c])

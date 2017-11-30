@@ -38,7 +38,7 @@ def formatgklexicon():
 	entries = f.readlines()
 	f.close()
 
-	print('formatting Liddell and Scott.',len(entries),'entries to parse')
+	print('formatting Liddell and Scott.', len(entries), 'entries to parse')
 
 	# testing
 	# entries = entries[10000:10010]
@@ -48,10 +48,11 @@ def formatgklexicon():
 	commitcount = MPCounter()
 
 	workers = setworkercount()
-	jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, commitcount)) for i in
-			range(workers)]
-	for j in jobs: j.start()
-	for j in jobs: j.join()
+	jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, commitcount)) for i in range(workers)]
+	for j in jobs:
+		j.start()
+	for j in jobs:
+		j.join()
 
 	return
 
@@ -82,8 +83,7 @@ def formatlatlexicon():
 	commitcount = MPCounter()
 
 	workers = setworkercount()
-	jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, commitcount)) for i in
-			range(workers)]
+	jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, commitcount)) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
@@ -104,8 +104,7 @@ def grammarloader(language):
 	analyses:
 	!ane/ntwn	{9619125 9 a)ne/ntwn,a)ni/hmi	send up	aor imperat act 3rd pl}{9619125 9 a)ne/ntwn,a)ni/hmi	send up	aor part act masc/neut gen pl}{37155703 9 e)ne/ntwn,e)ni/hmi	send in	aor imperat act 3rd pl}{37155703 9 e)ne/ntwn,e)ni/hmi	send in	aor part act masc/neut gen pl}
 
-	:param lemmalanguage:
-	:param lemmabasedir:
+	:param language:
 	:return:
 	"""
 
@@ -138,8 +137,7 @@ def grammarloader(language):
 	commitcount = MPCounter()
 
 	workers = setworkercount()
-	jobs = [Process(target=mplemmatainsert, args=(table, entries, islatin, commitcount)) for i in
-	        range(workers)]
+	jobs = [Process(target=mplemmatainsert, args=(table, entries, islatin, commitcount)) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
