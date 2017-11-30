@@ -361,7 +361,7 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 				# i[4] = 'polygonal'
 				# i[5] = 'neut dat pl'
 
-				possibilities = ''
+				possibilities = list()
 				# example:
 				# <possibility_1>ἠχήϲαϲα, ἠχέω<xref_value>50902522</xref_value><xref_kind>9</xref_kind><transl>sound</transl><analysis>aor part act fem nom/voc sg (attic epic ionic)</analysis></possibility_1>
 
@@ -376,10 +376,11 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 						wd = greekwithoutvowellengths(elements.group(3).upper())
 						wd = re.sub(r'\d', superscripterzero, wd)
 					wd = re.sub(r',', r', ', wd)
-					possibilities = ptemplate.format(p=number, wd=wd, xrv=elements.group(1), xrk=elements.group(2), t=elements.group(4), a=elements.group(5))
+					possibilities.append(ptemplate.format(p=number, wd=wd, xrv=elements.group(1), xrk=elements.group(2), t=elements.group(4), a=elements.group(5)))
 
+				ptext = ''.join(possibilities)
 				query = qtemplate.format(gdb=grammardb)
-				data = (observedform, xrefs, bracketed, possibilities)
+				data = (observedform, xrefs, bracketed, ptext)
 				# print(entry,'\n',observedform,xrefs,bracketed,'\n\t',possibilities)
 				curs.execute(query, data)
 				commitcount.increment()
