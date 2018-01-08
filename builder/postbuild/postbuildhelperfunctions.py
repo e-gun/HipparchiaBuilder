@@ -304,7 +304,6 @@ def rebasedcounter(decimalvalue, base):
 	return rebased
 
 
-# unused and ok to delete?
 def deletetemporarydbs(temprefix):
 	"""
 
@@ -322,15 +321,14 @@ def deletetemporarydbs(temprefix):
 	cursor.execute(q, d)
 	results = cursor.fetchall()
 
-	authors = []
+	authors = list()
 	for r in results:
 		a = r[0]
 		authors.append(a[0:6])
 	authors = list(set(authors))
 
 	for a in authors:
-		dropdb = a
-		q = 'DROP TABLE public.'+dropdb
+		q = 'DROP TABLE public.{a}'.format(a=a)
 		cursor.execute(q)
 
 	q = 'DELETE FROM authors WHERE universalid LIKE %s'

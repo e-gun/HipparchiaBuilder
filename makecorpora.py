@@ -10,7 +10,7 @@ import configparser
 import time
 
 from builder import corpusbuilder
-from builder.dbinteraction.build_lexica import formatgklexicon, formatlatlexicon, analysisloader, grammarloader
+from builder.dbinteraction.buildlexica import formatgklexicon, formatlatlexicon, analysisloader, grammarloader
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.postbuild.databasewordcounts import headwordcounts, wordcounter

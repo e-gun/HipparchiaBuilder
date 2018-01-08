@@ -233,6 +233,8 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 	
 	keywordfinder = re.compile(r'(.*?\t)(\d{1,})(.*?)$')
 	greekfinder = re.compile(r'(\t.*?)(\s.*?)(?=(\t|$))')
+	invals = "vjσς"
+	outvals = "uiϲϲ"
 
 	while len(entries) > 0:
 		try:
@@ -255,8 +257,21 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 			xref = int(segments.group(2))
 			# be careful: the corresponding xref is a str inside a text field
 
+			# clean the derivativeforms: note that this involves a loss of info
+			# ζῳωδία           |    49601761 |         ζῳωδίαϲ (fem acc pl) (fem gen sg (attic doric aeolic))  ζῳωδίᾳ (fem dat sg (attic doric aeolic))
+			# becomes
+			# ζῳωδία           |    49601761 | {ζῳωδίαϲ,ζῳωδίᾳ}
+			# but nothing in HipparchiaServer currently needs anything other than the list of extant forms
+
+			formlist = [f for f in otherforms.split('\t') if f]
+			formlist = [f.split(' ')[0] for f in formlist]
+			formlist = [re.sub(r'\'', '', f) for f in formlist]
+			formlist = [f.lower() for f in formlist]
+			formlist = [f.translate(str.maketrans(invals, outvals)) for f in formlist]
+			formlist = list(set(formlist))
+
 			query = 'INSERT INTO ' + grammardb + ' (dictionary_entry, xref_number, derivative_forms) VALUES (%s, %s, %s)'
-			data = (dictionaryform, xref, otherforms)
+			data = (dictionaryform, xref, formlist)
 			curs.execute(query, data)
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:

@@ -297,7 +297,7 @@ def getlexicaltablestructuredict(tablename):
 
 	options = {
 		'lemma': {
-			'columns': ['dictionary_entry character varying(64)', 'xref_number integer', 'derivative_forms text'],
+			'columns': ['dictionary_entry character varying(64)', 'xref_number integer', 'derivative_forms text[]'],
 			'index': 'dictionary_entry'},
 		'analysis': {
 			'columns': ['observed_form character varying(64)', 'xrefs character varying(128)', 'prefixrefs character varying(128)', 'possible_dictionary_forms text'],

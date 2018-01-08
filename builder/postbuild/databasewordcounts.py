@@ -310,7 +310,7 @@ def headwordcounts():
 	# 'v' should be empty, though; ϙ will go to 0
 	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
 	letters = {letters[l] for l in range(0, len(letters))}
-	countobjectlist = []
+	countobjectlist = list()
 	for l in letters:
 		countobjectlist += graballcountsasobjects('wordcounts_' + l, cursor)
 	countdict = {word.entryname: word for word in countobjectlist}
