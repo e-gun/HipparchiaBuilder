@@ -9,6 +9,7 @@
 import configparser
 from multiprocessing import Process, Manager
 from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.db import resultiterator
 from builder.builderclasses import MPCounter
 from builder.workers import setworkercount
 
@@ -17,24 +18,22 @@ config.read('config.ini')
 
 """
 	SPEED NOTES
-
-    thousands of UPDATEs flying at the postgresql server makes it sad
-
-    currently refactoring to dodge 'UPDATE' as much as possible or to update all relevant fields at once
+	thousands of UPDATEs flying at the postgresql server makes it sad
+	dodge 'UPDATE' as much as possible or to update all relevant fields at once
 
 	the following the faster way to do bulk UPDATES: create a tmp table and then update another table from it
 	[http://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql]
 
 	10x+ faster if you use this trick: worth the trouble
-
 """
 
 
 def insertfirstsandlasts(workcategoryprefix, cursor):
 	"""
+
 	public.works needs to know
-		firstline integer,
-        lastline integer,
+	firstline integer,
+	lastline integer,
 
 	:param workcategoryprefix:
 	:param cursor:
@@ -45,7 +44,7 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 	query = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid DESC'
 	data = (workcategoryprefix+'%',)
 	cursor.execute(query, data)
-	results = cursor.fetchall()
+	results = resultiterator(cursor)
 
 	uids = [r[0] for r in results]
 
@@ -83,11 +82,11 @@ def boundaryfinder(uids):
 			authors[uid[0:6]] = [uid]
 
 	# get all line values for all works
-	workmapper = {}
+	workmapper = dict()
 	for a in authors:
 		q = 'SELECT index, wkuniversalid FROM {a}'.format(a=a)
 		cursor.execute(q)
-		indexvalues = cursor.fetchall()
+		indexvalues = resultiterator(cursor)
 
 		for i in indexvalues:
 			try:
@@ -154,7 +153,7 @@ def findwordcounts(cursor, dbconnection):
 	print('inserting work db metatata: wordcounts')
 	query = 'SELECT universalid FROM works WHERE wordcount IS NULL ORDER BY universalid ASC'
 	cursor.execute(query)
-	results = cursor.fetchall()
+	results = resultiterator(cursor)
 	dbconnection.commit()
 
 	uids = [r[0] for r in results]
@@ -192,14 +191,13 @@ def calculatewordcounts(uids):
 			authors[uid[0:6]] = [uid]
 
 	# get all line values for all works
-	countdict = {}
+	countdict = dict()
 	for a in authors:
 		q = 'SELECT wkuniversalid, stripped_line, hyphenated_words FROM {a}'.format(a=a)
 		cursor.execute(q)
-		lines = cursor.fetchall()
+		lines = resultiterator(cursor)
 
-		while lines:
-			l = lines.pop()
+		for l in lines:
 			uid = l[0]
 			stripped = l[1]
 			hyphens = l[2]
@@ -209,7 +207,7 @@ def calculatewordcounts(uids):
 
 			try:
 				countdict[uid]
-			except:
+			except KeyError:
 				countdict[uid] = 0
 			words = stripped.split(' ')
 			words = [x for x in words if x]
@@ -238,10 +236,10 @@ def insertcounts(countdict):
 	cursor.execute(q)
 
 	count = 0
-	for id in countdict.keys():
+	for idnum in countdict.keys():
 		count += 1
 		q = 'INSERT INTO tmp_works (universalid, wordcount) VALUES ( %s, %s )'
-		d = (id, countdict[id])
+		d = (idnum, countdict[idnum])
 		cursor.execute(q, d)
 		if count % 5000 == 0:
 			dbc.commit()
@@ -272,14 +270,11 @@ def buildtrigramindices(workcategoryprefix, cursor):
 	query = 'SELECT universalid FROM authors WHERE universalid LIKE %s ORDER BY universalid ASC'
 	data = (workcategoryprefix+'%',)
 	cursor.execute(query,data)
-	results = cursor.fetchall()
+	results = resultiterator(cursor)
 	
 	manager = Manager()
-	uids = manager.list()
+	uids = manager.list([r[0] for r in results])
 	commitcount = MPCounter()
-
-	for r in results:
-		uids.append(r[0])
 
 	print('\t', len(uids), 'items to index')
 
@@ -289,7 +284,6 @@ def buildtrigramindices(workcategoryprefix, cursor):
 		j.start()
 	for j in jobs:
 		j.join()
-
 
 	return
 
@@ -305,13 +299,14 @@ def mpindexbuilder(universalids, commitcount):
 	dbc = setconnection(config)
 	curs = dbc.cursor()
 
-	while len(universalids) > 0:
+	while universalids:
 		try:
 			universalid = universalids.pop()
 		except:
-			universalid = ''
+			universalid = None
+			universalids = None
 
-		if universalid != '':
+		if universalid:
 			for column in [('_mu', 'accented_line'), ('_st', 'stripped_line')]:
 				query = 'DROP INDEX IF EXISTS {i}_trgm_idx'.format(i=universalid + column[0])
 				try:

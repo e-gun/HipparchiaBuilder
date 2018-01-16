@@ -595,7 +595,7 @@ def cleanworkname(betacodeworkname):
 	percents = re.compile(r'%(\d{1,3})')
 	workname = re.sub(percents, percentsubstitutes, betacodeworkname)
 	ands = re.compile(r'&(\d+)(.*?)')
-	workname = re.sub(ands, latinauthorandshiftparser, betacodeworkname)
+	workname = re.sub(ands, latinauthorandshiftparser, workname)
 
 	workname = re.sub(r'\[2(.*?)]2', r'⟨\1⟩', workname)
 	workname = re.sub(r'<.*?>', '', workname)

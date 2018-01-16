@@ -72,9 +72,6 @@ level00 = line
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-# dbconnection = setconnection(config)
-# cursor = dbconnection.cursor()
-
 def builddbremappers(oldprefix, newprefix):
 
 	dbc = setconnection(config)
@@ -85,9 +82,7 @@ def builddbremappers(oldprefix, newprefix):
 	pgsqlcursor.execute(q, d)
 	results = pgsqlcursor.fetchall()
 
-	olddbs = list()
-	for r in results:
-		olddbs.append(r[0])
+	olddbs = [r[0] for r in results]
 
 	aumapper = dict()
 	counter = -1
@@ -468,6 +463,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			wkid = workpile.pop()
 		except IndexError:
 			wkid = False
+			workpile = None
 
 		if wkid:
 			commitcount.increment()
@@ -484,7 +480,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			ln = r[1]
 			an = r[2]
 
-			pi = []
+			pi = list()
 			for info in [publicationinfo, additionalpubinfo, stillfurtherpubinfo, reprints]:
 				p = re.search(info, ln)
 				if p is not None:
@@ -567,7 +563,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 				dn = ''
 
 			if td != '' or dn != '':
-				newnotes = []
+				newnotes = list()
 				for n in [an, td, dn]:
 					if n != '':
 						newnotes.append(n)

@@ -216,6 +216,28 @@ def tablenamer(authorobject, indexedat):
 	return workdbname
 
 
+def resultiterator(cursor, chunksize=5000):
+	"""
+
+	Yield a generator from fetchmany to keep memory usage down in contrast to
+
+		results = curs.fetchall()
+
+	see: http://code.activestate.com/recipes/137270-use-generators-for-fetching-large-db-record-sets/
+
+	:param cursor:
+	:param chunksize:
+	:return:
+	"""
+
+	while True:
+		results = cursor.fetchmany(chunksize)
+		if not results:
+			break
+		for result in results:
+			yield result
+
+
 def dbauthoradder(authorobject, cursor):
 	"""
 	SQL setup
