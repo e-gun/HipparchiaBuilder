@@ -8,6 +8,7 @@
 
 import re
 
+
 def replacehebrew(texttoclean):
 	"""
 

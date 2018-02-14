@@ -15,6 +15,7 @@ from builder.parsers.latinsubstitutions import latindiacriticals
 
 def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 	"""
+
 	read and IDT file's contents and extract author and work info for it
 	this is done via a byte-by-byte walk
 
@@ -25,8 +26,10 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 	you would soon find out that that function is broken...
 
 	:param idtfiledatastream:
-	:param language
-	:return: authorobject
+	:param language:
+	:param uidprefix:
+	:param dataprefix:
+	:return:
 	"""
 
 	bytecount = -1
@@ -74,8 +77,7 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 						authorobject.idxname = authorname
 						bytecount = bytecount + len(authorname)
 					else:
-						print("Author number apparently was not followed by author name: ", bytecount, " = ",
-						      idtfiledatastream[bytecount])
+						print("Author number apparently was not followed by author name: ", bytecount, " = ", idtfiledatastream[bytecount])
 						break
 				elif level == 1:
 					worknumber = string
@@ -87,7 +89,7 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 						workname = getpascalstr(idtfiledatastream, bytecount)
 						bytecount = bytecount + len(workname)
 						grabitall = re.compile(r'(.*?)($)')
-						#workname = cleanworkname(workname)
+						# workname = cleanworkname(workname)
 						workname = latinauthorlinemarkupprober(workname, grabber=grabitall)
 						workname = replaceaddnlchars(workname)
 						# <hmu_fontshift_greek_normal>, etc. might still be in here
@@ -162,7 +164,6 @@ def loadauthor(idtfiledatastream, language, uidprefix, dataprefix):
 	if authorobject.universalid[0:2] in ['in', 'dp']:
 		for w in authorobject.works:
 			w.structure = {0: 'line', 1: 'document'}
-		
 
 	return authorobject
 
@@ -183,9 +184,9 @@ def getasciistring(filearray, offset):
 def getpascalstr(filearray, offset):
 	# Subroutine to extract pascal-style strings with the length byte first
 	pascalstr = ''
-	strLen = filearray[offset]
+	strlen = filearray[offset]
 	offset += 1
-	for c in range(offset, offset + strLen):
+	for c in range(offset, offset + strlen):
 		pascalstr += chr(filearray[c])
 	return pascalstr
 
@@ -248,7 +249,7 @@ def idthexparser(filearray, offset, code):
 			newbytecountoffset += 1
 		if (right == 9) or (right == 11) or (right == 13):
 			newbytecountoffset += 2
-		if (right == 12):
+		if right == 12:
 			newbytecountoffset += 3
 		if (right == 9) or (right == 11) or (right == 13):
 			print("found junk")

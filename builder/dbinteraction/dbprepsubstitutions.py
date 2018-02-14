@@ -418,4 +418,3 @@ def consolidatecontiguouslines(previousline, thisline, hypenatedword, transtable
 	newlines['l'] = tl
 
 	return newlines
-	

@@ -27,10 +27,6 @@ buildlex = config['corporatobuild']['buildlex']
 buildgram = config['corporatobuild']['buildgram']
 buildcounts = config['corporatobuild']['buildwordcounts']
 
-dbconnection = setconnection(config)
-cursor = dbconnection.cursor()
-
-
 start = time.time()
 
 corpusvars = {
@@ -116,6 +112,8 @@ for corpusname in corporatobuild:
 #
 # lexica, etc
 #
+dbconnection = setconnection(config)
+cursor = dbconnection.cursor()
 
 if buildlex == 'y':
 	print('building lexical dbs')

@@ -33,6 +33,7 @@ def hextohighunicode(twocharhexstring):
 	:param twocharhexstring:
 	:return:
 	"""
+	
 	invals = u'0123456789abcdef'
 	outvals = u'⓪①②③④⑤⑥⑦⑧⑨ⓐⓑⓒⓓⓔⓕ'
 	transformed = twocharhexstring.translate(str.maketrans(invals, outvals))
@@ -46,6 +47,7 @@ def bitswapchars(valuelist):
 	:param valuelist:
 	:return:
 	"""
+
 	asciival = ''
 	for hv in valuelist:
 		asciival += chr(int(hv, 16) & int('7f', 16))
