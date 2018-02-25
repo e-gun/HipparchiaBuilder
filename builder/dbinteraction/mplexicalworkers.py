@@ -196,19 +196,20 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			body = re.sub(restoreb, r'<pron extent="full">\1\2', body)
 			body = re.sub(restorec, r'<itype lang="greek" opt="n">\1\2', body)
 
-			partsofspeech = set(re.findall(posfinder, body))
-			preps = re.findall(prepfinder, body)
+			startofbody = body[:150]
+			partsofspeech = set(re.findall(posfinder, startofbody))
+			preps = re.findall(prepfinder, startofbody)
 			if preps:
 				partsofspeech.add('prep.')
-			nouns = [n for n in re.findall(nounfindera, body) if n in ['ὁ', 'ἡ', 'τό']]
-			nouns += [n for n in re.findall(nounfinderb, body) if n in ['ὁ', 'ἡ', 'τό']]
+			nouns = [n for n in re.findall(nounfindera, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
+			nouns += [n for n in re.findall(nounfinderb, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
 			if nouns:
 				partsofspeech.add('subst.')
-			adjs = [a for a in re.findall(twoterminationadjfinder, body) if a in ['έϲ']]
-			adjs += [a for a in re.findall(threeterminationadjfinder, body) if a in ['α', 'ά', 'η', 'ή']]
+			adjs = [a for a in re.findall(twoterminationadjfinder, startofbody) if a in ['έϲ']]
+			adjs += [a for a in re.findall(threeterminationadjfinder, startofbody) if a in ['α', 'ά', 'η', 'ή']]
 			if adjs:
 				partsofspeech.add('adj.')
-			verbs = re.findall(verbfinder, body)
+			verbs = re.findall(verbfinder, startofbody)
 			if verbs:
 				partsofspeech.add('v.')
 			if not partsofspeech and entryname[-1] == 'ω':
