@@ -8,6 +8,7 @@
 
 import configparser
 import re
+import psycopg2
 
 from builder.dbinteraction.connection import setconnection
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
@@ -138,7 +139,9 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	posfinder = re.compile(r'<pos.*?>(.*?)</pos>')
 	prepfinder = re.compile(r'Prep. with')
-	verbfinder = re.compile(r'<tns.*?>(.*?)</tns>')
+	verbfindera = re.compile(r'<gram type="voice" .*?</gram>')
+	verbfinderb = re.compile(r'<tns.*?>(.*?)</tns>')
+
 	# <orth extent="full" lang="greek" opt="n">χύτρ-α</orth>, <gen lang="greek" opt="n">ἡ</gen>,
 	nounfindera = re.compile(r'<orth extent=".*?".*?</orth>, <gen.*?>(.*?)</gen>')
 	# <orth extent="full" lang="greek" opt="n">βωρεύϲ</orth>, <itype lang="greek" opt="n">εωϲ</itype>, <gen lang="greek" opt="n">ὁ</gen>
@@ -205,14 +208,15 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			nouns += [n for n in re.findall(nounfinderb, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
 			if nouns:
 				partsofspeech.add('subst.')
-			adjs = [a for a in re.findall(twoterminationadjfinder, startofbody) if a in ['έϲ']]
+			adjs = [a for a in re.findall(twoterminationadjfinder, startofbody) if a in ['έϲ', 'εϲ', 'ον', 'όν']]
 			adjs += [a for a in re.findall(threeterminationadjfinder, startofbody) if a in ['α', 'ά', 'η', 'ή']]
 			if adjs:
 				partsofspeech.add('adj.')
-			verbs = re.findall(verbfinder, startofbody)
+			verbs = re.findall(verbfindera, startofbody)
+			verbs += re.findall(verbfinderb, startofbody)
 			if verbs:
 				partsofspeech.add('v.')
-			if not partsofspeech and entryname[-1] == 'ω':
+			if not partsofspeech and entryname and entryname[-1] == 'ω':
 				partsofspeech.add('v.')
 
 			pos = ''
@@ -232,10 +236,10 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 
 			try:
 				curs.execute(query, data)
-			except:
+			except psycopg2.DataError:
 				# psycopg2.DataError
 				print('failed to insert', entryname)
-				print('\t>>',entryname, metrical, stripped, idnum, pos,'<<')
+				print('\t>>', entryname, metrical, stripped, idnum, pos, '<<')
 
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
