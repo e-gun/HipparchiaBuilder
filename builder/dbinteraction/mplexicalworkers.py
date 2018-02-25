@@ -39,6 +39,9 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 	bodyfinder = re.compile(r'(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	defectivebody = re.compile(r'(<entryFree(.*?)>)(.*?)')
 	greekfinder = re.compile(r'(<foreign lang="greek">)(.*?)(</foreign>)')
+
+	etymfinder = re.compile(r'<etym.*?</etym>')
+	badprepfinder = re.compile(r'ith(|out)( | a )<pos opt="n">prep.</pos>')
 	posfinder = re.compile(r'<pos.*?>(.*?)</pos>')
 
 	while len(entries) > 0:
@@ -84,8 +87,11 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			# 'n1000' --> 1000
 			idnum = int(re.sub(r'^n', '', idnum))
 
+			# parts of speech
+			cleanbody = re.sub(etymfinder, '', body)
+			cleanbody = re.sub(badprepfinder, '', cleanbody)
 			pos = ''
-			pos += ' ‖ '.join(set(re.findall(posfinder, body)))
+			pos += ' ‖ '.join(set(re.findall(posfinder, cleanbody)))
 			pos = pos.lower()
 
 			translationlist = translationsummary(entry, 'hi')
@@ -141,6 +147,8 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	prepfinder = re.compile(r'Prep. with')
 	verbfindera = re.compile(r'<gram type="voice" .*?</gram>')
 	verbfinderb = re.compile(r'<tns.*?>(.*?)</tns>')
+
+	bodytrimmer = re.compile(r'<bibl.*?</bibl>')
 
 	# <orth extent="full" lang="greek" opt="n">χύτρ-α</orth>, <gen lang="greek" opt="n">ἡ</gen>,
 	nounfindera = re.compile(r'<orth extent=".*?".*?</orth>, <gen.*?>(.*?)</gen>')
@@ -199,7 +207,14 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			body = re.sub(restoreb, r'<pron extent="full">\1\2', body)
 			body = re.sub(restorec, r'<itype lang="greek" opt="n">\1\2', body)
 
-			startofbody = body[:150]
+			# 'n1000' --> 1000
+			idnum = int(re.sub(r'^n', '', idnum))
+			translationlist = translationsummary(entry, 'tr')
+			stripped = cleanaccentsandvj(entryname)
+
+			# part of speech stuff
+			startofbody = re.sub(bodytrimmer, '', body)
+			startofbody = startofbody[:500]
 			partsofspeech = set(re.findall(posfinder, startofbody))
 			preps = re.findall(prepfinder, startofbody)
 			if preps:
@@ -223,14 +238,11 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			pos += ' ‖ '.join(partsofspeech)
 			pos = pos.lower()
 
-			# 'n1000' --> 1000
-			idnum = int(re.sub(r'^n', '', idnum))
-			translationlist = translationsummary(entry, 'tr')
-			stripped = cleanaccentsandvj(entryname)
 			qtemplate = """
 			INSERT INTO {d} 
 				(entry_name, metrical_entry, unaccented_entry, id_number, pos, translations, entry_body)
 				VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+
 			query = qtemplate.format(d=dictdb)
 			data = (entryname, metrical, stripped, idnum, pos, translationlist, body)
 
@@ -300,7 +312,7 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 			xref = int(segments.group(2))
 			# be careful: the corresponding xref is a str inside a text field
 
-			# clean the derivativeforms: note that this involves a loss of info
+			# clean the derivativeforms: note that this involves a LOSS OF INFORMATION
 			# ζῳωδία           |    49601761 |         ζῳωδίαϲ (fem acc pl) (fem gen sg (attic doric aeolic))  ζῳωδίᾳ (fem dat sg (attic doric aeolic))
 			# becomes
 			# ζῳωδία           |    49601761 | {ζῳωδίαϲ,ζῳωδίᾳ}
