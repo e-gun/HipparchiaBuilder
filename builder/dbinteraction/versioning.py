@@ -11,7 +11,7 @@ from datetime import datetime
 
 
 #sqltemplateversion = 7242017
-sqltemplateversion = 1082018
+sqltemplateversion = 2242018
 
 config = configparser.ConfigParser()
 config.read('config.ini')

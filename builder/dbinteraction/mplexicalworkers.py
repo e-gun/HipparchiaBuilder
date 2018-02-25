@@ -38,6 +38,7 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 	bodyfinder = re.compile(r'(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	defectivebody = re.compile(r'(<entryFree(.*?)>)(.*?)')
 	greekfinder = re.compile(r'(<foreign lang="greek">)(.*?)(</foreign>)')
+	posfinder = re.compile(r'<pos.*?>(.*?)</pos>')
 
 	while len(entries) > 0:
 		try:
@@ -62,9 +63,9 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			info = segments.group(2)
 			parsedinfo = re.search('id="(.*?)"\stype="(.*?)"\skey="(.*?)" opt="(.*?)"', info)
 			idnum = parsedinfo.group(1)
-			etype = parsedinfo.group(2)
+			etype = parsedinfo.group(2)  # will go unused
 			key = parsedinfo.group(3)
-			opt = parsedinfo.group(4)
+			opt = parsedinfo.group(4)  # will go unused
 
 			# handle words like abactus which have key... n... opt... where n is the variant number
 			# this pattern interrupts the std parsedinfo flow
@@ -82,16 +83,19 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			# 'n1000' --> 1000
 			idnum = int(re.sub(r'^n', '', idnum))
 
+			pos = ''
+			pos += ' ‖ '.join(set(re.findall(posfinder, body)))
+			pos = pos.lower()
+
 			translationlist = translationsummary(entry, 'hi')
 			# do some quickie greek replacements
 			body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
 			qtemplate = """
 			INSERT INTO {d} 
-				(entry_name, metrical_entry, id_number, entry_type, entry_key, entry_options, 
-				translations, entry_body)
-				VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+				(entry_name, metrical_entry, id_number, entry_key, pos, translations, entry_body)
+				VALUES (%s, %s, %s, %s, %s, %s, %s)"""
 			query = qtemplate.format(d=dictdb)
-			data = (entryname, metricalentry, idnum, etype, key, opt, translationlist, body)
+			data = (entryname, metricalentry, idnum, key, pos, translationlist, body)
 			curs.execute(query, data)
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
@@ -132,6 +136,18 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	# not clear how much one needs to care: but a search inside a match group could be implemented.
 
 	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
+	posfinder = re.compile(r'<pos.*?>(.*?)</pos>')
+	prepfinder = re.compile(r'Prep. with')
+	verbfinder = re.compile(r'<tns.*?>(.*?)</tns>')
+	# <orth extent="full" lang="greek" opt="n">χύτρ-α</orth>, <gen lang="greek" opt="n">ἡ</gen>,
+	nounfindera = re.compile(r'<orth extent=".*?".*?</orth>, <gen.*?>(.*?)</gen>')
+	# <orth extent="full" lang="greek" opt="n">βωρεύϲ</orth>, <itype lang="greek" opt="n">εωϲ</itype>, <gen lang="greek" opt="n">ὁ</gen>
+	nounfinderb = re.compile(r'<orth extent=".*?".*?</orth>, <itype.*?</itype>, <gen.*?>(.*?)</gen>')
+	# <orth extent="full" lang="greek" opt="n">βωλο-ειδήϲ</orth>, <itype lang="greek" opt="n">έϲ</itype>,
+	twoterminationadjfinder = re.compile(r'<orth extent=".*?".*?</orth>, <itype.*?>(.*?)</itype>, <[^g]')
+	# <orth extent="full" lang="greek" opt="n">βωμιαῖοϲ</orth>, <itype lang="greek" opt="n">α</itype>, <itype lang="greek" opt="n">ον</itype>,
+	threeterminationadjfinder = re.compile(r'<orth extent=".*?".*?</orth>, <itype.*?>(.*?)</itype>, <itype .*?>.*?</itype>, <[^g]')
+
 	greekfinder = re.compile(
 		'(<(foreign|orth|pron|quote|gen|itype|etym|ref).*?lang="greek".*?>)(.*?)(</(foreign|orth|pron|quote|gen|itype|etym|ref)>)')
 	# these arise from nested tags: a more elegant solution would be nice; some other day
@@ -160,8 +176,8 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			try:
 				idnum = parsedinfo.group(1)
 				key = parsedinfo.group(2)
-				etype = parsedinfo.group(3)
-				opt = parsedinfo.group(4)
+				etype = parsedinfo.group(3)  # will go unused
+				opt = parsedinfo.group(4)  # will go unused
 			except:
 				# only one greek dictionary entry will throw an exception: n29246
 				# print('did not find key at', idnum, entry)
@@ -180,30 +196,52 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			body = re.sub(restoreb, r'<pron extent="full">\1\2', body)
 			body = re.sub(restorec, r'<itype lang="greek" opt="n">\1\2', body)
 
+			partsofspeech = set(re.findall(posfinder, body))
+			preps = re.findall(prepfinder, body)
+			if preps:
+				partsofspeech.add('prep.')
+			nouns = [n for n in re.findall(nounfindera, body) if n in ['ὁ', 'ἡ', 'τό']]
+			nouns += [n for n in re.findall(nounfinderb, body) if n in ['ὁ', 'ἡ', 'τό']]
+			if nouns:
+				partsofspeech.add('subst.')
+			adjs = [a for a in re.findall(twoterminationadjfinder, body) if a in ['έϲ']]
+			adjs += [a for a in re.findall(threeterminationadjfinder, body) if a in ['α', 'ά', 'η', 'ή']]
+			if adjs:
+				partsofspeech.add('adj.')
+			verbs = re.findall(verbfinder, body)
+			if verbs:
+				partsofspeech.add('v.')
+			if not partsofspeech and entryname[-1] == 'ω':
+				partsofspeech.add('v.')
+
+			pos = ''
+			pos += ' ‖ '.join(partsofspeech)
+			pos = pos.lower()
+
 			# 'n1000' --> 1000
 			idnum = int(re.sub(r'^n', '', idnum))
 			translationlist = translationsummary(entry, 'tr')
 			stripped = cleanaccentsandvj(entryname)
 			qtemplate = """
 			INSERT INTO {d} 
-				(entry_name, metrical_entry, unaccented_entry, id_number, entry_type,
-				entry_options, translations, entry_body)
-				VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+				(entry_name, metrical_entry, unaccented_entry, id_number, pos, translations, entry_body)
+				VALUES (%s, %s, %s, %s, %s, %s, %s)"""
 			query = qtemplate.format(d=dictdb)
-			data = (entryname, metrical, stripped, idnum, etype, opt, translationlist, body)
+			data = (entryname, metrical, stripped, idnum, pos, translationlist, body)
 
 			try:
 				curs.execute(query, data)
 			except:
 				# psycopg2.DataError
-				print('failed to insert', data)
+				print('failed to insert', entryname)
+				print('\t>>',entryname, metrical, stripped, idnum, pos,'<<')
 
 			commitcount.increment()
 			if commitcount.value % 5000 == 0:
 				dbc.commit()
 				try:
 					print('\tat', idnum, entryname)
-				except:
+				except UnicodeEncodeError:
 					# UnicodeEncodeError
 					print('\tat', idnum)
 
@@ -270,7 +308,7 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 			formlist = [f.translate(str.maketrans(invals, outvals)) for f in formlist]
 			formlist = list(set(formlist))
 
-			query = 'INSERT INTO ' + grammardb + ' (dictionary_entry, xref_number, derivative_forms) VALUES (%s, %s, %s)'
+			query = 'INSERT INTO {g} (dictionary_entry, xref_number, derivative_forms) VALUES (%s, %s, %s)'.format(g=grammardb)
 			data = (dictionaryform, xref, formlist)
 			curs.execute(query, data)
 			commitcount.increment()

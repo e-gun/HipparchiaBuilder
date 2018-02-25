@@ -68,7 +68,7 @@ def latinvowellengths(texttoclean):
 	:param texttoclean:
 	:return:
 	"""
-	textualmarkuptuples = []
+	textualmarkuptuples = list()
 
 	betacodetuples = (
 		(r'a_', u'a\u0304'),
@@ -150,8 +150,6 @@ def translationsummary(fullentry, translationlabel):
 	soup = BeautifulSoup(fullentry, 'html.parser')
 	tr = soup.find_all(translationlabel)
 	exclude = ['ab', 'de', 'ex', 'ut', 'nihil', 'quam', 'quid']
-
-	translations = ''
 
 	try:
 		tr = [t.string for t in tr]

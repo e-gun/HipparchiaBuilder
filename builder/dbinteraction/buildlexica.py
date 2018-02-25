@@ -303,14 +303,12 @@ def getlexicaltablestructuredict(tablename):
 			'columns': ['observed_form character varying(64)', 'xrefs character varying(128)', 'prefixrefs character varying(128)', 'possible_dictionary_forms text'],
 			'index': 'observed_form'},
 		'latin_dictionary': {
-			'columns': [ 'entry_name character varying(64)', 'metrical_entry character varying(64)', 'id_number integer',
-						 'entry_type character varying(8)', 'entry_key character varying(64)', 'entry_options "char"',
-						 'translations text', 'entry_body text' ],
+			'columns': ['entry_name character varying(64)', 'metrical_entry character varying(64)', 'id_number integer',
+						'entry_key character varying(64)', 'pos character varying(64)', 'translations text', 'entry_body text'],
 			'index': 'entry_name'},
 		'greek_dictionary': {
 			'columns': ['entry_name character varying(64)', 'metrical_entry character varying(64)', 'unaccented_entry character varying(64)',
-						'id_number integer', 'entry_type character varying(8)', 'entry_options "char"',
-						'translations text', 'entry_body text'],
+						'id_number integer', 'pos character varying(64)', 'translations text', 'entry_body text'],
 			'index': 'entry_name'}
 	}
 

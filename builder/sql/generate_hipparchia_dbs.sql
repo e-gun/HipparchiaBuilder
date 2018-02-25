@@ -92,14 +92,14 @@ GRANT SELECT ON TABLE public.works TO hippa_rd;
 
 -- DROP TABLE public.greek_dictionary;
 
-CREATE TABLE public.greek_dictionary
-(
-  entry_name character varying(64),
-  unaccented_entry character varying(64),
-  id_number character varying(8),
-  entry_type character varying(8),
-  entry_options "char",
-  entry_body text
+CREATE TABLE greek_dictionary (
+    entry_name character varying(64),
+    metrical_entry character varying(64),
+    unaccented_entry character varying(64),
+    id_number integer,
+    pos character varying(64),
+    translations text,
+    entry_body text
 )
 WITH (
   OIDS=FALSE
@@ -175,15 +175,15 @@ CREATE INDEX gkmorph_idx
 
 -- DROP TABLE public.latin_dictionary;
 
-CREATE TABLE public.latin_dictionary
-(
-  entry_name character varying(64),
-  id_number character varying(8),
-  entry_type character varying(8),
-  entry_key character varying(64),
-  entry_options "char",
-  entry_body text
-)
+CREATE TABLE latin_dictionary (
+    entry_name character varying(64),
+    metrical_entry character varying(64),
+    id_number integer,
+    entry_key character varying(64),
+    pos character varying(64),
+    translations text,
+    entry_body text
+);
 WITH (
   OIDS=FALSE
 );
