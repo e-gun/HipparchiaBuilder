@@ -43,6 +43,7 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 	etymfinder = re.compile(r'<etym.*?</etym>')
 	badprepfinder = re.compile(r'ith(|out)( | a )<pos opt="n">prep.</pos>')
 	posfinder = re.compile(r'<pos.*?>(.*?)</pos>')
+	particlefinder = re.compile(r'\. particle')
 
 	while len(entries) > 0:
 		try:
@@ -90,8 +91,11 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			# parts of speech
 			cleanbody = re.sub(etymfinder, '', body)
 			cleanbody = re.sub(badprepfinder, '', cleanbody)
-			pos = ''
-			pos += ' ‖ '.join(set(re.findall(posfinder, cleanbody)))
+			pos = list()
+			pos += list(set(re.findall(posfinder, cleanbody)))
+			if re.findall(particlefinder, cleanbody):
+				pos.append('partic.')
+			pos = ' ‖ '.join(pos)
 			pos = pos.lower()
 
 			translationlist = translationsummary(entry, 'hi')
@@ -145,10 +149,12 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	bodyfinder = re.compile('(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	posfinder = re.compile(r'<pos.*?>(.*?)</pos>')
 	prepfinder = re.compile(r'Prep. with')
+	conjfinder = re.compile(r'Conj\.,')
+	particlefinder = re.compile(r'Particle')
 	verbfindera = re.compile(r'<gram type="voice" .*?</gram>')
 	verbfinderb = re.compile(r'<tns.*?>(.*?)</tns>')
 
-	bodytrimmer = re.compile(r'<bibl.*?</bibl>')
+	bodytrimmer = re.compile(r'(<bibl.*?</bibl>|<gram type="dialect".*?</gram>|<cit.*?</cit>)')
 
 	# <orth extent="full" lang="greek" opt="n">χύτρ-α</orth>, <gen lang="greek" opt="n">ἡ</gen>,
 	nounfindera = re.compile(r'<orth extent=".*?".*?</orth>, <gen.*?>(.*?)</gen>')
@@ -216,9 +222,13 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			startofbody = re.sub(bodytrimmer, '', body)
 			startofbody = startofbody[:500]
 			partsofspeech = set(re.findall(posfinder, startofbody))
-			preps = re.findall(prepfinder, startofbody)
-			if preps:
+
+			if re.findall(conjfinder, startofbody):
+				partsofspeech.add('conj.')
+			if re.findall(prepfinder, startofbody):
 				partsofspeech.add('prep.')
+			if re.findall(particlefinder, startofbody):
+				partsofspeech.add('partic.')
 			nouns = [n for n in re.findall(nounfindera, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
 			nouns += [n for n in re.findall(nounfinderb, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
 			if nouns:
