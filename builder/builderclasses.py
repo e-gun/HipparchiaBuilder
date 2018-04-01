@@ -46,9 +46,9 @@ class Author(object):
 		self.recorded_date = ''
 		self.converted_date = None
 		self.location = ''
-		self.works = []
+		self.works = list()
 		# sadly we need this to decode what work number is stored where
-		self.workdict = {}
+		self.workdict = dict()
 		self.name = ''
 		self.aka = ''
 		self.dataprefix = dataprefix
@@ -267,7 +267,7 @@ class dbOpus(object):
 		# self.worknumber = int(universalid[7:])
 		# con't use int() any longer because ins and ddp numbers count via hex
 		self.worknumber = universalid[7:]
-		self.structure = {}
+		self.structure = dict()
 		idx = -1
 		for label in [levellabels_00, levellabels_01, levellabels_02, levellabels_03, levellabels_04, levellabels_05]:
 			idx += 1
@@ -365,7 +365,7 @@ class dbWorkLine(object):
 		:param self:
 		:return:
 		"""
-		loc = []
+		loc = list()
 
 		if self.wkuinversalid[0:2] not in ['in', 'dp', 'ch']:
 			for lvl in [self.l0, self.l1, self.l2, self.l3, self.l4, self.l5]:
@@ -497,7 +497,7 @@ class dbWorkLine(object):
 		:param version:
 		:return:
 		"""
-		wordlist = []
+		wordlist = list()
 
 		if version in ['polytonic', 'stripped']:
 			line = getattr(self, version)
@@ -613,13 +613,14 @@ class dbLemmaObject(object):
 	def __init__(self, dictionaryentry, xref, derivativeforms):
 		self.dictionaryentry = dictionaryentry
 		self.xref = xref
-		self.formandidentificationlist = [f for f in derivativeforms.split('\t') if f]
+		# self.formandidentificationlist = [f for f in derivativeforms.split('\t') if f]
+		self.formandidentificationlist = derivativeforms
 		self.formlist = [f.split(' ')[0] for f in self.formandidentificationlist]
 		self.formlist = [re.sub(r'\'', '', f) for f in self.formlist]
 		self.formlist = [re.sub(r'v', 'u', f) for f in self.formlist]
 
 	def getformdict(self):
-		fd = {}
+		fd = dict()
 		for f in self.formandidentificationlist:
 			key = f.split(' ')[0]
 			body = f[len(key)+1:]

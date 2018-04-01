@@ -1,0 +1,18 @@
+
+bad original headword data for ἄποκριϲιϲ
+
+    hipparchiaDB=# select * from greek_lemmata where dictionary_entry='ἄποκριϲιϲ';
+
+     dictionary_entry | xref_number | derivative_forms
+    ------------------+-------------+------------------
+    (0 rows)
+
+
+    hipparchiaDB=# select * from greek_lemmata where dictionary_entry='ἄποκριϲλϲ';
+
+     dictionary_entry | xref_number |                                                              derivative_forms
+    ------------------+-------------+---------------------------------------------------------------------------------------------------------------------------------------------
+     ἄποκριϲλϲ        |    13504156 | {ἀποκρίϲιοϲ,ἀπόκριϲιν,ἀποκρίϲειϲ,ἀποκρίϲεϲιν,ἀπόκριϲιϲ,ἀποκρίϲεϲι,ἀποκρίϲεων,ἀποκρίϲηϲ,ἀποκρίϲιεϲ,ἀποκρίϲῃ,ἀποκρίϲιαϲ,ἀποκρίϲει,ἀποκρίϲεωϲ}
+    (1 row)
+
+
