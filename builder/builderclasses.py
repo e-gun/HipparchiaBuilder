@@ -170,7 +170,7 @@ class dbAuthor(object):
 		self.converted_date = converted_date
 		self.location = location
 		self.authornumber = universalid[2:]
-		self.listofworks = []
+		self.listofworks = list()
 		self.name = akaname
 		self.id = universalid
 
@@ -196,7 +196,7 @@ class dbAuthor(object):
 		self.listofworks.append(work)
 
 	def listworkids(self):
-		workids = []
+		workids = list()
 		for w in self.listofworks:
 			workids.append(w.universalid)
 
@@ -302,7 +302,7 @@ class dbOpus(object):
 		return float(self.converted_date) > other
 
 	def alllevels(self):
-		levels = []
+		levels = list()
 		for l in [self.levellabels_00, self.levellabels_01, self.levellabels_02, self.levellabels_03, self.levellabels_04, self.levellabels_05]:
 			levels.append(l)
 

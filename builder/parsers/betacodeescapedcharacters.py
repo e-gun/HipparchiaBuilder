@@ -1198,7 +1198,7 @@ def ltanglebracketsubstitutes(match):
 		52: r'<hmu_undocumented_anglebracketspan52>',
 		53: r'<hmu_undocumented_anglebracketspan53>',
 		60: r'<span class="hmu_preferred_epigraphical_text_used">',
-		61: r'<span class="hmu_epigraphical_text_inserted_after_erasure>"',
+		61: r'<span class="hmu_epigraphical_text_inserted_after_erasure">',
 		62: r'<span class="lineover">',
 		63: r'<span class="hmu_epigraphical_text_after_correction">',
 		64: r'<span class="letterbox">',
