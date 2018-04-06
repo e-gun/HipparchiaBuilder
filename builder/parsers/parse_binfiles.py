@@ -208,7 +208,10 @@ def cleanlabels(labellist):
 
 
 def buildlabellist(binfilepath):
-	binfile = file_io.filereaders.loadbin(binfilepath)
+
+	with open(binfilepath, 'rb') as f:
+		binfile = f.read()
+
 	bl = list()
 	for byte in binfile:
 		bl.append(byte)

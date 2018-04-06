@@ -70,7 +70,7 @@ def loadgkcanon(canonfile):
 	:return:
 	"""
 
-	allauthors = loadallauthorsasobjects(config)
+	allauthors = loadallauthorsasobjects()
 
 	# txt = file_io.filereaders.dirtyhexloader(canonfile)
 	txt = file_io.filereaders.highunicodefileload(canonfile)
@@ -82,7 +82,7 @@ def loadgkcanon(canonfile):
 	authordatadict = {a[0]: [a[1]] for a in authorlines if a[1]}
 	authorcolumns = ['shortname']
 
-	allworks = loadallworksasobjects(config)
+	allworks = loadallworksasobjects()
 	works = [w for w in txt if re.search(r'^\t<work>', w)]
 	worklines = [temptableworkline(l, allworks) for l in works]
 	workdatadict = {w[0]: w[1:] for w in worklines}
@@ -439,7 +439,7 @@ def peekatcanon(workdbname):
 
 	# regex patterns:
 	# careful - structure set to {0: 'Volumépagéline'} [gr0598]
-	allauthors = loadallauthorsasobjects(config)
+	allauthors = loadallauthorsasobjects()
 	txt = gkcanoncleaner(txt, allauthors)
 	structure = []
 	for line in txt:

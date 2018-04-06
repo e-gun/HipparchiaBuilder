@@ -157,7 +157,7 @@ def translationsummary(fullentry, translationlabel):
 		tr = [t for t in tr if t not in exclude]
 	except TypeError:
 		# argument of type 'NoneType' is not iterable
-		tr = []
+		tr = list()
 
 	# so 'go' and 'go,' are not both on the list
 	depunct = '[{p}]$'.format(p=re.escape(punctuation))

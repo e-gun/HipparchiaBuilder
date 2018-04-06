@@ -17,9 +17,9 @@ def loadidt(filepath):
 	:param filepath:
 	:return: idtdata
 	"""
-	f = open(filepath, 'rb')
-	idtdata = f.read()
-	f.close()
+
+	with open(filepath, 'rb') as f:
+		idtdata = f.read()
 
 	return idtdata
 
@@ -74,44 +74,3 @@ def highunicodefileload(filepath):
 	txt = ''.join(txt)
 
 	return txt
-
-
-def dirtyhexloader(filepath):
-	"""
-	open a CD file and get it ready for parsing
-	:return: a collection of characters with the unprintable chars swapped out for their hex representation
-	"""
-
-	f = open(filepath, 'rb')
-	o = f.read()
-	f.close()
-
-	utf = ''.join(map(chr, o))
-
-	# swap out the high values for hex representations of those values
-
-	txt = []
-	for c in range(0, len(o) - 1):
-		if (o[c] >= 128) or (o[c] <= 31):
-			txt.append(hex(o[c]) + ' ')
-		else:
-			txt.append(utf[c])
-
-	txt = ''.join(txt)
-
-	return txt
-
-
-def loadbin(filepath):
-	"""
-	simple simon: a raw read of the file to prepare it for the brutal parse
-	:param filepath:
-	:return: binfile data
-	"""
-	f = open(filepath, 'rb')
-	binfile = f.read()
-	f.close()
-
-	return binfile
-
-
