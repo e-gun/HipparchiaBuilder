@@ -232,7 +232,7 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 	:return:
 	"""
 
-	dbconnection = setconnection(simple=False)
+	dbconnection = setconnection(simple=True)
 	dbcursor = dbconnection.cursor()
 
 	qtemplate = """
