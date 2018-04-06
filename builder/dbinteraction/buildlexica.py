@@ -223,7 +223,7 @@ def analysisloader(language):
 			print('\t', str(bundlecount * chunksize), 'forms inserted')
 
 	# we will be doing some searches inside of possible_dictionary_forms: need the right kind of index for it
-	dbc = setconnection(config)
+	dbc = setconnection()
 	cursor = dbc.cursor()
 
 	q = 'CREATE INDEX {l}_analysis_trgm_idx ON {l}_morphology USING GIN ( possible_dictionary_forms gin_trgm_ops)'.format(l=language)
@@ -248,7 +248,7 @@ def resettable(tablename, tablestructurelist, indexcolumn):
 	:return:
 	"""
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	cursor = dbc.cursor()
 
 	columns = ', '.join(tablestructurelist)

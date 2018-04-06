@@ -28,7 +28,7 @@ def oldsetconnection(config, autocommit=False):
 
 	return dbconnection
 
-def setconnection(config, autocommit=False):
+def setconnection(autocommit=False, simple=False):
 	"""
 
 	set a connection...
@@ -40,7 +40,10 @@ def setconnection(config, autocommit=False):
 	:return:
 	"""
 
-	c = ConnectionObject(readonlyconnection=False, ctype='rw')
+	if not simple:
+		c = ConnectionObject(readonlyconnection=False, ctype='rw')
+	else:
+		c = SimpleConnectionObject(readonlyconnection=False, ctype='rw')
 
 	if autocommit:
 		c.setautocommit()

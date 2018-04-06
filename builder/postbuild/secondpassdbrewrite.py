@@ -74,7 +74,7 @@ config.read('config.ini')
 
 def builddbremappers(oldprefix, newprefix):
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	pgsqlcursor = dbc.cursor()
 
 	q = 'SELECT universalid FROM authors WHERE universalid LIKE %s ORDER BY universalid ASC'
@@ -124,7 +124,7 @@ def compilenewauthors(aumapper, wkmapper):
 	:return: newauthors
 	"""
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	pgsqlcursor = dbc.cursor()
 
 	newauthors = list()
@@ -169,7 +169,7 @@ def compilenewworks(newauthors, wkmapper):
 	:return:
 	"""
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	pgsqlcursor = dbc.cursor()
 
 	remapper = dict()
@@ -216,7 +216,7 @@ def registernewworks(newworktuples):
 	:param newworktuples:
 	:return:
 	"""
-	dbc = setconnection(config)
+	dbc = setconnection()
 	curs = dbc.cursor()
 
 	workandtitletuplelist = findnewtitles(newworktuples)
@@ -442,7 +442,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 	:return:
 	"""
 
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	cur = dbconnection.cursor()
 
 	prov = re.compile(r'<hmu_metadata_provenance value="(.*?)" />')
@@ -577,7 +577,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 	return metadatalist
 
 
-def modifyauthorsdb(newentryname, worktitle, pgsqlcursor):
+def modifyauthorsdb(newentryname, worktitle, dbcursor):
 	"""
 	the idxname of something like "ZZ0080" will be "Black Sea and Scythia Minor"
 	the title of "in0001" should be set to "Black Sea and Scythia Minor IosPE I(2) [Scythia]"
@@ -585,7 +585,7 @@ def modifyauthorsdb(newentryname, worktitle, pgsqlcursor):
 	:param tempentryname:
 	:param newentryname:
 	:param worktitle:
-	:param pgsqlcursor:
+	:param dbcursor:
 	:return:
 	"""
 
@@ -621,17 +621,17 @@ def modifyauthorsdb(newentryname, worktitle, pgsqlcursor):
 		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, location, recorded_date) ' \
 				' VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
 		d = (newentryname, 'G', idx, aka, short, clean, loc, 'Varia')
-		pgsqlcursor.execute(q, d)
+		dbcursor.execute(q, d)
 	else:
 		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, recorded_date) ' \
 				' VALUES (%s, %s, %s, %s, %s, %s, %s)'
 		d = (newentryname, 'G', idx, aka, short, clean, 'Varia')
-		pgsqlcursor.execute(q, d)
+		dbcursor.execute(q, d)
 
 	return
 
 
-def insertnewworksintonewauthor(newwkuid, results, pgsqlcursor):
+def insertnewworksintonewauthor(newwkuid, results, dbcursor):
 	"""
 
 	send me all of the matching lines from one db and i will build a new workdb with only these lines
@@ -643,7 +643,7 @@ def insertnewworksintonewauthor(newwkuid, results, pgsqlcursor):
 
 	:param newwkuid:
 	:param results:
-	:param pgsqlcursor:
+	:param dbcursor:
 	:return:
 	"""
 
@@ -685,7 +685,7 @@ def insertnewworksintonewauthor(newwkuid, results, pgsqlcursor):
 		d = tuple(r)
 
 		q = qtemplate.format(db=db)
-		pgsqlcursor.execute(q, d)
+		dbcursor.execute(q, d)
 
 	return
 
@@ -709,7 +709,7 @@ def assignlanguagetonewworks(dbprefix):
 
 	print('assigning language value to new works')
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	pgsqlcursor = dbc.cursor()
 
 	q = 'SELECT * FROM works WHERE universalid ~ %s'
@@ -788,28 +788,29 @@ def insertlanguagedata(languagetuplelist):
 	:return:
 	"""
 
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_works AS SELECT * FROM works LIMIT 0'
-	cursor.execute(q)
+	dbcursor.execute(q)
 
 	count = 0
 	for l in languagetuplelist:
 		count += 1
 		q = 'INSERT INTO tmp_works (universalid, language) VALUES ( %s, %s)'
 		d = l
-		cursor.execute(q, d)
+		dbcursor.execute(q, d)
 		if count % 5000 == 0:
-			dbc.commit()
+			dbconnection.commit()
 
-	dbc.commit()
+	dbconnection.commit()
 	q = 'UPDATE works SET language = tmp_works.language FROM tmp_works WHERE works.universalid = tmp_works.universalid'
-	cursor.execute(q)
-	dbc.commit()
+	dbcursor.execute(q)
+	dbconnection.commit()
 
 	q = 'DROP TABLE tmp_works'
-	cursor.execute(q)
-	dbc.commit()
+	dbcursor.execute(q)
+
+	dbconnection.connectioncleanup()
 
 	return

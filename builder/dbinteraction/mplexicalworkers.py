@@ -33,7 +33,7 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 	:return:
 	"""
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	curs = dbc.cursor()
 
 	bodyfinder = re.compile(r'(<entryFree(.*?)>)(.*?)(</entryFree>)')
@@ -138,7 +138,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	:return:
 	"""
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	curs = dbc.cursor()
 
 	# places where you can find lang="greek"
@@ -293,7 +293,7 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 	:return:
 	"""
 	
-	dbc = setconnection(config)
+	dbc = setconnection()
 	curs = dbc.cursor()
 	
 	keywordfinder = re.compile(r'(.*?\t)(\d{1,})(.*?)$')
@@ -374,7 +374,7 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 	:return:
 	"""
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	curs = dbc.cursor()
 
 	# most end with '}', but some end with a bracketed number or numbers

@@ -21,7 +21,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def insertworksintoauthortable(authorobject, dbreadyversion, cursor, dbconnection):
+def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 	"""
 	run throught the dbreadyversion and put it into the db
 	iterate through the works
@@ -48,6 +48,8 @@ def insertworksintoauthortable(authorobject, dbreadyversion, cursor, dbconnectio
 	:param dbconnection:
 	:return:
 	"""
+
+	cursor = dbconnection.cursor()
 
 	for indexedat in range(len(authorobject.works)):
 		# warning: '002' might be the value at work[0]
@@ -146,13 +148,16 @@ def insertworksintoauthortable(authorobject, dbreadyversion, cursor, dbconnectio
 	return
 
 
-def authortablemaker(authordbname, cursor):
+def authortablemaker(authordbname, dbconnection):
 	"""
 	SQL prep only
 	:param workdbname:
 	:param cursor:
 	:return:
 	"""
+
+	cursor = dbconnection.cursor()
+
 	query = 'DROP TABLE IF EXISTS public.{adb}'.format(adb=authordbname)
 	cursor.execute(query)
 
@@ -182,6 +187,8 @@ def authortablemaker(authordbname, cursor):
 	cursor.execute(query)
 
 	# print('failed to create',workdbname)
+
+	dbconnection.commit()
 
 	return
 
@@ -236,13 +243,17 @@ def resultiterator(cursor, chunksize=5000):
 			yield result
 
 
-def dbauthoradder(authorobject, cursor):
+def dbauthoradder(authorobject, dbconnection):
 	"""
 	SQL setup
 	:param authorobject:
 	:param cursor:
 	:return:
+
 	"""
+
+	cursor = dbconnection.cursor()
+
 	# steal from above: get a table name and then drop the 'w001' bit
 	uid = authorobject.universalid
 	if authorobject.language == '':
@@ -267,6 +278,8 @@ def dbauthoradder(authorobject, cursor):
 		print('dbauthoradder() failed to insert', authorobject.cleanname)
 		print(e)
 		print('aborted query was:', query, data)
+
+	dbconnection.commit()
 
 	return
 
@@ -361,7 +374,7 @@ def resetauthorsandworksdbs(tmpprefix, prefix):
 	:param prefix:
 	:return:
 	"""
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	cursor = dbconnection.cursor()
 
 	for zap in [tmpprefix, prefix]:
@@ -420,7 +433,7 @@ def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
 	:return:
 	"""
 
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	cursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_{t} AS SELECT * FROM {t} LIMIT 0'.format(t=table)

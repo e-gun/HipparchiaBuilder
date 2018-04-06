@@ -6,13 +6,10 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 import re
-import configparser
 
 from builder.builderclasses import dbWordCountObject, dbLemmaObject, dbWorkLine
 from builder.dbinteraction.connection import setconnection
 
-config = configparser.ConfigParser()
-config.read('config.ini')
 
 def dictmerger(masterdict, targetdict, label):
 	"""
@@ -29,7 +26,7 @@ def dictmerger(masterdict, targetdict, label):
 			except:
 				masterdict[item][label] = targetdict[item][label]
 		else:
-			masterdict[item] = {}
+			masterdict[item] = dict()
 			masterdict[item][label] = targetdict[item][label]
 
 	return masterdict
@@ -44,7 +41,7 @@ def acuteforgrave(matchgroup):
 	:return:
 	"""
 
-	map = {'ὰ': 'ά',
+	lettermap = {'ὰ': 'ά',
 	       'ὲ': 'έ',
 	       'ὶ': 'ί',
 	       'ὸ': 'ό',
@@ -67,7 +64,7 @@ def acuteforgrave(matchgroup):
 	       }
 
 	try:
-		substitute = map[matchgroup.group(0)]
+		substitute = lettermap[matchgroup.group(0)]
 	except KeyError:
 		substitute = ''
 
@@ -144,7 +141,7 @@ def createwordcounttable(tablename, extracolumns=False):
 	:return:
 	"""
 
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	dbcursor = dbconnection.cursor()
 
 	query = 'DROP TABLE IF EXISTS public.' + tablename
@@ -313,7 +310,7 @@ def deletetemporarydbs(temprefix):
 	:return:
 	"""
 
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	dbcursor = dbconnection.cursor()
 
 	q = 'SELECT universalid FROM works WHERE universalid LIKE %s'

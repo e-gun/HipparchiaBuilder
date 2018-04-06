@@ -175,7 +175,7 @@ def buildcorpusmetadata(corpusname, corpusvars):
 	:return:
 	"""
 
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	cursor = dbconnection.cursor()
 
 	print('\ncompiling metadata for', corpusname, 'dbs')
@@ -231,7 +231,7 @@ def managedworker(managedwork, dbconnection):
 			thework = None
 
 		if thework:
-			result = addoneauthor(thework[0], thework[1], thework[2], thework[3], thework[4], dbconnection, dbcursor)
+			result = addoneauthor(thework[0], thework[1], thework[2], thework[3], thework[4], dbconnection)
 			print(re.sub(r'[^\x00-\x7F]+', ' ', result))
 			dbconnection.commit()
 
@@ -262,7 +262,7 @@ def checkextant(authorlist, datapath):
 	return pruneddict
 
 
-def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection, cursor):
+def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection):
 	"""
 
 	I need an authtab pair within a one-item dict: {'0022':'Marcus Porcius &1Cato&\x80Cato'}
@@ -283,14 +283,14 @@ def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnec
 	authorobj = buildauthorobject(number, language, datapath, uidprefix, dataprefix)
 	authorobj.addauthtabname(name)
 	authorobj.language = language
-	thecollectedworksof(authorobj, language, datapath,  dbconnection, cursor)
+	thecollectedworksof(authorobj, language, datapath,  dbconnection)
 	buildtime = round(time.time() - starttime,2)
 	success = number+' '+authorobj.cleanname+' '+str(buildtime)+'s'
 	
 	return success
 
 
-def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor):
+def thecollectedworksof(authorobject, language, datapath,  dbconnection):
 	"""
 	give me a authorobject and i will build you a corpus in three stages
 	[a] initial parsing of original files
@@ -301,7 +301,7 @@ def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor)
 	"""
 	txt = initialworkparsing(authorobject, language, datapath)
 	txt = secondaryworkparsing(authorobject, txt)
-	databaseloading(txt, authorobject,  dbconnection, cursor)
+	databaseloading(txt, authorobject,  dbconnection)
 
 	return
 
@@ -403,7 +403,7 @@ def secondaryworkparsing(authorobject, txt):
 	return dbreadyversion
 
 
-def databaseloading(dbreadyversion, authorobject,  dbconnection, cursor):
+def databaseloading(dbreadyversion, authorobject,  dbconnection):
 	"""
 
 	a little more cleaning, then insert this material into the database
@@ -418,9 +418,9 @@ def databaseloading(dbreadyversion, authorobject,  dbconnection, cursor):
 
 	dbreadyversion = builder.dbinteraction.dbprepsubstitutions.dbprepper(dbreadyversion)
 	# pickle.dump(dbreadyversion, outputfile, open( "wb"))
-	db.dbauthoradder(authorobject, cursor)
-	db.authortablemaker(authorobject.universalid, cursor)
-	db.insertworksintoauthortable(authorobject, dbreadyversion, cursor, dbconnection)
+	db.dbauthoradder(authorobject, dbconnection)
+	db.authortablemaker(authorobject.universalid, dbconnection)
+	db.insertworksintoauthortable(authorobject, dbreadyversion, dbconnection)
 
 	# to debug return dbreadyversion
 	return

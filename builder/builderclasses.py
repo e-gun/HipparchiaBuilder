@@ -677,7 +677,7 @@ def loadallauthorsasobjects(config):
 	:return:
 	"""
 
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	curs = dbconnection.cursor()
 
 	q = 'SELECT * FROM authors'
@@ -699,7 +699,7 @@ def loadallworksasobjects(config):
 	:return:
 	"""
 
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	curs = dbconnection.cursor()
 
 	q = 'SELECT universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02, levellabels_03, ' \

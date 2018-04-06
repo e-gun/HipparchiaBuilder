@@ -67,7 +67,7 @@ def boundaryfinder(uids):
 	:return:
 	"""
 
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	cursor = dbconnection.cursor()
 
 	# don't need to do 100k queries by asking for every work inside of every author
@@ -115,7 +115,7 @@ def insertboundaries(boundariestuplelist):
 	:return:
 	"""
 
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	cursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_works AS SELECT * FROM works LIMIT 0'
@@ -179,7 +179,7 @@ def calculatewordcounts(uids):
 	:return:
 	"""
 
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	cursor = dbconnection.cursor()
 
 	# don't need to do 100k queries by asking for every work inside of every author
@@ -234,7 +234,7 @@ def insertcounts(countdict):
 	:return:
 	"""
 
-	dbconnection = setconnection(config)
+	dbconnection = setconnection()
 	cursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_works AS SELECT * FROM works LIMIT 0'

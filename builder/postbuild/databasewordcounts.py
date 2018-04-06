@@ -184,7 +184,7 @@ def concordancechunk(enumerateddbdict):
 	:return:
 	"""
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	cursor = dbc.cursor()
 
 	chunknumber = enumerateddbdict[0]
@@ -236,7 +236,7 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 	:return:
 	"""
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	cursor = dbc.cursor()
 
 	qtemplate = """
@@ -301,7 +301,7 @@ def headwordcounts():
 	:return:
 	"""
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	cursor = dbc.cursor()
 
 	# loading is slow: avoid doing it 2x
@@ -651,7 +651,7 @@ def insertchronologicalmetadata(metadatadict, thetable):
 	:return:
 	"""
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	cursor = dbc.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_metadata AS SELECT * FROM {tb} LIMIT 0'.format(tb=thetable)
@@ -712,7 +712,7 @@ def insertgenremetadata(metadatadict, genrename, thetable):
 	# a clash between the stored genre names 'Alchem.' and names that are used for columns (which can't include period or whitespace)
 	thecolumn = re.sub(r'[\.\s]', '', genrename).lower()
 
-	dbc = setconnection(config)
+	dbc = setconnection()
 	cursor = dbc.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_metadata AS SELECT * FROM {tb} LIMIT 0'.format(tb=thetable)
@@ -821,7 +821,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> config = configparser.ConfigParser()
 >>> config.read('config.ini')
 >>> from builder.dbinteraction.connection import setconnection
->>> dbc = setconnection(config)
+>>> dbc = setconnection()
 >>> cursor = dbc.cursor()
 >>> from builder.postbuild.postbuildhelperfunctions import graballlinesasobjects, acuteforgrave, graballcountsasobjects, grablemmataasobjects, createwordcounttable, cleanwords, prettyprintcohortdata, dictmerger
 >>> lemmataobjectslist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
