@@ -7,7 +7,6 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-import configparser
 import re
 from multiprocessing import Pool
 from statistics import mean, median
@@ -15,9 +14,9 @@ from string import punctuation
 
 from builder.builderclasses import dbWordCountObject, loadallauthorsasobjects, loadallworksasobjects
 from builder.dbinteraction.connection import setconnection
-from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj, buildhipparchiatranstable
-from builder.postbuild.postbuildhelperfunctions import graballlinesasobjects, acuteforgrave, graballcountsasobjects, \
-	grablemmataasobjects, createwordcounttable, cleanwords, prettyprintcohortdata, dictmerger
+from builder.parsers.betacodeandunicodeinterconversion import buildhipparchiatranstable, cleanaccentsandvj
+from builder.postbuild.postbuildhelperfunctions import acuteforgrave, cleanwords, createwordcounttable, dictmerger, \
+	graballcountsasobjects, graballlinesasobjects, grablemmataasobjects, prettyprintcohortdata
 from builder.workers import setworkercount
 
 
@@ -119,8 +118,7 @@ def wordcounter(restriction=None, authordict=None, workdict=None):
 	# safe to almost hit number of cores here since we are not doing both db and regex simultaneously in each thread
 	# here's hoping that the workers number was not over-ambitious to begin with
 
-	bigpool = setworkercount() + int(setworkercount() / 2)
-	with Pool(processes=int(bigpool)) as pool:
+	with Pool() as pool:
 		listofconcordancedicts = pool.map(concordancechunk, enumerate(chunked))
 
 	# merge the results
@@ -145,7 +143,7 @@ def wordcounter(restriction=None, authordict=None, workdict=None):
 				masterconcorcdance[word][db] = 0
 		masterconcorcdance[word]['total'] = sum([masterconcorcdance[word][x] for x in masterconcorcdance[word]])
 
-	if restriction == None:
+	if not restriction:
 		# no restriction: then this is our first pass and we should write the results to the master counts
 		# restriction implies subsequent passes that are for metadata derived from unrestricted data;
 		# these passes should not overwrite that data
@@ -183,8 +181,10 @@ def concordancechunk(enumerateddbdict):
 	:return:
 	"""
 
-	dbc = setconnection()
-	cursor = dbc.cursor()
+	# Pool means assigning a connection to a thread is a tricky issue...
+	dbconnection = setconnection(simple=True)
+	dbconnection.setautocommit()
+	dbcursor = dbconnection.cursor()
 
 	chunknumber = enumerateddbdict[0]
 	dbdict = enumerateddbdict[1]
@@ -202,8 +202,7 @@ def concordancechunk(enumerateddbdict):
 	for db in dblist:
 		count += 1
 		rng = dbdict[db]
-		lineobjects = graballlinesasobjects(db[0:6], rng, cursor)
-		dbc.commit()
+		lineobjects = graballlinesasobjects(db[0:6], rng, dbcursor)
 		for line in lineobjects:
 			words = line.wordlist('polytonic')
 			words = [cleanwords(w, punct) for w in words]
@@ -217,13 +216,11 @@ def concordancechunk(enumerateddbdict):
 				# 	print(line.universalid,line.unformattedline())
 				try:
 					concordance[w][prefix] += 1
-				except:
+				except KeyError:
 					concordance[w] = dict()
 					concordance[w][prefix] = 1
 
 	print('\tfinished chunk', chunknumber + 1)
-
-	dbc.connectioncleanup()
 
 	return concordance
 
@@ -235,8 +232,8 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 	:return:
 	"""
 
-	dbc = setconnection()
-	cursor = dbc.cursor()
+	dbconnection = setconnection(simple=False)
+	dbcursor = dbconnection.cursor()
 
 	qtemplate = """
 	INSERT INTO {wct}_{lt} (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count)
@@ -273,17 +270,17 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 			q = qtemplate.format(wct=wordcounttable, lt=lettertable)
 			d = (key, cw['total'], cw['gr'], cw['lt'], cw['dp'], cw['in'], cw['ch'])
 			try:
-				cursor.execute(q, d)
+				dbcursor.execute(q, d)
 			except:
 				print('failed to insert', key)
 
 		if count % 2000 == 0:
-			dbc.commit()
+			dbconnection.commit()
 
 	# print('\t', str(len(chunkedkeys)), 'words inserted into the wordcount tables')
 	print('\tfinished chunk', chunknumber + 1)
 
-	dbc.connectioncleanup()
+	dbconnection.connectioncleanup()
 
 	return
 

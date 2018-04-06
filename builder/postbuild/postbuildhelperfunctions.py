@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 import re
-
+import psycopg2
 from builder.builderclasses import dbWordCountObject, dbLemmaObject, dbWorkLine
 from builder.dbinteraction.connection import setconnection
 
@@ -79,6 +79,8 @@ def graballlinesasobjects(db, linerangetuple, cursor):
 	:return:
 	"""
 
+	data = ''
+
 	if linerangetuple == (-1, -1):
 		whereclause = ''
 	else:
@@ -92,7 +94,12 @@ def graballlinesasobjects(db, linerangetuple, cursor):
 	else:
 		cursor.execute(query)
 
-	lines = cursor.fetchall()
+	try:
+		lines = cursor.fetchall()
+	except psycopg2.ProgrammingError:
+		# psycopg2.ProgrammingError: no results to fetch
+		print('something is broken - no results for q="{q}" d="{d}"'.format(q=query, d=data))
+		lines = None
 
 	lineobjects = [dblineintolineobject(l) for l in lines]
 
