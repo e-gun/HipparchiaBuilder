@@ -8,7 +8,7 @@
 
 import configparser
 from multiprocessing import Process, Manager
-from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.connection import setconnection, ConnectionObject
 from builder.dbinteraction.db import resultiterator
 from builder.builderclasses import MPCounter
 from builder.workers import setworkercount
@@ -67,8 +67,8 @@ def boundaryfinder(uids):
 	:return:
 	"""
 
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	dbconnection = setconnection(config)
+	cursor = dbconnection.cursor()
 
 	# don't need to do 100k queries by asking for every work inside of every author
 	# instead ask for it all at once and then sort it on this end
@@ -97,6 +97,8 @@ def boundaryfinder(uids):
 	# determine the min/max for each work
 	found = [(w, min(workmapper[w]), max(workmapper[w])) for w in workmapper]
 
+	dbconnection.connectioncleanup()
+
 	return found
 
 
@@ -113,8 +115,8 @@ def insertboundaries(boundariestuplelist):
 	:return:
 	"""
 
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	dbconnection = setconnection(config)
+	cursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_works AS SELECT * FROM works LIMIT 0'
 	cursor.execute(q)
@@ -126,17 +128,18 @@ def insertboundaries(boundariestuplelist):
 		d = b
 		cursor.execute(q, d)
 		if count % 5000 == 0:
-			dbc.commit()
+			dbconnection.commit()
 
-	dbc.commit()
+	dbconnection.commit()
 	q = 'UPDATE works SET firstline = tmp_works.firstline, lastline = tmp_works.lastline ' \
 			'FROM tmp_works WHERE works.universalid = tmp_works.universalid'
 	cursor.execute(q)
-	dbc.commit()
+	dbconnection.commit()
 
 	q = 'DROP TABLE tmp_works'
 	cursor.execute(q)
-	dbc.commit()
+
+	dbconnection.connectioncleanup()
 
 	return
 
@@ -176,8 +179,8 @@ def calculatewordcounts(uids):
 	:return:
 	"""
 
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	dbconnection = setconnection(config)
+	cursor = dbconnection.cursor()
 
 	# don't need to do 100k queries by asking for every work inside of every author
 	# instead ask for it all at once and then sort it on this end
@@ -213,6 +216,8 @@ def calculatewordcounts(uids):
 			words = [x for x in words if x]
 			countdict[uid] += len(words) + h
 
+	dbconnection.connectioncleanup()
+
 	return countdict
 
 
@@ -229,8 +234,8 @@ def insertcounts(countdict):
 	:return:
 	"""
 
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	dbconnection = setconnection(config)
+	cursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_works AS SELECT * FROM works LIMIT 0'
 	cursor.execute(q)
@@ -242,16 +247,17 @@ def insertcounts(countdict):
 		d = (idnum, countdict[idnum])
 		cursor.execute(q, d)
 		if count % 5000 == 0:
-			dbc.commit()
+			dbconnection.commit()
 
-	dbc.commit()
+	dbconnection.commit()
 	q = 'UPDATE works SET wordcount = tmp_works.wordcount FROM tmp_works WHERE works.universalid = tmp_works.universalid'
 	cursor.execute(q)
-	dbc.commit()
+	dbconnection.commit()
 
 	q = 'DROP TABLE tmp_works'
 	cursor.execute(q)
-	dbc.commit()
+	dbconnection.commit()
+	dbconnection.connectioncleanup()
 
 	return
 
@@ -279,7 +285,9 @@ def buildtrigramindices(workcategoryprefix, cursor):
 	print('\t', len(uids), 'items to index')
 
 	workers = setworkercount()
-	jobs = [Process(target=mpindexbuilder, args=(uids, commitcount)) for i in range(workers)]
+	oneconnectionperworker = {i: ConnectionObject() for i in range(workers)}
+
+	jobs = [Process(target=mpindexbuilder, args=(uids, commitcount, oneconnectionperworker[i])) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
@@ -288,7 +296,7 @@ def buildtrigramindices(workcategoryprefix, cursor):
 	return
 
 
-def mpindexbuilder(universalids, commitcount):
+def mpindexbuilder(universalids, commitcount, dbconnection):
 	"""
 	mp aware indexing pool: helps you crank through 'em
 
@@ -296,13 +304,12 @@ def mpindexbuilder(universalids, commitcount):
 	:return:
 	"""
 
-	dbc = setconnection(config)
-	curs = dbc.cursor()
+	dbcursor = dbconnection.cursor()
 
 	while universalids:
 		try:
 			universalid = universalids.pop()
-		except:
+		except IndexError:
 			universalid = None
 			universalids = None
 
@@ -310,24 +317,24 @@ def mpindexbuilder(universalids, commitcount):
 			for column in [('_mu', 'accented_line'), ('_st', 'stripped_line')]:
 				query = 'DROP INDEX IF EXISTS {i}_trgm_idx'.format(i=universalid + column[0])
 				try:
-					curs.execute(query)
-				except:
+					dbcursor.execute(query)
+				except ImportError:
 					print('failed to drop index for', universalid)
 					pass
 
 				query = 'CREATE INDEX {i}_trgm_idx ON {t} USING GIN ({c} gin_trgm_ops)'.format(i=universalid + column[0], t=universalid, c=column[1])
 				try:
-					curs.execute(query)
-				except:
+					dbcursor.execute(query)
+				except ImportError:
 					print('failed to create index for', universalid, '\n\t', query)
 
 			commitcount.increment()
 			if commitcount.value % 250 == 0:
-				dbc.commit()
+				dbconnection.commit()
 			if commitcount.value % 250 == 0:
 				print('\t', commitcount.value, 'indices created')
 
-	dbc.commit()
+	dbconnection.connectioncleanup()
 
 	return
 

@@ -13,10 +13,8 @@ import re
 from builder.dbinteraction.connection import setconnection
 from builder.builderclasses import dbOpus, dbAuthor
 
-try:
-	import psycopg2
-except ImportError:
-	import psycopg2cffi as psycopg2
+import psycopg2
+
 
 
 config = configparser.ConfigParser()
@@ -363,15 +361,15 @@ def resetauthorsandworksdbs(tmpprefix, prefix):
 	:param prefix:
 	:return:
 	"""
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	dbconnection = setconnection(config)
+	cursor = dbconnection.cursor()
 
 	for zap in [tmpprefix, prefix]:
 		q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
 		d = (zap + '%',)
 		cursor.execute(q, d)
 		results = cursor.fetchall()
-		dbc.commit()
+		dbconnection.commit()
 
 		authors = []
 		for r in results:
@@ -391,10 +389,10 @@ def resetauthorsandworksdbs(tmpprefix, prefix):
 				# because a build got interrupted? one hopes it is safe to pass
 				pass
 			if count % 500 == 0:
-				dbc.commit()
+				dbconnection.commit()
 			if count % 10000 == 0:
 				print('\t', count, zap, 'tables dropped')
-		dbc.commit()
+		dbconnection.commit()
 
 		q = 'DELETE FROM authors WHERE universalid LIKE %s'
 		d = (zap + '%',)
@@ -404,7 +402,8 @@ def resetauthorsandworksdbs(tmpprefix, prefix):
 		d = (zap + '%',)
 		cursor.execute(q, d)
 
-	dbc.commit()
+	dbconnection.connectioncleanup()
+
 	return
 
 
@@ -421,12 +420,12 @@ def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
 	:return:
 	"""
 
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	dbconnection = setconnection(config)
+	cursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_{t} AS SELECT * FROM {t} LIMIT 0'.format(t=table)
 	cursor.execute(q)
-	dbc.commit()
+	dbconnection.commit()
 
 	targetcolumns = ', '.join(targetcolumnlist)
 	blankvals = ['%s' for i in range(0,len(targetcolumnlist)+1)]
@@ -438,9 +437,9 @@ def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
 		d = tuple([k] + insertiondict[k])
 		cursor.execute(q, d)
 		if count % 100 == 0:
-			dbc.commit()
+			dbconnection.commit()
 
-	dbc.commit()
+	dbconnection.commit()
 
 	tc = targetcolumns.split(',')
 	tc = [re.sub('\s', '', c) for c in tc]
@@ -450,10 +449,11 @@ def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
 
 	q = 'UPDATE {t} SET {targs} FROM tmp_{t} WHERE {t}.{s}=tmp_{t}.{s}'.format(t=table, targs=targs, s=sharedcolumn)
 	cursor.execute(q)
-	dbc.commit()
+	dbconnection.commit()
 
 	q = 'DROP TABLE tmp_{t}'.format(t=table)
 	cursor.execute(q)
-	dbc.commit()
+
+	dbconnection.connectioncleanup()
 
 	return

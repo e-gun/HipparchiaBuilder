@@ -17,7 +17,7 @@ import builder.dbinteraction.dbprepsubstitutions
 import builder.parsers.betacodefontshifts
 from builder.dbinteraction import db
 from builder.dbinteraction.db import resetauthorsandworksdbs
-from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.connection import setconnection, ConnectionObject
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.file_io import filereaders
 from builder.parsers import idtfiles, parse_binfiles
@@ -121,7 +121,9 @@ def buildcorpusdbs(corpusname, corpusvars):
 
 	manager = Manager()
 	managedwork = manager.list(thework)
-	jobs = [Process(target=managedworker, args=[managedwork]) for i in range(workercount)]
+	oneconnectionperworker = {i: ConnectionObject() for i in range(workercount)}
+
+	jobs = [Process(target=managedworker, args=[managedwork, oneconnectionperworker[i]]) for i in range(workercount)]
 
 	for j in jobs:
 		j.start()
@@ -195,12 +197,13 @@ def buildcorpusmetadata(corpusname, corpusvars):
 	buildtrigramindices(workcategoryprefix, cursor)
 	findwordcounts(cursor, dbconnection)
 	timestampthebuild(workcategoryprefix, dbconnection, cursor)
-	dbconnection.commit()
+
+	dbconnection.connectioncleanup()
 
 	return
 
 
-def managedworker(managedwork):
+def managedworker(managedwork, dbconnection):
 	"""
 
 	build individual authors in parallel via multiprocessing manager
@@ -218,8 +221,8 @@ def managedworker(managedwork):
 	:param managedwork:
 	:return:
 	"""
-	dbc = setconnection(config)
-	cur = dbc.cursor()
+
+	dbcursor = dbconnection.cursor()
 
 	while managedwork:
 		try:
@@ -228,12 +231,11 @@ def managedworker(managedwork):
 			thework = None
 
 		if thework:
-			result = addoneauthor(thework[0], thework[1], thework[2], thework[3], thework[4], dbc, cur)
+			result = addoneauthor(thework[0], thework[1], thework[2], thework[3], thework[4], dbconnection, dbcursor)
 			print(re.sub(r'[^\x00-\x7F]+', ' ', result))
-			dbc.commit()
+			dbconnection.commit()
 
-	dbc.commit()
-	del dbc
+	dbconnection.connectioncleanup()
 
 	return
 

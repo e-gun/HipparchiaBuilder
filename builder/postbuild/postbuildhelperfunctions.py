@@ -144,11 +144,11 @@ def createwordcounttable(tablename, extracolumns=False):
 	:return:
 	"""
 
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	dbconnection = setconnection(config)
+	dbcursor = dbconnection.cursor()
 
 	query = 'DROP TABLE IF EXISTS public.' + tablename
-	cursor.execute(query)
+	dbcursor.execute(query)
 
 	query = 'CREATE TABLE public.' + tablename
 	query += '( entry_name character varying(64),'
@@ -168,20 +168,20 @@ def createwordcounttable(tablename, extracolumns=False):
 				query += ', '+c+' integer'
 	query += ') WITH ( OIDS=FALSE );'
 
-	cursor.execute(query)
+	dbcursor.execute(query)
 
 	query = 'GRANT SELECT ON TABLE {tn} TO hippa_rd;'.format(tn=tablename)
-	cursor.execute(query)
+	dbcursor.execute(query)
 
 	tableletter = tablename[-2:]
 
 	q = 'DROP INDEX IF EXISTS public.wcindex{tl}'.format(tl=tableletter, tn=tablename)
-	cursor.execute(q)
+	dbcursor.execute(q)
 
 	q = 'CREATE UNIQUE INDEX wcindex{tl} ON {tn} (entry_name)'.format(tl=tableletter, tn=tablename)
-	cursor.execute(q)
+	dbcursor.execute(q)
 
-	dbc.commit()
+	dbconnection.connectioncleanup()
 
 	return
 
@@ -313,13 +313,13 @@ def deletetemporarydbs(temprefix):
 	:return:
 	"""
 
-	dbc = setconnection(config)
-	cursor = dbc.cursor()
+	dbconnection = setconnection(config)
+	dbcursor = dbconnection.cursor()
 
 	q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
 	d = (temprefix+'%',)
-	cursor.execute(q, d)
-	results = cursor.fetchall()
+	dbcursor.execute(q, d)
+	results = dbcursor.fetchall()
 
 	authors = list()
 	for r in results:
@@ -329,17 +329,17 @@ def deletetemporarydbs(temprefix):
 
 	for a in authors:
 		q = 'DROP TABLE public.{a}'.format(a=a)
-		cursor.execute(q)
+		dbcursor.execute(q)
 
 	q = 'DELETE FROM authors WHERE universalid LIKE %s'
 	d = (temprefix + '%',)
-	cursor.execute(q, d)
+	dbcursor.execute(q, d)
 
 	q = 'DELETE FROM works WHERE universalid LIKE %s'
 	d = (temprefix + '%',)
-	cursor.execute(q, d)
+	dbcursor.execute(q, d)
 
-	dbc.commit()
+	dbconnection.connectioncleanup()
 
 	return
 

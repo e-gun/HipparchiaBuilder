@@ -12,7 +12,7 @@ from multiprocessing import Manager, Process
 
 from builder.builderclasses import dbAuthor, MPCounter, dbOpus
 from builder.dbinteraction.db import dbauthorandworkloader, authortablemaker
-from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.connection import setconnection, ConnectionObject
 from builder.parsers.swappers import forceregexsafevariants
 from builder.postbuild.postbuilddating import convertdate
 from builder.postbuild.postbuildhelperfunctions import rebasedcounter
@@ -191,7 +191,9 @@ def compilenewworks(newauthors, wkmapper):
 	newworktuples = manager.list()
 
 	workers = setworkercount()
-	jobs = [Process(target=parallelnewworkworker, args=(workpile, newworktuples)) for i in range(workers)]
+	oneconnectionperworker = {i: ConnectionObject() for i in range(workers)}
+	
+	jobs = [Process(target=parallelnewworkworker, args=(workpile, newworktuples, oneconnectionperworker[i])) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
@@ -361,7 +363,7 @@ def buildnewworkmetata(workandtitletuplelist):
 	return resultsdict
 
 
-def parallelnewworkworker(workpile, newworktuples):
+def parallelnewworkworker(workpile, newworktuples, dbconnection):
 	"""
 
 	compile new works in parallel to go faster
@@ -372,8 +374,7 @@ def parallelnewworkworker(workpile, newworktuples):
 	:return:
 	"""
 
-	dbc = setconnection(config)
-	cur = dbc.cursor()
+	cur = dbconnection.cursor()
 
 	while len(workpile) > 0:
 		try:
@@ -393,7 +394,7 @@ def parallelnewworkworker(workpile, newworktuples):
 				# UnicodeEncodeError: 'ascii' codec can't encode character '\xe1' in position 19: ordinal not in range(128)
 				print(a.universalid)
 			authortablemaker(a.universalid, cur)
-			dbc.commit()
+			dbconnection.commit()
 
 			q = 'SELECT DISTINCT level_05_value FROM {db} WHERE wkuniversalid=%s ORDER BY level_05_value'.format(db=db)
 			d = (wkid,)
@@ -422,11 +423,9 @@ def parallelnewworkworker(workpile, newworktuples):
 				newworktuples.append((newwkid, db, docname))
 
 				if wknum % 100 == 0 or wknum == len(results):
-					dbc.commit()
+					dbconnection.commit()
 
-	dbc.commit()
-
-	del dbc
+	dbconnection.connectioncleanup()
 
 	return newworktuples
 
@@ -443,9 +442,8 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 	:return:
 	"""
 
-
-	dbc = setconnection(config)
-	cur = dbc.cursor()
+	dbconnection = setconnection(config)
+	cur = dbconnection.cursor()
 
 	prov = re.compile(r'<hmu_metadata_provenance value="(.*?)" />')
 	date = re.compile(r'<hmu_metadata_date value="(.*?)" />')
@@ -468,7 +466,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 		if wkid:
 			commitcount.increment()
 			if commitcount.value % 1000 == 0:
-				dbc.commit()
+				dbconnection.commit()
 
 			db = wkid[0:6]
 
@@ -574,9 +572,8 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			# managed dict was a hassle; we have to do this in order and remember the order
 			metadatalist.append((wkid, pi, pr, dt, cd, tr, ty, (notes, idx)))
 
-	dbc.commit()
-	del dbc
-
+	dbconnection.connectioncleanup()
+	
 	return metadatalist
 
 
