@@ -18,15 +18,18 @@ config.read('config.ini')
 stamp = config['buildoptions']['timestamp']
 
 
-def versiontablemaker(dbconnection, cursor):
+def versiontablemaker(dbconnection):
 	"""
 	SQL prep only
 	:param workdbname:
 	:param cursor:
 	:return:
 	"""
+
+	dbcursor = dbconnection.cursor()
+
 	query = 'DROP TABLE IF EXISTS public.builderversion'
-	cursor.execute(query)
+	dbcursor.execute(query)
 
 	query = """
 		CREATE TABLE public.builderversion 
@@ -36,17 +39,17 @@ def versiontablemaker(dbconnection, cursor):
 			WITH ( OIDS=FALSE );
 		"""
 
-	cursor.execute(query)
+	dbcursor.execute(query)
 
 	query = 'GRANT SELECT ON TABLE public.builderversion TO hippa_rd;'
-	cursor.execute(query)
+	dbcursor.execute(query)
 
 	dbconnection.commit()
 
 	return
 
 
-def timestampthebuild(corpusname, dbconnection, cursor):
+def timestampthebuild(corpusname, dbconnection):
 	"""
 
 	store the build time and template version in the DB
@@ -55,6 +58,7 @@ def timestampthebuild(corpusname, dbconnection, cursor):
 	:param cursor:
 	:return:
 	"""
+	dbcursor = dbconnection.cursor()
 
 	try:
 		# trying because you might not actually have the needed file, etc
@@ -75,16 +79,16 @@ def timestampthebuild(corpusname, dbconnection, cursor):
 
 	q = 'SELECT to_regclass(%s);'
 	d = ('public.builderversion',)
-	cursor.execute(q, d)
-	results = cursor.fetchone()
+	dbcursor.execute(q, d)
+	results = dbcursor.fetchone()
 
 	if results[0] is None:
-		versiontablemaker(dbconnection, cursor)
+		versiontablemaker(dbconnection)
 
 	q = 'DELETE FROM builderversion WHERE corpusname = %s'
 	d = (corpusname,)
 	try:
-		cursor.execute(q, d)
+		dbcursor.execute(q, d)
 	except:
 		pass
 
@@ -92,7 +96,7 @@ def timestampthebuild(corpusname, dbconnection, cursor):
 
 	q = 'INSERT INTO builderversion ( templateversion, corpusname, corpusbuilddate ) VALUES (%s, %s, %s)'
 	d = (sqltemplateversion, corpusname, now)
-	cursor.execute(q, d)
+	dbcursor.execute(q, d)
 
 	dbconnection.commit()
 

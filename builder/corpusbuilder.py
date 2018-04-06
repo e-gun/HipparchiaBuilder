@@ -205,8 +205,8 @@ def buildcorpusmetadata(corpusname, corpusvars):
 	insertfirstsandlasts(workcategoryprefix, cursor)
 	dbconnection.commit()
 	buildtrigramindices(workcategoryprefix, cursor)
-	findwordcounts(cursor, dbconnection)
-	timestampthebuild(workcategoryprefix, dbconnection, cursor)
+	findwordcounts(dbconnection)
+	timestampthebuild(workcategoryprefix, dbconnection)
 
 	dbconnection.connectioncleanup()
 

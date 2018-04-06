@@ -27,7 +27,8 @@ def setconnection(autocommit=False, simple=False):
 
 	note that readonly connections do not make much sense for a builder, but they are available
 
-	concordancechunk() needs a SimpleConnectionObject()
+	concordancechunk() needs a SimpleConnectionObject() [thread problems]
+	dbchunkloader() needs a SimpleConnectionObject() [pool exhaustion problems]
 
 	:param config:
 	:param autocommit:

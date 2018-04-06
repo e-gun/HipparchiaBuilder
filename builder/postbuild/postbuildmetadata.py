@@ -142,7 +142,7 @@ def insertboundaries(boundariestuplelist):
 	return
 
 
-def findwordcounts(cursor, dbconnection):
+def findwordcounts(dbconnection):
 	"""
 
 	if you don't already have an official wordcount, generate one
@@ -151,10 +151,13 @@ def findwordcounts(cursor, dbconnection):
 	:param dbconnection:
 	:return:
 	"""
+
+	db = dbconnection.cursor()
+
 	print('inserting work db metatata: wordcounts')
 	query = 'SELECT universalid FROM works WHERE wordcount IS NULL ORDER BY universalid ASC'
-	cursor.execute(query)
-	results = resultiterator(cursor)
+	db.execute(query)
+	results = resultiterator(db)
 	dbconnection.commit()
 
 	uids = [r[0] for r in results]

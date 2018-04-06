@@ -11,19 +11,6 @@ import re
 from builder.parsers.swappers import hextohighunicode
 
 
-def loadidt(filepath):
-	"""
-	simple simon: a raw read of the file to prepare it for the brutal parse
-	:param filepath:
-	:return: idtdata
-	"""
-
-	with open(filepath, 'rb') as f:
-		idtdata = f.read()
-
-	return idtdata
-
-
 def findauthors(pathtoauthtab):
 	"""
 	tell me the disk path to the authtab file
