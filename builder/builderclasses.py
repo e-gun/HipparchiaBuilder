@@ -669,7 +669,7 @@ class MPCounter(object):
 		return self.val.value
 
 
-def loadallauthorsasobjects(config):
+def loadallauthorsasobjects():
 	"""
 
 	return a dict of all possible author objects
@@ -685,13 +685,14 @@ def loadallauthorsasobjects(config):
 	curs.execute(q)
 	results = curs.fetchall()
 
-	authorsdict = {r[0]: dbAuthor(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9])
-	               for r in results}
+	authorsdict = {r[0]: dbAuthor(*r) for r in results}
+
+	dbconnection.connectioncleanup()
 
 	return authorsdict
 
 
-def loadallworksasobjects(config):
+def loadallworksasobjects():
 	"""
 
 	return a dict of all possible work objects
@@ -708,11 +709,8 @@ def loadallworksasobjects(config):
 	curs.execute(q)
 	results = curs.fetchall()
 
-	worksdict = {r[0]: dbOpus(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8],
-						 r[9], r[10], r[11], r[12], r[13], r[14], r[15], r[16],
-						 r[17], r[18], r[19]) for r in results}
+	worksdict = {r[0]: dbOpus(*r) for r in results}
 
-	dbconnection.commit()
-	curs.close()
+	dbconnection.connectioncleanup()
 
 	return worksdict

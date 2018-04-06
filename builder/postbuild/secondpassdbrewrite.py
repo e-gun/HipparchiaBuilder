@@ -10,9 +10,11 @@ import configparser
 import re
 from multiprocessing import Manager, Process
 
-from builder.builderclasses import dbAuthor, MPCounter, dbOpus
-from builder.dbinteraction.db import dbauthorandworkloader, authortablemaker
-from builder.dbinteraction.connection import setconnection, ConnectionObject
+import psycopg2
+
+from builder.builderclasses import MPCounter, dbAuthor, dbOpus
+from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.db import authortablemaker, dbauthorandworkloader
 from builder.parsers.swappers import forceregexsafevariants
 from builder.postbuild.postbuilddating import convertdate
 from builder.postbuild.postbuildhelperfunctions import rebasedcounter
@@ -74,13 +76,13 @@ config.read('config.ini')
 
 def builddbremappers(oldprefix, newprefix):
 
-	dbc = setconnection()
-	pgsqlcursor = dbc.cursor()
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
 
 	q = 'SELECT universalid FROM authors WHERE universalid LIKE %s ORDER BY universalid ASC'
 	d = (oldprefix+'%',)
-	pgsqlcursor.execute(q, d)
-	results = pgsqlcursor.fetchall()
+	dbcursor.execute(q, d)
+	results = dbcursor.fetchall()
 
 	olddbs = [r[0] for r in results]
 
@@ -98,8 +100,8 @@ def builddbremappers(oldprefix, newprefix):
 	for key in aumapper.keys():
 		q = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid ASC'
 		d = (aumapper[key]+'%',)
-		pgsqlcursor.execute(q, d)
-		results = pgsqlcursor.fetchall()
+		dbcursor.execute(q, d)
+		results = dbcursor.fetchall()
 
 		counter = 0
 		for r in results:
@@ -110,7 +112,7 @@ def builddbremappers(oldprefix, newprefix):
 				hx = '0' + hx
 			wkmapper[r[0]] = key+hx
 
-	dbc.commit()
+	dbconnection.connectioncleanup()
 
 	return aumapper, wkmapper
 
@@ -124,13 +126,13 @@ def compilenewauthors(aumapper, wkmapper):
 	:return: newauthors
 	"""
 
-	dbc = setconnection()
-	pgsqlcursor = dbc.cursor()
+	dbcconnection = setconnection()
+	dbcursor = dbcconnection.cursor()
 
 	newauthors = list()
 
 	for key in aumapper.keys():
-		author = dbauthorandworkloader(aumapper[key], pgsqlcursor)
+		author = dbauthorandworkloader(aumapper[key], dbcursor)
 		for w in author.listofworks:
 			suffix = ' ({t})'.format(t=w.title)
 			newuniversalid = wkmapper[w.universalid]
@@ -154,7 +156,7 @@ def compilenewauthors(aumapper, wkmapper):
 			newauthor = dbAuthor(newuniversalid, newlanguage, newidxname, newakaname, newshortname, newcleanname, newgenres, newrecdate, newconvdate, newlocation)
 			newauthors.append(newauthor)
 
-	dbc.commit()
+	dbcconnection.connectioncleanup()
 
 	return newauthors
 
@@ -169,8 +171,8 @@ def compilenewworks(newauthors, wkmapper):
 	:return:
 	"""
 
-	dbc = setconnection()
-	pgsqlcursor = dbc.cursor()
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
 
 	remapper = dict()
 	for key in wkmapper:
@@ -182,24 +184,28 @@ def compilenewworks(newauthors, wkmapper):
 
 	for a in newauthors:
 		db = remapper[a.universalid]
-		modifyauthorsdb(a.universalid, a.idxname, pgsqlcursor)
+		modifyauthorsdb(a.universalid, a.idxname, dbcursor)
 		thework.append((a, db))
-	dbc.commit()
+
+	dbconnection.connectioncleanup()
 
 	manager = Manager()
 	workpile = manager.list(thework)
 	newworktuples = manager.list()
 
 	workers = setworkercount()
-	oneconnectionperworker = {i: ConnectionObject() for i in range(workers)}
+	connections = {i: setconnection() for i in range(workers)}
 	
-	jobs = [Process(target=parallelnewworkworker, args=(workpile, newworktuples, oneconnectionperworker[i])) for i in range(workers)]
+	jobs = [Process(target=parallelnewworkworker, args=(workpile, newworktuples, connections[i])) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
 		j.join()
 
 	# newworktuples = [(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
+
+	for c in connections:
+		connections[c].connectioncleanup()
 
 	return newworktuples
 
@@ -216,8 +222,8 @@ def registernewworks(newworktuples):
 	:param newworktuples:
 	:return:
 	"""
-	dbc = setconnection()
-	curs = dbc.cursor()
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
 
 	workandtitletuplelist = findnewtitles(newworktuples)
 	workinfodict = buildnewworkmetata(workandtitletuplelist)
@@ -257,10 +263,10 @@ def registernewworks(newworktuples):
 
 		q = 'INSERT INTO works ( {c} ) VALUES ( {v} ) '.format(c=columns, v=valstring)
 		d = vals
-		curs.execute(q, d)
+		dbcursor.execute(q, d)
 		if count % 2500 == 0:
-			dbc.commit()
-	dbc.commit()
+			dbconnection.commit()
+	dbconnection.commit()
 
 	print('updating the notations in {w} works'.format(w=len(workinfodict)))
 
@@ -274,13 +280,13 @@ def registernewworks(newworktuples):
 
 			q = 'UPDATE {db} SET annotations=%s WHERE index=%s'.format(db=db)
 			d = (notes, idx)
-			curs.execute(q, d)
+			dbcursor.execute(q, d)
 		if count % 2500 == 0:
-			dbc.commit()
+			dbconnection.commit()
 		if count % 5000 == 0:
 			print('\t', count, 'works updated')
-	dbc.commit()
-	del dbc
+
+	dbconnection.connectioncleanup()
 
 	return
 
@@ -329,11 +335,15 @@ def buildnewworkmetata(workandtitletuplelist):
 	metadatalist = manager.list()
 
 	workers = setworkercount()
-	jobs = [Process(target=buildworkmetadatatuples, args=(workpile, count, metadatalist)) for i in range(workers)]
+	connections = {i: setconnection() for i in range(workers)}
+	jobs = [Process(target=buildworkmetadatatuples, args=(workpile, count, metadatalist, connections[i])) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
 		j.join()
+
+	for c in connections:
+		connections[c].connectioncleanup()
 
 	# manager was not populating the manager.dict()
 	# so we are doing this
@@ -374,7 +384,7 @@ def parallelnewworkworker(workpile, newworktuples, dbconnection):
 	:return:
 	"""
 
-	cur = dbconnection.cursor()
+	dbcursor = dbconnection.cursor()
 
 	while len(workpile) > 0:
 		try:
@@ -393,13 +403,13 @@ def parallelnewworkworker(workpile, newworktuples, dbconnection):
 				# it is your shell/terminal who is to blame for this
 				# UnicodeEncodeError: 'ascii' codec can't encode character '\xe1' in position 19: ordinal not in range(128)
 				print(a.universalid)
-			authortablemaker(a.universalid, cur)
+			authortablemaker(a.universalid, dbconnection)
 			dbconnection.commit()
 
 			q = 'SELECT DISTINCT level_05_value FROM {db} WHERE wkuniversalid=%s ORDER BY level_05_value'.format(db=db)
 			d = (wkid,)
-			cur.execute(q, d)
-			results = cur.fetchall()
+			dbcursor.execute(q, d)
+			results = dbcursor.fetchall()
 
 			wknum = 0
 			for document in results:
@@ -414,23 +424,21 @@ def parallelnewworkworker(workpile, newworktuples, dbconnection):
 
 				q = 'SELECT * FROM {db} WHERE (wkuniversalid=%s AND level_05_value=%s) ORDER BY index'.format(db=db)
 				d = (wkid, document[0])
-				cur.execute(q, d)
-				results = cur.fetchall()
+				dbcursor.execute(q, d)
+				results = dbcursor.fetchall()
 
 				newwkid = a.universalid + 'w' + dbstring
-				insertnewworksintonewauthor(newwkid, results, cur)
+				insertnewworksintonewauthor(newwkid, results, dbcursor)
 				docname = document[0]
 				newworktuples.append((newwkid, db, docname))
 
 				if wknum % 100 == 0 or wknum == len(results):
 					dbconnection.commit()
 
-	dbconnection.connectioncleanup()
-
 	return newworktuples
 
 
-def buildworkmetadatatuples(workpile, commitcount, metadatalist):
+def buildworkmetadatatuples(workpile, commitcount, metadatalist, dbconnection):
 	"""
 
 	marked_up_line where level_00_value == 1 ought to contain metadata about the document
@@ -442,8 +450,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 	:return:
 	"""
 
-	dbconnection = setconnection()
-	cur = dbconnection.cursor()
+	dbcursor = dbconnection.cursor()
 
 	prov = re.compile(r'<hmu_metadata_provenance value="(.*?)" />')
 	date = re.compile(r'<hmu_metadata_date value="(.*?)" />')
@@ -465,15 +472,19 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 
 		if wkid:
 			commitcount.increment()
-			if commitcount.value % 1000 == 0:
-				dbconnection.commit()
+			dbconnection.checkneedtocommit(commitcount.value)
 
 			db = wkid[0:6]
 
 			q = 'SELECT index, marked_up_line, annotations FROM {db} WHERE wkuniversalid=%s ORDER BY index LIMIT 1'.format(db=db)
 			d = (wkid,)
-			cur.execute(q,d)
-			r = cur.fetchone()
+			dbcursor.execute(q, d)
+			try:
+				r = dbcursor.fetchone()
+			except psycopg2.ProgrammingError:
+				# psycopg2.ProgrammingError: no results to fetch
+				r = (-999, '', '')
+
 			idx = r[0]
 			ln = r[1]
 			an = r[2]
@@ -491,7 +502,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			try:
 				dt = dt.group(1)
 				dt = re.sub(r'(^\s+|\s+$)', '', dt)
-			except:
+			except AttributeError:
 				dt = '[unknown]'
 
 			cd = convertdate(dt)
@@ -499,7 +510,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			pr = re.search(prov, ln)
 			try:
 				pr = pr.group(1)
-			except:
+			except AttributeError:
 				pr = '[unknown]'
 			if pr == '?':
 				pr = '[unknown]'
@@ -509,13 +520,13 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 			rg = re.search(region, ln)
 			try:
 				rg = rg.group(1)
-			except:
+			except AttributeError:
 				rg = '[unknown]'
 
 			ct = re.search(city, ln)
 			try:
 				ct = ct.group(1)
-			except:
+			except AttributeError:
 				ct = '[unknown]'
 
 			if rg != '[unknown]' and ct != '[unknown]':
@@ -570,9 +581,8 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist):
 				notes = ''
 
 			# managed dict was a hassle; we have to do this in order and remember the order
-			metadatalist.append((wkid, pi, pr, dt, cd, tr, ty, (notes, idx)))
-
-	dbconnection.connectioncleanup()
+			if idx != -999:
+				metadatalist.append((wkid, pi, pr, dt, cd, tr, ty, (notes, idx)))
 	
 	return metadatalist
 
@@ -600,7 +610,7 @@ def modifyauthorsdb(newentryname, worktitle, dbcursor):
 		aka = re.search(r'\((.*?)\)$', worktitle)
 		try:
 			aka = aka.group(1)
-		except:
+		except AttributeError:
 			aka = worktitle
 
 	if newentryname[0:2] == 'dp':
@@ -609,7 +619,7 @@ def modifyauthorsdb(newentryname, worktitle, dbcursor):
 		short = re.search(r'\[(.*?)\]\)$', worktitle)
 		try:
 			short = short.group(1)
-		except:
+		except AttributeError:
 			short = aka
 
 	# do if... else... so that you don't do A then B (and pay the UPDATE price)
@@ -784,7 +794,7 @@ def insertlanguagedata(languagetuplelist):
 		[(universalid1, language1), (universalid2, language2), ...]
 
 
-	:param boundariestuplelist:
+	:param languagetuplelist:
 	:return:
 	"""
 

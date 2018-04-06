@@ -18,22 +18,14 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def oldsetconnection(config, autocommit=False):
-	dbconnection = psycopg2.connect(user=config['db']['DBUSER'], host=config['db']['DBHOST'],
-									port=config['db']['DBPORT'], database=config['db']['DBNAME'],
-									password=config['db']['DBPASS'])
-
-	if autocommit:
-		dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-
-	return dbconnection
-
 def setconnection(autocommit=False, simple=False):
 	"""
 
 	set a connection...
 
-	ConnectionObject() derived from HipparchiaServer and shoehorned into the Builder code
+	ConnectionObject() was pulled from HipparchiaServer and shoehorned into the Builder code
+
+	note that readonly connections do not make much sense for a builder, but they are available
 
 	:param config:
 	:param autocommit:
@@ -61,7 +53,7 @@ class GenericConnectionObject(object):
 
 	"""
 
-	MPCOMMITCOUNT = 200
+	MPCOMMITCOUNT = 500
 	DBUSER = config['db']['DBUSER']
 	DBHOST = config['db']['DBHOST']
 	DBPORT = config['db']['DBPORT']
@@ -188,7 +180,7 @@ class PooledConnectionObject(GenericConnectionObject):
 			        'database': GenericConnectionObject.DBNAME,
 			        'password': GenericConnectionObject.DBPASS}
 
-			readonlypool = pooltype(poolsize, poolsize * 2, **kwds)
+			readonlypool = pooltype(poolsize, poolsize, **kwds)
 
 			# [B] 'rw' pool
 			readandwritepool = pooltype(poolsize, poolsize * 2, **kwds)
@@ -202,7 +194,8 @@ class PooledConnectionObject(GenericConnectionObject):
 		if self.cytpe == 'rw':
 			self.readonlyconnection = False
 
-		if threading.current_thread().name == 'vectorbot':
+		self.thread = threading.current_thread().name
+		if self.thread == 'vectorbot':
 			# the vectobot lives in a thread and it will exhaust the pool
 			self.simpleconnectionfallback()
 		else:
@@ -219,6 +212,7 @@ class PooledConnectionObject(GenericConnectionObject):
 
 		self.setreadonly(self.readonlyconnection)
 		self.curs = getattr(self.dbconnection, 'cursor')()
+
 
 	def simpleconnectionfallback(self):
 		# print('SimpleConnectionObject', self.uniquename)
@@ -279,6 +273,7 @@ class SimpleConnectionObject(GenericConnectionObject):
 
 		self.setreadonly(self.readonlyconnection)
 		self.curs = getattr(self.dbconnection, 'cursor')()
+		self.thread = threading.current_thread().name
 
 	def connectioncleanup(self):
 		"""

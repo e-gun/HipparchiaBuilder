@@ -6,21 +6,18 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-import configparser
 import re
+
 import psycopg2
 
 from builder.dbinteraction.connection import setconnection
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
-from builder.parsers.lexica import latinvowellengths, greekwithvowellengths, betaconvertandsave, greekwithoutvowellengths, \
-	lsjgreekswapper, translationsummary
-from builder.parsers.swappers import superscripterzero, superscripterone
-
-config = configparser.ConfigParser()
-config.read('config.ini')
+from builder.parsers.lexica import betaconvertandsave, greekwithoutvowellengths, greekwithvowellengths, \
+	latinvowellengths, lsjgreekswapper, translationsummary
+from builder.parsers.swappers import superscripterone, superscripterzero
 
 
-def mplatindictionaryinsert(dictdb, entries, commitcount):
+def mplatindictionaryinsert(dictdb, entries, dbconnection, commitcount):
 	"""
 
 	work on dictdb entries
@@ -33,8 +30,7 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 	:return:
 	"""
 
-	dbc = setconnection()
-	curs = dbc.cursor()
+	dbcursor = dbconnection.cursor()
 
 	bodyfinder = re.compile(r'(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	defectivebody = re.compile(r'(<entryFree(.*?)>)(.*?)')
@@ -46,6 +42,7 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 	particlefinder = re.compile(r'\. particle')
 
 	while len(entries) > 0:
+
 		try:
 			entry = entries.pop()
 		except IndexError:
@@ -58,11 +55,11 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 			segments = re.search(bodyfinder, entry)
 			try:
 				body = segments.group(3)
-			except:
+			except AttributeError:
 				segments = re.search(defectivebody, entry)
 				try:
 					body = segments.group(3)
-				except:
+				except AttributeError:
 					print('died at', entry)
 					body = ''
 			info = segments.group(2)
@@ -107,25 +104,22 @@ def mplatindictionaryinsert(dictdb, entries, commitcount):
 				VALUES (%s, %s, %s, %s, %s, %s, %s)"""
 			query = qtemplate.format(d=dictdb)
 			data = (entryname, metricalentry, idnum, key, pos, translationlist, body)
-			curs.execute(query, data)
-			commitcount.increment()
-			if commitcount.value % 5000 == 0:
-				dbc.commit()
-				print('\tat', idnum, entryname)
+			dbcursor.execute(query, data)
 
 			# if idnum == 18069:
 			# 	items = [entryname, metricalentry, idnum, type, key, opt, translationlist, body]
 			# 	for i in items:
 			# 		print(i)
 
-	dbc.commit()
-	curs.close()
-	del dbc
+		commitcount.increment()
+		dbconnection.checkneedtocommit(commitcount)
+		if commitcount.value % 5000 == 0:
+			print('\tat {num}: {nm}'.format(th=dbconnection.uniquename, num=idnum, nm=entryname))
 
 	return
 
 
-def mpgreekdictionaryinsert(dictdb, entries, commitcount):
+def mpgreekdictionaryinsert(dictdb, entries, dbconnection, commitcount):
 	"""
 
 	work on dictdb entries
@@ -138,8 +132,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 	:return:
 	"""
 
-	dbc = setconnection()
-	curs = dbc.cursor()
+	dbcursor = dbconnection.cursor()
 
 	# places where you can find lang="greek"
 	# <foreign>; <orth>; <pron>; <quote>; <gen>; <itype>
@@ -185,7 +178,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			segments = re.search(bodyfinder, entry)
 			try:
 				body = segments.group(3)
-			except:
+			except AttributeError:
 				body = ''
 				print('died at', idnum, entry)
 			info = segments.group(2)
@@ -195,7 +188,7 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 				key = parsedinfo.group(2)
 				etype = parsedinfo.group(3)  # will go unused
 				opt = parsedinfo.group(4)  # will go unused
-			except:
+			except AttributeError:
 				# only one greek dictionary entry will throw an exception: n29246
 				# print('did not find key at', idnum, entry)
 				idnum = 'n29246'
@@ -257,29 +250,25 @@ def mpgreekdictionaryinsert(dictdb, entries, commitcount):
 			data = (entryname, metrical, stripped, idnum, pos, translationlist, body)
 
 			try:
-				curs.execute(query, data)
+				dbcursor.execute(query, data)
 			except psycopg2.DataError:
 				# psycopg2.DataError
 				print('failed to insert', entryname)
 				print('\t>>', entryname, metrical, stripped, idnum, pos, '<<')
 
 			commitcount.increment()
+			dbconnection.checkneedtocommit(commitcount)
 			if commitcount.value % 5000 == 0:
-				dbc.commit()
 				try:
-					print('\tat', idnum, entryname)
+					print('\tat {num}: {nm}'.format(th=dbconnection.uniquename, num=idnum, nm=entryname))
 				except UnicodeEncodeError:
 					# UnicodeEncodeError
 					print('\tat', idnum)
 
-	dbc.commit()
-	curs.close()
-	del dbc
-
 	return
 
 
-def mplemmatainsert(grammardb, entries, islatin, commitcount):
+def mplemmatainsert(grammardb, entries, islatin, dbconnection, commitcount):
 	"""
 
 	work on grammardb entries
@@ -292,9 +281,8 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 	:param commitcount:
 	:return:
 	"""
-	
-	dbc = setconnection()
-	curs = dbc.cursor()
+
+	dbcursor = dbconnection.cursor()
 	
 	keywordfinder = re.compile(r'(.*?\t)(\d{1,})(.*?)$')
 	greekfinder = re.compile(r'(\t.*?)(\s.*?)(?=(\t|$))')
@@ -337,20 +325,17 @@ def mplemmatainsert(grammardb, entries, islatin, commitcount):
 
 			query = 'INSERT INTO {g} (dictionary_entry, xref_number, derivative_forms) VALUES (%s, %s, %s)'.format(g=grammardb)
 			data = (dictionaryform, xref, formlist)
-			curs.execute(query, data)
+			dbcursor.execute(query, data)
+
 			commitcount.increment()
+			dbconnection.checkneedtocommit(commitcount)
 			if commitcount.value % 5000 == 0:
-				dbc.commit()
 				print('\tat', dictionaryform)
-		
-	dbc.commit()
-	curs.close()
-	del dbc
-	
+
 	return
 
 
-def mpanalysisinsert(grammardb, items, islatin, commitcount):
+def mpanalysisinsert(grammardb, items, islatin, dbconnection, commitcount):
 	"""
 
 	work on grammardb entries
@@ -374,8 +359,7 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 	:return:
 	"""
 
-	dbc = setconnection()
-	curs = dbc.cursor()
+	dbcursor = dbconnection.cursor()
 
 	# most end with '}', but some end with a bracketed number or numbers
 	# w)ph/sasqai	{49798258 9 a)ph/sasqai,a)po/-h(/domai	swād-	aor inf mid (ionic)}[12711488]
@@ -432,8 +416,9 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 					observedform = re.sub(r'(.*?)\t', lambda x: greekwithoutvowellengths(x[1]), observedform.upper())
 				analysislist = segments.group(2).split('}{')
 				# analysislist πολυγώνοιϲ ['92933543 9 polu/gwnon\tpolygonal\tneut dat pl', '92933543 9 polu/gwnos\tpolygonal\tmasc/fem/neut dat pl']
+
 				xrefs = set([str(x.split(' ')[0]) for x in analysislist])
-				xrefs = (', ').join(xrefs)
+				xrefs = ', '.join(xrefs)
 				# pass an item through analysisfinder and you will get this:
 				# i[1] = '92933543'
 				# i[2] = '9'
@@ -462,13 +447,8 @@ def mpanalysisinsert(grammardb, items, islatin, commitcount):
 				query = qtemplate.format(gdb=grammardb)
 				data = (observedform, xrefs, bracketed, ptext)
 				# print(entry,'\n',observedform,xrefs,bracketed,'\n\t',possibilities)
-				curs.execute(query, data)
+				dbcursor.execute(query, data)
 				commitcount.increment()
-				if commitcount.value % 2500 == 0:
-					dbc.commit()
-
-	dbc.commit()
-	curs.close()
-	del dbc
+				dbconnection.checkneedtocommit(commitcount)
 
 	return

@@ -6,15 +6,13 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-import configparser
-from multiprocessing import Process, Manager
-from builder.dbinteraction.connection import setconnection, ConnectionObject
-from builder.dbinteraction.db import resultiterator
-from builder.builderclasses import MPCounter
-from builder.workers import setworkercount
 
-config = configparser.ConfigParser()
-config.read('config.ini')
+from multiprocessing import Manager, Process
+
+from builder.builderclasses import MPCounter
+from builder.dbinteraction.connection import ConnectionObject, setconnection
+from builder.dbinteraction.db import resultiterator
+from builder.workers import setworkercount
 
 """
 	SPEED NOTES

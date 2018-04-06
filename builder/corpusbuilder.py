@@ -10,31 +10,31 @@
 import configparser
 import re
 import time
-from multiprocessing import Pool, Manager, Process
+from multiprocessing import Manager, Process
 from os import path
 
 import builder.dbinteraction.dbprepsubstitutions
 import builder.parsers.betacodefontshifts
 from builder.dbinteraction import db
+from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.db import resetauthorsandworksdbs
-from builder.dbinteraction.connection import setconnection, ConnectionObject
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.file_io import filereaders
 from builder.parsers import idtfiles, parse_binfiles
-from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode, restoreromanwithingreek, \
-	purgehybridgreekandlatinwords
+from builder.parsers.betacodeandunicodeinterconversion import purgehybridgreekandlatinwords, replacegreekbetacode, \
+	restoreromanwithingreek
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
-from builder.parsers.betacodefontshifts import replacegreekmarkup, latinfontlinemarkupprober, \
-	latinauthorlinemarkupprober, greekhmufontshiftsintospans, latinhmufontshiftsintospans
-from builder.parsers.regexsubstitutions import cleanuplingeringmesses, earlybirdsubstitutions, replacequotationmarks, \
-	addcdlabels, hexrunner, lastsecondsubsitutions, debughostilesubstitutions, totallemmatization, \
-	colonshift, insertnewlines
-from builder.parsers.latinsubstitutions import latindiacriticals
+from builder.parsers.betacodefontshifts import greekhmufontshiftsintospans, latinauthorlinemarkupprober, \
+	latinfontlinemarkupprober, latinhmufontshiftsintospans, replacegreekmarkup
 from builder.parsers.copticsubstitutions import replacecoptic
+from builder.parsers.latinsubstitutions import latindiacriticals
+from builder.parsers.regexsubstitutions import addcdlabels, cleanuplingeringmesses, colonshift, \
+	debughostilesubstitutions, earlybirdsubstitutions, hexrunner, insertnewlines, lastsecondsubsitutions, \
+	replacequotationmarks, totallemmatization
 from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
-from builder.postbuild.postbuildmetadata import insertfirstsandlasts, findwordcounts, buildtrigramindices
-from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks, \
-	assignlanguagetonewworks
+from builder.postbuild.postbuildmetadata import buildtrigramindices, findwordcounts, insertfirstsandlasts
+from builder.postbuild.secondpassdbrewrite import assignlanguagetonewworks, builddbremappers, compilenewauthors, \
+	compilenewworks, registernewworks
 from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
@@ -47,6 +47,14 @@ def buildcorpusdbs(corpusname, corpusvars):
 	generic, unified corpus database builder
 
 	will take all files that match a set of criteria and compile them into a set of tables under a given rubric
+
+	[a] reset the corpus tables
+	[b] acquire the raw data
+	[c] parcel out the work to managedworker as a list of work items apportioned out to N mp jobs
+	[d] managedworker() just pops a work item and sends it to addoneauthor()
+	[e] addoneauthor() builds an authorobject and then calls thecollectedworksof()
+	[f] thecollectedworksof() calls initialworkparsing(), secondaryworkparsing(), and then databaseloading()
+	[g] databaseloading() calls dbprepper(), dbauthoradder(), authortablemaker(), and then insertworksintoauthortable()
 
 	:param corpusname:
 	:param corpusvars:
@@ -89,17 +97,17 @@ def buildcorpusdbs(corpusname, corpusvars):
 	# prune other dbs
 	aa = [x for x in aa if dataprefix in x]
 	aa.sort()
-	thework = list()
+	listoftexts = list()
 	# aa = []
 	for a in aa:
 		if minfn < int(a[3:]) < maxfn and int(a[3:]) not in exclusions:
 			if lang != 'B':
-				thework.append(({a: allauthors[a]}, lang, abbrev, datapath, dataprefix))
+				listoftexts.append(({a: allauthors[a]}, lang, abbrev, datapath, dataprefix))
 			else:
 				if re.search(r'Latin', allauthors[a]) is not None:
-					thework.append(({a: allauthors[a]}, 'L', abbrev, datapath, dataprefix))
+					listoftexts.append(({a: allauthors[a]}, 'L', abbrev, datapath, dataprefix))
 				else:
-					thework.append(({a: allauthors[a]}, 'G', abbrev, datapath, dataprefix))
+					listoftexts.append(({a: allauthors[a]}, 'G', abbrev, datapath, dataprefix))
 
 	# now sort by size: do the long ones first
 
@@ -109,26 +117,28 @@ def buildcorpusdbs(corpusname, corpusvars):
 	if config['buildoptions']['buildlongestfirst'] == 'y':
 		sorter = dict()
 		count = 0
-		for w in thework:
+		for t in listoftexts:
 			count += 1
-			c = w[0].copy()
-			s = path.getsize('{p}{id}.TXT'.format(p=w[3], id=c.popitem()[0]))
+			c = t[0].copy()
+			s = path.getsize('{p}{id}.TXT'.format(p=t[3], id=c.popitem()[0]))
 			# avoid key collisions by adding a unique fraction to the size
-			sorter[s+(1/count)] = w
+			sorter[s+(1/count)] = t
 
 		# don't reverse the keys because popping from the stack later is itself a reversal
-		thework = [sorter[sz] for sz in sorted(sorter.keys())]
+		listoftexts = [sorter[sz] for sz in sorted(sorter.keys())]
 
 	manager = Manager()
-	managedwork = manager.list(thework)
-	oneconnectionperworker = {i: ConnectionObject() for i in range(workercount)}
-
-	jobs = [Process(target=managedworker, args=[managedwork, oneconnectionperworker[i]]) for i in range(workercount)]
+	managedwork = manager.list(listoftexts)
+	connections = {i: setconnection() for i in range(workercount)}
+	jobs = [Process(target=managedworker, args=[managedwork, connections[i]]) for i in range(workercount)]
 
 	for j in jobs:
 		j.start()
 	for j in jobs:
 		j.join()
+
+	for c in connections:
+		connections[c].connectioncleanup()
 
 	return
 
@@ -222,8 +232,6 @@ def managedworker(managedwork, dbconnection):
 	:return:
 	"""
 
-	dbcursor = dbconnection.cursor()
-
 	while managedwork:
 		try:
 			thework = managedwork.pop()
@@ -233,9 +241,6 @@ def managedworker(managedwork, dbconnection):
 		if thework:
 			result = addoneauthor(thework[0], thework[1], thework[2], thework[3], thework[4], dbconnection)
 			print(re.sub(r'[^\x00-\x7F]+', ' ', result))
-			dbconnection.commit()
-
-	dbconnection.connectioncleanup()
 
 	return
 
@@ -283,14 +288,14 @@ def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnec
 	authorobj = buildauthorobject(number, language, datapath, uidprefix, dataprefix)
 	authorobj.addauthtabname(name)
 	authorobj.language = language
-	thecollectedworksof(authorobj, language, datapath,  dbconnection)
-	buildtime = round(time.time() - starttime,2)
+	thecollectedworksof(authorobj, language, datapath, dbconnection)
+	buildtime = round(time.time() - starttime, 2)
 	success = number+' '+authorobj.cleanname+' '+str(buildtime)+'s'
 	
 	return success
 
 
-def thecollectedworksof(authorobject, language, datapath,  dbconnection):
+def thecollectedworksof(authorobject, language, datapath, dbconnection):
 	"""
 	give me a authorobject and i will build you a corpus in three stages
 	[a] initial parsing of original files
@@ -301,7 +306,7 @@ def thecollectedworksof(authorobject, language, datapath,  dbconnection):
 	"""
 	txt = initialworkparsing(authorobject, language, datapath)
 	txt = secondaryworkparsing(authorobject, txt)
-	databaseloading(txt, authorobject,  dbconnection)
+	databaseloading(txt, authorobject, dbconnection)
 
 	return
 
@@ -339,7 +344,9 @@ def buildauthorobject(authortabnumber, language, datapath, uidprefix, dataprefix
 	:return:
 	"""
 
-	authoridt = filereaders.loadidt(datapath+authortabnumber+'.IDT')
+	with open(datapath+authortabnumber+'.IDT', 'rb') as f:
+		authoridt = f.read()
+
 	authorobj = idtfiles.loadauthor(authoridt, language, uidprefix, dataprefix)
 
 	return authorobj
@@ -403,7 +410,7 @@ def secondaryworkparsing(authorobject, txt):
 	return dbreadyversion
 
 
-def databaseloading(dbreadyversion, authorobject,  dbconnection):
+def databaseloading(dbreadyversion, authorobject, dbconnection):
 	"""
 
 	a little more cleaning, then insert this material into the database

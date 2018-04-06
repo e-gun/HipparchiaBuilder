@@ -20,11 +20,8 @@ from builder.postbuild.postbuildhelperfunctions import graballlinesasobjects, ac
 	grablemmataasobjects, createwordcounttable, cleanwords, prettyprintcohortdata, dictmerger
 from builder.workers import setworkercount
 
-config = configparser.ConfigParser()
-config.read('config.ini')
 
-
-def wordcounter(restriction=None):
+def wordcounter(restriction=None, authordict=None, workdict=None):
 	"""
 
 	count all of the words in all of the dbs or a subset thereof: 'restriction' will do subsets
@@ -36,10 +33,12 @@ def wordcounter(restriction=None):
 	"""
 	wordcounttable = 'wordcounts'
 
-	authordict = loadallauthorsasobjects(config)
+	if not authordict:
+		authordict = loadallauthorsasobjects()
 
 	if restriction:
-		workdict = loadallworksasobjects(config)
+		if not workdict:
+			workdict = loadallworksasobjects()
 		try:
 			tr = restriction['time']
 			# restriction should be a date range tuple (-850,300), e.g.
@@ -224,7 +223,7 @@ def concordancechunk(enumerateddbdict):
 
 	print('\tfinished chunk', chunknumber + 1)
 
-	del dbc
+	dbc.connectioncleanup()
 
 	return concordance
 
@@ -284,7 +283,8 @@ def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 	# print('\t', str(len(chunkedkeys)), 'words inserted into the wordcount tables')
 	print('\tfinished chunk', chunknumber + 1)
 
-	dbc.commit()
+	dbc.connectioncleanup()
+
 	return
 
 
@@ -440,7 +440,7 @@ def headwordcounts():
 	thetable = 'dictionary_headword_wordcounts'
 	metadata = derivedictionaryentrymetadata(thetable, cursor)
 	lemmataobjectslist = grablemmataasobjects('greek_lemmata', cursor) + grablemmataasobjects('latin_lemmata', cursor)
-	metadata = derivechronologicalmetadata(metadata, lemmataobjectslist, cursor)
+	metadata = derivechronologicalmetadata(metadata, lemmataobjectslist)
 	metadata = insertchronologicalmetadata(metadata, thetable)
 	metadata = derivegenremetadata(metadata, lemmataobjectslist, thetable, knownworkgenres)
 
@@ -448,6 +448,7 @@ def headwordcounts():
 	# ἅρπαξ {'frequency_classification': 'core vocabulary (more than 50)', 'early': 42, 'middle': 113, 'late': 468}
 	# print('stuprum',metadata['stuprum'])
 
+	dbc.connectioncleanup()
 
 	return metadata
 
@@ -552,7 +553,7 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 	return metadata
 
 
-def derivechronologicalmetadata(metadata, lemmataobjectlist, cursor):
+def derivechronologicalmetadata(metadata, lemmataobjectlist):
 	"""
 
 	find frequencies by eras:
@@ -567,10 +568,12 @@ def derivechronologicalmetadata(metadata, lemmataobjectlist, cursor):
 	"""
 
 	eras = {'early': (-850, -300), 'middle': (-299, 300), 'late': (301, 1500)}
+	authordict = loadallauthorsasobjects()
+	workdict = loadallworksasobjects()
 
 	for era in eras:
 		print('calculating use by era:', era)
-		eraconcordance = wordcounter(restriction={'time': eras[era]})
+		eraconcordance = wordcounter(restriction={'time': eras[era]}, authordict=authordict, workdict=workdict)
 		# close, but we need to match the template above:
 		# countdict = {word.entryname: word for word in countobjectlist}
 		countobjectlist = [
@@ -582,7 +585,7 @@ def derivechronologicalmetadata(metadata, lemmataobjectlist, cursor):
 		for entry in lexiconentrycounts:
 			try:
 				metadata[entry]
-			except:
+			except KeyError:
 				metadata[entry] = dict()
 			metadata[entry][era] = lexiconentrycounts[entry]['total']
 
@@ -599,9 +602,12 @@ def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres):
 	:return:
 	"""
 
+	authordict = loadallauthorsasobjects()
+	workdict = loadallworksasobjects()
+
 	for genre in knownworkgenres:
 		print('compiling metadata for', genre)
-		genrecordance = wordcounter(restriction={'genre': genre})
+		genrecordance = wordcounter(restriction={'genre': genre}, authordict=authordict, workdict=workdict)
 		countobjectlist = [
 			dbWordCountObject(w, genrecordance[w]['total'], genrecordance[w]['gr'], genrecordance[w]['lt'],
 			                  genrecordance[w]['dp'], genrecordance[w]['in'], genrecordance[w]['ch']) for w in
@@ -611,7 +617,7 @@ def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres):
 		for entry in lexiconentrycounts:
 			try:
 				metadata[entry]
-			except:
+			except KeyError:
 				metadata[entry] = dict()
 			metadata[entry][genre] = lexiconentrycounts[entry]['total']
 		print('inserting metadata for', genre)
@@ -651,15 +657,17 @@ def insertchronologicalmetadata(metadatadict, thetable):
 	:return:
 	"""
 
-	dbc = setconnection()
-	cursor = dbc.cursor()
+	dbcconnection = setconnection()
+	dbcursor = dbcconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_metadata AS SELECT * FROM {tb} LIMIT 0'.format(tb=thetable)
-	cursor.execute(q)
+	dbcursor.execute(q)
 
 	count = 0
 	for entry in metadatadict.keys():
 		count += 1
+		dbcconnection.checkneedtocommit(count)
+
 		q = 'INSERT INTO tmp_metadata (entry_name, frequency_classification, early_occurrences, middle_occurrences, late_occurrences) ' \
 		    'VALUES ( %s, %s, %s, %s, %s)'
 		try:
@@ -670,12 +678,10 @@ def insertchronologicalmetadata(metadatadict, thetable):
 			# d = (entry, metadatadict[entry]['frequency_classification'], '', '', '')
 			d = None
 		if d:
-			cursor.execute(q, d)
+			dbcursor.execute(q, d)
 
-		if count % 2500 == 0:
-			dbc.commit()
+	dbcconnection.commit()
 
-	dbc.commit()
 	qtemplate = """
 		UPDATE {tb} SET
 			frequency_classification = tmp_metadata.frequency_classification,
@@ -686,13 +692,14 @@ def insertchronologicalmetadata(metadatadict, thetable):
 		WHERE {tb}.entry_name = tmp_metadata.entry_name
 	"""
 	q = qtemplate.format(tb=thetable)
-	cursor.execute(q)
-	dbc.commit()
+	dbcursor.execute(q)
+	dbcconnection.commit()
 
 	q = 'DROP TABLE tmp_metadata'
-	cursor.execute(q)
-	dbc.commit()
+	dbcursor.execute(q)
+	dbcconnection.commit()
 
+	dbcconnection.connectioncleanup()
 	# return the dict so you can reuse the data
 	return metadatadict
 

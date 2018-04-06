@@ -48,11 +48,15 @@ def formatgklexicon():
 	commitcount = MPCounter()
 
 	workers = setworkercount()
-	jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, commitcount)) for i in range(workers)]
+	connections = {i: setconnection() for i in range(workers)}
+	jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, connections[i], commitcount)) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
 		j.join()
+
+	for c in connections:
+		connections[c].connectioncleanup()
 
 	return
 
@@ -83,11 +87,16 @@ def formatlatlexicon():
 	commitcount = MPCounter()
 
 	workers = setworkercount()
-	jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, commitcount)) for i in range(workers)]
+	connections = {i: setconnection() for i in range(workers)}
+
+	jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, connections[i], commitcount)) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
 		j.join()
+
+	for c in connections:
+		connections[c].connectioncleanup()
 
 	return
 
@@ -137,12 +146,17 @@ def grammarloader(language):
 	commitcount = MPCounter()
 
 	workers = setworkercount()
-	jobs = [Process(target=mplemmatainsert, args=(table, entries, islatin, commitcount)) for i in range(workers)]
+	connections = {i: setconnection() for i in range(workers)}
+
+	jobs = [Process(target=mplemmatainsert, args=(table, entries, islatin, connections[i], commitcount)) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
 		j.join()
-	
+
+	for c in connections:
+		connections[c].connectioncleanup()
+
 	return
 
 
@@ -212,24 +226,28 @@ def analysisloader(language):
 		commitcount = MPCounter()
 
 		workers = setworkercount()
-		jobs = [Process(target=mpanalysisinsert, args=(table, items, islatin, commitcount)) for i in
-		        range(workers)]
+		connections = {i: setconnection() for i in range(workers)}
+		jobs = [Process(target=mpanalysisinsert, args=(table, items, islatin, connections[i], commitcount)) for i in range(workers)]
 		for j in jobs:
 			j.start()
 		for j in jobs:
 			j.join()
+
 		if bundlecount * chunksize < len(forms):
 			# this check prevents saying '950000 forms inserted' at the end when there are only '911871 items to load'
 			print('\t', str(bundlecount * chunksize), 'forms inserted')
 
+		for c in connections:
+			connections[c].connectioncleanup()
+
 	# we will be doing some searches inside of possible_dictionary_forms: need the right kind of index for it
-	dbc = setconnection()
-	cursor = dbc.cursor()
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
 
 	q = 'CREATE INDEX {l}_analysis_trgm_idx ON {l}_morphology USING GIN ( possible_dictionary_forms gin_trgm_ops)'.format(l=language)
-	cursor.execute(q)
+	dbcursor.execute(q)
 
-	dbc.commit()
+	dbconnection.connectioncleanup()
 
 	return
 
@@ -265,7 +283,7 @@ def resettable(tablename, tablestructurelist, indexcolumn):
 	q = 'CREATE INDEX {tn}_idx ON public.{tn} USING btree ({ic} COLLATE pg_catalog."default");'.format(tn=tablename, ic=indexcolumn)
 	cursor.execute(q)
 
-	dbc.commit()
+	dbc.connectioncleanup()
 
 	return
 

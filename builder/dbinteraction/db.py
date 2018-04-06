@@ -6,19 +6,13 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-
-import configparser
 import json
 import re
-from builder.dbinteraction.connection import setconnection
-from builder.builderclasses import dbOpus, dbAuthor
 
 import psycopg2
 
-
-
-config = configparser.ConfigParser()
-config.read('config.ini')
+from builder.builderclasses import dbAuthor, dbOpus
+from builder.dbinteraction.connection import setconnection
 
 
 def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
@@ -49,11 +43,11 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 	:return:
 	"""
 
-	cursor = dbconnection.cursor()
+	dbcursor = dbconnection.cursor()
 
 	for indexedat in range(len(authorobject.works)):
 		# warning: '002' might be the value at work[0]
-		workmaker(authorobject, indexedat, cursor)
+		workmaker(authorobject, indexedat, dbcursor)
 
 	index = 0
 	for line in dbreadyversion:
@@ -63,10 +57,8 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 			# let's hope nothing with useful info gets skipped...
 			pass
 		else:
-			if index % 2000 == 0:
-				dbconnection.commit()
-
 			index += 1
+			dbconnection.checkneedtocommit(index)
 			wn = int(line[0])
 
 			if wn < 10:
@@ -84,19 +76,9 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 				wklvs.sort()
 				try:
 					toplvl = wklvs.pop()
-				except:
+				except IndexError:
 					# this does in fact seem to be at the bottom of a certain class of error; and it likely emerges from bad idx parsing: tough
-					print(
-						'could not find top level; workobject level list is empty: anum=' + authorobject.universalid + ' wn=' + str(
-							wk.worknumber) + ' tit=' + wk.title)
-					if authorobject.universalid[0] == 'g':
-						print('\twork structure empty')
-						# labels = peekatcanon(wkuniversalid)
-						labels = []
-						# toplvl = len(labels)
-						# for i in range(0, toplvl):
-						# 	wk.structure[i] = labels[i]
-						# print('\tstructure set to', wk.structure)
+					print('could not find top level; workobject level list is empty: anum={a} wn={w} tit={t}'.format(a=authorobject.universalid, w=wk.worknumber, t=wk.title.format))
 
 				tups = line[1]
 
@@ -124,7 +106,7 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 				data = (index, wkuniversalid, tups[0][1], tups[1][1], tups[2][1], tups[3][1], tups[4][1], tups[5][1],
 						line[2], line[3], line[4], line[5], line[6])
 				try:
-					cursor.execute(query, data)
+					dbcursor.execute(query, data)
 
 				except psycopg2.DatabaseError as e:
 					print('insert into ', authorobject.universalid, 'failed at', index, 'while attempting', data)
@@ -156,10 +138,10 @@ def authortablemaker(authordbname, dbconnection):
 	:return:
 	"""
 
-	cursor = dbconnection.cursor()
+	dbcursor = dbconnection.cursor()
 
 	query = 'DROP TABLE IF EXISTS public.{adb}'.format(adb=authordbname)
-	cursor.execute(query)
+	dbcursor.execute(query)
 
 	template = """
 		CREATE TABLE public.{adb} (
@@ -181,10 +163,10 @@ def authortablemaker(authordbname, dbconnection):
 
 	query = template.format(adb=authordbname)
 
-	cursor.execute(query)
+	dbcursor.execute(query)
 
 	query = 'GRANT SELECT ON TABLE {adb} TO hippa_rd;'.format(adb=authordbname)
-	cursor.execute(query)
+	dbcursor.execute(query)
 
 	# print('failed to create',workdbname)
 
@@ -325,7 +307,7 @@ def dbauthorandworkloader(authoruid, cursor):
 	except:
 		# see the notes on the exception to dbauthormakersubroutine: you can get here and then die for the same reason
 		print('failed to find the requested work:', query, data)
-		results = []
+		results = list()
 
 	for match in results:
 		work = dbOpus(match[0], match[1], match[2], match[3], match[4], match[5], match[6], match[7], match[8],
@@ -347,7 +329,7 @@ def workmaker(authorobject, indexedat, cursor):
 	except:
 		pass
 
-	ll = []
+	ll = list()
 	for level in range(0, 6):
 		try:
 			ll.append(wk.structure[level])
@@ -384,7 +366,7 @@ def resetauthorsandworksdbs(tmpprefix, prefix):
 		results = cursor.fetchall()
 		dbconnection.commit()
 
-		authors = []
+		authors = list()
 		for r in results:
 			authors.append(r[0][0:6])
 		authors = list(set(authors))
