@@ -16,3 +16,5 @@ bad original headword data for ἄποκριϲιϲ
     (1 row)
 
 
+
+divergence between connection behavior between MacOS and FreeBSD: slow builds for latter; needs debugging...
