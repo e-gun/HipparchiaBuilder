@@ -18,3 +18,7 @@ bad original headword data for ἄποκριϲιϲ
 
 
 divergence between connection behavior between MacOS and FreeBSD: slow builds for latter; needs debugging...
+
+    pool divides the connections properly
+    then we parse
+    then database loading is where the big slowdown comes

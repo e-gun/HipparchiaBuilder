@@ -14,7 +14,8 @@ import psycopg2
 
 from builder.builderclasses import MPCounter, dbAuthor, dbOpus
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.db import authortablemaker, dbauthorandworkloader
+from builder.dbinteraction.db import dbauthorandworkloader
+from builder.dbinteraction.dbhelperfunctions import generatecopystream, authortablemaker
 from builder.parsers.swappers import forceregexsafevariants
 from builder.postbuild.postbuilddating import convertdate
 from builder.postbuild.postbuildhelperfunctions import rebasedcounter
@@ -73,6 +74,7 @@ level00 = line
 
 config = configparser.ConfigParser()
 config.read('config.ini')
+
 
 def builddbremappers(oldprefix, newprefix):
 
@@ -659,13 +661,40 @@ def insertnewworksintonewauthor(newwkuid, results, dbcursor):
 
 	db = newwkuid[0:6]
 
-	qtemplate = """
-		INSERT INTO {db} 
-			(index, wkuniversalid, level_05_value, level_04_value, level_03_value, level_02_value,
-			level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words,
-			annotations) 
-		VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+	newdata = generatemodifiedtuples(results, newwkuid)
+
+	newstream = generatecopystream(newdata)
+
+	columns = ('index',
+				'wkuniversalid',
+				'level_00_value',
+				'level_01_value',
+				'level_02_value',
+				'level_03_value',
+				'level_04_value',
+				'level_05_value',
+				'marked_up_line',
+				'accented_line',
+				'stripped_line',
+				'hyphenated_words',
+				'annotations')
+
+	separator = '\t'
+
+	dbcursor.copy_from(newstream, db, sep=separator, columns=columns)
+
+	return
+
+
+def generatemodifiedtuples(results, newwkuid):
 	"""
+
+	:param results:
+	:param newwkuid:
+	:return:
+	"""
+
+	newdata = list()
 
 	for r in results:
 		r = list(r)
@@ -692,12 +721,9 @@ def insertnewworksintonewauthor(newwkuid, results, dbcursor):
 		# swap this out for newwkuid
 
 		r = r[0:1] + [newwkuid] + r[2:]
-		d = tuple(r)
+		newdata.append(tuple(r))
 
-		q = qtemplate.format(db=db)
-		dbcursor.execute(q, d)
-
-	return
+	return newdata
 
 
 def assignlanguagetonewworks(dbprefix):
@@ -824,3 +850,64 @@ def insertlanguagedata(languagetuplelist):
 	dbconnection.connectioncleanup()
 
 	return
+
+
+# slated for removal
+def oldinsertnewworksintonewauthor(newwkuid, results, dbcursor):
+	"""
+
+	send me all of the matching lines from one db and i will build a new workdb with only these lines
+
+	a sample result:
+
+	(3166, 'YY0071w007', '411', '1', '1', '1', 'r', '1', '<hmu_metadata_provenance value="Herm nome?" /><hmu_metadata_date value="VII spc" /><hmu_metadata_documentnumber value="25" />☧ ἐὰν ϲχολάϲῃϲ <hmu_unconventional_form_written_by_scribe>ϲχολαϲειϲ</hmu_unconventional_form_written_by_scribe> θέλειϲ ἀπ̣ελθεῖν κα̣ὶ̣ ∙ε∙∙[ <hmu_latin_normal>c ̣ ]</hmu_latin_normal>', '☧ ἐὰν ϲχολάϲῃϲ ϲχολαϲειϲ θέλειϲ ἀπελθεῖν καὶ ∙ε∙∙ c  ', '☧ εαν ϲχολαϲηϲ ϲχολαϲειϲ θελειϲ απελθειν και ∙ε∙∙ c  ', '', '')
+
+
+	:param newwkuid:
+	:param results:
+	:param dbcursor:
+	:return:
+	"""
+
+	db = newwkuid[0:6]
+
+	qtemplate = """
+		INSERT INTO {db} 
+			(index, wkuniversalid, level_05_value, level_04_value, level_03_value, level_02_value,
+			level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words,
+			annotations) 
+		VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+	"""
+
+	for r in results:
+		r = list(r)
+		# you need to have '-1' in the unused levels otherwise HipparchiaServer will have trouble building citations
+		# level05 has been converted to the dbname, so we can discard it
+		# level01 is sometimes used: 'recto', 'verso'
+		# this is a problem since irregularly shaped works irritate HipparchiaServer
+		# level04 will yield things like: 'face C, right'
+		# this material will get merged with level01; but what sort of complications will arise?
+
+		r[2] = '-1'  # level05
+		if r[6] == '1':  # level 01
+			r[6] = 'recto'
+
+		for level in [3, 4, 5]:  # levels 04, 03, 02
+			if r[level] != '1':
+				if level != 4:
+					# print('unusual level data:', db,r[0],level,r[level])
+					pass
+				r[6] = r[level] + ' ' + r[6]
+			r[level] = '-1'
+
+		# r[1] = tmpdbid: 'YY0071w007', vel sim
+		# swap this out for newwkuid
+
+		r = r[0:1] + [newwkuid] + r[2:]
+		d = tuple(r)
+
+		q = qtemplate.format(db=db)
+		dbcursor.execute(q, d)
+
+	return
+

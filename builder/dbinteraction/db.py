@@ -13,10 +13,12 @@ import psycopg2
 
 from builder.builderclasses import dbAuthor, dbOpus
 from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.dbhelperfunctions import generatequeryvaluetuples, generatecopystream, tablenamer
 
 
 def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 	"""
+
 	run throught the dbreadyversion and put it into the db
 	iterate through the works
 	problems, though: some work numbers are incorrect/impossible
@@ -36,6 +38,7 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 	won't stick until you dbconnection.commit()
 	for hypens:
 	SELECT * from gr9999w999 WHERE (stripped_line LIKE '%marinam%') OR (hyphenated_words LIKE '%marinam%')
+
 	:param authorobject:
 	:param dbreadyversion:
 	:param cursor:
@@ -44,185 +47,37 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 	"""
 
 	dbcursor = dbconnection.cursor()
+	dbconnection.setautocommit()
 
 	for indexedat in range(len(authorobject.works)):
 		# warning: '002' might be the value at work[0]
 		workmaker(authorobject, indexedat, dbcursor)
 
-	index = 0
-	for line in dbreadyversion:
-		if line[2] == '' or line[2] == ' ':
-			# cd resets can produce blanks with bad line numbers, etc
-			# this can leave a blank line numbered '5.1' sandwiched between 5.292 and 5.293
-			# let's hope nothing with useful info gets skipped...
-			pass
-		else:
-			index += 1
-			dbconnection.checkneedtocommit(index)
-			wn = int(line[0])
+	queryvalues = generatequeryvaluetuples(dbreadyversion, authorobject)
 
-			if wn < 10:
-				wn = '00' + str(wn)
-			elif wn < 100:
-				wn = '0' + str(wn)
-			else:
-				wn = str(wn)
+	stream = generatecopystream(queryvalues)
 
-			wkuniversalid = authorobject.universalid + 'w' + wn
+	columns = ('index',
+				'wkuniversalid',
+				'level_00_value',
+				'level_01_value',
+				'level_02_value',
+				'level_03_value',
+				'level_04_value',
+				'level_05_value',
+				'marked_up_line',
+				'accented_line',
+				'stripped_line',
+				'hyphenated_words',
+				'annotations')
 
-			try:
-				wk = authorobject.works[authorobject.workdict[wn]]
-				wklvs = list(wk.structure.keys())
-				wklvs.sort()
-				try:
-					toplvl = wklvs.pop()
-				except IndexError:
-					# this does in fact seem to be at the bottom of a certain class of error; and it likely emerges from bad idx parsing: tough
-					print('could not find top level; workobject level list is empty: anum={a} wn={w} tit={t}'.format(a=authorobject.universalid, w=wk.worknumber, t=wk.title.format))
+	table = authorobject.universalid
 
-				tups = line[1]
+	separator = '\t'
 
-				if authorobject.universalid[0:2] in ['ZZ', 'XX', 'YY', 'in', 'dp', 'ch']:
-					# level 5 contains useful information for the inscriptions: don't nuke it
-					# level00 = line; level01 = face; [gap in levels]; level05 = documentID
-					# all of this gets taken care of in secondpassdbrewrite.py
-					pass
-				else:
-					for lvl in range(0, len(tups)):
-						if lvl > toplvl:
-							# do we want '-1' instead?
-							tups[lvl] = (lvl, -1)
-
-				qtemplate = """
-				INSERT INTO {t} 
-					(index, wkuniversalid, 
-					level_00_value, level_01_value, level_02_value, level_03_value, level_04_value, level_05_value,
-					marked_up_line, accented_line, stripped_line, hyphenated_words, annotations) 
-				VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-				"""
-				# print('ll',wn,wkuniversalid,wk.structure,wklvs, toplvl,tups,line[2])
-				# tempting to not add the -1's, but they are used to check top levels later
-				query = qtemplate.format(t=authorobject.universalid)
-				data = (index, wkuniversalid, tups[0][1], tups[1][1], tups[2][1], tups[3][1], tups[4][1], tups[5][1],
-						line[2], line[3], line[4], line[5], line[6])
-				try:
-					dbcursor.execute(query, data)
-
-				except psycopg2.DatabaseError as e:
-					print('insert into ', authorobject.universalid, 'failed at', index, 'while attempting', data)
-					print('Error %s' % e)
-
-			except:
-				if index < 2:
-					# the proper work number will be set real soon now
-					pass
-				else:
-					print('failed to set a work number for db insert: at line', str(index), 'work', wn,
-						  'does not fit with', authorobject.idxname)
-					ws = json.dumps(wk.structure)
-					print('workobject: wn=' + str(wk.worknumber) + ' tit=' + wk.title + ' struct=' + ws)
-					# print('compare to the authorobject: ' + authorobject.universalid + ' wks=' + authorobject.works)
-					print(line)
-				pass
-
-	dbconnection.commit()
+	dbcursor.copy_from(stream, table, sep=separator, columns=columns)
 
 	return
-
-
-def authortablemaker(authordbname, dbconnection):
-	"""
-	SQL prep only
-	:param workdbname:
-	:param cursor:
-	:return:
-	"""
-
-	dbcursor = dbconnection.cursor()
-
-	query = 'DROP TABLE IF EXISTS public.{adb}'.format(adb=authordbname)
-	dbcursor.execute(query)
-
-	template = """
-		CREATE TABLE public.{adb} (
-			index integer NOT NULL UNIQUE DEFAULT nextval('{adb}'::regclass),
-            wkuniversalid character varying(10) COLLATE pg_catalog."default",
-            level_05_value character varying(64) COLLATE pg_catalog."default",
-            level_04_value character varying(64) COLLATE pg_catalog."default",
-            level_03_value character varying(64) COLLATE pg_catalog."default",
-            level_02_value character varying(64) COLLATE pg_catalog."default",
-            level_01_value character varying(64) COLLATE pg_catalog."default",
-            level_00_value character varying(64) COLLATE pg_catalog."default",
-            marked_up_line text COLLATE pg_catalog."default",
-            accented_line text COLLATE pg_catalog."default",
-            stripped_line text COLLATE pg_catalog."default",
-            hyphenated_words character varying(128) COLLATE pg_catalog."default",
-            annotations character varying(256) COLLATE pg_catalog."default"
-        ) WITH ( OIDS=FALSE );
-	"""
-
-	query = template.format(adb=authordbname)
-
-	dbcursor.execute(query)
-
-	query = 'GRANT SELECT ON TABLE {adb} TO hippa_rd;'.format(adb=authordbname)
-	dbcursor.execute(query)
-
-	# print('failed to create',workdbname)
-
-	dbconnection.commit()
-
-	return
-
-
-def tablenamer(authorobject, indexedat):
-	"""
-	tell me the name of the table we will be working with
-
-	called by: dbauthoradder & workmaker
-	:param authorobject:
-	:param thework:
-	:return:
-	"""
-
-	wk = authorobject.works[indexedat]
-	nm = authorobject.number
-	wn = wk.worknumber
-
-	if wn < 10:
-		nn = '00' + str(wn)
-	elif wn < 100:
-		nn = '0' + str(wn)
-	else:
-		nn = str(wn)
-
-	pr = authorobject.universalid[0:2]
-
-	workdbname = pr + nm + 'w' + nn
-
-	return workdbname
-
-
-def resultiterator(cursor, chunksize=5000):
-	"""
-
-	Yield a generator from fetchmany to keep memory usage down in contrast to
-
-		results = curs.fetchall()
-
-	see: http://code.activestate.com/recipes/137270-use-generators-for-fetching-large-db-record-sets/
-
-	:param cursor:
-	:param chunksize:
-	:return:
-	"""
-
-	while True:
-		results = cursor.fetchmany(chunksize)
-		if not results:
-			break
-		for result in results:
-			yield result
 
 
 def dbauthoradder(authorobject, dbconnection):
@@ -452,3 +307,250 @@ def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
 	dbconnection.connectioncleanup()
 
 	return
+
+
+# slated for removal
+
+def oldinsertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
+	"""
+	run throught the dbreadyversion and put it into the db
+	iterate through the works
+	problems, though: some work numbers are incorrect/impossible
+
+	NOTE: before 26 dec 2016 works were stored in their own DBs; this worked quite wel, but it yielded a problem when
+	the INS and DDP data was finally merged into Hipparchia: suddenly postrgresql was working with 190k DBs, and that
+	yields a significant scheduler and filesystem problem; the costs were too high; nevertheless a TLG and LAT only system
+	could readily used the old model
+
+	here is a marked line...
+	['1', [('0', '87'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1')], "Μή μ' ἔπεϲιν μὲν ϲτέργε, νόον δ' ἔχε καὶ φρέναϲ ἄλληι, ", "Μη μ' επεϲιν μεν ϲτεργε, νοον δ' εχε και φρεναϲ αλληι, "]
+
+	Warning Never, never, NEVER use Python string concatenation (+) or string parameters interpolation (%) to pass variables to a SQL query string. Not even at gunpoint.
+	The correct way to pass variables in a SQL command is using the second argument of the execute() method:
+
+	sample query: SELECT * from gr9999w999 WHERE stripped_line LIKE '%debeas%'
+	won't stick until you dbconnection.commit()
+	for hypens:
+	SELECT * from gr9999w999 WHERE (stripped_line LIKE '%marinam%') OR (hyphenated_words LIKE '%marinam%')
+	:param authorobject:
+	:param dbreadyversion:
+	:param cursor:
+	:param dbconnection:
+	:return:
+	"""
+
+	dbcursor = dbconnection.cursor()
+
+	for indexedat in range(len(authorobject.works)):
+		# warning: '002' might be the value at work[0]
+		workmaker(authorobject, indexedat, dbcursor)
+
+	index = 0
+	for line in dbreadyversion:
+		if line[2] == '' or line[2] == ' ':
+			# cd resets can produce blanks with bad line numbers, etc
+			# this can leave a blank line numbered '5.1' sandwiched between 5.292 and 5.293
+			# let's hope nothing with useful info gets skipped...
+			pass
+		else:
+			index += 1
+			dbconnection.checkneedtocommit(index)
+			wn = int(line[0])
+
+			if wn < 10:
+				wn = '00' + str(wn)
+			elif wn < 100:
+				wn = '0' + str(wn)
+			else:
+				wn = str(wn)
+
+			wkuniversalid = authorobject.universalid + 'w' + wn
+
+			try:
+				wk = authorobject.works[authorobject.workdict[wn]]
+				wklvs = list(wk.structure.keys())
+				wklvs.sort()
+				try:
+					toplvl = wklvs.pop()
+				except IndexError:
+					# this does in fact seem to be at the bottom of a certain class of error; and it likely emerges from bad idx parsing: tough
+					print('could not find top level; workobject level list is empty: anum={a} wn={w} tit={t}'.format(a=authorobject.universalid, w=wk.worknumber, t=wk.title.format))
+
+				tups = line[1]
+
+				if authorobject.universalid[0:2] in ['ZZ', 'XX', 'YY', 'in', 'dp', 'ch']:
+					# level 5 contains useful information for the inscriptions: don't nuke it
+					# level00 = line; level01 = face; [gap in levels]; level05 = documentID
+					# all of this gets taken care of in secondpassdbrewrite.py
+					pass
+				else:
+					for lvl in range(0, len(tups)):
+						if lvl > toplvl:
+							# do we want '-1' instead?
+							tups[lvl] = (lvl, -1)
+
+				qtemplate = """
+				INSERT INTO {t} 
+					(index, wkuniversalid, 
+					level_00_value, level_01_value, level_02_value, level_03_value, level_04_value, level_05_value,
+					marked_up_line, accented_line, stripped_line, hyphenated_words, annotations) 
+				VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+				"""
+				# print('ll',wn,wkuniversalid,wk.structure,wklvs, toplvl,tups,line[2])
+				# tempting to not add the -1's, but they are used to check top levels later
+				query = qtemplate.format(t=authorobject.universalid)
+				data = (index, wkuniversalid, tups[0][1], tups[1][1], tups[2][1], tups[3][1], tups[4][1], tups[5][1],
+						line[2], line[3], line[4], line[5], line[6])
+				try:
+					dbcursor.execute(query, data)
+
+				except psycopg2.DatabaseError as e:
+					print('insert into ', authorobject.universalid, 'failed at', index, 'while attempting', data)
+					print('Error %s' % e)
+
+			except:
+				if index < 2:
+					# the proper work number will be set real soon now
+					pass
+				else:
+					print('failed to set a work number for db insert: at line', str(index), 'work', wn,
+						  'does not fit with', authorobject.idxname)
+					ws = json.dumps(wk.structure)
+					print('workobject: wn=' + str(wk.worknumber) + ' tit=' + wk.title + ' struct=' + ws)
+					# print('compare to the authorobject: ' + authorobject.universalid + ' wks=' + authorobject.works)
+					print(line)
+				pass
+
+	dbconnection.commit()
+
+	return
+
+
+"""
+	one bugged insert in CHR:
+	
+	promted by: *)IEZE[KIH/L\].
+
+	psycopg2.DataError: missing data for column "hyphenated_words"
+	CONTEXT:  COPY zz0012, line 668: "668	ZZ0012w002	1	a	1	1	1	3﹕52	<hmu_metadata_region value="Constantinople" /><hmu_metadata_city val..."
+
+
+	bugged line (668, 'ZZ0012w002', '1', 'a', '1', '1', '1', '3﹕52', '<hmu_metadata_region value="Constantinople" /><hmu_metadata_city value="Hagia Sophia" /><hmu_metadata_date value="c 886-912 ac?" /><hmu_metadata_publicationinfo value="Materials 59" /><hmu_metadata_documentnumber value="33" />Ἰεζε[κιήλ\\].', 'ἰεζεκιήλ\\', 'ιεζεκιηλ\\', '', '')
+
+	[ch0202w00x]
+	Constantinople [Chr.] (Ekphrasis H. Sophias),
+	3:52
+	a, line 1
+	(Assigned date of 899 CE)
+		Region:  Constantinople
+		City:  Hagia Sophia
+		Additional publication info:  Materials 59
+		Editor's date:  c 886-912 ac?
+
+		Ἰεζε[κιήλ\]. 	a 1
+
+		[Ἀββα]κου⟨μ⟩ Ἀμβακούμ 	b 1
+
+		[Ἰων]ᾶϲ 	c 1
+
+		Ἰερεμίαϲ. 	d,1 1
+
+hipparchiaDB=# select index,hyphenated_words from ch0202 order by index asc;
+ index | hyphenated_words
+-------+------------------
+   591 |
+   592 |
+   593 |
+   594 |
+   595 |
+   596 |
+   597 |
+   598 |
+   599 |
+   600 |
+   601 |
+   602 |
+   603 |
+   604 |
+   605 |
+   606 | εἰρήνη
+   607 |
+   608 |
+   609 |
+   610 | φῶϲ
+   611 |
+   612 |
+   613 |
+   614 |
+   615 |
+   616 |
+   617 |
+   618 |
+   619 |
+   620 |
+   621 |
+   622 |
+   623 |
+   624 |
+   625 |
+   626 |
+   627 |
+   628 |
+   629 |
+   630 |
+   631 |
+   632 |
+   633 |
+   634 |
+   635 |
+   636 |
+   637 |
+   638 | βοήθη
+   639 |
+   640 | νηκήτα
+   641 |
+   642 |
+   643 |
+   644 |
+   645 |
+   646 |
+   647 | οἰκουμενικοῦ
+   648 |
+   649 |
+   650 |
+   651 |
+   652 |
+   653 |
+   654 |
+   655 |
+   656 |
+   657 |
+   658 |
+   659 |
+   660 |
+   661 |
+   662 |
+   663 |
+   664 |
+   665 | τέξεται
+   666 |
+   667 |
+   668 |
+   669 |
+   670 |
+   671 |
+   672 |
+   673 |
+   674 |
+   675 |
+   676 |
+   677 | ἡμῶν
+   678 | λογιϲθήϲε-
+   679 |
+   680 | ἕτεροϲ
+   681 |
+   682 | αὐτόν
+   683 |
+(93 rows)
+
+"""

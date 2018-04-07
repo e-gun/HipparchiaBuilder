@@ -13,6 +13,7 @@ import time
 from multiprocessing import Manager, Process
 from os import path
 
+import builder.dbinteraction.dbhelperfunctions
 import builder.dbinteraction.dbprepsubstitutions
 import builder.parsers.betacodefontshifts
 from builder.dbinteraction import db
@@ -426,7 +427,7 @@ def databaseloading(dbreadyversion, authorobject, dbconnection):
 	dbreadyversion = builder.dbinteraction.dbprepsubstitutions.dbprepper(dbreadyversion)
 	# pickle.dump(dbreadyversion, outputfile, open( "wb"))
 	db.dbauthoradder(authorobject, dbconnection)
-	db.authortablemaker(authorobject.universalid, dbconnection)
+	builder.dbinteraction.dbhelperfunctions.authortablemaker(authorobject.universalid, dbconnection)
 	db.insertworksintoauthortable(authorobject, dbreadyversion, dbconnection)
 
 	# to debug return dbreadyversion
