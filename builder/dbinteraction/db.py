@@ -55,7 +55,9 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 
 	queryvalues = generatequeryvaluetuples(dbreadyversion, authorobject)
 
-	stream = generatecopystream(queryvalues)
+	separator = '\t'
+
+	stream = generatecopystream(queryvalues, separator=separator)
 
 	columns = ('index',
 				'wkuniversalid',
@@ -72,8 +74,6 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 				'annotations')
 
 	table = authorobject.universalid
-
-	separator = '\t'
 
 	dbcursor.copy_from(stream, table, sep=separator, columns=columns)
 

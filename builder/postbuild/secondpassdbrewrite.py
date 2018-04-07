@@ -663,7 +663,9 @@ def insertnewworksintonewauthor(newwkuid, results, dbcursor):
 
 	newdata = generatemodifiedtuples(results, newwkuid)
 
-	newstream = generatecopystream(newdata)
+	separator = '\t'
+
+	newstream = generatecopystream(newdata, separator=separator)
 
 	columns = ('index',
 				'wkuniversalid',
@@ -678,8 +680,6 @@ def insertnewworksintonewauthor(newwkuid, results, dbcursor):
 				'stripped_line',
 				'hyphenated_words',
 				'annotations')
-
-	separator = '\t'
 
 	dbcursor.copy_from(newstream, db, sep=separator, columns=columns)
 
