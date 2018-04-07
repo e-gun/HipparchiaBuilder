@@ -98,9 +98,15 @@ def replacequotationmarks(texttoclean):
 def lastsecondsubsitutions(texttoclean):
 	"""
 	regex work that for some reason or other needs to be put off until the very last second
+
 	:param texttoclean:
 	:return:
 	"""
+
+	# gr2762 and chr0012 will fail the COPY TO command because of '\\'
+
+	texttoclean = texttoclean.replace('\\', '')
+
 	betacodetuples = (
 		# a format shift code like '[3' if followed by a number that is supposed to print has an intervening ` to stop the TLG parser
 		# if you do this prematurely you will generate spurious codes by joining numbers that should be kept apart

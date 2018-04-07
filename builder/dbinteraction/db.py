@@ -6,14 +6,11 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-import json
 import re
-
-import psycopg2
 
 from builder.builderclasses import dbAuthor, dbOpus
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.dbhelperfunctions import generatequeryvaluetuples, generatecopystream, tablenamer
+from builder.dbinteraction.dbhelperfunctions import generatecopystream, generatequeryvaluetuples, tablenamer
 
 
 def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
@@ -307,133 +304,3 @@ def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
 	dbconnection.connectioncleanup()
 
 	return
-
-
-"""
-	one bugged insert in CHR:
-	
-	promted by: *)IEZE[KIH/L\].
-
-	psycopg2.DataError: missing data for column "hyphenated_words"
-	CONTEXT:  COPY zz0012, line 668: "668	ZZ0012w002	1	a	1	1	1	3﹕52	<hmu_metadata_region value="Constantinople" /><hmu_metadata_city val..."
-
-
-	bugged line (668, 'ZZ0012w002', '1', 'a', '1', '1', '1', '3﹕52', '<hmu_metadata_region value="Constantinople" /><hmu_metadata_city value="Hagia Sophia" /><hmu_metadata_date value="c 886-912 ac?" /><hmu_metadata_publicationinfo value="Materials 59" /><hmu_metadata_documentnumber value="33" />Ἰεζε[κιήλ\\].', 'ἰεζεκιήλ\\', 'ιεζεκιηλ\\', '', '')
-
-	[ch0202w00x]
-	Constantinople [Chr.] (Ekphrasis H. Sophias),
-	3:52
-	a, line 1
-	(Assigned date of 899 CE)
-		Region:  Constantinople
-		City:  Hagia Sophia
-		Additional publication info:  Materials 59
-		Editor's date:  c 886-912 ac?
-
-		Ἰεζε[κιήλ\]. 	a 1
-
-		[Ἀββα]κου⟨μ⟩ Ἀμβακούμ 	b 1
-
-		[Ἰων]ᾶϲ 	c 1
-
-		Ἰερεμίαϲ. 	d,1 1
-
-hipparchiaDB=# select index,hyphenated_words from ch0202 order by index asc;
- index | hyphenated_words
--------+------------------
-   591 |
-   592 |
-   593 |
-   594 |
-   595 |
-   596 |
-   597 |
-   598 |
-   599 |
-   600 |
-   601 |
-   602 |
-   603 |
-   604 |
-   605 |
-   606 | εἰρήνη
-   607 |
-   608 |
-   609 |
-   610 | φῶϲ
-   611 |
-   612 |
-   613 |
-   614 |
-   615 |
-   616 |
-   617 |
-   618 |
-   619 |
-   620 |
-   621 |
-   622 |
-   623 |
-   624 |
-   625 |
-   626 |
-   627 |
-   628 |
-   629 |
-   630 |
-   631 |
-   632 |
-   633 |
-   634 |
-   635 |
-   636 |
-   637 |
-   638 | βοήθη
-   639 |
-   640 | νηκήτα
-   641 |
-   642 |
-   643 |
-   644 |
-   645 |
-   646 |
-   647 | οἰκουμενικοῦ
-   648 |
-   649 |
-   650 |
-   651 |
-   652 |
-   653 |
-   654 |
-   655 |
-   656 |
-   657 |
-   658 |
-   659 |
-   660 |
-   661 |
-   662 |
-   663 |
-   664 |
-   665 | τέξεται
-   666 |
-   667 |
-   668 |
-   669 |
-   670 |
-   671 |
-   672 |
-   673 |
-   674 |
-   675 |
-   676 |
-   677 | ἡμῶν
-   678 | λογιϲθήϲε-
-   679 |
-   680 | ἕτεροϲ
-   681 |
-   682 | αὐτόν
-   683 |
-(93 rows)
-
-"""

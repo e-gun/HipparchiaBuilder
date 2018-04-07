@@ -76,7 +76,7 @@ def generatequeryvaluetuples(dbreadyversion, authorobject):
 				queryvalues.append(tuple([index, wkuniversalid, tups[0][1], tups[1][1], tups[2][1], tups[3][1], tups[4][1], tups[5][1],
 						line[2], line[3], line[4], line[5], line[6]]))
 
-				if index == 668 and wkuniversalid == 'ZZ0012w002':
+				if index == 413 and wkuniversalid == 'gr2762w004':
 					print('bugged line', queryvalues[-1])
 			except:
 				if index < 2:
