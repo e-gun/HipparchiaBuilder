@@ -8,9 +8,8 @@
 
 import re
 
-import psycopg2
+from psycopg2.extras import execute_values as insertlistofvaluetuples
 
-from builder.dbinteraction.connection import setconnection
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
 from builder.parsers.lexica import betaconvertandsave, greekwithoutvowellengths, greekwithvowellengths, \
 	latinvowellengths, lsjgreekswapper, translationsummary
@@ -119,7 +118,7 @@ def mplatindictionaryinsert(dictdb, entries, dbconnection, commitcount):
 	return
 
 
-def mpgreekdictionaryinsert(dictdb, entries, dbconnection, commitcount):
+def mpgreekdictionaryinsert(dictdb, entries, dbconnection):
 	"""
 
 	work on dictdb entries
@@ -133,6 +132,7 @@ def mpgreekdictionaryinsert(dictdb, entries, dbconnection, commitcount):
 	"""
 
 	dbcursor = dbconnection.cursor()
+	dbconnection.setautocommit()
 
 	# places where you can find lang="greek"
 	# <foreign>; <orth>; <pron>; <quote>; <gen>; <itype>
@@ -165,105 +165,99 @@ def mpgreekdictionaryinsert(dictdb, entries, dbconnection, commitcount):
 	restoreb = re.compile(r'<προν εχτεντ="φυλλ" λανγ="γρεεκ" οπτ="ν"(.*?)(</pron>)')
 	restorec = re.compile(r'<ιτψπε λανγ="γρεεκ" οπτ="ν">(.*?)(</itype>)')
 
+	bundlesize = 500
+
+	qtemplate = """
+	INSERT INTO {d} 
+		(entry_name, metrical_entry, unaccented_entry, id_number, pos, translations, entry_body)
+		VALUES %s"""
+	query = qtemplate.format(d=dictdb)
+
 	idnum = 0
 	while len(entries) > 0:
-		try:
-			entry = entries.pop()
-		except IndexError:
-			entry = ''
-
-		if entry[0:10] != "<entryFree":
-			pass
-		else:
-			segments = re.search(bodyfinder, entry)
+		# speed up by inserting bundles instead of hundreds of thousands of individual items
+		# would be nice to make a sub-function, but note all the compiled regex you need...
+		bundelofrawentries = list()
+		for e in range(bundlesize):
 			try:
-				body = segments.group(3)
-			except AttributeError:
-				body = ''
-				print('died at', idnum, entry)
-			info = segments.group(2)
-			parsedinfo = re.search('id="(.*?)"\skey=(".*?")\stype="(.*?)"\sopt="(.*?)"', info)
-			try:
-				idnum = parsedinfo.group(1)
-				key = parsedinfo.group(2)
-				etype = parsedinfo.group(3)  # will go unused
-				opt = parsedinfo.group(4)  # will go unused
-			except AttributeError:
-				# only one greek dictionary entry will throw an exception: n29246
-				# print('did not find key at', idnum, entry)
-				idnum = 'n29246'
-				key = ''
-				etype = ''
-				opt = ''
-			entryname = re.sub(r'"(.*?)"', lambda x: greekwithoutvowellengths(x.group(1)), key.upper())
-			entryname = re.sub(r'(\d+)', superscripterone, entryname)
-			metrical = re.sub(r'(")(.*?)(")', lambda x: greekwithvowellengths(x.group(2)), key.upper())
-			metrical = re.sub(r'(\d+)', superscripterone, metrical)
-			metrical = re.sub(r'"', r'', metrical)
+				bundelofrawentries.append(entries.pop())
+			except IndexError:
+				pass
 
-			body = re.sub(greekfinder, lsjgreekswapper, body)
-			body = re.sub(restorea, r'<gen lang="greek" opt="n">\1\2', body)
-			body = re.sub(restoreb, r'<pron extent="full">\1\2', body)
-			body = re.sub(restorec, r'<itype lang="greek" opt="n">\1\2', body)
-
-			# 'n1000' --> 1000
-			idnum = int(re.sub(r'^n', '', idnum))
-			translationlist = translationsummary(entry, 'tr')
-			stripped = cleanaccentsandvj(entryname)
-
-			# part of speech stuff
-			startofbody = re.sub(bodytrimmer, '', body)
-			startofbody = startofbody[:500]
-			partsofspeech = set(re.findall(posfinder, startofbody))
-
-			if re.findall(conjfinder, startofbody):
-				partsofspeech.add('conj.')
-			if re.findall(prepfinder, startofbody):
-				partsofspeech.add('prep.')
-			if re.findall(particlefinder, startofbody):
-				partsofspeech.add('partic.')
-			nouns = [n for n in re.findall(nounfindera, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
-			nouns += [n for n in re.findall(nounfinderb, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
-			if nouns:
-				partsofspeech.add('subst.')
-			adjs = [a for a in re.findall(twoterminationadjfinder, startofbody) if a in ['έϲ', 'εϲ', 'ον', 'όν']]
-			adjs += [a for a in re.findall(threeterminationadjfinder, startofbody) if a in ['α', 'ά', 'η', 'ή']]
-			if adjs:
-				partsofspeech.add('adj.')
-			verbs = re.findall(verbfindera, startofbody)
-			verbs += re.findall(verbfinderb, startofbody)
-			if verbs:
-				partsofspeech.add('v.')
-			if not partsofspeech and entryname and entryname[-1] == 'ω':
-				partsofspeech.add('v.')
-
-			pos = ''
-			pos += ' ‖ '.join(partsofspeech)
-			pos = pos.lower()
-
-			qtemplate = """
-			INSERT INTO {d} 
-				(entry_name, metrical_entry, unaccented_entry, id_number, pos, translations, entry_body)
-				VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-
-			query = qtemplate.format(d=dictdb)
-			data = (entryname, metrical, stripped, idnum, pos, translationlist, body)
-
-			try:
-				dbcursor.execute(query, data)
-			except psycopg2.DataError:
-				# psycopg2.DataError
-				print('failed to insert', entryname)
-				print('\t>>', entryname, metrical, stripped, idnum, pos, '<<')
-
-			commitcount.increment()
-			dbconnection.checkneedtocommit(commitcount)
-			if commitcount.value % 5000 == 0:
+		bundelofcookedentries = list()
+		for entry in bundelofrawentries:
+			if entry[0:10] != "<entryFree":
+				pass
+			else:
+				segments = re.search(bodyfinder, entry)
 				try:
-					print('\tat {num}: {nm}'.format(th=dbconnection.uniquename, num=idnum, nm=entryname))
-				except UnicodeEncodeError:
-					# UnicodeEncodeError
-					print('\tat', idnum)
+					body = segments.group(3)
+				except AttributeError:
+					body = ''
+					print('died at', idnum, entry)
+				info = segments.group(2)
+				parsedinfo = re.search('id="(.*?)"\skey=(".*?")\stype="(.*?)"\sopt="(.*?)"', info)
+				try:
+					idnum = parsedinfo.group(1)
+					key = parsedinfo.group(2)
+					etype = parsedinfo.group(3)  # will go unused
+					opt = parsedinfo.group(4)  # will go unused
+				except AttributeError:
+					# only one greek dictionary entry will throw an exception: n29246
+					# print('did not find key at', idnum, entry)
+					idnum = 'n29246'
+					key = ''
+					etype = ''
+					opt = ''
+				entryname = re.sub(r'"(.*?)"', lambda x: greekwithoutvowellengths(x.group(1)), key.upper())
+				entryname = re.sub(r'(\d+)', superscripterone, entryname)
+				metrical = re.sub(r'(")(.*?)(")', lambda x: greekwithvowellengths(x.group(2)), key.upper())
+				metrical = re.sub(r'(\d+)', superscripterone, metrical)
+				metrical = re.sub(r'"', r'', metrical)
+
+				body = re.sub(greekfinder, lsjgreekswapper, body)
+				body = re.sub(restorea, r'<gen lang="greek" opt="n">\1\2', body)
+				body = re.sub(restoreb, r'<pron extent="full">\1\2', body)
+				body = re.sub(restorec, r'<itype lang="greek" opt="n">\1\2', body)
+
+				# 'n1000' --> 1000
+				idnum = int(re.sub(r'^n', '', idnum))
+				translationlist = translationsummary(entry, 'tr')
+				stripped = cleanaccentsandvj(entryname)
+
+				# part of speech stuff
+				startofbody = re.sub(bodytrimmer, '', body)
+				startofbody = startofbody[:500]
+				partsofspeech = set(re.findall(posfinder, startofbody))
+
+				if re.findall(conjfinder, startofbody):
+					partsofspeech.add('conj.')
+				if re.findall(prepfinder, startofbody):
+					partsofspeech.add('prep.')
+				if re.findall(particlefinder, startofbody):
+					partsofspeech.add('partic.')
+				nouns = [n for n in re.findall(nounfindera, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
+				nouns += [n for n in re.findall(nounfinderb, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
+				if nouns:
+					partsofspeech.add('subst.')
+				adjs = [a for a in re.findall(twoterminationadjfinder, startofbody) if a in ['έϲ', 'εϲ', 'ον', 'όν']]
+				adjs += [a for a in re.findall(threeterminationadjfinder, startofbody) if a in ['α', 'ά', 'η', 'ή']]
+				if adjs:
+					partsofspeech.add('adj.')
+				verbs = re.findall(verbfindera, startofbody)
+				verbs += re.findall(verbfinderb, startofbody)
+				if verbs:
+					partsofspeech.add('v.')
+				if not partsofspeech and entryname and entryname[-1] == 'ω':
+					partsofspeech.add('v.')
+
+				pos = ''
+				pos += ' ‖ '.join(partsofspeech)
+				pos = pos.lower()
+
+				bundelofcookedentries.append(tuple([entryname, metrical, stripped, idnum, pos, translationlist, body]))
+
+		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
 
 	return
 

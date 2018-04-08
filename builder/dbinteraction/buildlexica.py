@@ -45,11 +45,10 @@ def formatgklexicon():
 
 	manager = Manager()
 	entries = manager.list(entries)
-	commitcount = MPCounter()
 
 	workers = setworkercount()
 	connections = {i: setconnection() for i in range(workers)}
-	jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, connections[i], commitcount)) for i in range(workers)]
+	jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, connections[i])) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
