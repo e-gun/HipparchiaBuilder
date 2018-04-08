@@ -11,7 +11,7 @@ import configparser
 from multiprocessing import Manager, Process
 
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.mplexicalworkers import mpanalysisinsert, mpgreekdictionaryinsert, mplatindictionaryinsert, \
+from builder.lexica.mplexicalworkers import mpanalysisinsert, mpgreekdictionaryinsert, mplatindictionaryinsert, \
 	mplemmatainsert
 from builder.workers import setworkercount
 

@@ -39,12 +39,6 @@ builder/corpusbuilder.py:def initialworkparsing(authorobject, language, datapath
 builder/corpusbuilder.py:def secondaryworkparsing(authorobject, txt):
 builder/corpusbuilder.py:def databaseloading(dbreadyversion, authorobject, dbconnection):
 builder/workers.py:def setworkercount():
-builder/dbinteraction/buildlexica.py:def formatgklexicon():
-builder/dbinteraction/buildlexica.py:def formatlatlexicon():
-builder/dbinteraction/buildlexica.py:def grammarloader(language):
-builder/dbinteraction/buildlexica.py:def analysisloader(language):
-builder/dbinteraction/buildlexica.py:def resettable(tablename, tablestructurelist, indexcolumn):
-builder/dbinteraction/buildlexica.py:def getlexicaltablestructuredict(tablename):
 builder/dbinteraction/connection.py:def setconnection(autocommit=False, simple=False):
 builder/dbinteraction/dbhelperfunctions.py:def resultiterator(cursor, chunksize=5000):
 builder/dbinteraction/dbhelperfunctions.py:def authortablemaker(authordbname, dbconnection):
@@ -69,15 +63,21 @@ builder/dbinteraction/dbprepsubstitutions.py:def hmutonbsp(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def quarterspacer(matchgroup):
 builder/dbinteraction/dbprepsubstitutions.py:def noleadingortrailingwhitespace(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def consolidatecontiguouslines(previousline, thisline, hypenatedword, transtable):
-builder/dbinteraction/mplexicalworkers.py:def mplatindictionaryinsert(dictdb, entries, dbconnection):
-builder/dbinteraction/mplexicalworkers.py:def mpgreekdictionaryinsert(dictdb, entries, dbconnection):
-builder/dbinteraction/mplexicalworkers.py:def mplemmatainsert(grammardb, entries, islatin, dbconnection):
-builder/dbinteraction/mplexicalworkers.py:def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 builder/dbinteraction/versioning.py:def versiontablemaker(dbconnection):
 builder/dbinteraction/versioning.py:def timestampthebuild(corpusname, dbconnection=None):
 builder/dbinteraction/versioning.py:def readgitdata():
 builder/file_io/filereaders.py:def findauthors(pathtoauthtab):
 builder/file_io/filereaders.py:def highunicodefileload(filepath):
+builder/lexica/buildlexica.py:def formatgklexicon():
+builder/lexica/buildlexica.py:def formatlatlexicon():
+builder/lexica/buildlexica.py:def grammarloader(language):
+builder/lexica/buildlexica.py:def analysisloader(language):
+builder/lexica/buildlexica.py:def resettable(tablename, tablestructurelist, indexcolumn):
+builder/lexica/buildlexica.py:def getlexicaltablestructuredict(tablename):
+builder/lexica/mplexicalworkers.py:def mplatindictionaryinsert(dictdb, entries, dbconnection):
+builder/lexica/mplexicalworkers.py:def mpgreekdictionaryinsert(dictdb, entries, dbconnection):
+builder/lexica/mplexicalworkers.py:def mplemmatainsert(grammardb, entries, islatin, dbconnection):
+builder/lexica/mplexicalworkers.py:def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 builder/parsers/betacodeandunicodeinterconversion.py:def replacegreekbetacode(texttoclean):
 builder/parsers/betacodeandunicodeinterconversion.py:def parseromaninsidegreek(texttoclean):
 builder/parsers/betacodeandunicodeinterconversion.py:def parsegreekinsidelatin(texttoclean):
@@ -299,4 +299,4 @@ builder/postbuild/secondpassdbrewrite.py:def insertnewworksintonewauthor(newwkui
 builder/postbuild/secondpassdbrewrite.py:def generatemodifiedtuples(results, newwkuid):
 builder/postbuild/secondpassdbrewrite.py:def assignlanguagetonewworks(dbprefix):
 builder/postbuild/secondpassdbrewrite.py:def determineworklanguage(strippedlines):
-builder/postbuild/secondpassdbrewrite.py:def insertlanguagedata(languagetuplelist)::
+builder/postbuild/secondpassdbrewrite.py:def insertlanguagedata(languagetuplelist):
