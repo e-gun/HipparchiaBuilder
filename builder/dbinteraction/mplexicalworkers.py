@@ -16,7 +16,7 @@ from builder.parsers.lexica import betaconvertandsave, greekwithoutvowellengths,
 from builder.parsers.swappers import superscripterone, superscripterzero
 
 
-def mplatindictionaryinsert(dictdb, entries, dbconnection, commitcount):
+def mplatindictionaryinsert(dictdb, entries, dbconnection):
 	"""
 
 	work on dictdb entries
@@ -30,6 +30,7 @@ def mplatindictionaryinsert(dictdb, entries, dbconnection, commitcount):
 	"""
 
 	dbcursor = dbconnection.cursor()
+	dbconnection.setautocommit()
 
 	bodyfinder = re.compile(r'(<entryFree(.*?)>)(.*?)(</entryFree>)')
 	defectivebody = re.compile(r'(<entryFree(.*?)>)(.*?)')
@@ -40,80 +41,82 @@ def mplatindictionaryinsert(dictdb, entries, dbconnection, commitcount):
 	posfinder = re.compile(r'<pos.*?>(.*?)</pos>')
 	particlefinder = re.compile(r'\. particle')
 
+	qtemplate = """
+	INSERT INTO {d} 
+		(entry_name, metrical_entry, id_number, entry_key, pos, translations, entry_body)
+		VALUES %s"""
+	query = qtemplate.format(d=dictdb)
+
+	bundlesize = 1000
+
 	while len(entries) > 0:
-
-		try:
-			entry = entries.pop()
-		except IndexError:
-			entry = ''
-
-		if entry[0:10] != "<entryFree":
-			# print(entry[0:25])
-			pass
-		else:
-			segments = re.search(bodyfinder, entry)
+		# speed up by inserting bundles instead of hundreds of thousands of individual items
+		# would be nice to make a sub-function, but note all the compiled regex you need...
+		bundelofrawentries = list()
+		for e in range(bundlesize):
 			try:
-				body = segments.group(3)
-			except AttributeError:
-				segments = re.search(defectivebody, entry)
+				bundelofrawentries.append(entries.pop())
+			except IndexError:
+				pass
+
+		bundelofcookedentries = list()
+		for entry in bundelofrawentries:
+			if entry[0:10] != "<entryFree":
+				# print(entry[0:25])
+				pass
+			else:
+				segments = re.search(bodyfinder, entry)
 				try:
 					body = segments.group(3)
 				except AttributeError:
-					print('died at', entry)
-					body = ''
-			info = segments.group(2)
-			parsedinfo = re.search('id="(.*?)"\stype="(.*?)"\skey="(.*?)" opt="(.*?)"', info)
-			idnum = parsedinfo.group(1)
-			etype = parsedinfo.group(2)  # will go unused
-			key = parsedinfo.group(3)
-			opt = parsedinfo.group(4)  # will go unused
+					segments = re.search(defectivebody, entry)
+					try:
+						body = segments.group(3)
+					except AttributeError:
+						print('died at', entry)
+						body = ''
+				info = segments.group(2)
+				parsedinfo = re.search('id="(.*?)"\stype="(.*?)"\skey="(.*?)" opt="(.*?)"', info)
+				idnum = parsedinfo.group(1)
+				etype = parsedinfo.group(2)  # will go unused
+				key = parsedinfo.group(3)
+				opt = parsedinfo.group(4)  # will go unused
 
-			# handle words like abactus which have key... n... opt... where n is the variant number
-			# this pattern interrupts the std parsedinfo flow
-			metricalentry = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
-			metricalentry = re.sub(r' \((\d)\)', superscripterone, metricalentry)
-			# kill off the tail if you still have one: fĭber" n="1
-			metricalentry = re.sub(r'(.*?)"\s.*?$', r'\1', metricalentry)
-			entryname = re.sub('(_|\^)', '', metricalentry)
-			metricalentry = latinvowellengths(metricalentry)
+				# handle words like abactus which have key... n... opt... where n is the variant number
+				# this pattern interrupts the std parsedinfo flow
+				metricalentry = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
+				metricalentry = re.sub(r' \((\d)\)', superscripterone, metricalentry)
+				# kill off the tail if you still have one: fĭber" n="1
+				metricalentry = re.sub(r'(.*?)"\s.*?$', r'\1', metricalentry)
+				entryname = re.sub('(_|\^)', '', metricalentry)
+				metricalentry = latinvowellengths(metricalentry)
 
-			key = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
-			key = re.sub(r' \((\d)\)', superscripterone, key)
-			key = latinvowellengths(key)
+				key = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
+				key = re.sub(r' \((\d)\)', superscripterone, key)
+				key = latinvowellengths(key)
 
-			# 'n1000' --> 1000
-			idnum = int(re.sub(r'^n', '', idnum))
+				# 'n1000' --> 1000
+				idnum = int(re.sub(r'^n', '', idnum))
 
-			# parts of speech
-			cleanbody = re.sub(etymfinder, '', body)
-			cleanbody = re.sub(badprepfinder, '', cleanbody)
-			pos = list()
-			pos += list(set(re.findall(posfinder, cleanbody)))
-			if re.findall(particlefinder, cleanbody):
-				pos.append('partic.')
-			pos = ' ‖ '.join(pos)
-			pos = pos.lower()
+				# parts of speech
+				cleanbody = re.sub(etymfinder, '', body)
+				cleanbody = re.sub(badprepfinder, '', cleanbody)
+				pos = list()
+				pos += list(set(re.findall(posfinder, cleanbody)))
+				if re.findall(particlefinder, cleanbody):
+					pos.append('partic.')
+				pos = ' ‖ '.join(pos)
+				pos = pos.lower()
 
-			translationlist = translationsummary(entry, 'hi')
-			# do some quickie greek replacements
-			body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
-			qtemplate = """
-			INSERT INTO {d} 
-				(entry_name, metrical_entry, id_number, entry_key, pos, translations, entry_body)
-				VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-			query = qtemplate.format(d=dictdb)
-			data = (entryname, metricalentry, idnum, key, pos, translationlist, body)
-			dbcursor.execute(query, data)
+				translationlist = translationsummary(entry, 'hi')
+				# do some quickie greek replacements
+				body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
 
-			# if idnum == 18069:
-			# 	items = [entryname, metricalentry, idnum, type, key, opt, translationlist, body]
-			# 	for i in items:
-			# 		print(i)
+				if idnum % 10000 == 0:
+					print('at {n}: {e}'.format(n=idnum, e=entryname))
+				bundelofcookedentries.append(tuple([entryname, metricalentry, idnum, key, pos, translationlist, body]))
 
-		commitcount.increment()
-		dbconnection.checkneedtocommit(commitcount)
-		if commitcount.value % 5000 == 0:
-			print('\tat {num}: {nm}'.format(th=dbconnection.uniquename, num=idnum, nm=entryname))
+		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
 
 	return
 
@@ -165,7 +168,8 @@ def mpgreekdictionaryinsert(dictdb, entries, dbconnection):
 	restoreb = re.compile(r'<προν εχτεντ="φυλλ" λανγ="γρεεκ" οπτ="ν"(.*?)(</pron>)')
 	restorec = re.compile(r'<ιτψπε λανγ="γρεεκ" οπτ="ν">(.*?)(</itype>)')
 
-	bundlesize = 500
+	# 500 is c 10% slower than 1000 w/ a SSD: no need to get too ambitious here
+	bundlesize = 1000
 
 	qtemplate = """
 	INSERT INTO {d} 
@@ -255,6 +259,8 @@ def mpgreekdictionaryinsert(dictdb, entries, dbconnection):
 				pos += ' ‖ '.join(partsofspeech)
 				pos = pos.lower()
 
+				if idnum % 10000 == 0:
+					print('at {n}: {e}'.format(n=idnum, e=entryname))
 				bundelofcookedentries.append(tuple([entryname, metrical, stripped, idnum, pos, translationlist, body]))
 
 		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
