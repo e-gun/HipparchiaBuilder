@@ -107,7 +107,7 @@ def graballcountsasobjects(db, cursor, extrasql=''):
 	cursor.execute(query)
 	lines = cursor.fetchall()
 
-	countobjects = [dbWordCountObject(l[0], l[1], l[2], l[3], l[4], l[5], l[6]) for l in lines]
+	countobjects = [dbWordCountObject(*l) for l in lines]
 
 	return countobjects
 
@@ -124,7 +124,7 @@ def grablemmataasobjects(db, cursor):
 	cursor.execute(query)
 	lines = cursor.fetchall()
 
-	lemmaobjects = [dbLemmaObject(l[0], l[1], l[2]) for l in lines]
+	lemmaobjects = [dbLemmaObject(*l) for l in lines]
 
 	return lemmaobjects
 
