@@ -24,7 +24,7 @@ else:
 	warnings = False
 
 
-# [nb: some regex happens in db.py as prep for loading]
+# [nb: some regex happens in dbloading.py as prep for loading]
 
 
 def earlybirdsubstitutions(texttoclean):

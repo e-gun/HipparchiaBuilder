@@ -10,7 +10,7 @@ import csv
 import re
 
 from builder import file_io
-from builder.dbinteraction.db import updatedbfromtemptable
+from builder.dbinteraction.dbhelperfunctions import updatedbfromtemptable
 from builder.parsers.betacodeescapedcharacters import percentsubstitutes
 from builder.parsers.greekcanonfunctions import loadgkcanon
 from builder.parsers.latinsubstitutions import latindiacriticals

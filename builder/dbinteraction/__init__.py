@@ -1,1 +1,1 @@
-__all__ = ['db', 'build_lexica', 'concordance', 'dbprepsubstitutions']
+__all__ = ['dbloading.py', 'build_lexica', 'concordance', 'dbprepsubstitutions']

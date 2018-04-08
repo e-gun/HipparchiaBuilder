@@ -16,9 +16,9 @@ from os import path
 import builder.dbinteraction.dbhelperfunctions
 import builder.dbinteraction.dbprepsubstitutions
 import builder.parsers.betacodefontshifts
-from builder.dbinteraction import db
+from builder.dbinteraction import dbloading
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.db import resetauthorsandworksdbs
+from builder.dbinteraction.dbhelperfunctions import resetauthorsandworksdbs
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.file_io import filereaders
 from builder.parsers import idtfiles, parse_binfiles
@@ -426,9 +426,9 @@ def databaseloading(dbreadyversion, authorobject, dbconnection):
 
 	dbreadyversion = builder.dbinteraction.dbprepsubstitutions.dbprepper(dbreadyversion)
 	# pickle.dump(dbreadyversion, outputfile, open( "wb"))
-	db.dbauthoradder(authorobject, dbconnection)
+	builder.dbinteraction.dbhelperfunctions.dbauthoradder(authorobject, dbconnection)
 	builder.dbinteraction.dbhelperfunctions.authortablemaker(authorobject.universalid, dbconnection)
-	db.insertworksintoauthortable(authorobject, dbreadyversion, dbconnection)
+	dbloading.insertworksintoauthortable(authorobject, dbreadyversion, dbconnection)
 
 	# to debug return dbreadyversion
 	return

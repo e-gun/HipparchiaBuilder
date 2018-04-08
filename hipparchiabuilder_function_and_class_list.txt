@@ -1,19 +1,19 @@
 cloc --not-match-f='^j' HipparchiaBuilder/
-      60 text files.
-      60 unique files.
-      13 files ignored.
+      63 text files.
+      63 unique files.
+      14 files ignored.
 
-github.com/AlDanial/cloc v 1.72  T=0.35 s (139.6 files/s, 43571.4 lines/s)
+github.com/AlDanial/cloc v 1.76  T=1.04 s (48.9 files/s, 15725.0 lines/s)
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Python                          39           2603           3052           7534
-XML                              5              0              0           1475
+Python                          40           2839           3261           7849
+XML                              6              0              0           1800
 SQL                              2             68             40            254
-INI                              2             38              0            147
-Markdown                         1             24              0             54
+INI                              2             40              0            168
+Markdown                         1             24              0             55
 -------------------------------------------------------------------------------
-SUM:                            49           2733           3092           9464
+SUM:                            51           2971           3301          10126
 -------------------------------------------------------------------------------
 
 HipparchiaBuilder/ $ grep "^class" */*.py && grep "^def " */*.py && grep "^def " */*/*.py
@@ -25,36 +25,39 @@ builder/builderclasses.py:class dbWordCountObject(object):
 builder/builderclasses.py:class dbLemmaObject(object):
 builder/builderclasses.py:class Opus(object):
 builder/builderclasses.py:class MPCounter(object):
-builder/builderclasses.py:def loadallauthorsasobjects(config):
-builder/builderclasses.py:def loadallworksasobjects(config):
+builder/builderclasses.py:def loadallauthorsasobjects():
+builder/builderclasses.py:def loadallworksasobjects():
 builder/corpusbuilder.py:def buildcorpusdbs(corpusname, corpusvars):
 builder/corpusbuilder.py:def remaptables(corpusname, corpusvars):
 builder/corpusbuilder.py:def buildcorpusmetadata(corpusname, corpusvars):
-builder/corpusbuilder.py:def parallelworker(thework):
+builder/corpusbuilder.py:def managedworker(managedwork, dbconnection):
 builder/corpusbuilder.py:def checkextant(authorlist, datapath):
-builder/corpusbuilder.py:def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection, cursor):
-builder/corpusbuilder.py:def thecollectedworksof(authorobject, language, datapath,  dbconnection, cursor):
+builder/corpusbuilder.py:def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection):
+builder/corpusbuilder.py:def thecollectedworksof(authorobject, language, datapath, dbconnection):
 builder/corpusbuilder.py:def buildauthorobject(authortabnumber, language, datapath, uidprefix, dataprefix):
 builder/corpusbuilder.py:def initialworkparsing(authorobject, language, datapath):
 builder/corpusbuilder.py:def secondaryworkparsing(authorobject, txt):
-builder/corpusbuilder.py:def databaseloading(dbreadyversion, authorobject,  dbconnection, cursor):
+builder/corpusbuilder.py:def databaseloading(dbreadyversion, authorobject, dbconnection):
 builder/workers.py:def setworkercount():
-builder/dbinteraction/build_lexica.py:def formatgklexicon():
-builder/dbinteraction/build_lexica.py:def formatlatlexicon():
-builder/dbinteraction/build_lexica.py:def grammarloader(language):
-builder/dbinteraction/build_lexica.py:def analysisloader(language):
-builder/dbinteraction/build_lexica.py:def resettable(tablename, tablestructurelist, indexcolumn):
-builder/dbinteraction/build_lexica.py:def getlexicaltablestructuredict(tablename):
-builder/dbinteraction/connection.py:def setconnection(config, autocommit=False):
-builder/dbinteraction/db.py:def insertworksintoauthortable(authorobject, dbreadyversion, cursor, dbconnection):
-builder/dbinteraction/db.py:def authortablemaker(authordbname, cursor):
-builder/dbinteraction/db.py:def tablenamer(authorobject, indexedat):
-builder/dbinteraction/db.py:def dbauthoradder(authorobject, cursor):
-builder/dbinteraction/db.py:def dbauthorloadersubroutine(uid, cursor):
-builder/dbinteraction/db.py:def dbauthorandworkloader(authoruid, cursor):
-builder/dbinteraction/db.py:def workmaker(authorobject, indexedat, cursor):
-builder/dbinteraction/db.py:def resetauthorsandworksdbs(tmpprefix, prefix):
-builder/dbinteraction/db.py:def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
+builder/dbinteraction/buildlexica.py:def formatgklexicon():
+builder/dbinteraction/buildlexica.py:def formatlatlexicon():
+builder/dbinteraction/buildlexica.py:def grammarloader(language):
+builder/dbinteraction/buildlexica.py:def analysisloader(language):
+builder/dbinteraction/buildlexica.py:def resettable(tablename, tablestructurelist, indexcolumn):
+builder/dbinteraction/buildlexica.py:def getlexicaltablestructuredict(tablename):
+builder/dbinteraction/connection.py:def setconnection(autocommit=False, simple=False):
+builder/dbinteraction/dbhelperfunctions.py:def resultiterator(cursor, chunksize=5000):
+builder/dbinteraction/dbhelperfunctions.py:def authortablemaker(authordbname, dbconnection):
+builder/dbinteraction/dbhelperfunctions.py:def tablenamer(authorobject, indexedat):
+builder/dbinteraction/dbhelperfunctions.py:def dbauthoradder(authorobject, dbconnection):
+builder/dbinteraction/dbhelperfunctions.py:def dbfetchauthorobject(uid, cursor):
+builder/dbinteraction/dbhelperfunctions.py:def dbauthorandworkloader(authoruid, cursor):
+builder/dbinteraction/dbhelperfunctions.py:def workmaker(authorobject, indexedat, cursor):
+builder/dbinteraction/dbhelperfunctions.py:def resetauthorsandworksdbs(tmpprefix, prefix):
+builder/dbinteraction/dbhelperfunctions.py:def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
+builder/dbinteraction/dbloading.py:def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
+builder/dbinteraction/dbloading.py:def generatequeryvaluetuples(dbreadyversion, authorobject):
+builder/dbinteraction/dbloading.py:def generatecopystream(queryvaluetuples, separator='\t'):
 builder/dbinteraction/dbprepsubstitutions.py:def dbprepper(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def cleanblanks(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def dbpdeincrement(dbunreadyversion):
@@ -66,17 +69,15 @@ builder/dbinteraction/dbprepsubstitutions.py:def hmutonbsp(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def quarterspacer(matchgroup):
 builder/dbinteraction/dbprepsubstitutions.py:def noleadingortrailingwhitespace(dbunreadyversion):
 builder/dbinteraction/dbprepsubstitutions.py:def consolidatecontiguouslines(previousline, thisline, hypenatedword, transtable):
-builder/dbinteraction/mplexicalworkers.py:def mplatindictionaryinsert(dictdb, entries, commitcount):
-builder/dbinteraction/mplexicalworkers.py:def mpgreekdictionaryinsert(dictdb, entries, commitcount):
-builder/dbinteraction/mplexicalworkers.py:def mplemmatainsert(grammardb, entries, islatin, commitcount):
-builder/dbinteraction/mplexicalworkers.py:def mpanalysisinsert(grammardb, items, islatin, commitcount):
-builder/dbinteraction/versioning.py:def versiontablemaker(dbconnection, cursor):
-builder/dbinteraction/versioning.py:def timestampthebuild(corpusname, dbconnection, cursor):
-builder/file_io/filereaders.py:def loadidt(filepath):
+builder/dbinteraction/mplexicalworkers.py:def mplatindictionaryinsert(dictdb, entries, dbconnection):
+builder/dbinteraction/mplexicalworkers.py:def mpgreekdictionaryinsert(dictdb, entries, dbconnection):
+builder/dbinteraction/mplexicalworkers.py:def mplemmatainsert(grammardb, entries, islatin, dbconnection):
+builder/dbinteraction/mplexicalworkers.py:def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
+builder/dbinteraction/versioning.py:def versiontablemaker(dbconnection):
+builder/dbinteraction/versioning.py:def timestampthebuild(corpusname, dbconnection=None):
+builder/dbinteraction/versioning.py:def readgitdata():
 builder/file_io/filereaders.py:def findauthors(pathtoauthtab):
 builder/file_io/filereaders.py:def highunicodefileload(filepath):
-builder/file_io/filereaders.py:def dirtyhexloader(filepath):
-builder/file_io/filereaders.py:def loadbin(filepath):
 builder/parsers/betacodeandunicodeinterconversion.py:def replacegreekbetacode(texttoclean):
 builder/parsers/betacodeandunicodeinterconversion.py:def parseromaninsidegreek(texttoclean):
 builder/parsers/betacodeandunicodeinterconversion.py:def parsegreekinsidelatin(texttoclean):
@@ -204,7 +205,7 @@ builder/parsers/lexica.py:def latinvowellengths(texttoclean):
 builder/parsers/lexica.py:def betaconvertandsave(convertme):
 builder/parsers/lexica.py:def lsjgreekswapper(match):
 builder/parsers/lexica.py:def translationsummary(fullentry, translationlabel):
-builder/parsers/parse_binfiles.py:def resetbininfo(relativepath, cursor, dbconnection):
+builder/parsers/parse_binfiles.py:def resetbininfo(relativepath, dbconnection):
 builder/parsers/parse_binfiles.py:def npop(numbertopop, listtopop):
 builder/parsers/parse_binfiles.py:def listoflabels(rbl):
 builder/parsers/parse_binfiles.py:def intostring(listofchars):
@@ -216,12 +217,12 @@ builder/parsers/parse_binfiles.py:def cleanlabels(labellist):
 builder/parsers/parse_binfiles.py:def buildlabellist(binfilepath):
 builder/parsers/parse_binfiles.py:def convertbinfiledates(stringdate):
 builder/parsers/parse_binfiles.py:def convertdatelist(datelist):
-builder/parsers/parse_binfiles.py:def wipegreekauthorcolumn(column, cursor, dbconnection):
-builder/parsers/parse_binfiles.py:def dbloadlist(labellist, column, cursor, dbconnection):
+builder/parsers/parse_binfiles.py:def wipegreekauthorcolumn(column, dbconnection):
+builder/parsers/parse_binfiles.py:def dbloadlist(labellist, column, dbconnection):
 builder/parsers/parse_binfiles.py:def latinloadcanon(canonfile, cursor):
-builder/parsers/parse_binfiles.py:def insertlatingenres(cursor, dbc):
+builder/parsers/parse_binfiles.py:def insertlatingenres(dbconnection):
 builder/parsers/parse_binfiles.py:def citationreformatter(matchgroups):
-builder/parsers/parse_binfiles.py:def streamout(txt,outfile):
+builder/parsers/parse_binfiles.py:def streamout(txt, outfile):
 builder/parsers/regexsubstitutions.py:def earlybirdsubstitutions(texttoclean):
 builder/parsers/regexsubstitutions.py:def replacequotationmarks(texttoclean):
 builder/parsers/regexsubstitutions.py:def lastsecondsubsitutions(texttoclean):
@@ -247,14 +248,14 @@ builder/parsers/swappers.py:def superscripterone(digitmatch):
 builder/parsers/swappers.py:def superscripterzero(digitmatch):
 builder/parsers/swappers.py:def forceregexsafevariants(text):
 builder/parsers/swappers.py:def avoidregexsafevariants(text):
-builder/postbuild/databasewordcounts.py:def wordcounter(restriction=None):
+builder/postbuild/databasewordcounts.py:def wordcounter(restriction=None, authordict=None, workdict=None):
 builder/postbuild/databasewordcounts.py:def concordancechunk(enumerateddbdict):
 builder/postbuild/databasewordcounts.py:def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
 builder/postbuild/databasewordcounts.py:def headwordcounts():
 builder/postbuild/databasewordcounts.py:def buildcountsfromlemmalist(lemmataobjectslist, wordcountdict):
 builder/postbuild/databasewordcounts.py:def derivedictionaryentrymetadata(headwordtable, cursor):
-builder/postbuild/databasewordcounts.py:def derivechronologicalmetadata(metadata, lemmataobjectlist, cursor):
-builder/postbuild/databasewordcounts.py:def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres, cursor):
+builder/postbuild/databasewordcounts.py:def derivechronologicalmetadata(metadata, lemmataobjectlist):
+builder/postbuild/databasewordcounts.py:def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres):
 builder/postbuild/databasewordcounts.py:def cohortstats(wordobjects):
 builder/postbuild/databasewordcounts.py:def insertchronologicalmetadata(metadatadict, thetable):
 builder/postbuild/databasewordcounts.py:def insertgenremetadata(metadatadict, genrename, thetable):
@@ -268,7 +269,7 @@ builder/postbuild/postbuilddating.py:def datemapper(stringdate):
 builder/postbuild/postbuildhelperfunctions.py:def dictmerger(masterdict, targetdict, label):
 builder/postbuild/postbuildhelperfunctions.py:def acuteforgrave(matchgroup):
 builder/postbuild/postbuildhelperfunctions.py:def graballlinesasobjects(db, linerangetuple, cursor):
-builder/postbuild/postbuildhelperfunctions.py:def graballcountsasobjects(db,cursor, extrasql=''):
+builder/postbuild/postbuildhelperfunctions.py:def graballcountsasobjects(db, cursor, extrasql=''):
 builder/postbuild/postbuildhelperfunctions.py:def grablemmataasobjects(db, cursor):
 builder/postbuild/postbuildhelperfunctions.py:def createwordcounttable(tablename, extracolumns=False):
 builder/postbuild/postbuildhelperfunctions.py:def dblineintolineobject(dbline):
@@ -277,21 +278,25 @@ builder/postbuild/postbuildhelperfunctions.py:def makeablankline(work, fakelinen
 builder/postbuild/postbuildhelperfunctions.py:def prettyprintcohortdata(label, cohortresultsdict):
 builder/postbuild/postbuildhelperfunctions.py:def rebasedcounter(decimalvalue, base):
 builder/postbuild/postbuildhelperfunctions.py:def deletetemporarydbs(temprefix):
-builder/postbuild/postbuildmetadata.py:def insertfirstsandlasts(workcategoryprefix, cursor):
+builder/postbuild/postbuildmetadata.py:def insertfirstsandlasts(workcategoryprefix,):
 builder/postbuild/postbuildmetadata.py:def boundaryfinder(uids):
 builder/postbuild/postbuildmetadata.py:def insertboundaries(boundariestuplelist):
-builder/postbuild/postbuildmetadata.py:def findwordcounts(cursor, dbconnection):
+builder/postbuild/postbuildmetadata.py:def findwordcounts(dbconnection):
 builder/postbuild/postbuildmetadata.py:def calculatewordcounts(uids):
 builder/postbuild/postbuildmetadata.py:def insertcounts(countdict):
-builder/postbuild/postbuildmetadata.py:def buildtrigramindices(workcategoryprefix, cursor):
-builder/postbuild/postbuildmetadata.py:def mpindexbuilder(universalids, commitcount):
+builder/postbuild/postbuildmetadata.py:def buildtrigramindices(workcategoryprefix):
+builder/postbuild/postbuildmetadata.py:def mpindexbuilder(universalids, commitcount, dbconnection):
 builder/postbuild/secondpassdbrewrite.py:def builddbremappers(oldprefix, newprefix):
 builder/postbuild/secondpassdbrewrite.py:def compilenewauthors(aumapper, wkmapper):
 builder/postbuild/secondpassdbrewrite.py:def compilenewworks(newauthors, wkmapper):
 builder/postbuild/secondpassdbrewrite.py:def registernewworks(newworktuples):
 builder/postbuild/secondpassdbrewrite.py:def findnewtitles(newworktuples):
 builder/postbuild/secondpassdbrewrite.py:def buildnewworkmetata(workandtitletuplelist):
-builder/postbuild/secondpassdbrewrite.py:def parallelnewworkworker(workpile, newworktuples):
-builder/postbuild/secondpassdbrewrite.py:def buildworkmetadatatuples(workpile, commitcount, metadatalist):
-builder/postbuild/secondpassdbrewrite.py:def modifyauthorsdb(newentryname, worktitle, pgsqlcursor):
-builder/postbuild/secondpassdbrewrite.py:def insertnewworksintonewauthor(newwkuid, results, pgsqlcursor):
+builder/postbuild/secondpassdbrewrite.py:def parallelnewworkworker(workpile, newworktuples, dbconnection):
+builder/postbuild/secondpassdbrewrite.py:def buildworkmetadatatuples(workpile, commitcount, metadatalist, dbconnection):
+builder/postbuild/secondpassdbrewrite.py:def modifyauthorsdb(newentryname, worktitle, dbcursor):
+builder/postbuild/secondpassdbrewrite.py:def insertnewworksintonewauthor(newwkuid, results, dbcursor):
+builder/postbuild/secondpassdbrewrite.py:def generatemodifiedtuples(results, newwkuid):
+builder/postbuild/secondpassdbrewrite.py:def assignlanguagetonewworks(dbprefix):
+builder/postbuild/secondpassdbrewrite.py:def determineworklanguage(strippedlines):
+builder/postbuild/secondpassdbrewrite.py:def insertlanguagedata(languagetuplelist)::
