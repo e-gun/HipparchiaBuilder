@@ -8,11 +8,11 @@
 
 
 import configparser
-from multiprocessing import Process, Manager
+from multiprocessing import Manager, Process
 
-from builder.builderclasses import MPCounter
-from builder.dbinteraction.mplexicalworkers import mplatindictionaryinsert, mpgreekdictionaryinsert, mplemmatainsert, mpanalysisinsert
 from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.mplexicalworkers import mpanalysisinsert, mpgreekdictionaryinsert, mplatindictionaryinsert, \
+	mplemmatainsert
 from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
@@ -141,12 +141,11 @@ def grammarloader(language):
 
 	manager = Manager()
 	entries = manager.list(entries)
-	commitcount = MPCounter()
 
 	workers = setworkercount()
 	connections = {i: setconnection() for i in range(workers)}
 
-	jobs = [Process(target=mplemmatainsert, args=(table, entries, islatin, connections[i], commitcount)) for i in range(workers)]
+	jobs = [Process(target=mplemmatainsert, args=(table, entries, islatin, connections[i])) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
@@ -209,7 +208,7 @@ def analysisloader(language):
 	# rather than manage a list of 100s of MB in size let's get chunky
 	# this also allows us to send updates outside of the commit() moment
 	# http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks#1751478
-	print('loading', language, 'morphology.', len(forms), 'items to load')
+	print('loading {lg} morphology. {n} items to load'.format(lg=language, n=len(forms)))
 
 	chunksize = 50000
 	formbundles = [forms[i:i + chunksize] for i in range(0, len(forms), chunksize)]
@@ -221,11 +220,10 @@ def analysisloader(language):
 		# need this because all searches are lower case and so you can't find "Διόϲ" via what will be a search for "διόϲ"
 		bundle[:] = [x.lower() for x in bundle]
 		items = manager.list(bundle)
-		commitcount = MPCounter()
 
 		workers = setworkercount()
 		connections = {i: setconnection() for i in range(workers)}
-		jobs = [Process(target=mpanalysisinsert, args=(table, items, islatin, connections[i], commitcount)) for i in range(workers)]
+		jobs = [Process(target=mpanalysisinsert, args=(table, items, islatin, connections[i])) for i in range(workers)]
 		for j in jobs:
 			j.start()
 		for j in jobs:

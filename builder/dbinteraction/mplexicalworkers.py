@@ -268,7 +268,7 @@ def mpgreekdictionaryinsert(dictdb, entries, dbconnection):
 	return
 
 
-def mplemmatainsert(grammardb, entries, islatin, dbconnection, commitcount):
+def mplemmatainsert(grammardb, entries, islatin, dbconnection):
 	"""
 
 	work on grammardb entries
@@ -283,19 +283,27 @@ def mplemmatainsert(grammardb, entries, islatin, dbconnection, commitcount):
 	"""
 
 	dbcursor = dbconnection.cursor()
-	
+	dbconnection.setautocommit()
+
+	query = 'INSERT INTO {g} (dictionary_entry, xref_number, derivative_forms) VALUES %s'.format(g=grammardb)
+
 	keywordfinder = re.compile(r'(.*?\t)(\d{1,})(.*?)$')
 	greekfinder = re.compile(r'(\t.*?)(\s.*?)(?=(\t|$))')
 	invals = "vjσς"
 	outvals = "uiϲϲ"
 
-	while len(entries) > 0:
-		try:
-			entry = entries.pop()
-		except IndexError:
-			entry = None
+	bundlesize = 1000
 
-		if entry:
+	while len(entries) > 0:
+		bundelofrawentries = list()
+		for e in range(bundlesize):
+			try:
+				bundelofrawentries.append(entries.pop())
+			except IndexError:
+				pass
+
+		bundelofcookedentries = list()
+		for entry in bundelofrawentries:
 			segments = re.search(keywordfinder, entry)
 			dictionaryform = segments.group(1)
 			if islatin is True:
@@ -323,19 +331,14 @@ def mplemmatainsert(grammardb, entries, islatin, dbconnection, commitcount):
 			formlist = [f.translate(str.maketrans(invals, outvals)) for f in formlist]
 			formlist = list(set(formlist))
 
-			query = 'INSERT INTO {g} (dictionary_entry, xref_number, derivative_forms) VALUES (%s, %s, %s)'.format(g=grammardb)
-			data = (dictionaryform, xref, formlist)
-			dbcursor.execute(query, data)
+			bundelofcookedentries.append(tuple([dictionaryform, xref, formlist]))
 
-			commitcount.increment()
-			dbconnection.checkneedtocommit(commitcount)
-			if commitcount.value % 5000 == 0:
-				print('\tat', dictionaryform)
+		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
 
 	return
 
 
-def mpanalysisinsert(grammardb, items, islatin, dbconnection, commitcount):
+def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 	"""
 
 	work on grammardb entries
@@ -353,13 +356,14 @@ def mpanalysisinsert(grammardb, items, islatin, dbconnection, commitcount):
 		{xrefnumber digit ancientform1,ancientform2(TAB)translation(TAB)parsinginfo}
 
 	:param grammardb:
-	:param items:
+	:param entries:
 	:param islatin:
 	:param commitcount:
 	:return:
 	"""
 
 	dbcursor = dbconnection.cursor()
+	dbconnection.setautocommit()
 
 	# most end with '}', but some end with a bracketed number or numbers
 	# w)ph/sasqai	{49798258 9 a)ph/sasqai,a)po/-h(/domai	swād-	aor inf mid (ionic)}[12711488]
@@ -376,7 +380,8 @@ def mpanalysisinsert(grammardb, items, islatin, dbconnection, commitcount):
 	formfinder = re.compile(r'(.*?\t){(.*?)}$')
 	analysisfinder = re.compile(r'(\d+)\s(\d)\s(.*?)\t(.*?)\t(.*?$)')
 
-	qtemplate = 'INSERT INTO {gdb} (observed_form, xrefs, prefixrefs, possible_dictionary_forms) VALUES (%s, %s, %s, %s)'
+	qtemplate = 'INSERT INTO {gdb} (observed_form, xrefs, prefixrefs, possible_dictionary_forms) VALUES %s'
+	query = qtemplate.format(gdb=grammardb)
 
 	ptemplate = list()
 	ptemplate.append('<possibility_{p}>{wd}')
@@ -387,15 +392,20 @@ def mpanalysisinsert(grammardb, items, islatin, dbconnection, commitcount):
 	ptemplate.append('</possibility_{p}>\n')
 	ptemplate = ''.join(ptemplate)
 
-	while items:
-		try:
-			entry = items.pop()
-		except IndexError:
-			entry = None
+	bundlesize = 1000
 
-		if entry:
+	while entries:
+		bundelofrawentries = list()
+		for e in range(bundlesize):
+			try:
+				bundelofrawentries.append(entries.pop())
+			except IndexError:
+				pass
+
+		bundelofcookedentries = list()
+		for entry in bundelofrawentries:
 			bracketed = ''
-			if re.search(bracketrefs,entry) is not None:
+			if re.search(bracketrefs, entry) is not None:
 				bracketed = re.findall(bracketrefs, entry)
 				bracketed = list(set(bracketed))
 				bracketed = ', '.join(bracketed)
@@ -444,11 +454,9 @@ def mpanalysisinsert(grammardb, items, islatin, dbconnection, commitcount):
 					possibilities.append(ptemplate.format(p=number, wd=wd, xrv=elements.group(1), xrk=elements.group(2), t=elements.group(4), a=elements.group(5)))
 
 				ptext = ''.join(possibilities)
-				query = qtemplate.format(gdb=grammardb)
-				data = (observedform, xrefs, bracketed, ptext)
-				# print(entry,'\n',observedform,xrefs,bracketed,'\n\t',possibilities)
-				dbcursor.execute(query, data)
-				commitcount.increment()
-				dbconnection.checkneedtocommit(commitcount)
+
+				bundelofcookedentries.append(tuple([observedform, xrefs, bracketed, ptext]))
+
+		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
 
 	return
