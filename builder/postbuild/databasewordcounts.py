@@ -29,9 +29,12 @@ def wordcounter(restriction=None, authordict=None, workdict=None):
 
 	restriction is either a list of time tuples or a list of genre names associated with a dict key
 
-	:param timerestriction:
+	:param restriction:
+	:param authordict:
+	:param workdict:
 	:return:
 	"""
+
 	wordcounttable = 'wordcounts'
 
 	if not authordict:
@@ -120,7 +123,9 @@ def wordcounter(restriction=None, authordict=None, workdict=None):
 	# safe to almost hit number of cores here since we are not doing both db and regex simultaneously in each thread
 	# here's hoping that the workers number was not over-ambitious to begin with
 
-	with Pool() as pool:
+	notsobigpool = min(4, setworkercount())
+
+	with Pool(processes=int(notsobigpool)) as pool:
 		listofconcordancedicts = pool.map(concordancechunk, enumerate(chunked))
 
 	# merge the results
