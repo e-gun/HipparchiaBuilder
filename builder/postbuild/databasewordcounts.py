@@ -123,9 +123,7 @@ def wordcounter(restriction=None, authordict=None, workdict=None):
 	# safe to almost hit number of cores here since we are not doing both db and regex simultaneously in each thread
 	# here's hoping that the workers number was not over-ambitious to begin with
 
-	notsobigpool = min(4, setworkercount())
-
-	with Pool(processes=int(notsobigpool)) as pool:
+	with Pool(processes=setworkercount()) as pool:
 		listofconcordancedicts = pool.map(concordancechunk, enumerate(chunked))
 
 	# merge the results
