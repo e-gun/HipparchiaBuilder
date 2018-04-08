@@ -9,7 +9,7 @@ import configparser
 import re
 
 from builder import file_io
-from builder.builderclasses import loadallauthorsasobjects, loadallworksasobjects
+from builder.dbinteraction.dbdataintoobjects import loadallauthorsasobjects, loadallworksasobjects
 from builder.dbinteraction.dbhelperfunctions import updatedbfromtemptable
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode
 from builder.parsers.betacodeescapedcharacters import percentsubstitutes

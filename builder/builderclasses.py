@@ -10,7 +10,6 @@
 import re
 from multiprocessing import Value
 
-from builder.dbinteraction.connection import setconnection
 from builder.parsers.betacodefontshifts import dollarssubstitutes
 from builder.parsers.latinsubstitutions import latindiacriticals
 
@@ -667,50 +666,3 @@ class MPCounter(object):
 	@property
 	def value(self):
 		return self.val.value
-
-
-def loadallauthorsasobjects():
-	"""
-
-	return a dict of all possible author objects
-
-	:return:
-	"""
-
-	dbconnection = setconnection()
-	curs = dbconnection.cursor()
-
-	q = 'SELECT * FROM authors'
-
-	curs.execute(q)
-	results = curs.fetchall()
-
-	authorsdict = {r[0]: dbAuthor(*r) for r in results}
-
-	dbconnection.connectioncleanup()
-
-	return authorsdict
-
-
-def loadallworksasobjects():
-	"""
-
-	return a dict of all possible work objects
-
-	:return:
-	"""
-
-	dbconnection = setconnection()
-	curs = dbconnection.cursor()
-
-	q = 'SELECT universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02, levellabels_03, ' \
-	        'levellabels_04, levellabels_05, workgenre, transmission, worktype, provenance, recorded_date, converted_date, wordcount, ' \
-			'firstline, lastline, authentic FROM works'
-	curs.execute(q)
-	results = curs.fetchall()
-
-	worksdict = {r[0]: dbOpus(*r) for r in results}
-
-	dbconnection.connectioncleanup()
-
-	return worksdict

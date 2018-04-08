@@ -6,8 +6,6 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 import re
-import psycopg2
-from builder.builderclasses import dbWordCountObject, dbLemmaObject, dbWorkLine
 from builder.dbinteraction.connection import setconnection
 
 
@@ -71,76 +69,6 @@ def acuteforgrave(matchgroup):
 	return substitute
 
 
-def graballlinesasobjects(db, linerangetuple, cursor):
-	"""
-
-	:param db:
-	:param cursor:
-	:return:
-	"""
-
-	data = ''
-
-	if linerangetuple == (-1, -1):
-		whereclause = ''
-	else:
-		whereclause = ' WHERE index >= %s and index <= %s'
-		data = (linerangetuple[0], linerangetuple[1])
-
-	query = 'SELECT * FROM ' + db + whereclause
-
-	if whereclause != '':
-		cursor.execute(query, data)
-	else:
-		cursor.execute(query)
-
-	try:
-		lines = cursor.fetchall()
-	except psycopg2.ProgrammingError:
-		# psycopg2.ProgrammingError: no results to fetch
-		print('something is broken - no results for q="{q}" d="{d}"'.format(q=query, d=data))
-		lines = None
-
-	lineobjects = [dblineintolineobject(l) for l in lines]
-
-	return lineobjects
-
-
-def graballcountsasobjects(db, cursor, extrasql=''):
-	"""
-
-	:param db:
-	:param cursor:
-	:param extrasql:
-	:return:
-	"""
-
-	query = 'SELECT * FROM ' + db + extrasql
-	cursor.execute(query)
-	lines = cursor.fetchall()
-
-	countobjects = [dbWordCountObject(l[0], l[1], l[2], l[3], l[4], l[5], l[6]) for l in lines]
-
-	return countobjects
-
-
-def grablemmataasobjects(db, cursor):
-	"""
-
-	:param db:
-	:param cursor:
-	:return:
-	"""
-
-	query = 'SELECT * FROM ' + db
-	cursor.execute(query)
-	lines = cursor.fetchall()
-
-	lemmaobjects = [dbLemmaObject(l[0], l[1], l[2]) for l in lines]
-
-	return lemmaobjects
-
-
 def createwordcounttable(tablename, extracolumns=False):
 	"""
 	the SQL to generate the wordcount table
@@ -190,24 +118,6 @@ def createwordcounttable(tablename, extracolumns=False):
 	return
 
 
-def dblineintolineobject(dbline):
-	"""
-	convert a db result into a db object
-
-	basically all columns pushed straight into the object with one twist: 1, 0, 2, 3, ...
-
-	:param dbline:
-	:return:
-	"""
-
-	# note the [1], [0], [2], order: wkuinversalid, index, level_05_value, ...
-
-	lineobject = dbWorkLine(dbline[1], dbline[0], dbline[2], dbline[3], dbline[4], dbline[5], dbline[6], dbline[7],
-	                        dbline[8], dbline[9], dbline[10], dbline[11], dbline[12])
-
-	return lineobject
-
-
 def cleanwords(word, punct):
 	"""
 	remove gunk that should not be in a concordance
@@ -229,19 +139,6 @@ def cleanwords(word, punct):
 		pass
 
 	return word
-
-
-def makeablankline(work, fakelinenumber):
-	"""
-	sometimes (like in lookoutsidetheline()) you need a dummy line
-	this will build one
-	:param work:
-	:return:
-	"""
-
-	lineobject = dbWorkLine(work, fakelinenumber, '-1', '-1', '-1', '-1', '-1', '-1', '', '', '', '', '')
-
-	return lineobject
 
 
 def prettyprintcohortdata(label, cohortresultsdict):

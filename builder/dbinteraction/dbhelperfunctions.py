@@ -1,6 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+	HipparchiaBuilder: compile a database of Greek and Latin texts
+	Copyright: E Gunderson 2016-17
+	License: GNU GENERAL PUBLIC LICENSE 3
+		(see LICENSE in the top level directory of the distribution)
+"""
+
 import re
 
-from builder.builderclasses import dbAuthor, dbOpus
 from builder.dbinteraction.connection import setconnection
 
 
@@ -142,54 +149,6 @@ def dbauthoradder(authorobject, dbconnection):
 	dbconnection.commit()
 
 	return
-
-
-def dbfetchauthorobject(uid, cursor):
-	# only call this AFTER you have built all of the work objects so that they can be placed into it
-
-	query = 'SELECT * from authors where universalid = %s'
-	data = (uid,)
-	cursor.execute(query, data)
-	try:
-		results = cursor.fetchone()
-	except:
-		# note that there is no graceful way out of this: you have to have an authorobject in the end
-		print('failed to find the requested author:', query, data)
-		results = None
-
-	author = dbAuthor(*results)
-
-	return author
-
-
-def dbauthorandworkloader(authoruid, cursor):
-	# note that this will return an AUTHOR filled with WORKS
-	# the original Opus objects only exist at the end of HD reads
-	# rebuild them from the DB instead: note that this object is simpler than the earlier version, but the stuff you need should all be there...
-
-	author = dbfetchauthorobject(authoruid, cursor)
-
-	query = """
-			SELECT universalid, title, language, publication_info, 
-				levellabels_00, levellabels_01, levellabels_02, levellabels_03, levellabels_04, levellabels_05, 
-				workgenre, transmission, worktype, provenance, recorded_date, converted_date, wordcount, 
-				firstline, lastline, authentic 
-			FROM works WHERE universalid LIKE %s
-			"""
-	data = (authoruid + '%',)
-	cursor.execute(query, data)
-	try:
-		results = cursor.fetchall()
-	except:
-		# see the notes on the exception to dbauthormakersubroutine: you can get here and then die for the same reason
-		print('failed to find the requested work:', query, data)
-		results = list()
-
-	for match in results:
-		work = dbOpus(*match)
-		author.addwork(work)
-
-	return author
 
 
 def workmaker(authorobject, indexedat, cursor):

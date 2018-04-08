@@ -14,7 +14,8 @@ import psycopg2
 
 from builder.builderclasses import MPCounter, dbAuthor, dbOpus
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.dbhelperfunctions import authortablemaker, dbauthorandworkloader
+from builder.dbinteraction.dbhelperfunctions import authortablemaker
+from builder.dbinteraction.dbdataintoobjects import dbauthorandworkloader
 from builder.dbinteraction.dbloading import generatecopystream
 from builder.parsers.swappers import forceregexsafevariants
 from builder.postbuild.postbuilddating import convertdate

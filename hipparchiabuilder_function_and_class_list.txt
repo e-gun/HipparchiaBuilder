@@ -25,8 +25,6 @@ builder/builderclasses.py:class dbWordCountObject(object):
 builder/builderclasses.py:class dbLemmaObject(object):
 builder/builderclasses.py:class Opus(object):
 builder/builderclasses.py:class MPCounter(object):
-builder/builderclasses.py:def loadallauthorsasobjects():
-builder/builderclasses.py:def loadallworksasobjects():
 builder/corpusbuilder.py:def buildcorpusdbs(corpusname, corpusvars):
 builder/corpusbuilder.py:def remaptables(corpusname, corpusvars):
 builder/corpusbuilder.py:def buildcorpusmetadata(corpusname, corpusvars):
@@ -40,12 +38,19 @@ builder/corpusbuilder.py:def secondaryworkparsing(authorobject, txt):
 builder/corpusbuilder.py:def databaseloading(dbreadyversion, authorobject, dbconnection):
 builder/workers.py:def setworkercount():
 builder/dbinteraction/connection.py:def setconnection(autocommit=False, simple=False):
+builder/dbinteraction/dbdataintoobjects.py:def dbfetchauthorobject(uid, cursor):
+builder/dbinteraction/dbdataintoobjects.py:def dbauthorandworkloader(authoruid, cursor):
+builder/dbinteraction/dbdataintoobjects.py:def graballlinesasobjects(db, linerangetuple, cursor):
+builder/dbinteraction/dbdataintoobjects.py:def graballcountsasobjects(db, cursor, extrasql=''):
+builder/dbinteraction/dbdataintoobjects.py:def grablemmataasobjects(db, cursor):
+builder/dbinteraction/dbdataintoobjects.py:def dblineintolineobject(dbline):
+builder/dbinteraction/dbdataintoobjects.py:def makeablankline(work, fakelinenumber):
+builder/dbinteraction/dbdataintoobjects.py:def loadallauthorsasobjects():
+builder/dbinteraction/dbdataintoobjects.py:def loadallworksasobjects():
 builder/dbinteraction/dbhelperfunctions.py:def resultiterator(cursor, chunksize=5000):
 builder/dbinteraction/dbhelperfunctions.py:def authortablemaker(authordbname, dbconnection):
 builder/dbinteraction/dbhelperfunctions.py:def tablenamer(authorobject, indexedat):
 builder/dbinteraction/dbhelperfunctions.py:def dbauthoradder(authorobject, dbconnection):
-builder/dbinteraction/dbhelperfunctions.py:def dbfetchauthorobject(uid, cursor):
-builder/dbinteraction/dbhelperfunctions.py:def dbauthorandworkloader(authoruid, cursor):
 builder/dbinteraction/dbhelperfunctions.py:def workmaker(authorobject, indexedat, cursor):
 builder/dbinteraction/dbhelperfunctions.py:def resetauthorsandworksdbs(tmpprefix, prefix):
 builder/dbinteraction/dbhelperfunctions.py:def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
@@ -268,13 +273,8 @@ builder/postbuild/postbuilddating.py:def numericdate(stringdate):
 builder/postbuild/postbuilddating.py:def datemapper(stringdate):
 builder/postbuild/postbuildhelperfunctions.py:def dictmerger(masterdict, targetdict, label):
 builder/postbuild/postbuildhelperfunctions.py:def acuteforgrave(matchgroup):
-builder/postbuild/postbuildhelperfunctions.py:def graballlinesasobjects(db, linerangetuple, cursor):
-builder/postbuild/postbuildhelperfunctions.py:def graballcountsasobjects(db, cursor, extrasql=''):
-builder/postbuild/postbuildhelperfunctions.py:def grablemmataasobjects(db, cursor):
 builder/postbuild/postbuildhelperfunctions.py:def createwordcounttable(tablename, extracolumns=False):
-builder/postbuild/postbuildhelperfunctions.py:def dblineintolineobject(dbline):
 builder/postbuild/postbuildhelperfunctions.py:def cleanwords(word, punct):
-builder/postbuild/postbuildhelperfunctions.py:def makeablankline(work, fakelinenumber):
 builder/postbuild/postbuildhelperfunctions.py:def prettyprintcohortdata(label, cohortresultsdict):
 builder/postbuild/postbuildhelperfunctions.py:def rebasedcounter(decimalvalue, base):
 builder/postbuild/postbuildhelperfunctions.py:def deletetemporarydbs(temprefix):

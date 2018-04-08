@@ -12,11 +12,13 @@ from multiprocessing import Pool
 from statistics import mean, median
 from string import punctuation
 
-from builder.builderclasses import dbWordCountObject, loadallauthorsasobjects, loadallworksasobjects
+from builder.builderclasses import dbWordCountObject
 from builder.dbinteraction.connection import setconnection
 from builder.parsers.betacodeandunicodeinterconversion import buildhipparchiatranstable, cleanaccentsandvj
 from builder.postbuild.postbuildhelperfunctions import acuteforgrave, cleanwords, createwordcounttable, dictmerger, \
-	graballcountsasobjects, graballlinesasobjects, grablemmataasobjects, prettyprintcohortdata
+	prettyprintcohortdata
+from builder.dbinteraction.dbdataintoobjects import graballlinesasobjects, graballcountsasobjects, grablemmataasobjects, \
+	loadallauthorsasobjects, loadallworksasobjects
 from builder.workers import setworkercount
 
 
