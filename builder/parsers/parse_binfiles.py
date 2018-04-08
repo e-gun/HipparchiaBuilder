@@ -8,28 +8,20 @@
 import configparser
 import csv
 import re
-from builder.parsers.swappers import forceregexsafevariants
-
-try:
-	# python3
-	import psycopg2
-except ImportError:
-	# pypy3
-	# pypy3 support is EXPERIMENTAL (and unlikely to be actively pursued)
-	import psycopg2cffi as psycopg2
 
 from builder import file_io
-from builder.parsers.latinsubstitutions import latindiacriticals
+from builder.dbinteraction.db import updatedbfromtemptable
 from builder.parsers.betacodeescapedcharacters import percentsubstitutes
 from builder.parsers.greekcanonfunctions import loadgkcanon
-from builder.dbinteraction.db import updatedbfromtemptable
+from builder.parsers.latinsubstitutions import latindiacriticals
+from builder.parsers.swappers import forceregexsafevariants
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 tlg = config['io']['tlg']
 
 
-def resetbininfo(relativepath, cursor, dbconnection):
+def resetbininfo(relativepath, dbconnection):
 	"""
 
 	:param relativepath:
@@ -58,23 +50,23 @@ def resetbininfo(relativepath, cursor, dbconnection):
 	dates = buildlabellist(relativepath + bininfo['recorded_date'])
 	numdates = convertdatelist(dates)
 
-	cleandates = {}
+	cleandates = dict()
 	for d in dates:
 		newdate = re.sub(r'`', '', d)
 		cleandates[newdate] = dates[d]
 
-	wipegreekauthorcolumn('genres', cursor, dbconnection)
+	wipegreekauthorcolumn('genres', dbconnection)
 	# wipegreekauthorcolumn('epithet', cursor, dbconnection)
-	wipegreekauthorcolumn('location', cursor, dbconnection)
-	wipegreekauthorcolumn('recorded_date', cursor, dbconnection)
-	wipegreekauthorcolumn('converted_date', cursor, dbconnection)
+	wipegreekauthorcolumn('location', dbconnection)
+	wipegreekauthorcolumn('recorded_date', dbconnection)
+	wipegreekauthorcolumn('converted_date', dbconnection)
 
 	print('\tloading new author column data')
 	# dbloadlist(genres, 'genres', cursor, dbconnection)
-	dbloadlist(epithets, 'genres', cursor, dbconnection)
-	dbloadlist(locations, 'location', cursor, dbconnection)
-	dbloadlist(cleandates, 'recorded_date', cursor, dbconnection)
-	dbloadlist(numdates, 'converted_date', cursor, dbconnection)
+	dbloadlist(epithets, 'genres', dbconnection)
+	dbloadlist(locations, 'location', dbconnection)
+	dbloadlist(cleandates, 'recorded_date', dbconnection)
+	dbloadlist(numdates, 'converted_date', dbconnection)
 
 	dbconnection.commit()
 
@@ -199,7 +191,7 @@ def cleanlabels(labellist):
 		l = re.sub(r'%3%19ae', '', l)  # Epigrammatici%3%19ae
 		l = re.sub(percents, percentsubstitutes, l)
 		l = re.sub('^ ', '', l)
-		l = re.sub(' $','',l)
+		l = re.sub(' $', '', l)
 		l = re.sub('\*', '', l)
 		# l = re.sub('\s', '_', l) # 'Scriptores Erotici' causes problems for HipparchiaServer
 		clean.append(l)
@@ -325,10 +317,10 @@ def convertbinfiledates(stringdate):
 
 def convertdatelist(datelist):
 	# do this before sending dates to dbloadlist
-	newdatelist = {}
+	newdatelist = dict()
 	for key in datelist:
 		k = convertbinfiledates(key)
-		newdatelist[k] = []
+		newdatelist[k] = list()
 	for key in datelist:
 		k = convertbinfiledates(key)
 		newdatelist[k] += datelist[key]
@@ -336,7 +328,7 @@ def convertdatelist(datelist):
 	return newdatelist
 
 
-def wipegreekauthorcolumn(column, cursor, dbconnection):
+def wipegreekauthorcolumn(column, dbconnection):
 	"""
 
 	7504 function calls (7499 primitive calls) in 0.219 seconds
@@ -346,6 +338,8 @@ def wipegreekauthorcolumn(column, cursor, dbconnection):
 	:param dbconnection:
 	:return:
 	"""
+
+	cursor = dbconnection.cursor()
 
 	query = 'SELECT universalid FROM authors WHERE universalid LIKE %s'
 	data = ('gr%',)
@@ -361,7 +355,7 @@ def wipegreekauthorcolumn(column, cursor, dbconnection):
 	return
 
 
-def dbloadlist(labellist, column, cursor, dbconnection):
+def dbloadlist(labellist, column, dbconnection):
 	"""
 
 	34525 function calls in 2.983 seconds
@@ -372,6 +366,8 @@ def dbloadlist(labellist, column, cursor, dbconnection):
 	:param dbconnection:
 	:return:
 	"""
+
+	cursor = dbconnection.cursor()
 
 	for key in labellist:
 		for author in labellist[key]:
@@ -432,7 +428,7 @@ def latinloadcanon(canonfile, cursor):
 	# linesout(txt, outfile)
 	#  <author>L. Annaeus Seneca iunior</author>. <work>Apocolocyntosis</work> <edition><volumename>Seneca: Apocolocyntosis</volumename>, ed. P. T. Eden, 1984</edition>. <authornumber>1017</authornumber><worknumber>011</worknumber><end>
 	
-	canoninfo = {}
+	canoninfo = dict()
 	a = re.compile(r'<authornumber>(.*?)</authornumber>')
 	w = re.compile(r'<worknumber>(.*?)</worknumber>')
 	l = re.compile(r'(.*?)\s<authornumber>')
@@ -461,7 +457,7 @@ def latinloadcanon(canonfile, cursor):
 	return
 
 
-def insertlatingenres(cursor, dbc):
+def insertlatingenres(dbconnection):
 	"""
 
 	we have no pre-rolled association between works and genres
@@ -473,12 +469,13 @@ def insertlatingenres(cursor, dbc):
 	:param cursor:
 	:return:
 	"""
+	cursor = dbconnection.cursor()
 
 	# First pass: use regex
 
 	q = 'SELECT universalid,title FROM works WHERE universalid LIKE %s ORDER BY universalid '
 	d = ('lt%',)
-	cursor.execute(q,d)
+	cursor.execute(q, d)
 	works = cursor.fetchall()
 
 	titletranslator = [
@@ -516,7 +513,7 @@ def insertlatingenres(cursor, dbc):
 		(r'^[Tt]ogat', 'Comic.'),
 	]
 
-	genres = []
+	genres = list()
 	for t in titletranslator:
 		for w in works:
 			if re.search(t[0], w[1]) is not None:
@@ -529,7 +526,7 @@ def insertlatingenres(cursor, dbc):
 
 	# SELECT * FROM works WHERE universalid LIKE 'lt%' AND workgenre IS NULL ORDER BY title
 	# 241 of the 836 will be assigned
-	dbc.commit()
+	dbconnection.commit()
 
 	# Second pass: use authorID
 	q = 'SELECT universalid FROM works WHERE universalid LIKE %s AND workgenre IS NULL'
@@ -551,7 +548,7 @@ def insertlatingenres(cursor, dbc):
 		'lt3211': 'Gramm.',
 	}
 
-	genres = []
+	genres = list()
 	for w in works:
 		if w[0:6] in authortranslator:
 			genres.append((w,authortranslator[w[0:6]]))
@@ -561,7 +558,7 @@ def insertlatingenres(cursor, dbc):
 		d = (g[1], g[0])
 		cursor.execute(q, d)
 
-	dbc.commit()
+	dbconnection.commit()
 
 	# third pass: brute force assignment
 	with open('./builder/parsers/manual_latin_genre_assignment.csv', encoding='utf-8') as csvfile:
@@ -573,7 +570,7 @@ def insertlatingenres(cursor, dbc):
 		d = (g[1], g[0])
 		cursor.execute(q, d)
 
-	dbc.commit()
+	dbconnection.commit()
 
 	return
 
@@ -594,7 +591,7 @@ def citationreformatter(matchgroups):
 	return substitute
 
 
-def streamout(txt,outfile):
+def streamout(txt, outfile):
 	f = open(outfile, 'w')
 	f.write(txt)
 	f.close()

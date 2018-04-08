@@ -112,15 +112,12 @@ for corpusname in corporatobuild:
 #
 # lexica, etc
 #
-dbconnection = setconnection(config)
-cursor = dbconnection.cursor()
 
 if buildlex == 'y':
 	print('building lexical dbs')
 	formatgklexicon()
 	formatlatlexicon()
-	timestampthebuild('lx', dbconnection, cursor)
-	dbconnection.commit()
+	timestampthebuild('lx')
 
 if buildgram == 'y':
 	print('building grammar dbs')
@@ -128,8 +125,7 @@ if buildgram == 'y':
 	analysisloader('greek')
 	grammarloader('latin')
 	analysisloader('latin')
-	timestampthebuild('lm', dbconnection, cursor)
-	dbconnection.commit()
+	timestampthebuild('lm')
 
 if buildcounts == 'y':
 	print('building wordcounts by (repeatedly) examining every line of every text in all available dbs: this might take a minute or two...')

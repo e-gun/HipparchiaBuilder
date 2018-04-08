@@ -187,7 +187,7 @@ def buildcorpusmetadata(corpusname, corpusvars):
 	"""
 
 	dbconnection = setconnection()
-	cursor = dbconnection.cursor()
+	dbcursor = dbconnection.cursor()
 
 	print('\ncompiling metadata for', corpusname, 'dbs')
 
@@ -195,19 +195,19 @@ def buildcorpusmetadata(corpusname, corpusvars):
 
 	# is there metadata contained in a binfile? if so, load it
 	if corpusname == 'latin':
-		parse_binfiles.latinloadcanon(corpusvars[corpusname]['datapath'] + corpusvars[corpusname]['dataprefix'] + '9999.TXT', cursor)
-		parse_binfiles.insertlatingenres(cursor, dbconnection)
+		parse_binfiles.latinloadcanon(corpusvars[corpusname]['datapath'] + corpusvars[corpusname]['dataprefix'] + '9999.TXT', dbcursor)
+		parse_binfiles.insertlatingenres(dbconnection)
 		dbconnection.commit()
 	if corpusname == 'greek':
-		parse_binfiles.resetbininfo(corpusvars[corpusname]['datapath'], cursor, dbconnection)
+		parse_binfiles.resetbininfo(corpusvars[corpusname]['datapath'], dbconnection)
 		dbconnection.commit()
 
 	# generate the metadata from the data we built
-	insertfirstsandlasts(workcategoryprefix, cursor)
+	insertfirstsandlasts(workcategoryprefix)
 	dbconnection.commit()
-	buildtrigramindices(workcategoryprefix, cursor)
+	buildtrigramindices(workcategoryprefix)
 	findwordcounts(dbconnection)
-	timestampthebuild(workcategoryprefix, dbconnection)
+	timestampthebuild(workcategoryprefix)
 
 	dbconnection.connectioncleanup()
 

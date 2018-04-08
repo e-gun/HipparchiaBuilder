@@ -26,7 +26,7 @@ from builder.workers import setworkercount
 """
 
 
-def insertfirstsandlasts(workcategoryprefix, cursor):
+def insertfirstsandlasts(workcategoryprefix,):
 	"""
 
 	public.works needs to know
@@ -37,7 +37,9 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 	:param cursor:
 	:return:
 	"""
-	
+	dbconnection = setconnection()
+	cursor = dbconnection.cursor()
+
 	print('inserting work db metatata: first/last lines')
 	query = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid DESC'
 	data = (workcategoryprefix+'%',)
@@ -48,6 +50,8 @@ def insertfirstsandlasts(workcategoryprefix, cursor):
 
 	boundaries = boundaryfinder(uids)
 	insertboundaries(boundaries)
+
+	dbconnection.connectioncleanup()
 
 	return
 
@@ -257,13 +261,13 @@ def insertcounts(countdict):
 
 	q = 'DROP TABLE tmp_works'
 	cursor.execute(q)
-	dbconnection.commit()
+
 	dbconnection.connectioncleanup()
 
 	return
 
 
-def buildtrigramindices(workcategoryprefix, cursor):
+def buildtrigramindices(workcategoryprefix):
 	"""
 	build indices for the works based on trigrams keyed to the stripped line
 	
@@ -273,26 +277,32 @@ def buildtrigramindices(workcategoryprefix, cursor):
 	"""
 	
 	print('building indices for author dbs')
-	
+	dbconnection = setconnection()
+	cursor = dbconnection.cursor()
+
 	query = 'SELECT universalid FROM authors WHERE universalid LIKE %s ORDER BY universalid ASC'
 	data = (workcategoryprefix+'%',)
-	cursor.execute(query,data)
+	cursor.execute(query, data)
 	results = resultiterator(cursor)
 	
 	manager = Manager()
 	uids = manager.list([r[0] for r in results])
 	commitcount = MPCounter()
 
+	dbconnection.connectioncleanup()
 	print('\t', len(uids), 'items to index')
 
 	workers = setworkercount()
-	oneconnectionperworker = {i: ConnectionObject() for i in range(workers)}
+	connections = {i: setconnection() for i in range(workers)}
 
-	jobs = [Process(target=mpindexbuilder, args=(uids, commitcount, oneconnectionperworker[i])) for i in range(workers)]
+	jobs = [Process(target=mpindexbuilder, args=(uids, commitcount, connections[i])) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
 		j.join()
+
+	for c in connections:
+		connections[c].connectioncleanup()
 
 	return
 
@@ -335,7 +345,4 @@ def mpindexbuilder(universalids, commitcount, dbconnection):
 			if commitcount.value % 250 == 0:
 				print('\t', commitcount.value, 'indices created')
 
-	dbconnection.connectioncleanup()
-
 	return
-

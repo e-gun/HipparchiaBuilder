@@ -8,7 +8,7 @@
 
 import configparser
 from datetime import datetime
-
+from builder.dbinteraction.connection import setconnection
 
 #sqltemplateversion = 7242017
 sqltemplateversion = 2242018
@@ -49,7 +49,7 @@ def versiontablemaker(dbconnection):
 	return
 
 
-def timestampthebuild(corpusname, dbconnection):
+def timestampthebuild(corpusname, dbconnection=None):
 	"""
 
 	store the build time and template version in the DB
@@ -58,13 +58,17 @@ def timestampthebuild(corpusname, dbconnection):
 	:param cursor:
 	:return:
 	"""
+
+	if not dbconnection:
+		dbconnection = setconnection()
+
 	dbcursor = dbconnection.cursor()
 
 	try:
 		# trying because you might not actually have the needed file, etc
 		# i.e. readgitdata() is liable to a FileNotFoundError
 		commit = readgitdata()
-	except:
+	except FileNotFoundError:
 		commit = None
 
 	if stamp == 'y':
@@ -98,7 +102,7 @@ def timestampthebuild(corpusname, dbconnection):
 	d = (sqltemplateversion, corpusname, now)
 	dbcursor.execute(q, d)
 
-	dbconnection.commit()
+	dbconnection.connectioncleanup()
 
 	return
 
