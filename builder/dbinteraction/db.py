@@ -18,21 +18,15 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 
 	run throught the dbreadyversion and put it into the db
 	iterate through the works
-	problems, though: some work numbers are incorrect/impossible
+	problems: some work numbers are incorrect/impossible
 
-	NOTE: before 26 dec 2016 works were stored in their own DBs; this worked quite wel, but it yielded a problem when
-	the INS and DDP data was finally merged into Hipparchia: suddenly postrgresql was working with 190k DBs, and that
-	yields a significant scheduler and filesystem problem; the costs were too high; nevertheless a TLG and LAT only system
-	could readily used the old model
+	NOTE: before 26 dec 2016 works were stored in their own DBs; this worked quite well, but it yielded a problem when
+	the INS and DDP data was finally merged into Hipparchia: suddenly postgresql was working with 190k DBs, and that
+	yields a significant scheduler and filesystem problem; the costs were too high
 
 	here is a marked line...
 	['1', [('0', '87'), ('1', '1'), ('2', '1'), ('3', '1'), ('4', '1')], "Μή μ' ἔπεϲιν μὲν ϲτέργε, νόον δ' ἔχε καὶ φρέναϲ ἄλληι, ", "Μη μ' επεϲιν μεν ϲτεργε, νοον δ' εχε και φρεναϲ αλληι, "]
 
-	Warning Never, never, NEVER use Python string concatenation (+) or string parameters interpolation (%) to pass variables to a SQL query string. Not even at gunpoint.
-	The correct way to pass variables in a SQL command is using the second argument of the execute() method:
-
-	sample query: SELECT * from gr9999w999 WHERE stripped_line LIKE '%debeas%'
-	won't stick until you dbconnection.commit()
 	for hypens:
 	SELECT * from gr9999w999 WHERE (stripped_line LIKE '%marinam%') OR (hyphenated_words LIKE '%marinam%')
 
@@ -50,9 +44,9 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 		# warning: '002' might be the value at work[0]
 		workmaker(authorobject, indexedat, dbcursor)
 
-	queryvalues = generatequeryvaluetuples(dbreadyversion, authorobject)
-
 	separator = '\t'
+
+	queryvalues = generatequeryvaluetuples(dbreadyversion, authorobject)
 
 	stream = generatecopystream(queryvalues, separator=separator)
 
@@ -80,6 +74,7 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 def dbauthoradder(authorobject, dbconnection):
 	"""
 	SQL setup
+
 	:param authorobject:
 	:param cursor:
 	:return:
@@ -88,7 +83,6 @@ def dbauthoradder(authorobject, dbconnection):
 
 	cursor = dbconnection.cursor()
 
-	# steal from above: get a table name and then drop the 'w001' bit
 	uid = authorobject.universalid
 	if authorobject.language == '':
 		lang = authorobject.works[0].language
@@ -102,8 +96,12 @@ def dbauthoradder(authorobject, dbconnection):
 	except:
 		pass
 
-	query = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, genres, recorded_date, converted_date, location) ' \
-			'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+	query = """
+			INSERT INTO authors 
+				(universalid, language, idxname, akaname, shortname, cleanname, genres, recorded_date, converted_date, location)
+			VALUES 
+				(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+			"""
 	data = (uid, lang, authorobject.idxname, authorobject.aka, authorobject.shortname, authorobject.cleanname,
 			authorobject.genre, '', None, '')
 	try:
@@ -127,17 +125,11 @@ def dbauthorloadersubroutine(uid, cursor):
 	try:
 		results = cursor.fetchone()
 	except:
-		# browser forward was producing random errors:
-		# 'failed to find the requested author: SELECT * from authors where universalid = %s ('gr1194',)'
-		# but this is the author being browsed and another click will browse him further
-		# a timing issue: the solution seems to be 'hipparchia.run(threaded=False, host="0.0.0.0")'
+		# note that there is no graceful way out of this: you have to have an authorobject in the end
 		print('failed to find the requested author:', query, data)
-	# note that there is no graceful way out of this: you have to have an authorobject in the end
+		results = None
 
-	# (universalid, language, idxname, akaname, shortname, cleanname, genres, recorded_date, converted_date, location)
-	# supposed to fit the dbAuthor class exactly
-	author = dbAuthor(results[0], results[1], results[2], results[3], results[4], results[5], results[6], results[7],
-					  results[8], results[9])
+	author = dbAuthor(*results)
 
 	return author
 
@@ -149,9 +141,13 @@ def dbauthorandworkloader(authoruid, cursor):
 
 	author = dbauthorloadersubroutine(authoruid, cursor)
 
-	query = 'SELECT universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02, levellabels_03, ' \
-			'levellabels_04, levellabels_05, workgenre, transmission, worktype, provenance, recorded_date, converted_date, wordcount, ' \
-			'firstline, lastline, authentic FROM works WHERE universalid LIKE %s'
+	query = """
+			SELECT universalid, title, language, publication_info, 
+				levellabels_00, levellabels_01, levellabels_02, levellabels_03, levellabels_04, levellabels_05, 
+				workgenre, transmission, worktype, provenance, recorded_date, converted_date, wordcount, 
+				firstline, lastline, authentic 
+			FROM works WHERE universalid LIKE %s
+			"""
 	data = (authoruid + '%',)
 	cursor.execute(query, data)
 	try:
@@ -162,9 +158,7 @@ def dbauthorandworkloader(authoruid, cursor):
 		results = list()
 
 	for match in results:
-		work = dbOpus(match[0], match[1], match[2], match[3], match[4], match[5], match[6], match[7], match[8],
-					  match[9], match[10], match[11], match[12], match[13], match[14], match[15], match[16],
-					  match[17], match[18], match[19])
+		work = dbOpus(*match)
 		author.addwork(work)
 
 	return author
@@ -188,8 +182,13 @@ def workmaker(authorobject, indexedat, cursor):
 		except:
 			ll.append('')
 
-	query = 'INSERT INTO works (universalid, title, language, publication_info, levellabels_00, levellabels_01, levellabels_02, levellabels_03, levellabels_04, levellabels_05) ' \
-			'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+	query = """
+			INSERT INTO works 
+				(universalid, title, language, publication_info, 
+				levellabels_00, levellabels_01, levellabels_02, levellabels_03, levellabels_04, levellabels_05)
+			VALUES 
+				(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+			"""
 	data = (uid, wk.title, wk.language, '', ll[0], ll[1], ll[2], ll[3], ll[4], ll[5])
 	try:
 		cursor.execute(query, data)
@@ -209,13 +208,13 @@ def resetauthorsandworksdbs(tmpprefix, prefix):
 	:return:
 	"""
 	dbconnection = setconnection()
-	cursor = dbconnection.cursor()
+	dbcursor = dbconnection.cursor()
 
 	for zap in [tmpprefix, prefix]:
 		q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
 		d = (zap + '%',)
-		cursor.execute(q, d)
-		results = cursor.fetchall()
+		dbcursor.execute(q, d)
+		results = dbcursor.fetchall()
 		dbconnection.commit()
 
 		authors = list()
@@ -230,7 +229,7 @@ def resetauthorsandworksdbs(tmpprefix, prefix):
 			count += 1
 			q = 'DROP TABLE public.' + a
 			try:
-				cursor.execute(q)
+				dbcursor.execute(q)
 			except:
 				# 'table "in090cw001" does not exist'
 				# because a build got interrupted? one hopes it is safe to pass
@@ -243,11 +242,11 @@ def resetauthorsandworksdbs(tmpprefix, prefix):
 
 		q = 'DELETE FROM authors WHERE universalid LIKE %s'
 		d = (zap + '%',)
-		cursor.execute(q, d)
+		dbcursor.execute(q, d)
 
 		q = 'DELETE FROM works WHERE universalid LIKE %s'
 		d = (zap + '%',)
-		cursor.execute(q, d)
+		dbcursor.execute(q, d)
 
 	dbconnection.connectioncleanup()
 
@@ -268,10 +267,10 @@ def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
 	"""
 
 	dbconnection = setconnection()
-	cursor = dbconnection.cursor()
+	dbcursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_{t} AS SELECT * FROM {t} LIMIT 0'.format(t=table)
-	cursor.execute(q)
+	dbcursor.execute(q)
 	dbconnection.commit()
 
 	targetcolumns = ', '.join(targetcolumnlist)
@@ -279,12 +278,11 @@ def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
 	vv = ', '.join(blankvals)
 	count = 0
 	for k in insertiondict.keys():
-		count += 1
 		q = 'INSERT INTO tmp_{t} ({s}, {c}) VALUES ({vv} )'.format(t=table, c=targetcolumns, s=sharedcolumn, vv=vv)
 		d = tuple([k] + insertiondict[k])
-		cursor.execute(q, d)
-		if count % 100 == 0:
-			dbconnection.commit()
+		dbcursor.execute(q, d)
+		count += 1
+		dbconnection.checkneedtocommit(count)
 
 	dbconnection.commit()
 
@@ -295,11 +293,11 @@ def updatedbfromtemptable(table, sharedcolumn, targetcolumnlist, insertiondict):
 	targs = ', '.join(targs)
 
 	q = 'UPDATE {t} SET {targs} FROM tmp_{t} WHERE {t}.{s}=tmp_{t}.{s}'.format(t=table, targs=targs, s=sharedcolumn)
-	cursor.execute(q)
+	dbcursor.execute(q)
 	dbconnection.commit()
 
 	q = 'DROP TABLE tmp_{t}'.format(t=table)
-	cursor.execute(q)
+	dbcursor.execute(q)
 
 	dbconnection.connectioncleanup()
 
