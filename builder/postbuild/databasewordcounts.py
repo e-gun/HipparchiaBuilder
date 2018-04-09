@@ -805,23 +805,14 @@ def wordcounter(restriction=None, authordict=None, workdict=None):
 			workpiles[thispilenumber] = [(key, dbdictwithranges[key])]
 
 	# [d] send the work off for processing
-	# https://stackoverflow.com/questions/15143837/how-to-multi-thread-an-operation-within-a-loop-in-python
 
-	wordcounterloop = asyncio.new_event_loop()
-	asyncio.set_event_loop(wordcounterloop)
+	with Pool(processes=numberofpiles) as pool:
+		getlistofdictionaries = [pool.apply_async(buildindexdictionary, (i, workpiles[i])) for i in range(numberofpiles)]
 
-	connections = {i: setconnection(autocommit=True) for i in range(numberofpiles)}
-	cursors = {i: connections[i].cursor() for i in range(numberofpiles)}
+		# you were returned [ApplyResult1, ApplyResult2, ...]
+		listofdictionaries = [result.get() for result in getlistofdictionaries]
 
-	argumentstopass = [(pilenumber, workpiles[pilenumber], cursors[pilenumber]) for pilenumber in workpiles]
-	functionstogather = starmap(buildindexdictionary, argumentstopass)
-
-	getlistofdictionaries = asyncio.gather(*[x for x in functionstogather], loop=wordcounterloop)
-
-	wordcounterloop.run_until_complete(getlistofdictionaries)
-	listofdictionaries = getlistofdictionaries.result()
-	wordcounterloop.close()
-
+	print('len(listofdictionaries)', len(listofdictionaries))
 
 def generatesearchidlist(restriction, authordict, workdict):
 	"""
@@ -896,7 +887,7 @@ def generatedbdictwithranges(idlist, authordict, workdict):
 	return dbswithranges
 
 
-async def buildindexdictionary(pilenumber, workpiles, dbcursor):
+def buildindexdictionary(pilenumber, workpiles):
 	"""
 
 	a workpile looks like:
@@ -905,6 +896,11 @@ async def buildindexdictionary(pilenumber, workpiles, dbcursor):
 
 	:return:
 	"""
+
+	dbconnection = setconnection(autocommit=True, simple=True)
+	dbcursor = dbconnection.cursor()
+
+	print('{p} gathering lines'.format(p=pilenumber))
 
 	graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
 	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
