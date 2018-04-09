@@ -18,14 +18,14 @@ from string import punctuation
 from builder.builderclasses import dbWordCountObject
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.dbdataintoobjects import graballcountsasobjects, graballlinesasobjects, grablemmataasobjects, \
-	grablineobjectsfromlist, loadallauthorsasobjects, loadallworksasobjects
+	grablineobjectsfromlist, loadallauthorsasobjects, loadallworksasobjects, loadallworksintoallauthors
 from builder.parsers.betacodeandunicodeinterconversion import buildhipparchiatranstable, cleanaccentsandvj
 from builder.postbuild.postbuildhelperfunctions import acuteforgrave, cleanwords, createwordcounttable, dictmerger, \
 	prettyprintcohortdata
 from builder.workers import setworkercount
 
 
-def wordcounter(restriction=None, authordict=None, workdict=None):
+def oldwordcounter(restriction=None, authordict=None, workdict=None):
 	"""
 
 	count all of the words in all of the dbs or a subset thereof: 'restriction' will do subsets
@@ -761,11 +761,15 @@ def insertgenremetadata(metadatadict, genrename, thetable):
 	return metadatadict
 
 
-def asyncwordcounter(restriction=None, authordict=None, workdict=None):
+def wordcounter(restriction=None, authordict=None, workdict=None):
 	"""
 
 	:return:
 	"""
+	if not authordict:
+		authordict = loadallauthorsasobjects()
+		workdict = loadallworksasobjects()
+		authordict = loadallworksintoallauthors(authordict, workdict)
 
 	# [a] figure out which works we are looking for: [universalid1, universalid2, ...]
 	idlist = generatesearchidlist(restriction, authordict, workdict)
@@ -775,7 +779,7 @@ def asyncwordcounter(restriction=None, authordict=None, workdict=None):
 	dbdictwithranges = generatedbdictwithranges(idlist, authordict, workdict)
 
 	# [c] divide up the work evenly: {1: {tableid1: range1, tableid2: range2, ...}, 2: {tableidX: rangeX, tableidY: rangeY, ...}
-	scopes = {key: len(dbdictwithranges[key]) for key in dbdictwithranges}
+	scopes = {key: len(list(dbdictwithranges[key])) for key in dbdictwithranges}
 
 	# if dbdictwithranges was exhausted, it needs to be regenerated
 	# dbdictwithranges = generatedbdictwithranges(idlist, authordict, workdict)
@@ -788,31 +792,33 @@ def asyncwordcounter(restriction=None, authordict=None, workdict=None):
 	thispilenumber = 0
 	currentpilesize = 0
 	for key in dbdictwithranges:
+		currentpilesize += scopes[key]
 		if currentpilesize < maxindividualpilesize:
+			# print('key: currentpilesize < maxindividualpilesize - {k}: {c} < {m}'.format(k=key, c=currentpilesize, m=maxindividualpilesize))
 			try:
-				workpiles[thispilenumber].append(dbdictwithranges[key])
+				workpiles[thispilenumber].append((key, dbdictwithranges[key]))
 			except KeyError:
-				workpiles[thispilenumber] = [dbdictwithranges[key]]
+				workpiles[thispilenumber] = [(key, dbdictwithranges[key])]
 		else:
 			currentpilesize = 0
 			thispilenumber += 1
-			workpiles[thispilenumber] = [dbdictwithranges[key]]
+			workpiles[thispilenumber] = [(key, dbdictwithranges[key])]
 
 	# [d] send the work off for processing
+	wordcounterloop = asyncio.new_event_loop()
+	asyncio.set_event_loop(wordcounterloop)
 
-	argumentstopass = [workpiles[key] for key in workpiles]
+	argumentstopass = [[workpiles[pilenumber]] for pilenumber in workpiles]
 	functionstogather = starmap(buildindexdictionary, argumentstopass)
+	getlistofdictionaries = asyncio.gather(*[x for x in functionstogather], loop=wordcounterloop)
+	print('getlistofdictionaries', getlistofdictionaries)
 
-	getlistofdictionaries = asyncio.gather(*[x for x in functionstogather])
-
-	loop = asyncio.new_event_loop()
-	asyncio.set_event_loop(loop)
-	loop.run_until_complete(getlistofdictionaries)
+	wordcounterloop.run_until_complete(getlistofdictionaries)
 	listofdictionaries = getlistofdictionaries.result()
-	loop.close()
+	wordcounterloop.close()
 
 
-def generatesearchidlist(restriction=None, authordict=None, workdict=None):
+def generatesearchidlist(restriction, authordict, workdict):
 	"""
 
 	need to know all of the lines you will need to examine in all of the works you will need to examine
@@ -888,6 +894,10 @@ def generatedbdictwithranges(idlist, authordict, workdict):
 async def buildindexdictionary(workpiles):
 	"""
 
+	a workpile looks like:
+
+		[('gr1346', <itertools.chain object at 0x10a858898>), ('gr3136', <itertools.chain object at 0x10d81e898>), ...]
+
 	:return:
 	"""
 
@@ -902,7 +912,8 @@ async def buildindexdictionary(workpiles):
 	# grab all lines
 	lineobjects = deque()
 	for w in workpiles:
-		lineobjects.append(grablineobjectsfromlist(w, workpiles[w], dbcursor))
+		# w ('gr1346', <itertools.chain object at 0x10a858898>)
+		lineobjects.append(grablineobjectsfromlist(w[0], w[1], dbcursor))
 
 	indexdictionary = dict()
 
@@ -922,6 +933,8 @@ async def buildindexdictionary(workpiles):
 			except KeyError:
 				indexdictionary[w] = dict()
 				indexdictionary[w][prefix] = 1
+
+	dbconnection.connectioncleanup()
 
 	return indexdictionary
 

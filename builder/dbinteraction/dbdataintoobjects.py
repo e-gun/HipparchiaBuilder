@@ -59,6 +59,23 @@ def dbauthorandworkloader(authoruid, cursor):
 	return author
 
 
+def loadallworksintoallauthors(authorsdict, worksdict):
+	"""
+
+	add the right work objects to the proper author objects
+
+	:param authorsdict:
+	:param worksdict:
+	:return:
+	"""
+
+	for wkid in worksdict.keys():
+		auid = wkid[0:6]
+		authorsdict[auid].addwork(worksdict[wkid])
+
+	return authorsdict
+
+
 def grablineobjectsfromlist(db, linelist, cursor):
 	"""
 
