@@ -88,8 +88,11 @@ def grablineobjectsfromlist(db, linelist, cursor):
 	:return:
 	"""
 
+	# linelist arrives as a itertools.chain
+	linelist = list(linelist)
 	testrange = list(range(linelist[0], linelist[-1]))
-	if len(linelist) == len(testrange):
+
+	if len(linelist) == len(testrange)+1:
 		# you want it all...
 		q = 'SELECT * FROM {d}'.format(d=db)
 	else:

@@ -781,8 +781,8 @@ def wordcounter(restriction=None, authordict=None, workdict=None):
 	# [c] divide up the work evenly: {1: {tableid1: range1, tableid2: range2, ...}, 2: {tableidX: rangeX, tableidY: rangeY, ...}
 	scopes = {key: len(list(dbdictwithranges[key])) for key in dbdictwithranges}
 
-	# if dbdictwithranges was exhausted, it needs to be regenerated
-	# dbdictwithranges = generatedbdictwithranges(idlist, authordict, workdict)
+	# dbdictwithranges was exhausted, it needs to be regenerated
+	dbdictwithranges = generatedbdictwithranges(idlist, authordict, workdict)
 
 	numberofpiles = setworkercount()
 	totalpilesize = sum(scopes[key] for key in scopes)
@@ -805,13 +805,18 @@ def wordcounter(restriction=None, authordict=None, workdict=None):
 			workpiles[thispilenumber] = [(key, dbdictwithranges[key])]
 
 	# [d] send the work off for processing
+	# https://stackoverflow.com/questions/15143837/how-to-multi-thread-an-operation-within-a-loop-in-python
+
 	wordcounterloop = asyncio.new_event_loop()
 	asyncio.set_event_loop(wordcounterloop)
 
-	argumentstopass = [[workpiles[pilenumber]] for pilenumber in workpiles]
+	connections = {i: setconnection(autocommit=True) for i in range(numberofpiles)}
+	cursors = {i: connections[i].cursor() for i in range(numberofpiles)}
+
+	argumentstopass = [(pilenumber, workpiles[pilenumber], cursors[pilenumber]) for pilenumber in workpiles]
 	functionstogather = starmap(buildindexdictionary, argumentstopass)
+
 	getlistofdictionaries = asyncio.gather(*[x for x in functionstogather], loop=wordcounterloop)
-	print('getlistofdictionaries', getlistofdictionaries)
 
 	wordcounterloop.run_until_complete(getlistofdictionaries)
 	listofdictionaries = getlistofdictionaries.result()
@@ -878,20 +883,20 @@ def generatedbdictwithranges(idlist, authordict, workdict):
 	for db in idlist:
 		if len(db) == 6:
 			# we are reading a full author
-			dbswithranges[db] = [range(authordict[db].findfirstlinenumber(), authordict[db].findlastlinenumber())]
+			dbswithranges[db] = [range(authordict[db].findfirstlinenumber(), authordict[db].findlastlinenumber()+1)]
 		else:
 			# we are reading an individual work
 			try:
-				dbswithranges[db[0:6]].append([range(workdict[db].starts, workdict[db].ends)])
+				dbswithranges[db[0:6]].append([range(workdict[db].starts, workdict[db].ends+1)])
 			except KeyError:
-				dbswithranges[db[0:6]] = [range(workdict[db].starts, workdict[db].ends)]
+				dbswithranges[db[0:6]] = [range(workdict[db].starts, workdict[db].ends+1)]
 
 	dbswithranges = {key: chain.from_iterable(dbswithranges[key]) for key in dbswithranges}
 
 	return dbswithranges
 
 
-async def buildindexdictionary(workpiles):
+async def buildindexdictionary(pilenumber, workpiles, dbcursor):
 	"""
 
 	a workpile looks like:
@@ -901,10 +906,6 @@ async def buildindexdictionary(workpiles):
 	:return:
 	"""
 
-	dbconnection = setconnection()
-	dbconnection.setautocommit()
-	dbcursor = dbconnection.cursor()
-
 	graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
 	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
 	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
@@ -913,11 +914,17 @@ async def buildindexdictionary(workpiles):
 	lineobjects = deque()
 	for w in workpiles:
 		# w ('gr1346', <itertools.chain object at 0x10a858898>)
-		lineobjects.append(grablineobjectsfromlist(w[0], w[1], dbcursor))
+		lineobjects.extend(grablineobjectsfromlist(w[0], w[1], dbcursor))
+
+	print('{p} gathered {n} lines'.format(p=pilenumber, n=len(lineobjects)))
 
 	indexdictionary = dict()
 
+	index = 0
 	for line in lineobjects:
+		index += 1
+		if index % 100000 == 0:
+			print('{p} @ {i}'.format(p=pilenumber, i=index))
 		words = line.wordlist('polytonic')
 		words = [cleanwords(w, punct) for w in words]
 		words = [re.sub(graves, acuteforgrave, w) for w in words]
@@ -933,8 +940,6 @@ async def buildindexdictionary(workpiles):
 			except KeyError:
 				indexdictionary[w] = dict()
 				indexdictionary[w][prefix] = 1
-
-	dbconnection.connectioncleanup()
 
 	return indexdictionary
 
