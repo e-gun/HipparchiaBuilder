@@ -19,7 +19,7 @@ from builder.dbinteraction.dbdataintoobjects import dbauthorandworkloader
 from builder.dbinteraction.dbloading import generatecopystream
 from builder.parsers.swappers import forceregexsafevariants
 from builder.postbuild.postbuilddating import convertdate
-from builder.postbuild.postbuildhelperfunctions import rebasedcounter
+from builder.wordcounting.wordcounthelperfunctions import rebasedcounter
 from builder.workers import setworkercount
 
 """

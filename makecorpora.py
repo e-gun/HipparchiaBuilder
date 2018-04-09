@@ -12,7 +12,7 @@ import time
 from builder import corpusbuilder
 from builder.lexica.buildlexica import formatgklexicon, formatlatlexicon, analysisloader, grammarloader
 from builder.dbinteraction.versioning import timestampthebuild
-from builder.postbuild.databasewordcounts import headwordcounts, wordcounter
+from builder.wordcounting.databasewordcounts import headwordcounts, wordcounter
 
 config = configparser.ConfigParser()
 config.read('config.ini')

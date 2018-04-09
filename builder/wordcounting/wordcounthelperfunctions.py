@@ -6,7 +6,6 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 import re
-from builder.dbinteraction.connection import setconnection
 
 
 def dictmerger(masterdict, targetdict, label):
@@ -20,12 +19,20 @@ def dictmerger(masterdict, targetdict, label):
 	for item in targetdict:
 		if item in masterdict:
 			try:
+				targetdict[item][label]
+			except KeyError:
+				targetdict[item][label] = 0
+			try:
 				masterdict[item][label] += targetdict[item][label]
-			except:
+			except KeyError:
 				masterdict[item][label] = targetdict[item][label]
 		else:
 			masterdict[item] = dict()
-			masterdict[item][label] = targetdict[item][label]
+			try:
+				masterdict[item][label] = targetdict[item][label]
+			except KeyError:
+				targetdict[item][label] = 0
+				masterdict[item][label] = 0
 
 	return masterdict
 
@@ -67,55 +74,6 @@ def acuteforgrave(matchgroup):
 		substitute = ''
 
 	return substitute
-
-
-def createwordcounttable(tablename, extracolumns=False):
-	"""
-	the SQL to generate the wordcount table
-	:param tablename:
-	:return:
-	"""
-
-	dbconnection = setconnection()
-	dbcursor = dbconnection.cursor()
-
-	query = 'DROP TABLE IF EXISTS public.' + tablename
-	dbcursor.execute(query)
-
-	query = 'CREATE TABLE public.' + tablename
-	query += '( entry_name character varying(64),'
-	query += ' total_count integer,'
-	query += ' gr_count integer,'
-	query += ' lt_count integer,'
-	query += ' dp_count integer,'
-	query += ' in_count integer,'
-	query += ' ch_count integer'
-	if extracolumns:
-		query += ', frequency_classification character varying(64),'
-		query += ' early_occurrences integer,'
-		query += ' middle_occurrences integer,'
-		query += ' late_occurrences integer'
-		if type(extracolumns) == type([]):
-			for c in extracolumns:
-				query += ', '+c+' integer'
-	query += ') WITH ( OIDS=FALSE );'
-
-	dbcursor.execute(query)
-
-	query = 'GRANT SELECT ON TABLE {tn} TO hippa_rd;'.format(tn=tablename)
-	dbcursor.execute(query)
-
-	tableletter = tablename[-2:]
-
-	q = 'DROP INDEX IF EXISTS public.wcindex{tl}'.format(tl=tableletter, tn=tablename)
-	dbcursor.execute(q)
-
-	q = 'CREATE UNIQUE INDEX wcindex{tl} ON {tn} (entry_name)'.format(tl=tableletter, tn=tablename)
-	dbcursor.execute(q)
-
-	dbconnection.connectioncleanup()
-
-	return
 
 
 def cleanwords(word, punct):
@@ -203,47 +161,6 @@ def rebasedcounter(decimalvalue, base):
 	rebased = thirddigit + seconddigit + lastdigit
 
 	return rebased
-
-
-def deletetemporarydbs(temprefix):
-	"""
-
-	kill off the first pass info now that you have made the second pass
-
-	:param temprefix:
-	:return:
-	"""
-
-	dbconnection = setconnection()
-	dbcursor = dbconnection.cursor()
-
-	q = 'SELECT universalid FROM works WHERE universalid LIKE %s'
-	d = (temprefix+'%',)
-	dbcursor.execute(q, d)
-	results = dbcursor.fetchall()
-
-	authors = list()
-	for r in results:
-		a = r[0]
-		authors.append(a[0:6])
-	authors = list(set(authors))
-
-	for a in authors:
-		q = 'DROP TABLE public.{a}'.format(a=a)
-		dbcursor.execute(q)
-
-	q = 'DELETE FROM authors WHERE universalid LIKE %s'
-	d = (temprefix + '%',)
-	dbcursor.execute(q, d)
-
-	q = 'DELETE FROM works WHERE universalid LIKE %s'
-	d = (temprefix + '%',)
-	dbcursor.execute(q, d)
-
-	dbconnection.connectioncleanup()
-
-	return
-
 
 
 """

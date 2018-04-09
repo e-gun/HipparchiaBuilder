@@ -27,7 +27,7 @@ from builder.file_io.filereaders import findauthors
 from builder.corpusbuilder import addoneauthor, buildauthorobject
 from builder.dbinteraction.connection import setconnection
 from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
-from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
+from builder.wordcounting.wordcountdbfunctions import deletetemporarydbs
 from builder.postbuild.postbuildmetadata import boundaryfinder, insertboundaries, calculatewordcounts, insertcounts
 
 config = configparser.ConfigParser()

@@ -32,7 +32,7 @@ from builder.parsers.latinsubstitutions import latindiacriticals
 from builder.parsers.regexsubstitutions import addcdlabels, cleanuplingeringmesses, colonshift, \
 	debughostilesubstitutions, earlybirdsubstitutions, hexrunner, insertnewlines, lastsecondsubsitutions, \
 	replacequotationmarks, totallemmatization
-from builder.postbuild.postbuildhelperfunctions import deletetemporarydbs
+from builder.wordcounting.wordcountdbfunctions import deletetemporarydbs
 from builder.postbuild.postbuildmetadata import buildtrigramindices, findwordcounts, insertfirstsandlasts
 from builder.postbuild.secondpassdbrewrite import assignlanguagetonewworks, builddbremappers, compilenewauthors, \
 	compilenewworks, registernewworks
