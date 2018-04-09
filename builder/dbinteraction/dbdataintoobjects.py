@@ -59,6 +59,35 @@ def dbauthorandworkloader(authoruid, cursor):
 	return author
 
 
+def grablineobjectsfromlist(db, linelist, cursor):
+	"""
+
+	example:
+		table id: 'gr0001'
+		index values: [1, 2, 5, 10]
+
+	:param db:
+	:param range:
+	:return:
+	"""
+
+	testrange = list(range(linelist[0], linelist[-1]))
+	if len(linelist) == len(testrange):
+		# you want it all...
+		q = 'SELECT * FROM {d}'.format(d=db)
+	else:
+		q = 'SELECT * FROM {d} WHERE index in %s'.format(d=db)
+
+	d = (linelist,)
+
+	cursor.execute(q, d)
+	lines = cursor.fetchall()
+
+	lineobjects = [dblineintolineobject(l) for l in lines]
+
+	return lineobjects
+
+
 def graballlinesasobjects(db, linerangetuple, cursor):
 	"""
 

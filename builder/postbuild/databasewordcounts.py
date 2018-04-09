@@ -7,18 +7,21 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
+import asyncio
 import re
+from collections import deque
+from itertools import chain, starmap
 from multiprocessing import Pool
 from statistics import mean, median
 from string import punctuation
 
 from builder.builderclasses import dbWordCountObject
 from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.dbdataintoobjects import graballcountsasobjects, graballlinesasobjects, grablemmataasobjects, \
+	grablineobjectsfromlist, loadallauthorsasobjects, loadallworksasobjects
 from builder.parsers.betacodeandunicodeinterconversion import buildhipparchiatranstable, cleanaccentsandvj
 from builder.postbuild.postbuildhelperfunctions import acuteforgrave, cleanwords, createwordcounttable, dictmerger, \
 	prettyprintcohortdata
-from builder.dbinteraction.dbdataintoobjects import graballlinesasobjects, graballcountsasobjects, grablemmataasobjects, \
-	loadallauthorsasobjects, loadallworksasobjects
 from builder.workers import setworkercount
 
 
@@ -43,6 +46,7 @@ def wordcounter(restriction=None, authordict=None, workdict=None):
 	if restriction:
 		if not workdict:
 			workdict = loadallworksasobjects()
+
 		try:
 			tr = restriction['time']
 			# restriction should be a date range tuple (-850,300), e.g.
@@ -757,6 +761,171 @@ def insertgenremetadata(metadatadict, genrename, thetable):
 	return metadatadict
 
 
+def asyncwordcounter(restriction=None, authordict=None, workdict=None):
+	"""
+
+	:return:
+	"""
+
+	# [a] figure out which works we are looking for: [universalid1, universalid2, ...]
+	idlist = generatesearchidlist(restriction, authordict, workdict)
+
+	# [b] figure out what table index values we will need to assemble them: {tableid1: range1, tableid2: range2, ...}
+
+	dbdictwithranges = generatedbdictwithranges(idlist, authordict, workdict)
+
+	# [c] divide up the work evenly: {1: {tableid1: range1, tableid2: range2, ...}, 2: {tableidX: rangeX, tableidY: rangeY, ...}
+	scopes = {key: len(dbdictwithranges[key]) for key in dbdictwithranges}
+
+	# if dbdictwithranges was exhausted, it needs to be regenerated
+	# dbdictwithranges = generatedbdictwithranges(idlist, authordict, workdict)
+
+	numberofpiles = setworkercount()
+	totalpilesize = sum(scopes[key] for key in scopes)
+	maxindividualpilesize = totalpilesize / numberofpiles
+
+	workpiles = dict()
+	thispilenumber = 0
+	currentpilesize = 0
+	for key in dbdictwithranges:
+		if currentpilesize < maxindividualpilesize:
+			try:
+				workpiles[thispilenumber].append(dbdictwithranges[key])
+			except KeyError:
+				workpiles[thispilenumber] = [dbdictwithranges[key]]
+		else:
+			currentpilesize = 0
+			thispilenumber += 1
+			workpiles[thispilenumber] = [dbdictwithranges[key]]
+
+	# [d] send the work off for processing
+
+	argumentstopass = [workpiles[key] for key in workpiles]
+	functionstogather = starmap(buildindexdictionary, argumentstopass)
+
+	getlistofdictionaries = asyncio.gather(*[x for x in functionstogather])
+
+	loop = asyncio.new_event_loop()
+	asyncio.set_event_loop(loop)
+	loop.run_until_complete(getlistofdictionaries)
+	listofdictionaries = getlistofdictionaries.result()
+	loop.close()
+
+
+def generatesearchidlist(restriction=None, authordict=None, workdict=None):
+	"""
+
+	need to know all of the lines you will need to examine in all of the works you will need to examine
+
+	this will return a list of workids OR a list of authorids depending on your restriction
+
+	[universalid1, universalid2, ...]
+
+	:return:
+	"""
+
+	searchlist = list()
+
+	if not authordict:
+		authordict = loadallauthorsasobjects()
+
+	if restriction:
+		if not workdict:
+			workdict = loadallworksasobjects()
+
+		try:
+			tr = restriction['time']
+			# restriction should be a date range tuple (-850,300), e.g.
+			searchlist = [key for key in authordict.keys() if
+			              authordict[key].converted_date and tr[0] < int(authordict[key].converted_date) < tr[1]]
+			searchlist += [key for key in workdict.keys() if
+			               workdict[key].converted_date and tr[0] < int(workdict[key].converted_date) < tr[1]]
+		except KeyError:
+			# no such restriction
+			pass
+		try:
+			restriction['genre']
+			# restriction will be an item from the list of known genres
+			searchlist = [key for key in workdict.keys() if workdict[key].workgenre == restriction['genre']]
+		except KeyError:
+			# no such restriction
+			pass
+	else:
+		searchlist = list(authordict.keys())
+
+	return searchlist
+
+
+def generatedbdictwithranges(idlist, authordict, workdict):
+	"""
+
+	given a list of universalids, convert this list into a dictionary with authorid keys (ie, table names)
+
+	each id will be associated with a range of line numbers that need to be pulled from that author table
+
+	{tableid1: range1, tableid2: range2, ...}
+
+	:return:
+	"""
+
+	dbswithranges = dict()
+	for db in idlist:
+		if len(db) == 6:
+			# we are reading a full author
+			dbswithranges[db] = [range(authordict[db].findfirstlinenumber(), authordict[db].findlastlinenumber())]
+		else:
+			# we are reading an individual work
+			try:
+				dbswithranges[db[0:6]].append([range(workdict[db].starts, workdict[db].ends)])
+			except KeyError:
+				dbswithranges[db[0:6]] = [range(workdict[db].starts, workdict[db].ends)]
+
+	dbswithranges = {key: chain.from_iterable(dbswithranges[key]) for key in dbswithranges}
+
+	return dbswithranges
+
+
+async def buildindexdictionary(workpiles):
+	"""
+
+	:return:
+	"""
+
+	dbconnection = setconnection()
+	dbconnection.setautocommit()
+	dbcursor = dbconnection.cursor()
+
+	graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
+	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
+	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
+
+	# grab all lines
+	lineobjects = deque()
+	for w in workpiles:
+		lineobjects.append(grablineobjectsfromlist(w, workpiles[w], dbcursor))
+
+	indexdictionary = dict()
+
+	for line in lineobjects:
+		words = line.wordlist('polytonic')
+		words = [cleanwords(w, punct) for w in words]
+		words = [re.sub(graves, acuteforgrave, w) for w in words]
+		words = [re.sub('v', 'u', w) for w in words]
+		words[:] = [x.lower() for x in words]
+		prefix = line.universalid[0:2]
+		for w in words:
+			# uncomment to watch individual words enter the dict
+			# if w == 'docilem':
+			# 	print(line.universalid,line.unformattedline())
+			try:
+				indexdictionary[w][prefix] += 1
+			except KeyError:
+				indexdictionary[w] = dict()
+				indexdictionary[w][prefix] = 1
+
+	return indexdictionary
+
+
 """
 you get 334 rows if you:
 	select * from authors where genres IS NULL and universalid like 'gr%'
@@ -850,6 +1019,38 @@ Type "help", "copyright", "credits" or "license" for more information.
 {'frequency_classification': 'core (>50 occurrences; not in top 2500)', 'Iamb.': 17}
 >>> x = {m for m in metadata if m['Iamb.'] > 0}
 
+
+
+"""
+
+
+"""
+
+pulling results from asyncio...
+
+
+async def factorial(name, number):
+	f = 1
+	for i in range(2, number+1):
+		print("Task %s: Compute factorial(%s)..." % (name, i))
+		await asyncio.sleep(.5)
+		f *= i
+	print("Task %s: factorial(%s) = %s" % (name, number, f))
+	return f
+
+loop = asyncio.get_event_loop()
+
+arguments = [("A", 2), ("B", 3), ("C", 4)]
+sm = starmap(factorial, arguments)
+results = asyncio.gather(*[x for x in sm])
+
+loop.run_until_complete(results)
+
+print(results.result())
+for r in results.result():
+	print(r)
+
+loop.close()
 
 
 """

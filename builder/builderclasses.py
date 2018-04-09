@@ -198,8 +198,19 @@ class dbAuthor(object):
 		workids = list()
 		for w in self.listofworks:
 			workids.append(w.universalid)
-
 		return workids
+
+	def findlastlinenumber(self):
+		lasts = list()
+		for w in self.listofworks:
+			lasts.append(w.ends)
+		return max(lasts)
+
+	def findfirstlinenumber(self):
+		firsts = list()
+		for w in self.listofworks:
+			firsts.append(w.starts)
+		return max(firsts)
 
 
 class dbOpus(object):

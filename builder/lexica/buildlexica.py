@@ -6,7 +6,6 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-
 import configparser
 from multiprocessing import Manager, Process
 
