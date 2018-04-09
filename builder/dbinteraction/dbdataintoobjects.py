@@ -5,9 +5,11 @@
 	License: GNU GENERAL PUBLIC LICENSE 3
 		(see LICENSE in the top level directory of the distribution)
 """
+from itertools import chain
+
 import psycopg2
 
-from builder.builderclasses import dbAuthor, dbOpus, dbWordCountObject, dbLemmaObject, dbWorkLine
+from builder.builderclasses import dbAuthor, dbLemmaObject, dbOpus, dbWordCountObject, dbWorkLine
 from builder.dbinteraction.connection import setconnection
 
 
@@ -89,14 +91,27 @@ def grablineobjectsfromlist(db, linelist, cursor):
 	"""
 
 	# linelist arrives as a itertools.chain
-	linelist = list(linelist)
+	chainedlines = list(linelist)
+	# but you now have a list that itself might contain ranges:
+	# in001a [190227, range(188633, 188638), range(183054, 183056), range(183243, 183246), ...]
+	linelist = list()
+	for item in chainedlines:
+		if isinstance(item, int):
+			linelist.append(item)
+		elif isinstance(item, range):
+			linelist.extend(list(item))
+		else:
+			print('problem item {i} is type {t}'.format(i=item, t=type(item)))
+
+	linelist.sort()
+	
 	testrange = list(range(linelist[0], linelist[-1]))
 
 	if len(linelist) == len(testrange)+1:
 		# you want it all...
 		q = 'SELECT * FROM {d}'.format(d=db)
 	else:
-		q = 'SELECT * FROM {d} WHERE index in %s'.format(d=db)
+		q = 'SELECT * FROM {d} WHERE index = ALL(%s)'.format(d=db)
 
 	d = (linelist,)
 

@@ -210,7 +210,11 @@ class dbAuthor(object):
 		firsts = list()
 		for w in self.listofworks:
 			firsts.append(w.starts)
-		return max(firsts)
+		try:
+			return max(firsts)
+		except ValueError:
+			print('work list error for {me}'.format(me=self.universalid))
+			print('\tneed loadallworksintoallauthors()?')
 
 
 class dbOpus(object):
