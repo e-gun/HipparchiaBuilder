@@ -20,7 +20,7 @@ from builder.wordcounting.wordcountdbfunctions import createwordcounttable, inse
 from builder.wordcounting.wordcounthelperfunctions import prettyprintcohortdata
 
 
-def headwordcounts():
+def headwordcounts(alllineobjects):
 	"""
 
 	count morphological forms using the wordcount data

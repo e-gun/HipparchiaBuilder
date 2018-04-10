@@ -362,7 +362,7 @@ class dbWorkLine(object):
 		self.polytonic = accented_line
 		self.stripped = stripped_line
 		self.annotations = annotations
-		self.universalid = self.wkuinversalid + '_LN_' + str(index)
+		self.universalid = '{w}_LN_{i}'.format(w=self.wkuinversalid, i=index)
 		self.hyphenated = hyphenated_words
 		if len(self.hyphenated) > 1:
 			self.hashyphenated = True

@@ -163,6 +163,31 @@ def rebasedcounter(decimalvalue, base):
 	return rebased
 
 
+def unpackchainedranges(chainedranges):
+	"""
+
+	turn a list of flat numbers and ranges into a flat list of numbers
+
+	:param chainedranges:
+	:return:
+	"""
+
+	chainedlines = list(chainedranges)
+	# but you now have a list that itself might contain ranges:
+	# in001a [190227, range(188633, 188638), range(183054, 183056), range(183243, 183246), ...]
+	linelist = list()
+	for item in chainedlines:
+		if isinstance(item, int):
+			linelist.append(item)
+		elif isinstance(item, range):
+			linelist.extend(list(item))
+		else:
+			print('problem item {i} is type {t}'.format(i=item, t=type(item)))
+
+	linelist = list(set(linelist))
+
+	return linelist
+
 """
 prettyprintcohortdata()
 

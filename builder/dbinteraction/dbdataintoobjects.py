@@ -5,12 +5,12 @@
 	License: GNU GENERAL PUBLIC LICENSE 3
 		(see LICENSE in the top level directory of the distribution)
 """
-from itertools import chain
 
 import psycopg2
 
 from builder.builderclasses import dbAuthor, dbLemmaObject, dbOpus, dbWordCountObject, dbWorkLine
 from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.dbhelperfunctions import resultiterator
 
 
 def dbfetchauthorobject(uid, cursor):
@@ -29,6 +29,67 @@ def dbfetchauthorobject(uid, cursor):
 	author = dbAuthor(*results)
 
 	return author
+
+
+def generatecomprehensivesetoflineobjects():
+	"""
+
+	grab every line from every table
+
+	turn ito into a hollow lineobject (since we only need the polytonic line and the universalid)
+
+	note the construction of the index: 'gr3018_LN_4773', etc.
+
+	:return:
+	"""
+
+	print('grabbing every line from every table: this is slow and memory-intensive...')
+
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
+
+	q = 'SELECT universalid FROM authors'
+	dbcursor.execute(q)
+
+	authors = [a[0] for a in resultiterator(dbcursor)]
+
+	# test
+	# authors = authors[:10]
+
+	qtemplate = 'SELECT index, wkuniversalid, accented_line FROM {t}'
+
+	everyline = dict()
+	total = len(authors)
+	steps = int(total/10)
+	index = 0
+	for a in authors:
+		q = qtemplate.format(t=a)
+		dbcursor.execute(q)
+		foundlines = resultiterator(dbcursor)
+		hollowlineobjects = [makehollowlineobject(*f) for f in foundlines]
+		everyline.update({'{a}_LN_{ln}'.format(a=a, ln=h.index): h for h in hollowlineobjects})
+		index += 1
+		if index % steps == 0:
+			percent = int((index / steps) * 10)
+			print('\t{n}% of authors loaded'.format(n=percent))
+
+	return everyline
+
+
+def makehollowlineobject(index, wkuniversalid, accented_line):
+	"""
+
+	build a line object with only three items fleshed out:
+		index, wkuinversalid, accented_line
+
+	wkuinversalid, index, level_05_value, level_04_value, level_03_value, level_02_value,
+	             level_01_value, level_00_value, marked_up_line, accented_line, stripped_line, hyphenated_words,
+	             annotations
+
+	:return:
+	"""
+
+	return dbWorkLine(wkuniversalid, index, None, None, None, None, None, None, None, accented_line, None, '', None)
 
 
 def dbauthorandworkloader(authoruid, cursor):

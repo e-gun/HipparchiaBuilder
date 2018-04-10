@@ -13,6 +13,7 @@ from builder import corpusbuilder
 from builder.lexica.buildlexica import formatgklexicon, formatlatlexicon, analysisloader, grammarloader
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.wordcounting.databasewordcounts import wordcounter
+from builder.dbinteraction.dbdataintoobjects import generatecomprehensivesetoflineobjects
 from builder.wordcounting.wordcountsbyheadword import headwordcounts
 
 config = configparser.ConfigParser()
@@ -131,9 +132,10 @@ if buildcounts == 'y':
 	print('building wordcounts by (repeatedly) examining every line of every text in all available dbs: this might take a minute or two...')
 	# first draft speed: 2061919 distinct words found; Build took 58.17 minutes
 	# Build took 8.68 minutes
-	wordcounter()
+	alllines = generatecomprehensivesetoflineobjects()
+	wordcounter(alllines)
 	# Build took 17.54 minutes
-	headwordcounts()
+	# headwordcounts(alllines)
 	# if you do genres, brace yourself: Build took 84.11 minutes
 
 stop = time.time()

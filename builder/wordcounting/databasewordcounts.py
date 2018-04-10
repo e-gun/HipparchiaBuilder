@@ -8,19 +8,16 @@
 
 import re
 from collections import deque
-from itertools import chain
-from multiprocessing import Pool
 from string import punctuation
 
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.dbdataintoobjects import grablineobjectsfromlist, loadallauthorsasobjects, loadallworksasobjects, loadallworksintoallauthors
+from builder.dbinteraction.dbdataintoobjects import loadallauthorsasobjects, loadallworksasobjects, loadallworksintoallauthors
 from builder.dbinteraction.dbloading import generatecopystream
 from builder.wordcounting.wordcountdbfunctions import createwordcounttable
-from builder.wordcounting.wordcounthelperfunctions import acuteforgrave, cleanwords, dictmerger
-from builder.workers import setworkercount
+from builder.wordcounting.wordcounthelperfunctions import acuteforgrave, cleanwords, unpackchainedranges
 
 
-def wordcounter(restriction=None, authordict=None, workdict=None):
+def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None):
 	"""
 
 	:return:
@@ -39,52 +36,77 @@ def wordcounter(restriction=None, authordict=None, workdict=None):
 
 	dbdictwithranges = generatedbdictwithranges(idlist, authordict, workdict)
 
-	# [c] divide up the work evenly: {1: {tableid1: range1, tableid2: range2, ...}, 2: {tableidX: rangeX, tableidY: rangeY, ...}
-	scopes = {key: len(list(dbdictwithranges[key])) for key in dbdictwithranges}
+	# [c] turn this into a list of lines we will need
 
-	# dbdictwithranges was exhausted, it needs to be regenerated
-	dbdictwithranges = generatedbdictwithranges(idlist, authordict, workdict)
-
-	numberofpiles = setworkercount()
-	totalpilesize = sum(scopes[key] for key in scopes)
-	maxindividualpilesize = totalpilesize / numberofpiles
-
-	workpiles = dict()
-	thispilenumber = 0
-	currentpilesize = 0
-	for key in dbdictwithranges:
-		currentpilesize += scopes[key]
-		if currentpilesize < maxindividualpilesize:
-			# print('key: currentpilesize < maxindividualpilesize - {k}: {c} < {m}'.format(k=key, c=currentpilesize, m=maxindividualpilesize))
-			try:
-				workpiles[thispilenumber].append((key, dbdictwithranges[key]))
-			except KeyError:
-				workpiles[thispilenumber] = [(key, dbdictwithranges[key])]
-		else:
-			currentpilesize = 0
-			thispilenumber += 1
-			workpiles[thispilenumber] = [(key, dbdictwithranges[key])]
-
-	# you can end up with len(workpiles) < setworkercount()
-	# print('totalpilesize', totalpilesize)
-	# print('len(workpiles)', len(workpiles))
+	linesweneed = list(convertrangedicttolineset(dbdictwithranges))
 
 	# [d] send the work off for processing
 
-	with Pool(processes=numberofpiles) as pool:
-		getlistofdictionaries = [pool.apply_async(buildindexdictionary, (i, workpiles[i])) for i in range(len(workpiles))]
+	masterconcorcdance = monothreadedindexer(alllineobjects, linesweneed)
 
-		# you were returned [ApplyResult1, ApplyResult2, ...]
-		listofdictionaries = [result.get() for result in getlistofdictionaries]
+	# [e] calculate totals
 
-	# [e] merge the results
-	masterconcorcdance = concordancemerger(listofdictionaries)
+	masterconcorcdance = calculatetotals(masterconcorcdance)
 
-	# [f] build the tables if needed
 	if not restriction:
 		generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance)
 
 	return masterconcorcdance
+
+
+def monothreadedindexer(alllineobjects, linesweneed):
+	"""
+
+
+	:param alllineobjects:
+	:param linesweneed:
+	:return:
+	"""
+
+	lineobjects = [alllineobjects[l] for l in linesweneed]
+
+	graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
+	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
+	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
+
+	print('indexing {n} lines'.format(n=len(lineobjects)))
+
+	progresschunks = int(len(lineobjects) / 10)
+
+	indexdictionary = dict()
+
+	index = 0
+	for line in lineobjects:
+		words = line.wordlist('polytonic')
+		words = [cleanwords(w, punct) for w in words]
+		words = [re.sub(graves, acuteforgrave, w) for w in words]
+		words = [re.sub('v', 'u', w) for w in words]
+		words[:] = [x.lower() for x in words]
+		prefix = line.universalid[0:2]
+		for w in words:
+			try:
+				# does the word exist at all?
+				indexdictionary[w]
+			except KeyError:
+				indexdictionary[w] = dict()
+			try:
+				# have we already indexed the word as part of this this db?
+				indexdictionary[w][prefix] += 1
+			except KeyError:
+				indexdictionary[w][prefix] = 1
+			# uncomment to watch individual words enter the dict
+			# if w == 'πρόϲωπον':
+			# 	try:
+			# 		print(indexdictionary[w][prefix], line.universalid, line.wordlist('polytonic'))
+			# 	except KeyError:
+			# 		print('need to generate indexdictionary[{w}][{p}]'.format(w=w, p=prefix))
+		index += 1
+
+		if index % progresschunks == 0:
+			percent = round((index / len(lineobjects)) * 100, 1)
+			print('\tprogress: {n}% ({a}/{b})'.format(n=percent, a=index, b=len(lineobjects)))
+
+	return indexdictionary
 
 
 def generatesearchidlist(restriction, authordict, workdict):
@@ -151,112 +173,31 @@ def generatedbdictwithranges(idlist, authordict, workdict):
 		else:
 			# we are reading an individual work
 			try:
-				dbswithranges[db[0:6]].append([range(workdict[db].starts, workdict[db].ends+1)])
+				dbswithranges[db[0:6]].extend([range(workdict[db].starts, workdict[db].ends+1)])
 			except KeyError:
 				dbswithranges[db[0:6]] = [range(workdict[db].starts, workdict[db].ends+1)]
 
-	dbswithranges = {key: chain.from_iterable(dbswithranges[key]) for key in dbswithranges}
+	dbswithranges = {key: dbswithranges[key] for key in dbswithranges}
 
 	return dbswithranges
 
 
-def buildindexdictionary(pilenumber, workpiles):
+def convertrangedicttolineset(dbswithranges):
 	"""
 
-	a workpile looks like:
+	{tableid1: [range1.1, range1.2], tableid2: [range2.1, range2.2], ...} ==> {lineuniversalid1, lineuniversalid2, ... }
 
-		[('gr1346', <itertools.chain object at 0x10a858898>), ('gr3136', <itertools.chain object at 0x10d81e898>), ...]
 
+	:param dbswithranges:
 	:return:
 	"""
 
-	dbconnection = setconnection(autocommit=True, simple=True)
-	dbcursor = dbconnection.cursor()
+	lineset = set()
+	for table in dbswithranges:
+		tablelines = unpackchainedranges(dbswithranges[table])
+		lineset.update({'{wk}_LN_{li}'.format(wk=table, li=l) for l in tablelines})
 
-	print('worker #{p} gathering lines'.format(p=pilenumber))
-
-	graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
-	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
-	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
-
-	# grab all lines
-	lineobjects = deque()
-	for w in workpiles:
-		# w ('gr1346', <itertools.chain object at 0x10a858898>)
-		lineobjects.extend(grablineobjectsfromlist(w[0], w[1], dbcursor))
-
-	print('worker #{p} gathered {n} lines'.format(p=pilenumber, n=len(lineobjects)))
-
-	# debug
-	# lineobjects = list(lineobjects)
-	# lineobjects = lineobjects[:10000]
-
-	progresschunks = int(len(lineobjects) / 4)
-
-	indexdictionary = dict()
-
-	index = 0
-	for line in lineobjects:
-		words = line.wordlist('polytonic')
-		words = [cleanwords(w, punct) for w in words]
-		words = [re.sub(graves, acuteforgrave, w) for w in words]
-		words = [re.sub('v', 'u', w) for w in words]
-		words[:] = [x.lower() for x in words]
-		prefix = line.universalid[0:2]
-		for w in words:
-			# uncomment to watch individual words enter the dict
-			# if w == 'docilem':
-			# 	print(line.universalid,line.unformattedline())
-			try:
-				indexdictionary[w][prefix] += 1
-			except KeyError:
-				indexdictionary[w] = dict()
-				indexdictionary[w][prefix] = 1
-		index += 1
-		if index % progresschunks == 0:
-			percent = round((index / len(lineobjects)) * 100, 1)
-			print('worker #{p} progress: {n}%'.format(p=pilenumber, n=percent))
-			# uncomment to see where we stand with a given set of words
-			# if line.universalid[0:2] == 'lt':
-			# 	print('worker #{p}  @ line.universalid {u}'.format(p=pilenumber, u=line.universalid))
-			# 	print('\t{ln}'.format(ln=line.wordlist('polytonic')))
-			# 	for w in line.wordlist('polytonic'):
-			# 		try:
-			# 			print(w, indexdictionary[w][line.universalid[0:2]])
-			# 		except:
-			# 			print('{w} not in indexdictionary'.format(w=w))
-
-	return indexdictionary
-
-
-def concordancemerger(listofconcordancedicts):
-	"""
-
-	:return:
-	"""
-
-	print('merging the partial results')
-	try:
-		masterconcorcdance = listofconcordancedicts.pop()
-	except IndexError:
-		masterconcorcdance = dict()
-
-	for cd in listofconcordancedicts:
-		# find the 'gr' in something like {'τότοιν': {'gr': 1}}
-		tdk = list(cd.keys())
-		tdl = list(cd[tdk[0]].keys())
-		label = tdl[0]
-		masterconcorcdance = dictmerger(masterconcorcdance, cd, label)
-
-	# add the zeros and do the sums
-	print('summing the finds')
-	for word in masterconcorcdance:
-		for db in ['gr', 'lt', 'in', 'dp', 'ch']:
-			if db not in masterconcorcdance[word]:
-				masterconcorcdance[word][db] = 0
-		masterconcorcdance[word]['total'] = sum([masterconcorcdance[word][x] for x in masterconcorcdance[word]])
-
-	return masterconcorcdance
+	return lineset
 
 
 def generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance):
@@ -277,6 +218,9 @@ def generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance):
 
 	:return:
 	"""
+
+	print('generating fresh word count tables')
+
 	dbcconnection = setconnection()
 	dbcursor = dbcconnection.cursor()
 
@@ -295,7 +239,7 @@ def generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance):
 	separator = '\t'
 
 	for letter in letters:
-		print('generating {l}'.format(l=letter))
+		# print('\tgenerating {l}'.format(l=letter))
 		queryvalues = generatemasterconcorcdancevaluetuples(masterconcorcdance, letter)
 		stream = generatecopystream(queryvalues, separator=separator)
 		table = '{w}_{l}'.format(w=wordcounttable, l=letter)
@@ -306,37 +250,30 @@ def generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance):
 	return
 
 
-def generatemasterconcorcdancevaluetuples(masterconcorcdance, letter):
+def calculatetotals(masterconcorcdance):
 	"""
 
-	entries look like:
-		'θήϲομαί': {'gr': 1, 'lt': 0, 'in': 0, 'dp': 0, 'ch': 0, 'total': 1}
+	find the Ⓣ for something like πρόϲωπον given Ⓖ Ⓛ Ⓘ Ⓓ & Ⓒ
 
+		Ⓖ 11,346 / Ⓛ 12 / Ⓘ 292 / Ⓓ 105 / Ⓒ 12 / Ⓣ 11,767
 
 	:param masterconcorcdance:
-	:param letter:
 	:return:
 	"""
 
-	validletters = 'abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+	print('calculating totals')
+	for word in masterconcorcdance:
+		for db in ['gr', 'lt', 'in', 'dp', 'ch']:
+			if db not in masterconcorcdance[word]:
+				masterconcorcdance[word][db] = 0
+		masterconcorcdance[word]['total'] = sum([masterconcorcdance[word][x] for x in masterconcorcdance[word]])
 
-	valuetuples = deque()
+	return masterconcorcdance
 
-	# oddly it seems you cen get null keys...
-	# key[0] can give you an IndexError
-
-	if letter != '0':
-		subset = {key: masterconcorcdance[key] for key in masterconcorcdance if key and key[0] == letter}
-	else:
-		subset = {key: masterconcorcdance[key] for key in masterconcorcdance if key and key[0] not in validletters}
-
-	for item in subset:
-		valuetuples.append(tuple([item, subset[item]['total'], subset[item]['gr'], subset[item]['lt'], subset[item]['dp'], subset[item]['in'], subset[item]['ch']]))
-
-	return valuetuples
 
 
 """
+
 you get 334 rows if you:
 	select * from authors where genres IS NULL and universalid like 'gr%'
 """
@@ -483,3 +420,33 @@ wordcounterloop.close()
 
 
 """
+
+
+def generatemasterconcorcdancevaluetuples(masterconcorcdance, letter):
+	"""
+
+	entries look like:
+		'θήϲομαί': {'gr': 1, 'lt': 0, 'in': 0, 'dp': 0, 'ch': 0, 'total': 1}
+
+
+	:param masterconcorcdance:
+	:param letter:
+	:return:
+	"""
+
+	validletters = 'abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+
+	valuetuples = deque()
+
+	# oddly it seems you cen get null keys...
+	# key[0] can give you an IndexError
+
+	if letter != '0':
+		subset = {key: masterconcorcdance[key] for key in masterconcorcdance if key and key[0] == letter}
+	else:
+		subset = {key: masterconcorcdance[key] for key in masterconcorcdance if key and key[0] not in validletters}
+
+	for item in subset:
+		valuetuples.append(tuple([item, subset[item]['total'], subset[item]['gr'], subset[item]['lt'], subset[item]['dp'], subset[item]['in'], subset[item]['ch']]))
+
+	return valuetuples
