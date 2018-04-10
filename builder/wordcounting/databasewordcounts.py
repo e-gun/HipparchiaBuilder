@@ -9,12 +9,15 @@
 import re
 from collections import deque
 from string import punctuation
+from multiprocessing.pool import Pool
 
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.dbdataintoobjects import loadallauthorsasobjects, loadallworksasobjects, loadallworksintoallauthors
 from builder.dbinteraction.dbloading import generatecopystream
 from builder.wordcounting.wordcountdbfunctions import createwordcounttable
-from builder.wordcounting.wordcounthelperfunctions import acuteforgrave, cleanwords, unpackchainedranges
+from builder.wordcounting.wordcounthelperfunctions import acuteforgrave, cleanwords, unpackchainedranges, \
+	concordancemerger, grouper
+from builder.workers import setworkercount
 
 
 def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None):
@@ -46,11 +49,33 @@ def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None
 	# len(linesweneed) 2103514
 
 	linesweneed = list(convertrangedicttolineset(dbdictwithranges))
-	print('len(linesweneed)', len(linesweneed))
 
-	# [d] send the work off for processing
+	multiprocess = False
+	if multiprocess:
+		# this ends up being super slow: pickle millions of objects; then flood the RAM until you are swapping all the time...
+		# death by shared state
 
-	masterconcorcdance = monothreadedindexer(alllineobjects, linesweneed)
+		# chunk the lines then process
+
+		workers = setworkercount()
+		# workers = 2
+		cunksize = int(len(linesweneed) / workers)
+		workpiles = grouper(linesweneed, cunksize)
+		trimmedworpiles = list()
+		for w in workpiles:
+			trimmedworpiles.append([alllineobjects[line] for line in w if line])
+
+		print('launching indexing pool')
+		with Pool(processes=workers) as pool:
+			getlistofdictionaries = [pool.apply_async(monothreadedindexer, (trimmedworpiles[i], i)) for i in range(workers)]
+			# you were returned [ApplyResult1, ApplyResult2, ...]
+			listofdictionaries = [result.get() for result in getlistofdictionaries]
+
+		masterconcorcdance = concordancemerger(listofdictionaries)
+	else:
+		# keep it simple send the work off for linear processing
+		lineobjects = [alllineobjects[l] for l in linesweneed]
+		masterconcorcdance = monothreadedindexer(lineobjects, 'monothread')
 
 	# [e] calculate totals
 
@@ -62,7 +87,7 @@ def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None
 	return masterconcorcdance
 
 
-def monothreadedindexer(alllineobjects, linesweneed):
+def monothreadedindexer(lineobjects, workername=''):
 	"""
 
 
@@ -71,7 +96,7 @@ def monothreadedindexer(alllineobjects, linesweneed):
 	:return:
 	"""
 
-	lineobjects = [alllineobjects[l] for l in linesweneed]
+	# lineobjects = [alllineobjects[l] for l in linesweneed]
 
 	graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
 	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
@@ -112,7 +137,7 @@ def monothreadedindexer(alllineobjects, linesweneed):
 
 		if index % progresschunks == 0:
 			percent = round((index / len(lineobjects)) * 100, 1)
-			print('\tprogress: {n}% ({a}/{b})'.format(n=percent, a=index, b=len(lineobjects)))
+			print('\t{w} progress: {n}% ({a}/{b})'.format(w=workername, n=percent, a=index, b=len(lineobjects)))
 
 	return indexdictionary
 

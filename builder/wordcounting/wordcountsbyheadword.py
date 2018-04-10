@@ -192,9 +192,9 @@ def headwordcounts(alllineobjects):
 	thetable = 'dictionary_headword_wordcounts'
 	metadata = derivedictionaryentrymetadata(thetable, dbcursor)
 	lemmataobjectslist = grablemmataasobjects('greek_lemmata', dbcursor) + grablemmataasobjects('latin_lemmata', dbcursor)
-	metadata = derivechronologicalmetadata(metadata, lemmataobjectslist)
+	metadata = derivechronologicalmetadata(metadata, alllineobjects, lemmataobjectslist)
 	metadata = insertchronologicalmetadata(metadata, thetable)
-	metadata = derivegenremetadata(metadata, lemmataobjectslist, thetable, knownworkgenres)
+	metadata = derivegenremetadata(metadata, alllineobjects, lemmataobjectslist, thetable, knownworkgenres)
 
 	# print('ἅρπαξ',metadata['ἅρπαξ'])
 	# ἅρπαξ {'frequency_classification': 'core vocabulary (more than 50)', 'early': 42, 'middle': 113, 'late': 468}
@@ -305,7 +305,7 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 	return metadata
 
 
-def derivechronologicalmetadata(metadata, lemmataobjectlist, authordict=None):
+def derivechronologicalmetadata(metadata, alllineobjects, lemmataobjectlist, authordict=None):
 	"""
 
 	find frequencies by eras:
@@ -328,7 +328,7 @@ def derivechronologicalmetadata(metadata, lemmataobjectlist, authordict=None):
 
 	for era in eras:
 		print('calculating use by era:', era)
-		eraconcordance = wordcounter(restriction={'time': eras[era]}, authordict=authordict, workdict=workdict)
+		eraconcordance = wordcounter(alllineobjects, restriction={'time': eras[era]}, authordict=authordict, workdict=workdict)
 		# close, but we need to match the template above:
 		# countdict = {word.entryname: word for word in countobjectlist}
 		countobjectlist = [
@@ -347,7 +347,7 @@ def derivechronologicalmetadata(metadata, lemmataobjectlist, authordict=None):
 	return metadata
 
 
-def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres):
+def derivegenremetadata(metadata, alllineobjects, lemmataobjectlist, thetable, knownworkgenres):
 	"""
 
 	can/should do 'Inscr.' separately? It's just the sum of 'in' + 'ch'
@@ -362,7 +362,7 @@ def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres):
 
 	for genre in knownworkgenres:
 		print('compiling metadata for', genre)
-		genrecordance = wordcounter(restriction={'genre': genre}, authordict=authordict, workdict=workdict)
+		genrecordance = wordcounter(alllineobjects, restriction={'genre': genre}, authordict=authordict, workdict=workdict)
 		countobjectlist = [
 			dbWordCountObject(w, genrecordance[w]['total'], genrecordance[w]['gr'], genrecordance[w]['lt'],
 			                  genrecordance[w]['dp'], genrecordance[w]['in'], genrecordance[w]['ch']) for w in

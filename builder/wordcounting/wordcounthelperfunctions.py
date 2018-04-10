@@ -6,6 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 import re
+from itertools import zip_longest
 
 
 def dictmerger(masterdict, targetdict, label):
@@ -281,3 +282,43 @@ very rare (fewer than 5 occurrences)
 	average	1
 	median	2
 """
+
+
+def concordancemerger(listofconcordancedicts):
+	"""
+
+	:return:
+	"""
+
+	print('merging the partial results')
+	try:
+		masterconcorcdance = listofconcordancedicts.pop()
+	except IndexError:
+		masterconcorcdance = dict()
+
+	for cd in listofconcordancedicts:
+		# find the 'gr' in something like {'τότοιν': {'gr': 1}}
+		tdk = list(cd.keys())
+		tdl = list(cd[tdk[0]].keys())
+		label = tdl[0]
+		masterconcorcdance = dictmerger(masterconcorcdance, cd, label)
+
+	return masterconcorcdance
+
+
+def grouper(iterable, n, fillvalue=None):
+	"""
+	recipe from https://docs.python.org/3.6/library/itertools.html
+
+	Collect data into fixed-length chunks or blocks
+
+	grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx
+
+	:param iterable:
+	:param n:
+	:param fillvalue:
+	:return:
+	"""
+
+	args = [iter(iterable)] * n
+	return zip_longest(*args, fillvalue=fillvalue)

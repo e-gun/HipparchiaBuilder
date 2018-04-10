@@ -131,7 +131,7 @@ if buildgram == 'y':
 if buildcounts == 'y':
 	print('building wordcounts by (repeatedly) examining every line of every text in all available dbs: this might take a minute or two...')
 	# first draft speed: 2061919 distinct words found; Build took 58.17 minutes
-	# Build took 8.68 minutes
+	# Build took 22.7 minutes
 	alllines = generatecomprehensivesetoflineobjects()
 	wordcounter(alllines)
 	# Build took 17.54 minutes
