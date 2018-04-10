@@ -184,7 +184,8 @@ def unpackchainedranges(chainedranges):
 		else:
 			print('problem item {i} is type {t}'.format(i=item, t=type(item)))
 
-	linelist = list(set(linelist))
+	# linelist = list(set(linelist))
+	# linelist.sort()
 
 	return linelist
 

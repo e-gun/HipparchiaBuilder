@@ -22,6 +22,10 @@ def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None
 
 	:return:
 	"""
+
+	# print('len(alllineobjects)', len(alllineobjects))
+	# len(alllineobjects) 11902961
+
 	wordcounttable = 'wordcounts'
 
 	if not authordict:
@@ -29,16 +33,20 @@ def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None
 		workdict = loadallworksasobjects()
 		authordict = loadallworksintoallauthors(authordict, workdict)
 
-	# [a] figure out which works we are looking for: [universalid1, universalid2, ...]
+	# [a] figure out which works we are looking for: idlist = ['lt1002', 'lt1351', 'lt2331', 'lt1038', 'lt0690', ...]
 	idlist = generatesearchidlist(restriction, authordict, workdict)
 
 	# [b] figure out what table index values we will need to assemble them: {tableid1: range1, tableid2: range2, ...}
 
-	dbdictwithranges = generatedbdictwithranges(idlist, authordict, workdict)
+	dbdictwithranges = generatedbdictwithranges(idlist, workdict)
 
 	# [c] turn this into a list of lines we will need
+	# bug in convertrangedicttolineset() evident at firstpass
+	# len(alllineobjects) 11902961
+	# len(linesweneed) 2103514
 
 	linesweneed = list(convertrangedicttolineset(dbdictwithranges))
+	print('len(linesweneed)', len(linesweneed))
 
 	# [d] send the work off for processing
 
@@ -95,7 +103,7 @@ def monothreadedindexer(alllineobjects, linesweneed):
 			except KeyError:
 				indexdictionary[w][prefix] = 1
 			# uncomment to watch individual words enter the dict
-			# if w == 'πρόϲωπον':
+			# if w == 'λελέχθαι':
 			# 	try:
 			# 		print(indexdictionary[w][prefix], line.universalid, line.wordlist('polytonic'))
 			# 	except KeyError:
@@ -153,7 +161,7 @@ def generatesearchidlist(restriction, authordict, workdict):
 	return searchlist
 
 
-def generatedbdictwithranges(idlist, authordict, workdict):
+def generatedbdictwithranges(idlist, workdict):
 	"""
 
 	given a list of universalids, convert this list into a dictionary with authorid keys (ie, table names)
@@ -165,11 +173,21 @@ def generatedbdictwithranges(idlist, authordict, workdict):
 	:return:
 	"""
 
+	dbcconnection = setconnection(autocommit=True)
+	dbcursor = dbcconnection.cursor()
+
+	minq = 'SELECT index FROM {t} ORDER BY index ASC LIMIT 1'
+	maxq = 'SELECT index FROM {t} ORDER BY index DESC LIMIT 1'
+
 	dbswithranges = dict()
 	for db in idlist:
 		if len(db) == 6:
 			# we are reading a full author
-			dbswithranges[db] = [range(authordict[db].findfirstlinenumber(), authordict[db].findlastlinenumber()+1)]
+			dbcursor.execute(minq.format(t=db))
+			low = dbcursor.fetchone()
+			dbcursor.execute(maxq.format(t=db))
+			high = dbcursor.fetchone()
+			dbswithranges[db] = [range(low[0], high[0] + 1)]
 		else:
 			# we are reading an individual work
 			try:
@@ -178,6 +196,8 @@ def generatedbdictwithranges(idlist, authordict, workdict):
 				dbswithranges[db[0:6]] = [range(workdict[db].starts, workdict[db].ends+1)]
 
 	dbswithranges = {key: dbswithranges[key] for key in dbswithranges}
+
+	dbcconnection.connectioncleanup()
 
 	return dbswithranges
 
@@ -270,6 +290,35 @@ def calculatetotals(masterconcorcdance):
 
 	return masterconcorcdance
 
+
+def generatemasterconcorcdancevaluetuples(masterconcorcdance, letter):
+	"""
+
+	entries look like:
+		'θήϲομαί': {'gr': 1, 'lt': 0, 'in': 0, 'dp': 0, 'ch': 0, 'total': 1}
+
+
+	:param masterconcorcdance:
+	:param letter:
+	:return:
+	"""
+
+	validletters = 'abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
+
+	valuetuples = deque()
+
+	# oddly it seems you cen get null keys...
+	# key[0] can give you an IndexError
+
+	if letter != '0':
+		subset = {key: masterconcorcdance[key] for key in masterconcorcdance if key and key[0] == letter}
+	else:
+		subset = {key: masterconcorcdance[key] for key in masterconcorcdance if key and key[0] not in validletters}
+
+	for item in subset:
+		valuetuples.append(tuple([item, subset[item]['total'], subset[item]['gr'], subset[item]['lt'], subset[item]['dp'], subset[item]['in'], subset[item]['ch']]))
+
+	return valuetuples
 
 
 """
@@ -419,34 +468,14 @@ listofdictionaries = getlistofdictionaries.result()
 wordcounterloop.close()
 
 
+the pool paradigm:
+
+def launchindexpool(self):
+	print('launching indexing pool')
+	with Pool(processes=self.workers) as pool:
+		getlistofdictionaries = [pool.apply_async(self.buildindexdictionary, (i, workpiles[i])) for i in range(workers)]
+		# you were returned [ApplyResult1, ApplyResult2, ...]
+		listofdictionaries = [result.get() for result in getlistofdictionaries]
+	return listofdictionaries
+
 """
-
-
-def generatemasterconcorcdancevaluetuples(masterconcorcdance, letter):
-	"""
-
-	entries look like:
-		'θήϲομαί': {'gr': 1, 'lt': 0, 'in': 0, 'dp': 0, 'ch': 0, 'total': 1}
-
-
-	:param masterconcorcdance:
-	:param letter:
-	:return:
-	"""
-
-	validletters = 'abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
-
-	valuetuples = deque()
-
-	# oddly it seems you cen get null keys...
-	# key[0] can give you an IndexError
-
-	if letter != '0':
-		subset = {key: masterconcorcdance[key] for key in masterconcorcdance if key and key[0] == letter}
-	else:
-		subset = {key: masterconcorcdance[key] for key in masterconcorcdance if key and key[0] not in validletters}
-
-	for item in subset:
-		valuetuples.append(tuple([item, subset[item]['total'], subset[item]['gr'], subset[item]['lt'], subset[item]['dp'], subset[item]['in'], subset[item]['ch']]))
-
-	return valuetuples

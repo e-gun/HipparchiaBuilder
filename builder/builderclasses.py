@@ -200,22 +200,6 @@ class dbAuthor(object):
 			workids.append(w.universalid)
 		return workids
 
-	def findlastlinenumber(self):
-		lasts = list()
-		for w in self.listofworks:
-			lasts.append(w.ends)
-		return max(lasts)
-
-	def findfirstlinenumber(self):
-		firsts = list()
-		for w in self.listofworks:
-			firsts.append(w.starts)
-		try:
-			return max(firsts)
-		except ValueError:
-			print('work list error for {me}'.format(me=self.universalid))
-			print('\tneed loadallworksintoallauthors()?')
-
 
 class dbOpus(object):
 	"""
