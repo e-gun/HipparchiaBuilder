@@ -129,8 +129,8 @@ if buildgram == 'y':
 
 if buildcounts == 'y':
 	print('building wordcounts by (repeatedly) examining every line of every text in all available dbs: this might take a minute or two...')
-	# first draft speed: 2061919 distinct words found; Build took 58.17 minutes
-	# Build took 22.7 minutes
+	# this can be dangerous if the number of workers is high and the RAM available is not substantial; not the most likely configuration?
+	# mpwordcounter() is the hazardous one; if your survive it headwordcounts() will never get you near the same level of resource use
 	# mpwordcounter(): Build took 8.69 minutes
 	mpwordcounter()
 	headwordcounts()

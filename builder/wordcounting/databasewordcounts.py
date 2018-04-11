@@ -98,7 +98,8 @@ def mpbuildindexdictionary(pilenumber, workpile):
 	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
 	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
 
-	print('worker #{p} gathering lines'.format(p=pilenumber))
+	if pilenumber == 0:
+		print('gathering lines'.format(p=pilenumber))
 
 	workdict = dict()
 	for line in workpile:
@@ -114,7 +115,8 @@ def mpbuildindexdictionary(pilenumber, workpile):
 	for key in workdict:
 		lineobjects.extend(grabhollowlineobjectsfromlist(key, workdict[key]))
 
-	print('worker #{p} gathered {n} lines'.format(p=pilenumber, n=len(lineobjects)))
+	if pilenumber == 0:
+		print('worker #{p} gathered {n} lines'.format(p=pilenumber, n=len(lineobjects)))
 
 	# debug
 	# lineobjects = list(lineobjects)
@@ -144,7 +146,8 @@ def mpbuildindexdictionary(pilenumber, workpile):
 		index += 1
 		if index % progresschunks == 0:
 			percent = round((index / len(lineobjects)) * 100, 1)
-			print('worker #{p} progress: {n}%'.format(p=pilenumber, n=percent))
+			if pilenumber == 0:
+				print('\tworker #{p} progress: {n}%'.format(p=pilenumber, n=percent))
 			# uncomment to see where we stand with a given set of words
 			# if line.universalid[0:2] == 'lt':
 			# 	print('worker #{p}  @ line.universalid {u}'.format(p=pilenumber, u=line.universalid))
