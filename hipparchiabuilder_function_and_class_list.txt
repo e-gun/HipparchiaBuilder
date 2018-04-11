@@ -39,7 +39,11 @@ builder/corpusbuilder.py:def databaseloading(dbreadyversion, authorobject, dbcon
 builder/workers.py:def setworkercount():
 builder/dbinteraction/connection.py:def setconnection(autocommit=False, simple=False):
 builder/dbinteraction/dbdataintoobjects.py:def dbfetchauthorobject(uid, cursor):
+builder/dbinteraction/dbdataintoobjects.py:def generatecomprehensivesetoflineobjects():
+builder/dbinteraction/dbdataintoobjects.py:def makehollowlineobject(index, wkuniversalid, accented_line):
 builder/dbinteraction/dbdataintoobjects.py:def dbauthorandworkloader(authoruid, cursor):
+builder/dbinteraction/dbdataintoobjects.py:def loadallworksintoallauthors(authorsdict, worksdict):
+builder/dbinteraction/dbdataintoobjects.py:def grablineobjectsfromlist(db, linelist, cursor):
 builder/dbinteraction/dbdataintoobjects.py:def graballlinesasobjects(db, linerangetuple, cursor):
 builder/dbinteraction/dbdataintoobjects.py:def graballcountsasobjects(db, cursor, extrasql=''):
 builder/dbinteraction/dbdataintoobjects.py:def grablemmataasobjects(db, cursor):
@@ -253,17 +257,6 @@ builder/parsers/swappers.py:def superscripterone(digitmatch):
 builder/parsers/swappers.py:def superscripterzero(digitmatch):
 builder/parsers/swappers.py:def forceregexsafevariants(text):
 builder/parsers/swappers.py:def avoidregexsafevariants(text):
-builder/postbuild/databasewordcounts.py:def wordcounter(restriction=None, authordict=None, workdict=None):
-builder/postbuild/databasewordcounts.py:def concordancechunk(enumerateddbdict):
-builder/postbuild/databasewordcounts.py:def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
-builder/postbuild/databasewordcounts.py:def headwordcounts():
-builder/postbuild/databasewordcounts.py:def buildcountsfromlemmalist(lemmataobjectslist, wordcountdict):
-builder/postbuild/databasewordcounts.py:def derivedictionaryentrymetadata(headwordtable, cursor):
-builder/postbuild/databasewordcounts.py:def derivechronologicalmetadata(metadata, lemmataobjectlist):
-builder/postbuild/databasewordcounts.py:def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres):
-builder/postbuild/databasewordcounts.py:def cohortstats(wordobjects):
-builder/postbuild/databasewordcounts.py:def insertchronologicalmetadata(metadatadict, thetable):
-builder/postbuild/databasewordcounts.py:def insertgenremetadata(metadatadict, genrename, thetable):
 builder/postbuild/postbuilddating.py:def convertdate(date, passvalue=0):
 builder/postbuild/postbuilddating.py:def germandate(stringdate):
 builder/postbuild/postbuilddating.py:def numberedcenturydate(stringdate, ordinalregexfinder):
@@ -271,13 +264,6 @@ builder/postbuild/postbuilddating.py:def aetatesdates(stringdate):
 builder/postbuild/postbuilddating.py:def romannumeraldate(stringdate):
 builder/postbuild/postbuilddating.py:def numericdate(stringdate):
 builder/postbuild/postbuilddating.py:def datemapper(stringdate):
-builder/postbuild/postbuildhelperfunctions.py:def dictmerger(masterdict, targetdict, label):
-builder/postbuild/postbuildhelperfunctions.py:def acuteforgrave(matchgroup):
-builder/postbuild/postbuildhelperfunctions.py:def createwordcounttable(tablename, extracolumns=False):
-builder/postbuild/postbuildhelperfunctions.py:def cleanwords(word, punct):
-builder/postbuild/postbuildhelperfunctions.py:def prettyprintcohortdata(label, cohortresultsdict):
-builder/postbuild/postbuildhelperfunctions.py:def rebasedcounter(decimalvalue, base):
-builder/postbuild/postbuildhelperfunctions.py:def deletetemporarydbs(temprefix):
 builder/postbuild/postbuildmetadata.py:def insertfirstsandlasts(workcategoryprefix,):
 builder/postbuild/postbuildmetadata.py:def boundaryfinder(uids):
 builder/postbuild/postbuildmetadata.py:def insertboundaries(boundariestuplelist):
@@ -300,3 +286,30 @@ builder/postbuild/secondpassdbrewrite.py:def generatemodifiedtuples(results, new
 builder/postbuild/secondpassdbrewrite.py:def assignlanguagetonewworks(dbprefix):
 builder/postbuild/secondpassdbrewrite.py:def determineworklanguage(strippedlines):
 builder/postbuild/secondpassdbrewrite.py:def insertlanguagedata(languagetuplelist):
+builder/wordcounting/databasewordcounts.py:def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None):
+builder/wordcounting/databasewordcounts.py:def monothreadedindexer(lineobjects, workername=''):
+builder/wordcounting/databasewordcounts.py:def generatesearchidlist(restriction, authordict, workdict):
+builder/wordcounting/databasewordcounts.py:def generatedbdictwithranges(idlist, workdict):
+builder/wordcounting/databasewordcounts.py:def convertrangedicttolineset(dbswithranges):
+builder/wordcounting/databasewordcounts.py:def generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance):
+builder/wordcounting/databasewordcounts.py:def calculatetotals(masterconcorcdance):
+builder/wordcounting/databasewordcounts.py:def generatemasterconcorcdancevaluetuples(masterconcorcdance, letter):
+builder/wordcounting/databasewordcounts.py:def launchindexpool(self):
+builder/wordcounting/wordcountdbfunctions.py:def createwordcounttable(tablename, extracolumns=False):
+builder/wordcounting/wordcountdbfunctions.py:def deletetemporarydbs(temprefix):
+builder/wordcounting/wordcountdbfunctions.py:def insertchronologicalmetadata(metadatadict, thetable):
+builder/wordcounting/wordcountdbfunctions.py:def insertgenremetadata(metadatadict, genrename, thetable):
+builder/wordcounting/wordcounthelperfunctions.py:def dictmerger(masterdict, targetdict, label):
+builder/wordcounting/wordcounthelperfunctions.py:def acuteforgrave(matchgroup):
+builder/wordcounting/wordcounthelperfunctions.py:def cleanwords(word, punct):
+builder/wordcounting/wordcounthelperfunctions.py:def prettyprintcohortdata(label, cohortresultsdict):
+builder/wordcounting/wordcounthelperfunctions.py:def rebasedcounter(decimalvalue, base):
+builder/wordcounting/wordcounthelperfunctions.py:def unpackchainedranges(chainedranges):
+builder/wordcounting/wordcounthelperfunctions.py:def concordancemerger(listofconcordancedicts):
+builder/wordcounting/wordcounthelperfunctions.py:def grouper(iterable, n, fillvalue=None):
+builder/wordcounting/wordcountsbyheadword.py:def headwordcounts(alllineobjects):
+builder/wordcounting/wordcountsbyheadword.py:def buildcountsfromlemmalist(lemmataobjectslist, wordcountdict):
+builder/wordcounting/wordcountsbyheadword.py:def derivedictionaryentrymetadata(headwordtable, cursor):
+builder/wordcounting/wordcountsbyheadword.py:def derivechronologicalmetadata(metadata, alllineobjects, lemmataobjectlist, authordict=None):
+builder/wordcounting/wordcountsbyheadword.py:def derivegenremetadata(metadata, alllineobjects, lemmataobjectlist, thetable, knownworkgenres):
+builder/wordcounting/wordcountsbyheadword.py:def cohortstats(wordobjects):
