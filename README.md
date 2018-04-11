@@ -46,7 +46,7 @@ minimum software requirements:
         psycopg2
         bs4
         websockets
-    postgresql 9.6
+    postgresql 9.6+
 ```
 
 hardware recommendations:
