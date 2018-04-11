@@ -132,18 +132,9 @@ if buildcounts == 'y':
 	print('building wordcounts by (repeatedly) examining every line of every text in all available dbs: this might take a minute or two...')
 	# first draft speed: 2061919 distinct words found; Build took 58.17 minutes
 	# Build took 22.7 minutes
-	mpwordcounts = True
-	if not mpwordcounts:
-		# monowordcounter(): Build took 23.48 minutes
-		alllines = generatecomprehensivesetoflineobjects()
-		monowordcounter(alllines)
-		headwordcounts(alllines)
-	else:
-		# mpwordcounter(): Build took 8.69 minutes
-		alllines = None
-		mpwordcounter()
-		headwordcounts(alllines)
-
+	# mpwordcounter(): Build took 8.69 minutes
+	mpwordcounter()
+	headwordcounts()
 	# if you do genres, brace yourself: Build took 84.11 minutes
 
 stop = time.time()
