@@ -6,15 +6,15 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 import re
-from statistics import mean, median
 from collections import deque
+from statistics import mean, median
 
 from builder.builderclasses import dbWordCountObject
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.dbloading import generatecopystream
-from builder.dbinteraction.dbdataintoobjects import grablemmataasobjects, graballcountsasobjects, \
+from builder.dbinteraction.dbdataintoobjects import graballcountsasobjects, grablemmataasobjects, \
 	loadallauthorsasobjects, loadallworksasobjects, loadallworksintoallauthors
-from builder.wordcounting.databasewordcounts import monowordcounter, mpwordcounter
+from builder.dbinteraction.dbloading import generatecopystream
+from builder.wordcounting.databasewordcounts import mpwordcounter
 from builder.wordcounting.wordcountdbfunctions import createwordcounttable, insertchronologicalmetadata, \
 	insertgenremetadata
 from builder.wordcounting.wordcounthelperfunctions import prettyprintcohortdata
