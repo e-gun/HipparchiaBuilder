@@ -14,7 +14,7 @@ from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.dbloading import generatecopystream
 from builder.dbinteraction.dbdataintoobjects import grablemmataasobjects, graballcountsasobjects, \
 	loadallauthorsasobjects, loadallworksasobjects, loadallworksintoallauthors
-from builder.wordcounting.databasewordcounts import wordcounter
+from builder.wordcounting.databasewordcounts import monowordcounter, mpwordcounter
 from builder.wordcounting.wordcountdbfunctions import createwordcounttable, insertchronologicalmetadata, \
 	insertgenremetadata
 from builder.wordcounting.wordcounthelperfunctions import prettyprintcohortdata
@@ -319,6 +319,11 @@ def derivechronologicalmetadata(metadata, alllineobjects, lemmataobjectlist, aut
 	:return:
 	"""
 
+	if alllineobjects:
+		counter = monowordcounter
+	else:
+		counter = mpwordcounter
+
 	eras = {'early': (-850, -300), 'middle': (-299, 300), 'late': (301, 1500)}
 
 	if not authordict:
@@ -328,7 +333,7 @@ def derivechronologicalmetadata(metadata, alllineobjects, lemmataobjectlist, aut
 
 	for era in eras:
 		print('calculating use by era:', era)
-		eraconcordance = wordcounter(alllineobjects, restriction={'time': eras[era]}, authordict=authordict, workdict=workdict)
+		eraconcordance = counter(alllineobjects, restriction={'time': eras[era]}, authordict=authordict, workdict=workdict)
 		# close, but we need to match the template above:
 		# countdict = {word.entryname: word for word in countobjectlist}
 		countobjectlist = [
@@ -357,12 +362,17 @@ def derivegenremetadata(metadata, alllineobjects, lemmataobjectlist, thetable, k
 	:return:
 	"""
 
+	if alllineobjects:
+		counter = monowordcounter
+	else:
+		counter = mpwordcounter
+
 	authordict = loadallauthorsasobjects()
 	workdict = loadallworksasobjects()
 
 	for genre in knownworkgenres:
 		print('compiling metadata for', genre)
-		genrecordance = wordcounter(alllineobjects, restriction={'genre': genre}, authordict=authordict, workdict=workdict)
+		genrecordance = counter(alllineobjects, restriction={'genre': genre}, authordict=authordict, workdict=workdict)
 		countobjectlist = [
 			dbWordCountObject(w, genrecordance[w]['total'], genrecordance[w]['gr'], genrecordance[w]['lt'],
 			                  genrecordance[w]['dp'], genrecordance[w]['in'], genrecordance[w]['ch']) for w in

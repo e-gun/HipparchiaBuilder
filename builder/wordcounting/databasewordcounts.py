@@ -12,7 +12,7 @@ from string import punctuation
 from multiprocessing.pool import Pool
 
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.dbdataintoobjects import loadallauthorsasobjects, loadallworksasobjects, loadallworksintoallauthors
+from builder.dbinteraction.dbdataintoobjects import loadallauthorsasobjects, loadallworksasobjects, loadallworksintoallauthors, grabhollowlineobjectsfromlist
 from builder.dbinteraction.dbloading import generatecopystream
 from builder.wordcounting.wordcountdbfunctions import createwordcounttable
 from builder.wordcounting.wordcounthelperfunctions import acuteforgrave, cleanwords, unpackchainedranges, \
@@ -20,9 +20,157 @@ from builder.wordcounting.wordcounthelperfunctions import acuteforgrave, cleanwo
 from builder.workers import setworkercount
 
 
-def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None):
+def mpwordcounter(alllineobjects=None, restriction=None, authordict=None, workdict=None):
 	"""
 
+	count all of the words in all of the lines so you can find out the following re προϲώπου:
+
+		Prevalence (this form): Ⓖ 8,455 / Ⓛ 1 / Ⓘ 7 / Ⓓ 68 / Ⓒ 6 / Ⓣ 8,537
+
+	alllineobjects is unused; here to match interface of monowordcounter
+
+	:param alllineobjects:
+	:param restriction:
+	:param authordict:
+	:param workdict:
+	:return:
+	"""
+
+	wordcounttable = 'wordcounts'
+
+	if not authordict:
+		print('loading information about authors and works')
+		authordict = loadallauthorsasobjects()
+		workdict = loadallworksasobjects()
+		authordict = loadallworksintoallauthors(authordict, workdict)
+
+	# [a] figure out which works we are looking for: idlist = ['lt1002', 'lt1351', 'lt2331', 'lt1038', 'lt0690', ...]
+	idlist = generatesearchidlist(restriction, authordict, workdict)
+
+	# [b] figure out what table index values we will need to assemble them: {tableid1: range1, tableid2: range2, ...}
+
+	dbdictwithranges = generatedbdictwithranges(idlist, workdict)
+
+	# [c] turn this into a list of lines we will need
+	# bug in convertrangedicttolineset() evident at firstpass
+	# len(alllineobjects) 11902961
+	# len(linesweneed) 2103514
+
+	linesweneed = list(convertrangedicttolineset(dbdictwithranges))
+	# if you do not sort, four workers will each look for different lines in the same table
+	linesweneed.sort()
+
+	workers = setworkercount()
+	chunksize = int(len(linesweneed) / workers) + 1
+	workpiles = grouper(linesweneed, chunksize)
+	workpiles = [list(w) for w in workpiles]
+
+	# [d] send the work off for processing
+
+	with Pool(processes=workers) as pool:
+		getlistofdictionaries = [pool.apply_async(mpbuildindexdictionary, (i, workpiles[i])) for i in range(workers)]
+
+		# you were returned [ApplyResult1, ApplyResult2, ...]
+		listofdictionaries = [result.get() for result in getlistofdictionaries]
+
+	# [e] merge the results
+	masterconcorcdance = concordancemerger(listofdictionaries)
+
+	# [f] totals are needed both initially and in the subsearches
+	masterconcorcdance = calculatetotals(masterconcorcdance)
+
+	# [g] build the tables if needed
+	if not restriction:
+		generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance)
+
+	return masterconcorcdance
+
+
+def mpbuildindexdictionary(pilenumber, workpile):
+	"""
+	a workpile looks like:
+		['gr2042_LN_40997', 'gr1306_LN_503', 'gr0081_LN_51401', 'gr0006_LN_4864', 'gr2047_LN_21226', ...]
+	:return:
+	"""
+
+	# unevenly sized groups are padded with None by grouper
+	workpile = [w for w in workpile if w]
+
+	graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
+	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
+	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
+
+	print('worker #{p} gathering lines'.format(p=pilenumber))
+
+	workdict = dict()
+	for line in workpile:
+		workandline = line.split('_LN_')
+		w = workandline[0]
+		l = int(workandline[1])
+		try:
+			workdict[w].append(l)
+		except KeyError:
+			workdict[w] = [l]
+
+	lineobjects = deque()
+	for key in workdict:
+		lineobjects.extend(grabhollowlineobjectsfromlist(key, workdict[key]))
+
+	print('worker #{p} gathered {n} lines'.format(p=pilenumber, n=len(lineobjects)))
+
+	# debug
+	# lineobjects = list(lineobjects)
+	# lineobjects = lineobjects[:10000]
+
+	progresschunks = int(len(lineobjects) / 4)
+
+	indexdictionary = dict()
+
+	index = 0
+	for line in lineobjects:
+		words = line.wordlist('polytonic')
+		words = [cleanwords(w, punct) for w in words]
+		words = [re.sub(graves, acuteforgrave, w) for w in words]
+		words = [re.sub('v', 'u', w) for w in words]
+		words[:] = [x.lower() for x in words]
+		prefix = line.universalid[0:2]
+		for w in words:
+			# uncomment to watch individual words enter the dict
+			# if w == 'docilem':
+			# 	print(line.universalid,line.unformattedline())
+			try:
+				indexdictionary[w][prefix] += 1
+			except KeyError:
+				indexdictionary[w] = dict()
+				indexdictionary[w][prefix] = 1
+		index += 1
+		if index % progresschunks == 0:
+			percent = round((index / len(lineobjects)) * 100, 1)
+			print('worker #{p} progress: {n}%'.format(p=pilenumber, n=percent))
+			# uncomment to see where we stand with a given set of words
+			# if line.universalid[0:2] == 'lt':
+			# 	print('worker #{p}  @ line.universalid {u}'.format(p=pilenumber, u=line.universalid))
+			# 	print('\t{ln}'.format(ln=line.wordlist('polytonic')))
+			# 	for w in line.wordlist('polytonic'):
+			# 		try:
+			# 			print(w, indexdictionary[w][line.universalid[0:2]])
+			# 		except:
+			# 			print('{w} not in indexdictionary'.format(w=w))
+
+	return indexdictionary
+
+
+def monowordcounter(alllineobjects, restriction=None, authordict=None, workdict=None):
+	"""
+
+	count all of the words in all of the lines so you can find out the following re προϲώπου:
+
+		Prevalence (this form): Ⓖ 8,455 / Ⓛ 1 / Ⓘ 7 / Ⓓ 68 / Ⓒ 6 / Ⓣ 8,537
+
+	:param alllineobjects:
+	:param restriction:
+	:param authordict:
+	:param workdict:
 	:return:
 	"""
 
@@ -32,6 +180,7 @@ def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None
 	wordcounttable = 'wordcounts'
 
 	if not authordict:
+		print('loading information about authors and works')
 		authordict = loadallauthorsasobjects()
 		workdict = loadallworksasobjects()
 		authordict = loadallworksintoallauthors(authordict, workdict)
@@ -50,8 +199,13 @@ def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None
 
 	linesweneed = list(convertrangedicttolineset(dbdictwithranges))
 
-	multiprocess = False
-	if multiprocess:
+	monoprocess = True
+	if monoprocess:
+		# keep it simple send the work off for linear processing
+		lineobjects = [alllineobjects[l] for l in linesweneed]
+		masterconcorcdance = monothreadedindexer(lineobjects, 'indexing')
+	else:
+		# DO NOT USE: the code is preserved here mainly to prevent re-inventing a bad wheel
 		# this ends up being super slow: pickle millions of objects; then flood the RAM until you are swapping all the time...
 		# death by shared state
 
@@ -71,10 +225,6 @@ def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None
 			listofdictionaries = [result.get() for result in getlistofdictionaries]
 
 		masterconcorcdance = concordancemerger(listofdictionaries)
-	else:
-		# keep it simple send the work off for linear processing
-		lineobjects = [alllineobjects[l] for l in linesweneed]
-		masterconcorcdance = monothreadedindexer(lineobjects, 'indexing')
 
 	# [e] calculate totals
 
@@ -319,7 +469,7 @@ def generatemasterconcorcdancevaluetuples(masterconcorcdance, letter):
 	"""
 
 	entries look like:
-		'θήϲομαί': {'gr': 1, 'lt': 0, 'in': 0, 'dp': 0, 'ch': 0, 'total': 1}
+		'WORD': {'gr': 1, 'lt': 2, 'in': 3, 'dp': 4, 'ch': 5, 'total': 15}
 
 
 	:param masterconcorcdance:
