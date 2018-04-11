@@ -112,8 +112,8 @@ def insertchronologicalmetadata(metadatadict, thetable):
 	:return:
 	"""
 
-	dbcconnection = setconnection()
-	dbcursor = dbcconnection.cursor()
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_metadata AS SELECT * FROM {tb} LIMIT 0'.format(tb=thetable)
 	dbcursor.execute(q)
@@ -121,7 +121,7 @@ def insertchronologicalmetadata(metadatadict, thetable):
 	count = 0
 	for entry in metadatadict.keys():
 		count += 1
-		dbcconnection.checkneedtocommit(count)
+		dbconnection.checkneedtocommit(count)
 
 		q = 'INSERT INTO tmp_metadata (entry_name, frequency_classification, early_occurrences, middle_occurrences, late_occurrences) ' \
 		    'VALUES ( %s, %s, %s, %s, %s)'
@@ -135,7 +135,7 @@ def insertchronologicalmetadata(metadatadict, thetable):
 		if d:
 			dbcursor.execute(q, d)
 
-	dbcconnection.commit()
+	dbconnection.commit()
 
 	qtemplate = """
 		UPDATE {tb} SET
@@ -148,13 +148,13 @@ def insertchronologicalmetadata(metadatadict, thetable):
 	"""
 	q = qtemplate.format(tb=thetable)
 	dbcursor.execute(q)
-	dbcconnection.commit()
+	dbconnection.commit()
 
 	q = 'DROP TABLE tmp_metadata'
 	dbcursor.execute(q)
-	dbcconnection.commit()
+	dbconnection.commit()
 
-	dbcconnection.connectioncleanup()
+	dbconnection.connectioncleanup()
 	# return the dict so you can reuse the data
 	return metadatadict
 
@@ -174,11 +174,11 @@ def insertgenremetadata(metadatadict, genrename, thetable):
 	# a clash between the stored genre names 'Alchem.' and names that are used for columns (which can't include period or whitespace)
 	thecolumn = re.sub(r'[\.\s]', '', genrename).lower()
 
-	dbc = setconnection()
-	cursor = dbc.cursor()
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_metadata AS SELECT * FROM {tb} LIMIT 0'.format(tb=thetable)
-	cursor.execute(q)
+	dbcursor.execute(q)
 
 	count = 0
 	for entry in metadatadict.keys():
@@ -191,80 +191,22 @@ def insertgenremetadata(metadatadict, genrename, thetable):
 			# d = (entry, metadatadict[entry]['frequency_classification'], '', '', '')
 			d = None
 		if d:
-			cursor.execute(q, d)
+			dbcursor.execute(q, d)
 
 		if count % 2500 == 0:
-			dbc.commit()
-
-	dbc.commit()
-	q = 'UPDATE {tb} SET {tc} = tmp_metadata.{tc} FROM tmp_metadata WHERE {tb}.entry_name = tmp_metadata.entry_name'.format(
-		tb=thetable, tc=thecolumn)
-	cursor.execute(q)
-	dbc.commit()
-
-	q = 'DROP TABLE tmp_metadata'
-	cursor.execute(q)
-	dbc.commit()
-
-	# return the dict so you can reuse the data
-	return metadatadict
-
-
-def dbchunkloader(enumeratedchunkedkeys, masterconcorcdance, wordcounttable):
-	"""
-
-	:param resultbundle:
-	:return:
-	"""
-
-	dbconnection = setconnection(simple=True)
-	dbcursor = dbconnection.cursor()
-
-	qtemplate = """
-	INSERT INTO {wct}_{lt} (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count)
-		VALUES (%s, %s, %s, %s, %s, %s, %s)
-	"""
-
-	transtable = buildhipparchiatranstable()
-
-	# 'v' should be empty, though; ϙ will go to 0
-	letters = '0abcdefghijklmnopqrstuvwxyzαβψδεφγηιξκλμνοπρϲτυωχθζ'
-	letters = {letters[l] for l in range(0, len(letters))}
-
-	chunknumber = enumeratedchunkedkeys[0]
-	chunkedkeys = enumeratedchunkedkeys[1]
-
-	count = 0
-	for key in chunkedkeys:
-		count += 1
-		cw = masterconcorcdance[key]
-		skip = False
-		try:
-			lettertable = cleanaccentsandvj(key[0], transtable)
-		# fine, but this just put any 'v' words inside of 'u' where they can never be found
-		# so v issue has to be off the table by now
-		except:
-			# IndexError: string index out of range
-			lettertable = '0'
-			skip = True
-
-		if lettertable not in letters:
-			lettertable = '0'
-
-		if skip is not True:
-			q = qtemplate.format(wct=wordcounttable, lt=lettertable)
-			d = (key, cw['total'], cw['gr'], cw['lt'], cw['dp'], cw['in'], cw['ch'])
-			try:
-				dbcursor.execute(q, d)
-			except:
-				print('failed to insert', key)
-
-		if count % 2000 == 0:
 			dbconnection.commit()
 
-	# print('\t', str(len(chunkedkeys)), 'words inserted into the wordcount tables')
-	print('\tfinished chunk', chunknumber + 1)
+	dbconnection.commit()
+	q = 'UPDATE {tb} SET {tc} = tmp_metadata.{tc} FROM tmp_metadata WHERE {tb}.entry_name = tmp_metadata.entry_name'.format(
+		tb=thetable, tc=thecolumn)
+	dbcursor.execute(q)
+	dbconnection.commit()
+
+	q = 'DROP TABLE tmp_metadata'
+	dbcursor.execute(q)
+	dbconnection.commit()
 
 	dbconnection.connectioncleanup()
-
-	return
+	
+	# return the dict so you can reuse the data
+	return metadatadict

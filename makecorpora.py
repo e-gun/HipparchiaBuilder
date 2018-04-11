@@ -135,7 +135,7 @@ if buildcounts == 'y':
 	alllines = generatecomprehensivesetoflineobjects()
 	wordcounter(alllines)
 	# Build took 17.54 minutes
-	# headwordcounts(alllines)
+	headwordcounts(alllines)
 	# if you do genres, brace yourself: Build took 84.11 minutes
 
 stop = time.time()

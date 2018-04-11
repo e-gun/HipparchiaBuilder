@@ -58,7 +58,6 @@ def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None
 		# chunk the lines then process
 
 		workers = setworkercount()
-		# workers = 2
 		cunksize = int(len(linesweneed) / workers)
 		workpiles = grouper(linesweneed, cunksize)
 		trimmedworpiles = list()
@@ -75,7 +74,7 @@ def wordcounter(alllineobjects, restriction=None, authordict=None, workdict=None
 	else:
 		# keep it simple send the work off for linear processing
 		lineobjects = [alllineobjects[l] for l in linesweneed]
-		masterconcorcdance = monothreadedindexer(lineobjects, 'monothread')
+		masterconcorcdance = monothreadedindexer(lineobjects, 'indexing')
 
 	# [e] calculate totals
 
