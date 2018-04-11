@@ -139,7 +139,7 @@ def loadallworksintoallauthors(authorsdict, worksdict):
 	return authorsdict
 
 
-def grablineobjectsfromlist(db, linelist, cursor):
+def grabhollowlineobjectsfromlist(db, linelist):
 	"""
 
 	example:
@@ -151,37 +151,25 @@ def grablineobjectsfromlist(db, linelist, cursor):
 	:return:
 	"""
 
-	# linelist arrives as a itertools.chain
-	chainedlines = list(linelist)
-	# but you now have a list that itself might contain ranges:
-	# in001a [190227, range(188633, 188638), range(183054, 183056), range(183243, 183246), ...]
-	linelist = list()
-	for item in chainedlines:
-		if isinstance(item, int):
-			linelist.append(item)
-		elif isinstance(item, range):
-			linelist.extend(list(item))
-		else:
-			print('problem item {i} is type {t}'.format(i=item, t=type(item)))
+	dbconnection = setconnection(simple=True)
+	dbcursor = dbconnection.cursor()
 
 	linelist.sort()
-	
-	testrange = list(range(linelist[0], linelist[-1]))
 
-	if len(linelist) == len(testrange)+1:
-		# you want it all...
-		q = 'SELECT * FROM {d}'.format(d=db)
-	else:
-		q = 'SELECT * FROM {d} WHERE index = ALL(%s)'.format(d=db)
+	q = 'SELECT index, wkuniversalid, accented_line FROM {d} WHERE index = ANY(%s)'.format(d=db)
 
 	d = (linelist,)
 
-	cursor.execute(q, d)
-	lines = cursor.fetchall()
+	# if db == 'gr2042':
+	# 	print('gr2042', linelist)
 
-	lineobjects = [dblineintolineobject(l) for l in lines]
+	dbcursor.execute(q, d)
+	foundlines = resultiterator(dbcursor)
+	hollowlineobjects = [makehollowlineobject(*f) for f in foundlines]
 
-	return lineobjects
+	dbconnection.connectioncleanup()
+
+	return hollowlineobjects
 
 
 def graballlinesasobjects(db, linerangetuple, cursor):
