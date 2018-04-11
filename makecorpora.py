@@ -10,10 +10,9 @@ import configparser
 import time
 
 from builder import corpusbuilder
-from builder.lexica.buildlexica import formatgklexicon, formatlatlexicon, analysisloader, grammarloader
 from builder.dbinteraction.versioning import timestampthebuild
-from builder.wordcounting.databasewordcounts import monowordcounter, mpwordcounter
-from builder.dbinteraction.dbdataintoobjects import generatecomprehensivesetoflineobjects
+from builder.lexica.buildlexica import analysisloader, formatgklexicon, formatlatlexicon, grammarloader
+from builder.wordcounting.databasewordcounts import mpwordcounter
 from builder.wordcounting.wordcountsbyheadword import headwordcounts
 
 config = configparser.ConfigParser()
