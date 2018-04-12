@@ -116,7 +116,7 @@ def mpbuildindexdictionary(pilenumber, workpile):
 		lineobjects.extend(grabhollowlineobjectsfromlist(key, workdict[key]))
 
 	if pilenumber == 0:
-		print('worker #{p} gathered {n} lines'.format(p=pilenumber, n=len(lineobjects)))
+		print('\tworker #{p} gathered {n} lines'.format(p=pilenumber, n=len(lineobjects)))
 
 	# debug
 	# lineobjects = list(lineobjects)
@@ -277,8 +277,9 @@ def generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance):
 	hipparchiaDB=# select * from wordcounts_θ where entry_name='θυγατριδοῦϲ';
 	 entry_name  | total_count | gr_count | lt_count | dp_count | in_count | ch_count
 	-------------+-------------+----------+----------+----------+----------+----------
-	 θυγατριδοῦϲ |         115 |      115 |        0 |        0 |        0 |        0
+	 θυγατριδοῦϲ |         120 |      115 |        0 |        0 |        5 |        0
 	(1 row)
+
 
 	:return:
 	"""

@@ -150,20 +150,6 @@ def headwordcounts():
 
 	# note that entries are stored under their 'analysis name' ('ἀμφί-λαμβάνω', etc.) and not their LSJ name
 
-	# commitcount = 0
-	# keys = dictionarycounts.keys()
-	# keys = sorted(keys)
-	# for word in keys:
-	# 	commitcount += 1
-	# 	q = 'INSERT INTO {tb} (entry_name, total_count, gr_count, lt_count, dp_count, in_count, ch_count) ' \
-	# 	    'VALUES (%s, %s, %s, %s, %s, %s, %s)'.format(tb=thetable)
-	# 	d = (word, dictionarycounts[word]['total'], dictionarycounts[word]['gr'], dictionarycounts[word]['lt'],
-	# 	     dictionarycounts[word]['dp'], dictionarycounts[word]['in'], dictionarycounts[word]['ch'])
-	# 	cursor.execute(q, d)
-	# 	if commitcount % 2500 == 0:
-	# 		dbc.commit()
-	# dbc.commit()
-
 	columns = ('entry_name',
 				'total_count',
 				'gr_count',

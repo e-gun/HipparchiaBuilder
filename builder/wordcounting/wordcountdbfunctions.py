@@ -14,6 +14,38 @@ from builder.dbinteraction.connection import setconnection
 def createwordcounttable(tablename, extracolumns=False):
 	"""
 	the SQL to generate the wordcount table
+
+	simple example:
+
+		CREATE TABLE public.wordcounts_ζ (
+			entry_name character varying(64),
+			total_count integer DEFAULT 0,
+			gr_count integer DEFAULT 0,
+			lt_count integer DEFAULT 0,
+			dp_count integer DEFAULT 0,
+			in_count integer DEFAULT 0,
+			ch_count integer DEFAULT 0
+			)
+
+	compound example:
+
+		CREATE TABLE public.dictionary_headword_wordcounts (
+			entry_name character varying(64),
+			total_count integer DEFAULT 0,
+			gr_count integer DEFAULT 0,
+			lt_count integer DEFAULT 0,
+			dp_count integer DEFAULT 0,
+			in_count integer DEFAULT 0,
+			ch_count integer DEFAULT 0,
+			frequency_classification character varying(64),
+			early_occurrences integer DEFAULT 0,
+			middle_occurrences integer DEFAULT 0,
+			late_occurrences integer DEFAULT 0
+		,			acta integer DEFAULT 0,
+			agric integer DEFAULT 0,
+			...
+			)
+
 	:param tablename:
 	:return:
 	"""
@@ -21,39 +53,52 @@ def createwordcounttable(tablename, extracolumns=False):
 	dbconnection = setconnection()
 	dbcursor = dbconnection.cursor()
 
-	query = 'DROP TABLE IF EXISTS public.' + tablename
+	query = 'DROP TABLE IF EXISTS public.{t}'.format(t=tablename)
 	dbcursor.execute(query)
 
-	query = 'CREATE TABLE public.' + tablename
-	query += '( entry_name character varying(64),'
-	query += ' total_count integer,'
-	query += ' gr_count integer,'
-	query += ' lt_count integer,'
-	query += ' dp_count integer,'
-	query += ' in_count integer,'
-	query += ' ch_count integer'
+	qtemplateextension = ''
+
+	qtemplatebase = """
+		CREATE TABLE public.{t} (
+			entry_name character varying(64),
+			total_count integer DEFAULT 0,
+			gr_count integer DEFAULT 0,
+			lt_count integer DEFAULT 0,
+			dp_count integer DEFAULT 0,
+			in_count integer DEFAULT 0,
+			ch_count integer DEFAULT 0{x}
+			)
+	"""
+
 	if extracolumns:
-		query += ', frequency_classification character varying(64),'
-		query += ' early_occurrences integer,'
-		query += ' middle_occurrences integer,'
-		query += ' late_occurrences integer'
-		if type(extracolumns) == type([]):
-			for c in extracolumns:
-				query += ', '+c+' integer'
-	query += ') WITH ( OIDS=FALSE );'
+		qtemplateextension = """,
+			frequency_classification character varying(64),
+			early_occurrences integer DEFAULT 0,
+			middle_occurrences integer DEFAULT 0,
+			late_occurrences integer DEFAULT 0
+		"""
+
+	if isinstance(extracolumns, list):
+		qtemplatesupplement = '\t\t\t{c} integer DEFAULT 0'
+		supplement = list()
+		for c in extracolumns:
+			supplement.append(qtemplatesupplement.format(c=c))
+		qtemplateextension = qtemplateextension + ',' + ',\n'.join(supplement)
+
+	query = qtemplatebase.format(t=tablename, x=qtemplateextension)
 
 	dbcursor.execute(query)
 
-	query = 'GRANT SELECT ON TABLE {tn} TO hippa_rd;'.format(tn=tablename)
+	query = 'GRANT SELECT ON TABLE {tn} TO hippa_rd'.format(tn=tablename)
 	dbcursor.execute(query)
 
 	tableletter = tablename[-2:]
 
-	q = 'DROP INDEX IF EXISTS public.wcindex{tl}'.format(tl=tableletter, tn=tablename)
-	dbcursor.execute(q)
+	query = 'DROP INDEX IF EXISTS public.wcindex{tl}'.format(tl=tableletter, tn=tablename)
+	dbcursor.execute(query)
 
-	q = 'CREATE UNIQUE INDEX wcindex{tl} ON {tn} (entry_name)'.format(tl=tableletter, tn=tablename)
-	dbcursor.execute(q)
+	query = 'CREATE UNIQUE INDEX wcindex{tl} ON {tn} (entry_name)'.format(tl=tableletter, tn=tablename)
+	dbcursor.execute(query)
 
 	dbconnection.connectioncleanup()
 
