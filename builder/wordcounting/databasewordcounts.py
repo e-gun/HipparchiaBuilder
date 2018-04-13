@@ -272,11 +272,11 @@ def generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance):
 
 	after this runs you will be able to do the following:
 
-	hipparchiaDB=# select * from wordcounts_θ where entry_name='θυγατριδοῦϲ';
-	 entry_name  | total_count | gr_count | lt_count | dp_count | in_count | ch_count
-	-------------+-------------+----------+----------+----------+----------+----------
-	 θυγατριδοῦϲ |         120 |      115 |        0 |        0 |        5 |        0
-	(1 row)
+		hipparchiaDB=# select * from wordcounts_θ where entry_name='θυγατριδοῦϲ';
+		 entry_name  | total_count | gr_count | lt_count | dp_count | in_count | ch_count
+		-------------+-------------+----------+----------+----------+----------+----------
+		 θυγατριδοῦϲ |         120 |      115 |        0 |        0 |        5 |        0
+		(1 row)
 
 
 	:return:
@@ -428,6 +428,7 @@ knownauthorgenres = [
 	'Tragici'
 ]
 
+
 """
 manual testing/probing
 
@@ -492,7 +493,7 @@ for r in results.result():
 loop.close()
 
 
-# this works: but it also blocks...
+# this works: but it also blocks as written ...
 # https://stackoverflow.com/questions/15143837/how-to-multi-thread-an-operation-within-a-loop-in-python
 
 wordcounterloop = asyncio.new_event_loop()
@@ -510,15 +511,5 @@ wordcounterloop.run_until_complete(getlistofdictionaries)
 listofdictionaries = getlistofdictionaries.result()
 wordcounterloop.close()
 
-
-the pool paradigm:
-
-def launchindexpool(self):
-	print('launching indexing pool')
-	with Pool(processes=self.workers) as pool:
-		getlistofdictionaries = [pool.apply_async(self.buildindexdictionary, (i, workpiles[i])) for i in range(workers)]
-		# you were returned [ApplyResult1, ApplyResult2, ...]
-		listofdictionaries = [result.get() for result in getlistofdictionaries]
-	return listofdictionaries
 
 """

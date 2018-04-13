@@ -206,7 +206,6 @@ def buildcountsfromlemmalist(lemmataobjectslist, wordcountdict):
 	countdict['euulgato'].t
 	1
 
-
 	:param lemmataobjectslist:
 	:return:
 	"""
@@ -237,6 +236,14 @@ def derivedictionaryentrymetadata(headwordtable, cursor):
 	"""
 
 	now that you know how many times a word occurs, put that number into perspective
+
+		hipparchiaDB=# select frequency_classification
+		from dictionary_headword_wordcounts where entry_name='κλόκιον';
+
+		frequency_classification
+		-------------------------------------
+		rare (between 50 and 5 occurrences)
+
 
 	:param cursor:
 	:return:
@@ -301,6 +308,13 @@ def derivechronologicalmetadata(metadata, lemmataobjectlist, authordict=None):
 
 	attach this data to our existing metadata which is keyed to dictionary entry
 
+		hipparchiaDB=# select early_occurrences,middle_occurrences,late_occurrences
+		from dictionary_headword_wordcounts where entry_name='φιάλη';
+
+			early_occurrences | middle_occurrences | late_occurrences
+			-------------------+--------------------+------------------
+			           392 |               3069 |             1061
+
 	:param metadata:
 	:return:
 	"""
@@ -337,6 +351,13 @@ def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres):
 	"""
 
 	can/should do 'Inscr.' separately? It's just the sum of 'in' + 'ch'
+
+	hipparchiaDB=# select alchem from dictionary_headword_wordcounts where entry_name='φιάλη';
+
+		 alchem
+		--------
+		     46
+		(1 row)
 
 	:param metadata:
 	:param cursor:
