@@ -8,15 +8,16 @@
 
 import re
 from collections import deque
-from string import punctuation
 from multiprocessing.pool import Pool
+from string import punctuation
 
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.dbdataintoobjects import loadallauthorsasobjects, loadallworksasobjects, loadallworksintoallauthors, grabhollowlineobjectsfromlist
+from builder.dbinteraction.dbdataintoobjects import grabhollowlineobjectsfromlist, loadallauthorsasobjects, \
+	loadallworksasobjects, loadallworksintoallauthors
 from builder.dbinteraction.dbloading import generatecopystream
+from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
 from builder.wordcounting.wordcountdbfunctions import createwordcounttable
-from builder.wordcounting.wordcounthelperfunctions import acuteforgrave, cleanwords, unpackchainedranges, \
-	concordancemerger, grouper
+from builder.wordcounting.wordcounthelperfunctions import acuteforgrave, concordancemerger, grouper, unpackchainedranges
 from builder.workers import setworkercount
 
 
@@ -354,7 +355,7 @@ def generatemasterconcorcdancevaluetuples(masterconcorcdance, letter):
 	# key[0] can give you an IndexError
 
 	if letter != '0':
-		subset = {key: masterconcorcdance[key] for key in masterconcorcdance if key and key[0] == letter}
+		subset = {key: masterconcorcdance[key] for key in masterconcorcdance if key and cleanaccentsandvj(key[0]) == letter}
 	else:
 		subset = {key: masterconcorcdance[key] for key in masterconcorcdance if key and key[0] not in validletters}
 
