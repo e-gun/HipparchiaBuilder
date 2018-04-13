@@ -290,7 +290,7 @@ def concordancemerger(listofconcordancedicts):
 	:return:
 	"""
 
-	print('merging the partial results')
+	print('\tmerging the partial results')
 	try:
 		masterconcorcdance = listofconcordancedicts.pop()
 	except IndexError:

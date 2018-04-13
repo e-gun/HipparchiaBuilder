@@ -359,6 +359,14 @@ def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres):
 		     46
 		(1 row)
 
+
+	hipparchiaDB=# select comm,epist,exeget,fab from dictionary_headword_wordcounts where entry_name='ἐγκεντρίζω';
+
+		 comm | epist | exeget | fab
+		------+-------+--------+-----
+		   12 |     6 |     41 |   1
+		(1 row)
+
 	:param metadata:
 	:param cursor:
 	:return:
@@ -382,7 +390,7 @@ def derivegenremetadata(metadata, lemmataobjectlist, thetable, knownworkgenres):
 			except KeyError:
 				metadata[entry] = dict()
 			metadata[entry][genre] = lexiconentrycounts[entry]['total']
-		print('inserting metadata for', genre)
+		print('\tinserting metadata for', genre)
 		insertgenremetadata(metadata, genre, thetable)
 
 	return metadata

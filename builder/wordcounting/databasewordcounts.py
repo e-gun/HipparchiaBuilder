@@ -324,7 +324,7 @@ def calculatetotals(masterconcorcdance):
 	:return:
 	"""
 
-	print('calculating totals')
+	print('\tcalculating totals')
 	for word in masterconcorcdance:
 		for db in ['gr', 'lt', 'in', 'dp', 'ch']:
 			if db not in masterconcorcdance[word]:
