@@ -129,15 +129,13 @@ def mpbuildindexdictionary(pilenumber, workpile):
 	index = 0
 	for line in lineobjects:
 		words = line.wordlist('polytonic')
-		words = [cleanwords(w, punct) for w in words]
 		words = [re.sub(graves, acuteforgrave, w) for w in words]
 		words = [re.sub('v', 'u', w) for w in words]
-		words[:] = [x.lower() for x in words]
 		prefix = line.universalid[0:2]
 		for w in words:
 			# uncomment to watch individual words enter the dict
 			# if w == 'docilem':
-			# 	print(line.universalid,line.unformattedline())
+			# 	print(line.universalid, line.unformattedline())
 			try:
 				indexdictionary[w][prefix] += 1
 			except KeyError:
