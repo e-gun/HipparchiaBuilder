@@ -190,6 +190,8 @@ def compilenewworks(newauthors, wkmapper):
 		modifyauthorsdb(a.universalid, a.idxname, dbcursor)
 		thework.append((a, db))
 
+	thework.reverse()
+
 	dbconnection.connectioncleanup()
 
 	manager = Manager()
@@ -400,12 +402,6 @@ def parallelnewworkworker(workpile, newworktuples, dbconnection):
 			wkid = authoranddbtuple[1]
 			db = wkid[0:6]
 
-			try:
-				print(a.universalid, a.idxname)
-			except UnicodeEncodeError:
-				# it is your shell/terminal who is to blame for this
-				# UnicodeEncodeError: 'ascii' codec can't encode character '\xe1' in position 19: ordinal not in range(128)
-				print(a.universalid)
 			authortablemaker(a.universalid, dbconnection)
 			dbconnection.commit()
 
@@ -437,6 +433,13 @@ def parallelnewworkworker(workpile, newworktuples, dbconnection):
 
 				if wknum % 100 == 0 or wknum == len(results):
 					dbconnection.commit()
+
+			try:
+				print(a.universalid, a.idxname)
+			except UnicodeEncodeError:
+				# it is your shell/terminal who is to blame for this
+				# UnicodeEncodeError: 'ascii' codec can't encode character '\xe1' in position 19: ordinal not in range(128)
+				print(a.universalid)
 
 	return newworktuples
 
