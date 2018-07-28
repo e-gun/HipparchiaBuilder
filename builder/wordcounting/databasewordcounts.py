@@ -43,8 +43,10 @@ def mpwordcounter(restriction=None, authordict=None, workdict=None):
 		workdict = loadallworksasobjects()
 		authordict = loadallworksintoallauthors(authordict, workdict)
 
-	# [a] figure out which works we are looking for: idlist = ['lt1002', 'lt1351', 'lt2331', 'lt1038', 'lt0690', ...]
+	# [a] figure out which works we are looking for:
 	idlist = generatesearchidlist(restriction, authordict, workdict)
+	# print('idlist', idlist)
+	# e.g., Doxogr. = ['gr0093w003', 'gr0530w042', 'gr1193w001', 'gr0528w002', 'gr1269w002', 'gr0093w008', 'gr0528w001', 'gr0529w001', 'gr0094w003', 'gr0531w001']
 
 	# [b] figure out what table index values we will need to assemble them: {tableid1: range1, tableid2: range2, ...}
 

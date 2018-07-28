@@ -1,5 +1,5 @@
 
-bad original headword data for ἄποκριϲιϲ
+[A] bad original headword data for ἄποκριϲιϲ
 
     hipparchiaDB=# select * from greek_lemmata where dictionary_entry='ἄποκριϲιϲ';
 
@@ -22,3 +22,90 @@ divergence between connection behavior between MacOS and FreeBSD: slow builds fo
     pool divides the connections properly
     then we parse
     then database loading is where the big slowdown comes
+
+
+[B] Wordcount error: ἀπροϲηγορία [But only on Ryzen+FreeBSD]
+[Nope some sort of threading / Ryzen/ FreeBSD combo-error]
+
+A 10 thread build will give bad word counts; a 1 thread build will get them right.
+9 gets it wrong; 8 gets it wrong
+5 gets it right; 7 gets it right (2x)
+
+Sought »ἀπροϲηγορία«
+Searched 236,835 texts and found 4 passages (2.04s)
+
+[1]   Anonymi In Aristotelis Ethica Nicomachea, In ethica Nicomachea paraphrasis (pseudepigraphum olim a Constantino Palaeocappa confectum et olim sub auctore Heliodoro Prusensi vel Andronico Rhodio vel Olympiodoro): 170.23 	      πολλὰϲ δὴ φιλίαϲ ἀπροϲηγορία διέλυϲεν.
+[2]   Aristotle, Ethica Nicomachea: 1157b.13 	“πολλὰϲ δὴ φιλίαϲ ἀπροϲηγορία διέλυϲεν.” οὐ φαίνονται
+[3]   Arsenius, Apophthegmata: 14.59a.1 	   Πολλὰϲ φιλίαϲ ἀπροϲηγορία διέλυϲε.
+[4]   Elegiaca Adespota, Fragmenta: 4.1 	πολλὰϲ δὴ φιλίαϲ ἀπροϲηγορία διέλυϲεν.
+
+[WRONG]
+    ἀπροϲηγορία
+
+    Prevalence (all forms): Ⓖ 3
+
+    Weighted distribution by corpus: Ⓖ 100 / Ⓛ 0 / Ⓘ 0 / Ⓓ 0 / Ⓒ 0
+
+    Weighted chronological distribution: ⓔ 100 / ⓜ 0 / ⓛ 0
+
+    Predominant genres: eleg (100), paroem (35), phil (2), comm (1)
+
+    Relative frequency: very rare (fewer than 5 occurrences)
+
+===
+Sought » κεχωριϲμένοι «
+Searched 7,461 texts and found 98 passages (1.49s)
+
+[WRONG]
+Prevalence (this form): Ⓖ 89
+
+    (1)  κεχωριϲμένοι (from χωρίζω, separate):
+    perf part mp masc nom/voc pl
+
+    χωρίζω
+
+    Prevalence (all forms): Ⓖ 8,143 / Ⓘ 32 / Ⓣ 8,175
+
+    Weighted distribution by corpus: Ⓖ 100 / Ⓘ 11 / Ⓛ 0 / Ⓓ 0 / Ⓒ 0
+
+    Weighted chronological distribution: ⓛ 100 / ⓜ 72 / ⓔ 57
+
+    Predominant genres: comm (100), phil (87), nathist (76), hymn (76), doxogr (72), mus (60), paradox (58), alchem (53)
+
+vs macOS [RIGHT]
+
+Prevalence (this form): Ⓖ 99
+
+    (1)  κεχωριϲμένοι (from χωρίζω, separate):
+    perf part mp masc nom/voc pl
+
+    χωρίζω
+
+    Prevalence (all forms): Ⓖ 8,397 / Ⓘ 32 / Ⓣ 8,429
+
+    Weighted distribution by corpus: Ⓖ 100 / Ⓘ 11 / Ⓛ 0 / Ⓓ 0 / Ⓒ 0
+
+    Weighted chronological distribution: ⓛ 100 / ⓜ 69 / ⓔ 66
+
+    Predominant genres: comm (100), phil (87), nathist (76), hymn (76), doxogr (72), mus (60), paradox (58), alchem (53)
+
+    Relative frequency: top 2500
+
+
+[the same scripts built the data within hours...]
+[FreeBSD][WRONG]
+psql (10.4)
+Type "help" for help.
+
+hipparchiaDB=> select * from wordcounts_α where entry_name='ἀπροϲηγορία';
+ entry_name  | total_count | gr_count | lt_count | dp_count | in_count | ch_count
+-------------+-------------+----------+----------+----------+----------+----------
+ ἀπροϲηγορία |           3 |        3 |        0 |        0 |        0 |        0
+(1 row)
+
+[macOS][CORRECT]
+hipparchiaDB=# select * from wordcounts_α where entry_name='ἀπροϲηγορία';
+ entry_name  | total_count | gr_count | lt_count | dp_count | in_count | ch_count
+-------------+-------------+----------+----------+----------+----------+----------
+ ἀπροϲηγορία |           4 |        4 |        0 |        0 |        0 |        0
+(1 row)
