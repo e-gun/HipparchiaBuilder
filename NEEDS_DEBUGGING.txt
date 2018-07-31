@@ -25,7 +25,7 @@ divergence between connection behavior between MacOS and FreeBSD: slow builds fo
 
 
 [B] Wordcount error: ἀπροϲηγορία [But only on Ryzen+FreeBSD]
-[Nope some sort of threading / Ryzen/ FreeBSD combo-error]
+[console says out of swap space: so this is a memory error...]
 
 A 10 thread build will give bad word counts; a 1 thread build will get them right.
 9 gets it wrong; 8 gets it wrong
