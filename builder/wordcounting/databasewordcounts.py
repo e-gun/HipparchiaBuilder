@@ -131,7 +131,14 @@ def mpbuildindexdictionary(pilenumber, workpile):
 
 	index = 0
 	for line in lineobjects:
-		words = line.wordlist('polytonic')
+		# how to grab τ’ and δ’ and the rest: original solution is in HipparchiaServer indexing functions
+		# tricky to decide whether to store τ’ or τ', but the original data has τ'...
+		# perhaps that should be changed...
+		polytonicwords = line.wordlist('polytonic')
+		unformattedwords = set(line.wordlist('marked_up_line'))
+		words = [w for w in polytonicwords if w + '’' not in unformattedwords]
+		elisions = [w + "'" for w in polytonicwords if w + '’' in unformattedwords]
+		words.extend(elisions)
 		words = [re.sub(graves, acuteforgrave, w) for w in words]
 		words = [re.sub('v', 'u', w) for w in words]
 		prefix = line.universalid[0:2]
