@@ -87,6 +87,32 @@ def mpwordcounter(restriction=None, authordict=None, workdict=None):
 	return masterconcorcdance
 
 
+def tidyupterm(word: str, punct=None) -> str:
+	"""
+	remove gunk that should not be present in a cleaned line
+	pass punct if you do not feel like compiling it 100k times
+	:param word:
+	:param punct:
+	:return:
+	"""
+
+	if not punct:
+		elidedextrapunct = '\′‵‘·̆́“”„—†⌈⌋⌊⟫⟪❵❴⟧⟦(«»›‹⟨⟩⸐„⸏⸖⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚̄⁝͜‖͡⸓͝'
+		extrapunct = elidedextrapunct + '’'
+		punct = re.compile('[{s}]'.format(s=re.escape(punctuation + extrapunct)))
+
+	# hard to know whether or not to do the editorial insertions stuff: ⟫⟪⌈⌋⌊
+	# word = re.sub(r'\[.*?\]','', word) # '[o]missa' should be 'missa'
+	word = re.sub(r'[0-9]', '', word)
+	word = re.sub(punct, '', word)
+
+	invals = u'jv'
+	outvals = u'iu'
+	word = word.translate(str.maketrans(invals, outvals))
+
+	return word
+
+
 def mpbuildindexdictionary(pilenumber, workpile):
 	"""
 	a workpile looks like:
@@ -97,9 +123,9 @@ def mpbuildindexdictionary(pilenumber, workpile):
 	# unevenly sized groups are padded with None by grouper
 	workpile = [w for w in workpile if w]
 
-	graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
-	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
-	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
+	# graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
+	# # pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
+	# punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖͡⸓͝'))
 
 	if pilenumber == 0:
 		print('gathering lines'.format(p=pilenumber))
@@ -130,18 +156,49 @@ def mpbuildindexdictionary(pilenumber, workpile):
 	indexdictionary = dict()
 
 	index = 0
+
+	# shadow of HipparchiaServer code
+
+	grave = 'ὰὲὶὸὺὴὼῒῢᾲῂῲἃἓἳὃὓἣὣἂἒἲὂὒἢὢ'
+	acute = 'άέίόύήώΐΰᾴῄῴἅἕἵὅὕἥὥἄἔἴὄὔἤὤ'
+	gravetoacute = str.maketrans(grave, acute)
+
+	elidedextrapunct = '\′‵‘·̆́“”„—†⌈⌋⌊⟫⟪❵❴⟧⟦(«»›‹⟨⟩⸐„⸏⸖⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚̄⁝͜‖͡⸓͝'
+
+	elidedextrapunct = '\′‵‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚̄⁝͜‖͡⸓͝'
+	extrapunct = elidedextrapunct + '’'
+	greekpunct = re.compile('[{s}]'.format(s=re.escape(punctuation + elidedextrapunct)))
+	latinpunct = re.compile('[{s}]'.format(s=re.escape(punctuation + extrapunct)))
+
+	minimumgreek = re.compile(
+		'[α-ωἀἁἂἃἄἅἆἇᾀᾁᾂᾃᾄᾅᾆᾇᾲᾳᾴᾶᾷᾰᾱὰάἐἑἒἓἔἕὲέἰἱἲἳἴἵἶἷὶίῐῑῒΐῖῗὀὁὂὃὄὅόὸὐὑὒὓὔὕὖὗϋῠῡῢΰῦῧύὺᾐᾑᾒᾓᾔᾕᾖᾗῂῃῄῆῇἤἢἥἣὴήἠἡἦἧὠὡὢὣὤὥὦὧᾠᾡᾢᾣᾤᾥᾦᾧῲῳῴῶῷώὼ]')
+
+	# version 1.0.0 code:
+	# graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
+
 	for line in lineobjects:
-		# how to grab τ’ and δ’ and the rest: original solution is in HipparchiaServer indexing functions
-		# tricky to decide whether to store τ’ or τ', but the original data has τ'...
-		# perhaps that should be changed...
+
+		# version 1.0.0 code:
+		
+		# words = line.wordlist('polytonic')
+		# words = [re.sub(graves, acuteforgrave, w) for w in words]
+		# words = [re.sub('v', 'u', w) for w in words]
+		# prefix = line.universalid[0:2]
+
+		# shadow of HipparchiaServer code
 		polytonicwords = line.wordlist('polytonic')
+		polytonicgreekwords = [tidyupterm(w, greekpunct).lower() for w in polytonicwords if re.search(minimumgreek, w)]
+		polytoniclatinwords = [tidyupterm(w, latinpunct).lower() for w in polytonicwords if not re.search(minimumgreek, w)]
+		polytonicwords = polytonicgreekwords + polytoniclatinwords
+		# need to figure out how to grab τ’ and δ’ and the rest
+		# but you can't say that 'me' is elided in a line like 'inquam, ‘teque laudo. sed quando?’ ‘nihil ad me’ inquit ‘de'
 		unformattedwords = set(line.wordlist('marked_up_line'))
-		words = [w for w in polytonicwords if w + '’' not in unformattedwords]
-		elisions = [w + "'" for w in polytonicwords if w + '’' in unformattedwords]
+		words = [w for w in polytonicwords if w+'’' not in unformattedwords or not re.search(minimumgreek, w)]
+		elisions = [w+"'" for w in polytonicwords if w+'’' in unformattedwords and re.search(minimumgreek, w)]
 		words.extend(elisions)
-		words = [re.sub(graves, acuteforgrave, w) for w in words]
-		words = [re.sub('v', 'u', w) for w in words]
+		words = [w.translate(gravetoacute) for w in words]
 		prefix = line.universalid[0:2]
+
 		for w in words:
 			# uncomment to watch individual words enter the dict
 			# if w == 'docilem':
