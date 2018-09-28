@@ -228,6 +228,13 @@ def graballcountsasobjects(db, cursor, extrasql=''):
 def grablemmataasobjects(db, cursor):
 	"""
 
+	hipparchiaDB=# select * from latin_lemmata where dictionary_entry like '%eritas' limit 10;
+	 dictionary_entry | xref_number |                                                        derivative_forms
+	------------------+-------------+---------------------------------------------------------------------------------------------------------------------------------
+	 veritas          |    82616897 | {ueritates,ueritatique,ueritatisque,ueritatemque,ueritatis,ueritasque,ueritatem,ueritas,ueritate,ueritati}
+	 teneritas        |    77551938 | {teneritatem,teneritate,teneritas}
+	...
+
 	:param db:
 	:param cursor:
 	:return:

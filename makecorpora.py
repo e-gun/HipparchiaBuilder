@@ -12,7 +12,7 @@ import time
 from builder import corpusbuilder
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.lexica.buildlexica import analysisloader, formatgklexicon, formatlatlexicon, grammarloader
-from builder.wordcounting.databasewordcounts import mpwordcounter
+from builder.wordcounting.databasewordcounts import mpwordcounter, monowordcounter
 from builder.wordcounting.wordcountsbyheadword import headwordcounts
 
 config = configparser.ConfigParser()
@@ -132,7 +132,11 @@ if buildcounts == 'y':
 	# this can be dangerous if the number of workers is high and the RAM available is not substantial; not the most likely configuration?
 	# mpwordcounter() is the hazardous one; if your survive it headwordcounts() will never get you near the same level of resource use
 	# mpwordcounter(): Build took 8.69 minutes
-	mpwordcounter()
+	if 0 > 1:
+		# does not return counts properly: see notes
+		mpwordcounter()
+	else:
+		monowordcounter()
 	headwordcounts()
 	# if you do genres, brace yourself: Build took 84.11 minutes
 

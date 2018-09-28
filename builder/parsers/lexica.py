@@ -161,10 +161,8 @@ def translationsummary(fullentry, translationlabel):
 
 	# so 'go' and 'go,' are not both on the list
 	depunct = '[{p}]$'.format(p=re.escape(punctuation))
-	tr = [re.sub(depunct, '',t) for t in tr]
-	tr = [re.sub(r'^To', 'to', t) for t in tr]
-	# brackets = re.compile(r'[\]\[\(\)\{\}]')
-	# tr = [re.sub(brackets, lambda x: swapregexbrackets(x.group(0)), t) for t in tr]
+	tr = [re.sub(depunct, '', t) for t in tr]
+	tr = [t[0].lower() + t[1:] for t in tr if len(t) > 1]
 	tr = list(set(tr))
 	tr.sort()
 	translations = ' ‖ '.join(tr)

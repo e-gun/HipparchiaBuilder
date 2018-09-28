@@ -13,7 +13,7 @@ from string import punctuation
 
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.dbdataintoobjects import grabhollowlineobjectsfromlist, loadallauthorsasobjects, \
-	loadallworksasobjects, loadallworksintoallauthors
+	loadallworksasobjects, loadallworksintoallauthors, generatecomprehensivesetoflineobjects
 from builder.dbinteraction.dbloading import generatecopystream
 from builder.parsers.betacodeandunicodeinterconversion import buildhipparchiatranstable, cleanaccentsandvj
 from builder.wordcounting.wordcountdbfunctions import createwordcounttable
@@ -21,8 +21,132 @@ from builder.wordcounting.wordcounthelperfunctions import acuteforgrave, concord
 from builder.workers import setworkercount
 
 
+def monowordcounter(restriction=None, authordict=None, workdict=None):
+	"""
+	count all of the words in all of the lines so you can find out the following re προϲώπου:
+		Prevalence (this form): Ⓖ 8,455 / Ⓛ 1 / Ⓘ 7 / Ⓓ 68 / Ⓒ 6 / Ⓣ 8,537
+	:param alllineobjects:
+	:param restriction:
+	:param authordict:
+	:param workdict:
+	:return:
+	"""
+
+	# print('len(alllineobjects)', len(alllineobjects))
+	# len(alllineobjects) 11902961
+
+	wordcounttable = 'wordcounts'
+
+	if not authordict:
+		print('loading information about authors and works')
+		authordict = loadallauthorsasobjects()
+		workdict = loadallworksasobjects()
+		authordict = loadallworksintoallauthors(authordict, workdict)
+
+	# [a] figure out which works we are looking for: idlist = ['lt1002', 'lt1351', 'lt2331', 'lt1038', 'lt0690', ...]
+	idlist = generatesearchidlist(restriction, authordict, workdict)
+
+	# [b] figure out what table index values we will need to assemble them: {tableid1: range1, tableid2: range2, ...}
+
+	dbdictwithranges = generatedbdictwithranges(idlist, workdict)
+
+	# [c] turn this into a list of lines we will need
+	# bug in convertrangedicttolineset() evident at firstpass
+	# len(alllineobjects) 11902961
+	# len(linesweneed) 2103514
+
+	linesweneed = list(convertrangedicttolineset(dbdictwithranges))
+
+	# keep it simple send the work off for linear processing
+	alllineobjects = generatecomprehensivesetoflineobjects()
+	lineobjects = [alllineobjects[l] for l in linesweneed]
+	masterconcorcdance = monothreadedindexer(lineobjects, 'indexing')
+
+	# [e] calculate totals
+
+	masterconcorcdance = calculatetotals(masterconcorcdance)
+
+	if not restriction:
+		generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance)
+
+	return masterconcorcdance
+
+
+def monothreadedindexer(lineobjects, workername=''):
+	"""
+
+	back from the dead...
+
+
+
+	:param lineobjects:
+	:param workername:
+	:return:
+	"""
+
+	# lineobjects = [alllineobjects[l] for l in linesweneed]
+
+	graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
+	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
+	punct = re.compile(
+		'[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
+
+	print('indexing {n} lines'.format(n=len(lineobjects)))
+
+	progresschunks = int(len(lineobjects) / 5)
+
+	indexdictionary = dict()
+
+	index = 0
+	for line in lineobjects:
+		words = line.wordlist('polytonic')
+		words = [re.sub(graves, acuteforgrave, w) for w in words]
+		# most of this cleanup is already part of 'polytonic'
+		# words = [tidyupterm(w, punct) for w in words]
+		# words[:] = [x.lower() for x in words]
+		words = [re.sub('v', 'u', w) for w in words]
+
+		prefix = line.universalid[0:2]
+		for w in words:
+			try:
+				# does the word exist at all?
+				indexdictionary[w]
+			except KeyError:
+				indexdictionary[w] = dict()
+			try:
+				# have we already indexed the word as part of this this db?
+				indexdictionary[w][prefix] += 1
+			except KeyError:
+				indexdictionary[w][prefix] = 1
+		# uncomment to watch individual words enter the dict
+		# if w == 'λελέχθαι':
+		#       try:
+		#               print(indexdictionary[w][prefix], line.universalid, line.wordlist('polytonic'))
+		#       except KeyError:
+		#               print('need to generate indexdictionary[{w}][{p}]'.format(w=w, p=prefix))
+		index += 1
+
+		if index % progresschunks == 0:
+			percent = round((index / len(lineobjects)) * 100, 1)
+			print('\t{w} progress: {n}% ({a}/{b})'.format(w=workername, n=percent, a=index, b=len(lineobjects)))
+
+	return indexdictionary
+
+
 def mpwordcounter(restriction=None, authordict=None, workdict=None):
 	"""
+
+	BROKEN: the counts will vary for common words depending on how many workers you have
+
+	count of δέ in Ⓖ varies as a function of the number of workers:
+
+		2	878,994
+		3	1,258,168
+		4	1,446,098
+		5	1,539,313
+		6	1,603,0455
+
+	monocount is 1,611,529.
 
 	count all of the words in all of the lines so you can find out the following re προϲώπου:
 
@@ -61,6 +185,12 @@ def mpwordcounter(restriction=None, authordict=None, workdict=None):
 	# if you do not sort, four workers will each look for different lines in the same table
 	linesweneed.sort()
 
+	# print('len(linesweneed)', len(linesweneed))
+	# linesweneed[:20] ['ch0001_LN_1', 'ch0001_LN_10', 'ch0001_LN_100', 'ch0001_LN_1000', 'ch0001_LN_1001',
+	# 'ch0001_LN_1002', 'ch0001_LN_1003', 'ch0001_LN_1004', 'ch0001_LN_1005', 'ch0001_LN_1006', 'ch0001_LN_1007',
+	# 'ch0001_LN_1008', 'ch0001_LN_1009', 'ch0001_LN_101', 'ch0001_LN_1010', 'ch0001_LN_1011', 'ch0001_LN_1012',
+	# 'ch0001_LN_1013', 'ch0001_LN_1014', 'ch0001_LN_1015']
+
 	workers = setworkercount()
 	chunksize = int(len(linesweneed) / workers) + 1
 	workpiles = grouper(linesweneed, chunksize)
@@ -97,9 +227,9 @@ def mpbuildindexdictionary(pilenumber, workpile):
 	# unevenly sized groups are padded with None by grouper
 	workpile = [w for w in workpile if w]
 
-	graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
-	# pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
-	punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖⸓'))
+	# graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
+	# # pull this out of cleanwords() so you don't waste cycles recompiling it millions of times: massive speedup
+	# punct = re.compile('[%s]' % re.escape(punctuation + '\′‵’‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚⁝‖͡⸓͝'))
 
 	if pilenumber == 0:
 		print('gathering lines'.format(p=pilenumber))
@@ -130,11 +260,47 @@ def mpbuildindexdictionary(pilenumber, workpile):
 	indexdictionary = dict()
 
 	index = 0
+
+	# shadow of HipparchiaServer code
+
+	grave = 'ὰὲὶὸὺὴὼῒῢᾲῂῲἃἓἳὃὓἣὣἂἒἲὂὒἢὢ'
+	acute = 'άέίόύήώΐΰᾴῄῴἅἕἵὅὕἥὥἄἔἴὄὔἤὤ'
+	gravetoacute = str.maketrans(grave, acute)
+
+	elidedextrapunct = '\′‵‘·“”„—†⌈⌋⌊∣⎜͙ˈͻ✳※¶§⸨⸩｟｠⟫⟪❵❴⟧⟦→◦⊚𐄂𝕔☩(«»›‹⸐„⸏⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚̄⁝͜‖͡⸓͝'
+	extrapunct = elidedextrapunct + '’'
+	greekpunct = re.compile('[{s}]'.format(s=re.escape(punctuation + elidedextrapunct)))
+	latinpunct = re.compile('[{s}]'.format(s=re.escape(punctuation + extrapunct)))
+
+	minimumgreek = re.compile(
+		'[α-ωἀἁἂἃἄἅἆἇᾀᾁᾂᾃᾄᾅᾆᾇᾲᾳᾴᾶᾷᾰᾱὰάἐἑἒἓἔἕὲέἰἱἲἳἴἵἶἷὶίῐῑῒΐῖῗὀὁὂὃὄὅόὸὐὑὒὓὔὕὖὗϋῠῡῢΰῦῧύὺᾐᾑᾒᾓᾔᾕᾖᾗῂῃῄῆῇἤἢἥἣὴήἠἡἦἧὠὡὢὣὤὥὦὧᾠᾡᾢᾣᾤᾥᾦᾧῲῳῴῶῷώὼ]')
+
+	# version 1.0.0 code:
+	# graves = re.compile(r'[ὰὲὶὸὺὴὼἂἒἲὂὒἢὢᾃᾓᾣᾂᾒᾢ]')
+
 	for line in lineobjects:
-		words = line.wordlist('polytonic')
-		words = [re.sub(graves, acuteforgrave, w) for w in words]
-		words = [re.sub('v', 'u', w) for w in words]
+
+		# version 1.0.0 code:
+		
+		# words = line.wordlist('polytonic')
+		# words = [re.sub(graves, acuteforgrave, w) for w in words]
+		# words = [re.sub('v', 'u', w) for w in words]
+		# prefix = line.universalid[0:2]
+
+		# shadow of HipparchiaServer code
+		polytonicwords = line.wordlist('polytonic')
+		polytonicgreekwords = [tidyupterm(w, greekpunct).lower() for w in polytonicwords if re.search(minimumgreek, w)]
+		polytoniclatinwords = [tidyupterm(w, latinpunct).lower() for w in polytonicwords if not re.search(minimumgreek, w)]
+		polytonicwords = polytonicgreekwords + polytoniclatinwords
+		# need to figure out how to grab τ’ and δ’ and the rest
+		# but you can't say that 'me' is elided in a line like 'inquam, ‘teque laudo. sed quando?’ ‘nihil ad me’ inquit ‘de'
+		unformattedwords = set(line.wordlist('marked_up_line'))
+		words = [w for w in polytonicwords if w+'’' not in unformattedwords or not re.search(minimumgreek, w)]
+		elisions = [w+"'" for w in polytonicwords if w+'’' in unformattedwords and re.search(minimumgreek, w)]
+		words.extend(elisions)
+		words = [w.translate(gravetoacute) for w in words]
 		prefix = line.universalid[0:2]
+
 		for w in words:
 			# uncomment to watch individual words enter the dict
 			# if w == 'docilem':
@@ -366,6 +532,35 @@ def generatemasterconcorcdancevaluetuples(masterconcorcdance, letter):
 		valuetuples.append(tuple([item, subset[item]['total'], subset[item]['gr'], subset[item]['lt'], subset[item]['dp'], subset[item]['in'], subset[item]['ch']]))
 
 	return valuetuples
+
+
+def tidyupterm(word: str, punct=None) -> str:
+	"""
+
+	remove gunk that should not be present in a cleaned line
+	pass punct if you do not feel like compiling it 100k times
+	:param word:
+	:param punct:
+	:return:
+	"""
+
+	if not punct:
+		elidedextrapunct = '\′‵‘·̆́“”„—†⌈⌋⌊⟫⟪❵❴⟧⟦(«»›‹⟨⟩⸐„⸏⸖⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚̄⁝͜‖͡⸓͝'
+		extrapunct = elidedextrapunct + '’'
+		punct = re.compile('[{s}]'.format(s=re.escape(punctuation + extrapunct)))
+
+	# hard to know whether or not to do the editorial insertions stuff: ⟫⟪⌈⌋⌊
+	# word = re.sub(r'\[.*?\]','', word) # '[o]missa' should be 'missa'
+	word = re.sub(r'[0-9]', '', word)
+	word = re.sub(punct, '', word)
+
+	invals = u'jv'
+	outvals = u'iu'
+	word = word.translate(str.maketrans(invals, outvals))
+
+	return word
+
+
 
 
 """
