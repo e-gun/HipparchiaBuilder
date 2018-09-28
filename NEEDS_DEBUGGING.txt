@@ -109,3 +109,12 @@ hipparchiaDB=# select * from wordcounts_α where entry_name='ἀπροϲηγορ
 -------------+-------------+----------+----------+----------+----------+----------
  ἀπροϲηγορία |           4 |        4 |        0 |        0 |        0 |        0
 (1 row)
+
+
+[C] Wordcount error
+
+count of δέ varies as a function of the number of workers:
+
+    4	1,446,098
+    5	1,539,313
+    6	1,603,045
