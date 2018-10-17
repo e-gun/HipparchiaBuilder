@@ -66,8 +66,8 @@ def generatecomprehensivesetoflineobjects():
 		q = qtemplate.format(t=a)
 		dbcursor.execute(q)
 		foundlines = resultiterator(dbcursor)
-		hollowlineobjects = [makehollowlineobject(*f) for f in foundlines]
-		everyline.update({'{a}_LN_{ln}'.format(a=a, ln=h.index): h for h in hollowlineobjects})
+		minimallineobjects = [makeminimallineobject(*f) for f in foundlines]
+		everyline.update({'{a}_LN_{ln}'.format(a=a, ln=h.index): h for h in minimallineobjects})
 		index += 1
 		if index % steps == 0:
 			percent = int((index / steps) * 10)
@@ -76,7 +76,7 @@ def generatecomprehensivesetoflineobjects():
 	return everyline
 
 
-def makehollowlineobject(index, wkuniversalid, accented_line):
+def makeminimallineobject(index, wkuniversalid, accented_line):
 	"""
 
 	build a line object with only three items fleshed out:
@@ -139,7 +139,7 @@ def loadallworksintoallauthors(authorsdict, worksdict):
 	return authorsdict
 
 
-def grabhollowlineobjectsfromlist(db, linelist):
+def grabminimallineobjectsfromlist(db, linelist):
 	"""
 
 	example:
@@ -165,11 +165,11 @@ def grabhollowlineobjectsfromlist(db, linelist):
 
 	dbcursor.execute(q, d)
 	foundlines = resultiterator(dbcursor)
-	hollowlineobjects = [makehollowlineobject(*f) for f in foundlines]
+	minimallineobjects = [makeminimallineobject(*f) for f in foundlines]
 
 	dbconnection.connectioncleanup()
 
-	return hollowlineobjects
+	return minimallineobjects
 
 
 def graballlinesasobjects(db, linerangetuple, cursor):
