@@ -216,7 +216,6 @@ class PooledConnectionObject(GenericConnectionObject):
 		self.setreadonly(self.readonlyconnection)
 		self.curs = getattr(self.dbconnection, 'cursor')()
 
-
 	def simpleconnectionfallback(self):
 		# print('SimpleConnectionObject', self.uniquename)
 		c = SimpleConnectionObject(autocommit=self.autocommit, readonlyconnection=self.readonlyconnection,

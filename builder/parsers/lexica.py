@@ -131,6 +131,9 @@ def lsjgreekswapper(match):
 def translationsummary(fullentry, translationlabel):
 	"""
 
+	sample:
+		<tr opt="n">commander of an army, general</tr>
+
 	adapted from hserver
 
 	return a list of all senses to be found in an entry
@@ -147,12 +150,11 @@ def translationsummary(fullentry, translationlabel):
 	:return:
 	"""
 
-	soup = BeautifulSoup(fullentry, 'html.parser')
-	tr = soup.find_all(translationlabel)
+	fingerprint = re.compile(r'<{label}.*?>(.*?)</{label}>'.format(label=translationlabel))
+	tr = re.findall(fingerprint, fullentry)
 	exclude = ['ab', 'de', 'ex', 'ut', 'nihil', 'quam', 'quid']
 
 	try:
-		tr = [t.string for t in tr]
 		tr = [t for t in tr if '.' not in t]
 		tr = [t for t in tr if t not in exclude]
 	except TypeError:
