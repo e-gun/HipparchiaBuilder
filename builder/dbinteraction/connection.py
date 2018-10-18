@@ -234,7 +234,11 @@ class PooledConnectionObject(GenericConnectionObject):
 		"""
 
 		self.commit()
-		self.dbconnection.set_session(readonly=False)
+		try:
+			self.dbconnection.set_session(readonly=False)
+		except psycopg2.OperationalError:
+			print('change your connection type to "simple" in "config.ini"; pooled connections are failing')
+
 		self.setdefaultisolation()
 		self.pool.putconn(self.dbconnection, key=self.uniquename)
 		# print('connection returned to pool:', self.uniquename)
