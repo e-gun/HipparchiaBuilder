@@ -145,7 +145,7 @@ def lowercaseletters(betacode):
 
 
 def lowercasesigmassubsitutes(match):
-	substitutions: {
+	substitutions = {
 		1: u'σ',
 		2: u'ς',
 		3: u'ϲ'

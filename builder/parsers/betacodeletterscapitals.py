@@ -83,7 +83,7 @@ def capitalletters(betacode):
 
 
 def capitalsigmassubsitutes(match):
-	substitutions: {
+	substitutions = {
 		3: u'\u03f9'
 		}
 

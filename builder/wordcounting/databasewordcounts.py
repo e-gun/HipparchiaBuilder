@@ -12,7 +12,7 @@ from multiprocessing.pool import Pool
 from string import punctuation
 
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.dbdataintoobjects import grabhollowlineobjectsfromlist, loadallauthorsasobjects, \
+from builder.dbinteraction.dbdataintoobjects import grabminimallineobjectsfromlist, loadallauthorsasobjects, \
 	loadallworksasobjects, loadallworksintoallauthors, generatecomprehensivesetoflineobjects
 from builder.dbinteraction.dbloading import generatecopystream
 from builder.parsers.betacodeandunicodeinterconversion import buildhipparchiatranstable, cleanaccentsandvj
@@ -197,6 +197,9 @@ def mpwordcounter(restriction=None, authordict=None, workdict=None):
 	workpiles = [list(w) for w in workpiles]
 
 	# [d] send the work off for processing
+	# the breakage seems to be here
+	# maybe refactor after the pattern in
+	#   https://stackoverflow.com/questions/5318936/python-multiprocessing-pool-lazy-iteration
 
 	with Pool(processes=workers) as pool:
 		getlistofdictionaries = [pool.apply_async(mpbuildindexdictionary, (i, workpiles[i])) for i in range(workers)]
@@ -246,7 +249,7 @@ def mpbuildindexdictionary(pilenumber, workpile):
 
 	lineobjects = deque()
 	for key in workdict:
-		lineobjects.extend(grabhollowlineobjectsfromlist(key, workdict[key]))
+		lineobjects.extend(grabminimallineobjectsfromlist(key, workdict[key]))
 
 	if pilenumber == 0:
 		print('\tworker #{p} gathered {n} lines'.format(p=pilenumber, n=len(lineobjects)))

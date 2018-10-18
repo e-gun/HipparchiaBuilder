@@ -302,7 +302,12 @@ class SimpleConnectionObject(GenericConnectionObject):
 		return
 
 
-if 0 > 1:
+try:
+	ct = config['db']['CONNECTIONTYPE']
+except KeyError:
+	ct = 'notsimple'
+
+if ct == 'simple':
 	class ConnectionObject(SimpleConnectionObject):
 		pass
 else:
