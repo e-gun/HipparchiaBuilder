@@ -10,7 +10,7 @@
 from multiprocessing import Manager, Process
 
 from builder.builderclasses import MPCounter
-from builder.dbinteraction.connection import ConnectionObject, setconnection
+from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.dbhelperfunctions import resultiterator
 from builder.workers import setworkercount
 

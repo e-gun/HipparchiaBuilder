@@ -18,7 +18,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def setconnection(autocommit=False, simple=False):
+def setconnection(autocommit=False, mandatorysimple=False):
 	"""
 
 	set a connection...
@@ -35,7 +35,17 @@ def setconnection(autocommit=False, simple=False):
 	:return:
 	"""
 
-	if not simple:
+	try:
+		ct = config['db']['CONNECTIONTYPE']
+	except KeyError:
+		ct = 'notsimple'
+
+	if ct == 'simple':
+		ConnectionObject = SimpleConnectionObject
+	else:
+		ConnectionObject = PooledConnectionObject
+
+	if not mandatorysimple:
 		c = ConnectionObject(readonlyconnection=False, ctype='rw')
 	else:
 		c = SimpleConnectionObject(readonlyconnection=False, ctype='rw')
@@ -303,16 +313,3 @@ class SimpleConnectionObject(GenericConnectionObject):
 		# print('deleted connection', self.uniquename)
 
 		return
-
-
-try:
-	ct = config['db']['CONNECTIONTYPE']
-except KeyError:
-	ct = 'notsimple'
-
-if ct == 'simple':
-	class ConnectionObject(SimpleConnectionObject):
-		pass
-else:
-	class ConnectionObject(PooledConnectionObject):
-		pass
