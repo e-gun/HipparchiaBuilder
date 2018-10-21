@@ -8,6 +8,7 @@
 
 import configparser
 import time
+from multiprocessing import freeze_support
 
 from builder import corpusbuilder
 from builder.dbinteraction.versioning import timestampthebuild
@@ -86,60 +87,63 @@ corpusvars = {
 # corpora
 #
 
-corporatobuild = list()
+if __name__ == '__main__':
+	freeze_support()
 
-if buildlatinauthors == 'y':
-	corporatobuild.append('latin')
+	corporatobuild = list()
 
-if buildgreekauthors == 'y':
-	corporatobuild.append('greek')
+	if buildlatinauthors == 'y':
+		corporatobuild.append('latin')
 
-if buildinscriptions == 'y':
-	corporatobuild.append('inscriptions')
+	if buildgreekauthors == 'y':
+		corporatobuild.append('greek')
 
-if buildpapyri == 'y':
-	corporatobuild.append('papyri')
+	if buildinscriptions == 'y':
+		corporatobuild.append('inscriptions')
 
-if buildchristians == 'y':
-	corporatobuild.append('christians')
+	if buildpapyri == 'y':
+		corporatobuild.append('papyri')
 
-for corpusname in corporatobuild:
-	corpusbuilder.buildcorpusdbs(corpusname, corpusvars)
-	corpusbuilder.remaptables(corpusname, corpusvars)
-	corpusbuilder.buildcorpusmetadata(corpusname, corpusvars)
+	if buildchristians == 'y':
+		corporatobuild.append('christians')
+
+	for corpusname in corporatobuild:
+		corpusbuilder.buildcorpusdbs(corpusname, corpusvars)
+		corpusbuilder.remaptables(corpusname, corpusvars)
+		corpusbuilder.buildcorpusmetadata(corpusname, corpusvars)
 
 
-#
-# lexica, etc
-#
+	#
+	# lexica, etc
+	#
 
-if buildlex == 'y':
-	print('building lexical dbs')
-	formatgklexicon()
-	formatlatlexicon()
-	timestampthebuild('lx')
+	if buildlex == 'y':
+		print('building lexical dbs')
+		formatgklexicon()
+		formatlatlexicon()
+		timestampthebuild('lx')
 
-if buildgram == 'y':
-	print('building grammar dbs')
-	grammarloader('greek')
-	analysisloader('greek')
-	grammarloader('latin')
-	analysisloader('latin')
-	timestampthebuild('lm')
+	if buildgram == 'y':
+		print('building grammar dbs')
+		grammarloader('greek')
+		analysisloader('greek')
+		grammarloader('latin')
+		analysisloader('latin')
+		timestampthebuild('lm')
 
-if buildcounts == 'y':
-	print('building wordcounts by (repeatedly) examining every line of every text in all available dbs: this might take a minute or two...')
-	# this can be dangerous if the number of workers is high and the RAM available is not substantial; not the most likely configuration?
-	# mpwordcounter() is the hazardous one; if your survive it headwordcounts() will never get you near the same level of resource use
-	# mpwordcounter(): Build took 8.69 minutes
-	if 0 > 1:
-		# does not return counts properly: see notes
-		mpwordcounter()
-	else:
-		monowordcounter()
-	headwordcounts()
-	# if you do genres, brace yourself: Build took 84.11 minutes
+	if buildcounts == 'y':
+		print('building wordcounts by (repeatedly) examining every line of every text in all available dbs: this might take a minute or two...')
+		# this can be dangerous if the number of workers is high and the RAM available is not substantial; not the most likely configuration?
+		# mpwordcounter() is the hazardous one; if your survive it headwordcounts() will never get you near the same level of resource use
+		# mpwordcounter(): Build took 8.69 minutes
+		if 0 > 1:
+			# does not return counts properly: see notes
+			mpwordcounter()
+		else:
+			monowordcounter()
+		headwordcounts()
+		# if you do genres, brace yourself: Build took 84.11 minutes
 
-stop = time.time()
-took = round((stop-start)/60, 2)
-print('\nBuild took', str(took), 'minutes')
+	stop = time.time()
+	took = round((stop-start)/60, 2)
+	print('\nBuild took', str(took), 'minutes')
