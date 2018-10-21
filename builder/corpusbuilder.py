@@ -131,7 +131,7 @@ def buildcorpusdbs(corpusname, corpusvars):
 	manager = Manager()
 	managedwork = manager.list(listoftexts)
 	connections = {i: setconnection() for i in range(workercount)}
-	jobs = [Process(target=managedworker, args=[managedwork, connections[i]]) for i in range(workercount)]
+	jobs = [Process(target=managedworker, args=(managedwork, connections[i])) for i in range(workercount)]
 
 	for j in jobs:
 		j.start()
