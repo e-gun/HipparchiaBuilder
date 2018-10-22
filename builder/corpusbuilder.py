@@ -17,7 +17,7 @@ import builder.dbinteraction.dbhelperfunctions
 import builder.dbinteraction.dbprepsubstitutions
 import builder.parsers.betacodefontshifts
 from builder.dbinteraction import dbloading
-from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.connection import setconnection, icanpickleconnections
 from builder.dbinteraction.dbhelperfunctions import resetauthorsandworksdbs
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.file_io import filereaders
@@ -130,7 +130,8 @@ def buildcorpusdbs(corpusname, corpusvars):
 
 	manager = Manager()
 	managedwork = manager.list(listoftexts)
-	if config['db']['AVOIDPICKLEDCONNECTION'] == 'y':
+
+	if not icanpickleconnections():
 		connections = [None for _ in range(workercount)]
 	else:
 		connections = {i: setconnection() for i in range(workercount)}

@@ -6,6 +6,8 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
+from multiprocessing import Process
+
 import psycopg2
 import psycopg2.pool as connectionpool
 import threading
@@ -55,6 +57,19 @@ def setconnection(autocommit=False, mandatorysimple=False):
 
 	return c
 
+
+def icanpickleconnections():
+	result = True
+	c = (setconnection(),)
+	j = Process(target=type, args=c)
+	try:
+		j.start()
+		j.join()
+	except TypeError:
+		# can't pickle psycopg2.extensions.connection objects
+		result = False
+	c[0].connectioncleanup()
+	return result
 
 class GenericConnectionObject(object):
 	"""
