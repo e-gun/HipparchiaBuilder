@@ -151,7 +151,10 @@ def grammarloader(language):
 	entries = manager.list(entries)
 
 	workers = setworkercount()
-	connections = {i: setconnection() for i in range(workers)}
+	if not icanpickleconnections():
+		connections = [None for _ in range(workers)]
+	else:
+		connections = {i: setconnection() for i in range(workers)}
 
 	jobs = [Process(target=mplemmatainsert, args=(table, entries, islatin, connections[i])) for i in range(workers)]
 	for j in jobs:
@@ -161,6 +164,10 @@ def grammarloader(language):
 
 	for c in connections:
 		connections[c].connectioncleanup()
+
+	if connections[0]:
+		for c in connections:
+			connections[c].connectioncleanup()
 
 	return
 
