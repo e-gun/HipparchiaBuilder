@@ -130,7 +130,10 @@ def buildcorpusdbs(corpusname, corpusvars):
 
 	manager = Manager()
 	managedwork = manager.list(listoftexts)
-	connections = {i: setconnection() for i in range(workercount)}
+	if config['db']['AVOIDPICKLEDCONNECTION'] == 'y':
+		connections = [None for _ in range(workercount)]
+	else:
+		connections = {i: setconnection() for i in range(workercount)}
 	jobs = [Process(target=managedworker, args=(managedwork, connections[i])) for i in range(workercount)]
 
 	for j in jobs:
@@ -232,6 +235,9 @@ def managedworker(managedwork, dbconnection):
 	:param managedwork:
 	:return:
 	"""
+
+	if not dbconnection:
+		dbconnection = setconnection()
 
 	while managedwork:
 		try:
