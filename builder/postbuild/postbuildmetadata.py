@@ -319,6 +319,9 @@ def mpindexbuilder(universalids, commitcount, dbconnection):
 	:return:
 	"""
 
+	if not dbconnection:
+		dbconnection = setconnection()
+
 	dbcursor = dbconnection.cursor()
 
 	while universalids:
