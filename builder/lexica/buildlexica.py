@@ -9,7 +9,7 @@
 import configparser
 from multiprocessing import Manager, Process
 
-from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.connection import setconnection, icanpickleconnections
 from builder.lexica.mplexicalworkers import mpanalysisinsert, mpgreekdictionaryinsert, mplatindictionaryinsert, \
 	mplemmatainsert
 from builder.workers import setworkercount
@@ -46,15 +46,20 @@ def formatgklexicon():
 	entries = manager.list(entries)
 
 	workers = setworkercount()
-	connections = {i: setconnection() for i in range(workers)}
+	if not icanpickleconnections():
+		connections = [None for _ in range(workers)]
+	else:
+		connections = {i: setconnection() for i in range(workers)}
+
 	jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, connections[i])) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
 		j.join()
 
-	for c in connections:
-		connections[c].connectioncleanup()
+	if connections[0]:
+		for c in connections:
+			connections[c].connectioncleanup()
 
 	return
 
