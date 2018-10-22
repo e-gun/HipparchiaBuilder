@@ -10,6 +10,7 @@ import re
 
 from psycopg2.extras import execute_values as insertlistofvaluetuples
 
+from builder.dbinteraction.connection import setconnection
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
 from builder.parsers.lexica import betaconvertandsave, greekwithoutvowellengths, greekwithvowellengths, \
 	latinvowellengths, lsjgreekswapper, translationsummary
@@ -28,6 +29,9 @@ def mplatindictionaryinsert(dictdb, entries, dbconnection):
 	:param commitcount:
 	:return:
 	"""
+
+	if not dbconnection:
+		dbconnection = setconnection()
 
 	dbcursor = dbconnection.cursor()
 	dbconnection.setautocommit()
@@ -133,6 +137,8 @@ def mpgreekdictionaryinsert(dictdb, entries, dbconnection):
 	:param commitcount:
 	:return:
 	"""
+	if not dbconnection:
+		dbconnection = setconnection()
 
 	dbcursor = dbconnection.cursor()
 	dbconnection.setautocommit()
@@ -281,6 +287,8 @@ def mplemmatainsert(grammardb, entries, islatin, dbconnection):
 	:param commitcount:
 	:return:
 	"""
+	if not dbconnection:
+		dbconnection = setconnection()
 
 	dbcursor = dbconnection.cursor()
 	dbconnection.setautocommit()
@@ -361,6 +369,8 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 	:param commitcount:
 	:return:
 	"""
+	if not dbconnection:
+		dbconnection = setconnection()
 
 	dbcursor = dbconnection.cursor()
 	dbconnection.setautocommit()

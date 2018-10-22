@@ -84,7 +84,10 @@ def formatlatlexicon():
 	entries = manager.list(entries)
 
 	workers = setworkercount()
-	connections = {i: setconnection() for i in range(workers)}
+	if not icanpickleconnections():
+		connections = [None for _ in range(workers)]
+	else:
+		connections = {i: setconnection() for i in range(workers)}
 
 	jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, connections[i])) for i in range(workers)]
 	for j in jobs:
@@ -92,8 +95,9 @@ def formatlatlexicon():
 	for j in jobs:
 		j.join()
 
-	for c in connections:
-		connections[c].connectioncleanup()
+	if connections[0]:
+		for c in connections:
+			connections[c].connectioncleanup()
 
 	return
 
