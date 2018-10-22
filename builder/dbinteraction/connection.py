@@ -62,6 +62,9 @@ def icanpickleconnections():
 	if config['db']['ICANPICKLECONNECTIONS'] == 'n':
 		return False
 
+	if config['db']['ICANPICKLECONNECTIONS'] == 'y':
+		return True
+
 	result = True
 	c = (setconnection(),)
 	j = Process(target=type, args=c)
@@ -76,6 +79,7 @@ def icanpickleconnections():
 		result = False
 	c[0].connectioncleanup()
 	return result
+
 
 class GenericConnectionObject(object):
 	"""
