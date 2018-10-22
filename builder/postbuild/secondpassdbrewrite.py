@@ -13,7 +13,7 @@ from multiprocessing import Manager, Process
 import psycopg2
 
 from builder.builderclasses import MPCounter, dbAuthor, dbOpus
-from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.connection import setconnection, icanpickleconnections
 from builder.dbinteraction.dbhelperfunctions import authortablemaker
 from builder.dbinteraction.dbdataintoobjects import dbauthorandworkloader
 from builder.dbinteraction.dbloading import generatecopystream
@@ -199,7 +199,10 @@ def compilenewworks(newauthors, wkmapper):
 	newworktuples = manager.list()
 
 	workers = setworkercount()
-	connections = {i: setconnection() for i in range(workers)}
+	if not icanpickleconnections():
+		connections = [None for _ in range(workers)]
+	else:
+		connections = {i: setconnection() for i in range(workers)}
 	
 	jobs = [Process(target=parallelnewworkworker, args=(workpile, newworktuples, connections[i])) for i in range(workers)]
 	for j in jobs:
@@ -209,8 +212,9 @@ def compilenewworks(newauthors, wkmapper):
 
 	# newworktuples = [(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
 
-	for c in connections:
-		connections[c].connectioncleanup()
+	if connections[0]:
+		for c in connections:
+			connections[c].connectioncleanup()
 
 	return newworktuples
 
@@ -340,15 +344,20 @@ def buildnewworkmetata(workandtitletuplelist):
 	metadatalist = manager.list()
 
 	workers = setworkercount()
-	connections = {i: setconnection() for i in range(workers)}
+	if not icanpickleconnections():
+		connections = [None for _ in range(workers)]
+	else:
+		connections = {i: setconnection() for i in range(workers)}
+
 	jobs = [Process(target=buildworkmetadatatuples, args=(workpile, count, metadatalist, connections[i])) for i in range(workers)]
 	for j in jobs:
 		j.start()
 	for j in jobs:
 		j.join()
 
-	for c in connections:
-		connections[c].connectioncleanup()
+	if connections[0]:
+		for c in connections:
+			connections[c].connectioncleanup()
 
 	# manager was not populating the manager.dict()
 	# so we are doing this
@@ -388,6 +397,9 @@ def parallelnewworkworker(workpile, newworktuples, dbconnection):
 	:param newworktuples:
 	:return:
 	"""
+
+	if not dbconnection:
+		dbconnection = setconnection()
 
 	dbcursor = dbconnection.cursor()
 
@@ -455,6 +467,9 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist, dbconnection):
 	:param metadatalist:
 	:return:
 	"""
+
+	if not dbconnection:
+		dbconnection = setconnection()
 
 	dbcursor = dbconnection.cursor()
 

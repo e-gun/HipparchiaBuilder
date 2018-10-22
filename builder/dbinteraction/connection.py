@@ -59,16 +59,20 @@ def setconnection(autocommit=False, mandatorysimple=False):
 
 
 def icanpickleconnections():
+	if config['db']['ICANPICKLECONNECTIONS'] == 'n':
+		return False
+
 	result = True
 	c = (setconnection(),)
 	j = Process(target=type, args=c)
+
 	try:
 		j.start()
 		j.join()
 	except TypeError:
 		# can't pickle psycopg2.extensions.connection objects
-		print('to avoid seeing error messages edit "config.ini" to read:')
-		print('\tICANPICKLECONNECTIONS = n')
+		print('to avoid seeing "EOFError: Ran out of input" messages edit "config.ini" to read:')
+		print('\tICANPICKLECONNECTIONS = n\n')
 		result = False
 	c[0].connectioncleanup()
 	return result

@@ -131,7 +131,7 @@ def buildcorpusdbs(corpusname, corpusvars):
 	manager = Manager()
 	managedwork = manager.list(listoftexts)
 
-	if config['db']['ICANPICKLECONNECTIONS'] == 'n' or not icanpickleconnections():
+	if not icanpickleconnections():
 		connections = [None for _ in range(workercount)]
 	else:
 		connections = {i: setconnection() for i in range(workercount)}
