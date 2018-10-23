@@ -7,12 +7,12 @@
 """
 
 
-from multiprocessing import Manager, Process
+from multiprocessing import Manager
 
 from builder.builderclasses import MPCounter
-from builder.dbinteraction.connection import setconnection, icanpickleconnections
+from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.dbhelperfunctions import resultiterator
-from builder.workers import setworkercount
+from builder.dbinteraction.genericworkerobject import GenericInserterObject
 
 """
 	SPEED NOTES
@@ -292,21 +292,8 @@ def buildtrigramindices(workcategoryprefix):
 	dbconnection.connectioncleanup()
 	print('\t', len(uids), 'items to index')
 
-	workers = setworkercount()
-	if not icanpickleconnections():
-		connections = [None for _ in range(workers)]
-	else:
-		connections = {i: setconnection() for i in range(workers)}
-
-	jobs = [Process(target=mpindexbuilder, args=(uids, commitcount, connections[i])) for i in range(workers)]
-	for j in jobs:
-		j.start()
-	for j in jobs:
-		j.join()
-
-	if connections[0]:
-		for c in connections:
-			connections[c].connectioncleanup()
+	workerobject = GenericInserterObject(mpindexbuilder, argumentlist=[uids, commitcount])
+	workerobject.dothework()
 
 	return
 

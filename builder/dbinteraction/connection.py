@@ -6,6 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
+from os import name as osname
 from multiprocessing import Process
 
 import psycopg2
@@ -59,10 +60,10 @@ def setconnection(autocommit=False, mandatorysimple=False):
 
 
 def icanpickleconnections():
-	if config['db']['ICANPICKLECONNECTIONS'] == 'n':
+	if osname == 'nt':
 		return False
 
-	if config['db']['ICANPICKLECONNECTIONS'] == 'y':
+	if osname == 'posix':
 		return True
 
 	result = True
@@ -78,6 +79,7 @@ def icanpickleconnections():
 		print('\tICANPICKLECONNECTIONS = n\n')
 		result = False
 	c[0].connectioncleanup()
+
 	return result
 
 

@@ -10,15 +10,16 @@
 import configparser
 import re
 import time
-from multiprocessing import Manager, Process
+from multiprocessing import Manager
 from os import path
 
 import builder.dbinteraction.dbhelperfunctions
 import builder.dbinteraction.dbprepsubstitutions
 import builder.parsers.betacodefontshifts
 from builder.dbinteraction import dbloading
-from builder.dbinteraction.connection import setconnection, icanpickleconnections
+from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.dbhelperfunctions import resetauthorsandworksdbs
+from builder.dbinteraction.genericworkerobject import GenericInserterObject
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.file_io import filereaders
 from builder.parsers import idtfiles, parse_binfiles
@@ -32,10 +33,10 @@ from builder.parsers.latinsubstitutions import latindiacriticals
 from builder.parsers.regexsubstitutions import addcdlabels, cleanuplingeringmesses, colonshift, \
 	debughostilesubstitutions, earlybirdsubstitutions, hexrunner, insertnewlines, lastsecondsubsitutions, \
 	replacequotationmarks, totallemmatization
-from builder.wordcounting.wordcountdbfunctions import deletetemporarydbs
 from builder.postbuild.postbuildmetadata import buildtrigramindices, findwordcounts, insertfirstsandlasts
 from builder.postbuild.secondpassdbrewrite import assignlanguagetonewworks, builddbremappers, compilenewauthors, \
 	compilenewworks, registernewworks
+from builder.wordcounting.wordcountdbfunctions import deletetemporarydbs
 from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
@@ -131,20 +132,8 @@ def buildcorpusdbs(corpusname, corpusvars):
 	manager = Manager()
 	managedwork = manager.list(listoftexts)
 
-	if not icanpickleconnections():
-		connections = [None for _ in range(workercount)]
-	else:
-		connections = {i: setconnection() for i in range(workercount)}
-	jobs = [Process(target=managedworker, args=(managedwork, connections[i])) for i in range(workercount)]
-
-	for j in jobs:
-		j.start()
-	for j in jobs:
-		j.join()
-
-	if connections[0]:
-		for c in connections:
-			connections[c].connectioncleanup()
+	workerobject = GenericInserterObject(managedworker, argumentlist=[managedwork])
+	workerobject.dothework()
 
 	return
 

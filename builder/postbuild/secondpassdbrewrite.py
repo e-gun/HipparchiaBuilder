@@ -8,19 +8,19 @@
 
 import configparser
 import re
-from multiprocessing import Manager, Process
+from multiprocessing import Manager
 
 import psycopg2
 
 from builder.builderclasses import MPCounter, dbAuthor, dbOpus
-from builder.dbinteraction.connection import setconnection, icanpickleconnections
-from builder.dbinteraction.dbhelperfunctions import authortablemaker
+from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.dbdataintoobjects import dbauthorandworkloader
+from builder.dbinteraction.dbhelperfunctions import authortablemaker
 from builder.dbinteraction.dbloading import generatecopystream
+from builder.dbinteraction.genericworkerobject import GenericInserterObject
 from builder.parsers.swappers import forceregexsafevariants
 from builder.postbuild.postbuilddating import convertdate
 from builder.wordcounting.wordcounthelperfunctions import rebasedcounter
-from builder.workers import setworkercount
 
 """
 
@@ -198,23 +198,8 @@ def compilenewworks(newauthors, wkmapper):
 	workpile = manager.list(thework)
 	newworktuples = manager.list()
 
-	workers = setworkercount()
-	if not icanpickleconnections():
-		connections = [None for _ in range(workers)]
-	else:
-		connections = {i: setconnection() for i in range(workers)}
-	
-	jobs = [Process(target=parallelnewworkworker, args=(workpile, newworktuples, connections[i])) for i in range(workers)]
-	for j in jobs:
-		j.start()
-	for j in jobs:
-		j.join()
-
-	# newworktuples = [(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
-
-	if connections[0]:
-		for c in connections:
-			connections[c].connectioncleanup()
+	workerobject = GenericInserterObject(parallelnewworkworker, argumentlist=[workpile, newworktuples])
+	workerobject.dothework()
 
 	return newworktuples
 
@@ -343,21 +328,8 @@ def buildnewworkmetata(workandtitletuplelist):
 	workpile = manager.list(workinfodict.keys())
 	metadatalist = manager.list()
 
-	workers = setworkercount()
-	if not icanpickleconnections():
-		connections = [None for _ in range(workers)]
-	else:
-		connections = {i: setconnection() for i in range(workers)}
-
-	jobs = [Process(target=buildworkmetadatatuples, args=(workpile, count, metadatalist, connections[i])) for i in range(workers)]
-	for j in jobs:
-		j.start()
-	for j in jobs:
-		j.join()
-
-	if connections[0]:
-		for c in connections:
-			connections[c].connectioncleanup()
+	workerobject = GenericInserterObject(buildworkmetadatatuples, argumentlist=[workpile, count, metadatalist])
+	workerobject.dothework()
 
 	# manager was not populating the manager.dict()
 	# so we are doing this

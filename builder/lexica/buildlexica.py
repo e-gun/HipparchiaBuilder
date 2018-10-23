@@ -7,12 +7,12 @@
 """
 
 import configparser
-from multiprocessing import Manager, Process
+from multiprocessing import Manager
 
-from builder.dbinteraction.connection import setconnection, icanpickleconnections
+from builder.dbinteraction.connection import setconnection
+from builder.dbinteraction.genericworkerobject import GenericInserterObject
 from builder.lexica.mplexicalworkers import mpanalysisinsert, mpgreekdictionaryinsert, mplatindictionaryinsert, \
 	mplemmatainsert
-from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -45,21 +45,8 @@ def formatgklexicon():
 	manager = Manager()
 	entries = manager.list(entries)
 
-	workers = setworkercount()
-	if not icanpickleconnections():
-		connections = [None for _ in range(workers)]
-	else:
-		connections = {i: setconnection() for i in range(workers)}
-
-	jobs = [Process(target=mpgreekdictionaryinsert, args=(dictdb, entries, connections[i])) for i in range(workers)]
-	for j in jobs:
-		j.start()
-	for j in jobs:
-		j.join()
-
-	if connections[0]:
-		for c in connections:
-			connections[c].connectioncleanup()
+	workerobject = GenericInserterObject(mpgreekdictionaryinsert, argumentlist=[dictdb, entries])
+	workerobject.dothework()
 
 	return
 
@@ -88,21 +75,8 @@ def formatlatlexicon():
 	manager = Manager()
 	entries = manager.list(entries)
 
-	workers = setworkercount()
-	if not icanpickleconnections():
-		connections = [None for _ in range(workers)]
-	else:
-		connections = {i: setconnection() for i in range(workers)}
-
-	jobs = [Process(target=mplatindictionaryinsert, args=(dictdb, entries, connections[i])) for i in range(workers)]
-	for j in jobs:
-		j.start()
-	for j in jobs:
-		j.join()
-
-	if connections[0]:
-		for c in connections:
-			connections[c].connectioncleanup()
+	workerobject = GenericInserterObject(mplatindictionaryinsert, argumentlist=[dictdb, entries])
+	workerobject.dothework()
 
 	return
 
@@ -150,21 +124,8 @@ def grammarloader(language):
 	manager = Manager()
 	entries = manager.list(entries)
 
-	workers = setworkercount()
-	if not icanpickleconnections():
-		connections = [None for _ in range(workers)]
-	else:
-		connections = {i: setconnection() for i in range(workers)}
-
-	jobs = [Process(target=mplemmatainsert, args=(table, entries, islatin, connections[i])) for i in range(workers)]
-	for j in jobs:
-		j.start()
-	for j in jobs:
-		j.join()
-
-	if connections[0]:
-		for c in connections:
-			connections[c].connectioncleanup()
+	workerobject = GenericInserterObject(mplemmatainsert, argumentlist=[table, entries, islatin])
+	workerobject.dothework()
 
 	return
 
@@ -233,25 +194,12 @@ def analysisloader(language):
 		bundle[:] = [x.lower() for x in bundle]
 		items = manager.list(bundle)
 
-		workers = setworkercount()
-		if not icanpickleconnections():
-			connections = [None for _ in range(workers)]
-		else:
-			connections = {i: setconnection() for i in range(workers)}
-
-		jobs = [Process(target=mpanalysisinsert, args=(table, items, islatin, connections[i])) for i in range(workers)]
-		for j in jobs:
-			j.start()
-		for j in jobs:
-			j.join()
+		workerobject = GenericInserterObject(mpanalysisinsert, argumentlist=[table, items, islatin])
+		workerobject.dothework()
 
 		if bundlecount * chunksize < len(forms):
 			# this check prevents saying '950000 forms inserted' at the end when there are only '911871 items to load'
 			print('\t', str(bundlecount * chunksize), 'forms inserted')
-
-		if connections[0]:
-			for c in connections:
-				connections[c].connectioncleanup()
 
 	# we will be doing some searches inside of possible_dictionary_forms: need the right kind of index for it
 	dbconnection = setconnection()
