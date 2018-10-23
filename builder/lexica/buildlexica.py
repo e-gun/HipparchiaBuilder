@@ -234,7 +234,11 @@ def analysisloader(language):
 		items = manager.list(bundle)
 
 		workers = setworkercount()
-		connections = {i: setconnection() for i in range(workers)}
+		if not icanpickleconnections():
+			connections = [None for _ in range(workers)]
+		else:
+			connections = {i: setconnection() for i in range(workers)}
+
 		jobs = [Process(target=mpanalysisinsert, args=(table, items, islatin, connections[i])) for i in range(workers)]
 		for j in jobs:
 			j.start()
@@ -245,8 +249,9 @@ def analysisloader(language):
 			# this check prevents saying '950000 forms inserted' at the end when there are only '911871 items to load'
 			print('\t', str(bundlecount * chunksize), 'forms inserted')
 
-		for c in connections:
-			connections[c].connectioncleanup()
+		if connections[0]:
+			for c in connections:
+				connections[c].connectioncleanup()
 
 	# we will be doing some searches inside of possible_dictionary_forms: need the right kind of index for it
 	dbconnection = setconnection()
