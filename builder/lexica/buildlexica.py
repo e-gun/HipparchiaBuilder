@@ -162,9 +162,6 @@ def grammarloader(language):
 	for j in jobs:
 		j.join()
 
-	for c in connections:
-		connections[c].connectioncleanup()
-
 	if connections[0]:
 		for c in connections:
 			connections[c].connectioncleanup()
