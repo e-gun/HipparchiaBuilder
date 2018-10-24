@@ -17,7 +17,7 @@ from builder.wordcounting.databasewordcounts import mpwordcounter, monowordcount
 from builder.wordcounting.wordcountsbyheadword import headwordcounts
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 buildgreekauthors = config['corporatobuild']['buildgreekauthors']
 buildlatinauthors = config['corporatobuild']['buildlatinauthors']
