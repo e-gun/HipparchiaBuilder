@@ -155,7 +155,7 @@ def dbstrippedliner(dbunreadyversion):
 	# ['1', [('0', '5'), ('1', '1'), ('2', '4'), ('3', 'Milt'), ('4', '1')], 'hostem esse Atheniensibus, quod eorum auxilio Iones Sardis expugnas-']
 	# be careful: the next will kill even editorial insertions 'do <ut> des': you have to be sure that no 'pure' angled brackets made it this far
 	# ⟨abc⟩ should be all that you see
-	markup = re.compile(r'<.*?>')
+	nukemarkup = re.compile(r'<.*?>')
 	combininglowerdot = u'\u0323'
 	straydigits = r'\d'
 	sigmas = re.compile(r'[σς]')
@@ -169,17 +169,29 @@ def dbstrippedliner(dbunreadyversion):
 	#   no longer relevant?: ⸨⸩｟｠《
 	straypunct = r'\<\>\{\}\[\]\(\)⟨⟩₍₎\'\.\?\!⌉⎜͙✳※¶§͜﹖→𐄂𝕔;:ˈ＇,‚‛‘’“”„·‧∣'
 
-	nukem = re.compile('['+combininglowerdot+straydigits+straypunct+']')
+	nukepunct = re.compile('['+combininglowerdot+straydigits+straypunct+']')
 
 	dbreadyversion = deque()
 	workingcolumn = 2
 
+	# remove things like '<speaker>Cr.</speaker>' from the search column
+	# many 'ltcurlybracketsubstitutes' are interesting candidates for purging
+	# you can get a '\s\s' problem with these erasures
+	dbtagnuker = config['buildoptions']['unsearchable'].split(' ')
+	dbtagnuker = [t for t in dbtagnuker if t]
+	fingerprints = [re.compile(r'<{t}>.*?</{t}>\s*'.format(t=tag)) for tag in dbtagnuker]
+
 	for line in dbunreadyversion:
-		clean = re.sub(markup, '', line[workingcolumn])
-		clean = re.sub(nukem, '', clean)
+		# must do this before running the markup cleaner
+		clean = line[workingcolumn]
+		for f in fingerprints:
+			clean = re.sub(f, '', clean)
+		clean = re.sub(nukemarkup, '', clean)
+		clean = re.sub(nukepunct, '', clean)
 		clean = clean.lower()
 		if config['buildoptions']['lunate'] == 'n':
 			clean = re.sub(sigmas, 'ϲ', clean)
+		clean = re.sub(r'\s{2,}', ' ', clean)
 		line.append(clean)
 		# this is the clean line with accents
 		dbreadyversion.append(line)

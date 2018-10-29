@@ -1071,7 +1071,7 @@ def ltcurlybracketsubstitutes(match):
 	val = int(match.group(1))
 
 	substitutions = {
-		1: r'<span class="hmu_title">',
+		1: r'<hmutitle>',
 		2: r'<span class="hmu_marginaltext">',
 		3: r'<span class="hmu_scholium">',
 		4: r'<span class="hmu_unconventional_form_written_by_scribe">',
@@ -1121,7 +1121,7 @@ def rtcurlybracketsubstitutes(match):
 	val = int(match.group(1))
 
 	substitutions = {
-		1: r'</span>',  # hmu_title
+		1: r'</hmutitle>',  # hmu_title
 		2: r'</span>',  # hmu_marginal_text
 		3: r'</span>',  # hmu_reference_in_scholium
 		4: r'</span>',  # hmu_unconventional_form_written_by_scribe
