@@ -917,7 +917,6 @@ def leftbracketsubstitutions(match):
 	:return:
 	"""
 
-
 	val = int(match.group(1))
 
 	substitutions = {
@@ -960,7 +959,6 @@ def leftbracketsubstitutions(match):
 		substitute = '<hmu_unhandled_left_bracket betacodeval="{v}" />'.format(v=val)
 		if warnings:
 			print('\t', substitute)
-
 
 	return substitute
 

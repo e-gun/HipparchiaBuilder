@@ -21,7 +21,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 
-def setconnection(autocommit=False, mandatorysimple=False):
+def setconnection(autocommit=False, simple=False):
 	"""
 
 	set a connection...
@@ -48,7 +48,7 @@ def setconnection(autocommit=False, mandatorysimple=False):
 	else:
 		ConnectionObject = PooledConnectionObject
 
-	if not mandatorysimple:
+	if not simple:
 		c = ConnectionObject(readonlyconnection=False, ctype='rw')
 	else:
 		c = SimpleConnectionObject(readonlyconnection=False, ctype='rw')
