@@ -18,7 +18,7 @@ import configparser
 from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 
 def setconnection(autocommit=False, simple=False):
