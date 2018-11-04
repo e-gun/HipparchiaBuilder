@@ -31,7 +31,7 @@ from builder.wordcounting.wordcountdbfunctions import deletetemporarydbs
 from builder.postbuild.postbuildmetadata import boundaryfinder, insertboundaries, calculatewordcounts, insertcounts
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 outputdir = config['io']['outputdir']
 debugoutfile = config['io']['debugoutfile']

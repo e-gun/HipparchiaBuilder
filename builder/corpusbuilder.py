@@ -40,7 +40,7 @@ from builder.wordcounting.wordcountdbfunctions import deletetemporarydbs
 from builder.workers import setworkercount
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 
 def buildcorpusdbs(corpusname, corpusvars):

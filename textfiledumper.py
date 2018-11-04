@@ -31,7 +31,7 @@ from builder.parsers.regexsubstitutions import cleanuplingeringmesses, earlybird
 from builder.parsers.latinsubstitutions import latindiacriticals
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 outputdir = config['io']['outputdir']
 debugoutfile = config['io']['debugoutfile']
