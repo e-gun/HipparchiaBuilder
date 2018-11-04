@@ -14,7 +14,7 @@ from builder.dbinteraction.connection import setconnection
 sqltemplateversion = 2242018
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 stamp = config['buildoptions']['timestamp']
 
 

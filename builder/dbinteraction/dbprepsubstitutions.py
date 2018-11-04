@@ -13,7 +13,7 @@ from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj,
 from builder.parsers.regexsubstitutions import swapregexbrackets, makepunctuationsmall
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 
 def dbprepper(dbunreadyversion):

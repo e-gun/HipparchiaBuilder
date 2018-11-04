@@ -15,7 +15,7 @@ from builder.lexica.mplexicalworkers import mpanalysisinsert, mpgreekdictionaryi
 	mplemmatainsert
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 
 def formatgklexicon():

@@ -74,7 +74,7 @@ level00 = line
 """
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 
 def builddbremappers(oldprefix, newprefix):

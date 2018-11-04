@@ -10,7 +10,7 @@ import re
 import configparser
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 def capitalletters(betacode):
 	# needs to be done in order of length of regex string

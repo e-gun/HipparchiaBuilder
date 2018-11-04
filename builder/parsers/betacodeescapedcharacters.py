@@ -10,7 +10,7 @@ import re
 import configparser
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 if config['buildoptions']['warnings'] == 'y':
 	warnings = True

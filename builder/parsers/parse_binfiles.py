@@ -17,7 +17,7 @@ from builder.parsers.latinsubstitutions import latindiacriticals
 from builder.parsers.swappers import forceregexsafevariants
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 tlg = config['io']['tlg']
 
 

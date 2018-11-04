@@ -16,7 +16,7 @@ from builder.parsers.citationbuilder import citationbuilder
 from builder.parsers.swappers import bitswapchars, hextohighunicode, highunicodetohex, hutohxgrouper
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 if config['buildoptions']['warnings'] == 'y':
 	warnings = True

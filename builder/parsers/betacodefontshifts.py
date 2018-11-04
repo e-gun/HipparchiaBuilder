@@ -11,7 +11,7 @@ import configparser
 from builder.parsers.betacodeandunicodeinterconversion import parsegreekinsidelatin
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='utf8')
 
 if config['buildoptions']['warnings'] == 'y':
 	warnings = True
