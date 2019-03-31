@@ -1,4 +1,4 @@
-#!../bin/python
+# -*- coding: utf-8 -*-
 """
 	HipparchiaBuilder: compile a database of Greek and Latin texts
 	Copyright: E Gunderson 2016-19
