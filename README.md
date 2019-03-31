@@ -15,13 +15,9 @@ Five databases possible:
 
 these databases can be read by HipparchiaServer
 
-in order to prepare the build environment you should look at HipparchiaBSD first
+in order to prepare the build environment you need to have installed it via HipparchiaYOUROSTYPE
 
-there you will find starter files for installing hipparchia onto macOS or into a virtualbox (or a non-virtual one) running BSD 10.3 or 11.0
-
-in addition to the build environment itself, you will need:
-
-data to insert into the builder:
+in addition to the build environment itself, you will need: the `data` to insert into the builder:
 
 ```
     the TLG_E and/or PHI00005 and/or PHI7 files (presumably from cd-rom disks)
@@ -30,22 +26,28 @@ data to insert into the builder:
     the lexical data 
         see HipparchiaBSD on how to acquire the lexical data
         [00_FreeBSD_initial_setup.txt or 01_macOS_hipparchia_installation.txt under 'ACQUIRING THE LEXICA']
+```
 
-    HipparchiaServer knows what it does and does not know: any combination of core data is acceptable, but unusual
-    combinations of data can be expected to produce unusual results (e.g., only Greek Documentary papyri and the Latin
-    lexicon and no Latin grammar): some items are more or less meant to go together. But it is possible to install
-    just a subset of one corpus: only Homer, for example.
+After `config.ini` has been properly edited you can run `makecorpora.py`. A default installation will 
+be pre-configured to build all of the databases on the first run.
 
 ```
+    % cd ~/hipparchia_venv/HipparchiaBuilder/
+    % ./makecorpora.py
+    
+    or
+    
+    % ./makecorpora.py -h
+```
+
+`HipparchiaServer` knows what it does and does not know: any combination of core data is acceptable, but unusual
+combinations of data can be expected to produce unusual results (e.g., only Greek Documentary papyri and the Latin
+lexicon and no Latin grammar): some items are more or less meant to go together. But it is possible to install
+just a subset of one corpus: only Homer, for example.
 
 minimum software requirements:
 ```
     python 3.6
-        pip
-        flask
-        psycopg2
-        bs4
-        websockets
     postgresql 9.6+
 ```
 
