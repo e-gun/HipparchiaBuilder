@@ -10,23 +10,21 @@ import configparser
 import time
 from multiprocessing import freeze_support
 
+from builder.configureatlaunch import getcommandlineargs, tobuildaccordingtoconfigfile
 from builder import corpusbuilder
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.lexica.buildlexica import analysisloader, formatgklexicon, formatlatlexicon, grammarloader
-from builder.wordcounting.databasewordcounts import mpwordcounter, monowordcounter
+from builder.wordcounting.databasewordcounts import monowordcounter
 from builder.wordcounting.wordcountsbyheadword import headwordcounts
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
-buildgreekauthors = config['corporatobuild']['buildgreekauthors']
-buildlatinauthors = config['corporatobuild']['buildlatinauthors']
-buildinscriptions = config['corporatobuild']['buildinscriptions']
-buildpapyri = config['corporatobuild']['buildpapyri']
-buildchristians = config['corporatobuild']['buildchristians']
-buildlex = config['corporatobuild']['buildlex']
-buildgram = config['corporatobuild']['buildgram']
-buildcounts = config['corporatobuild']['buildwordcounts']
+tobuild = tobuildaccordingtoconfigfile()
+commandlineargs = getcommandlineargs()
+ovverride = {getattr(commandlineargs, k) for k in tobuild.keys() if getattr(commandlineargs, k)}
+if ovverride:
+	tobuild = {k: getattr(commandlineargs, k) for k in tobuild.keys()}
 
 start = time.time()
 
@@ -38,7 +36,7 @@ corpusvars = {
 			'corpusabbrev': 'lt',
 			'maxfilenumber': 9999,  # canon at 9999
 			'minfilenumber': 0,
-			'exclusionlist': [],
+			'exclusionlist': list(),
 			'languagevalue': 'L'
 			},
 	'greek':
@@ -48,7 +46,7 @@ corpusvars = {
 			'corpusabbrev': 'gr',
 			'maxfilenumber': 9999,
 			'minfilenumber': 0,
-			'exclusionlist': [],
+			'exclusionlist': list(),
 			'languagevalue': 'G'
 			},
 	'inscriptions':
@@ -58,7 +56,7 @@ corpusvars = {
 			'corpusabbrev': 'in',
 			'maxfilenumber': 8000,  # 8000+ are bibliographies
 			'minfilenumber': 0,
-			'exclusionlist': [],
+			'exclusionlist': list(),
 			'languagevalue': 'B'
 			},
 	'papyri':
@@ -68,7 +66,7 @@ corpusvars = {
 			'corpusabbrev': 'dp',
 			'maxfilenumber': 5000,  # maxval is 213; checklist at 9999
 			'minfilenumber': 0,
-			'exclusionlist': [],
+			'exclusionlist': list(),
 			'languagevalue': 'B'
 			},
 	'christians':
@@ -92,19 +90,19 @@ if __name__ == '__main__':
 
 	corporatobuild = list()
 
-	if buildlatinauthors == 'y':
+	if tobuild['latinauthors']:
 		corporatobuild.append('latin')
 
-	if buildgreekauthors == 'y':
+	if tobuild['greekauthors']:
 		corporatobuild.append('greek')
 
-	if buildinscriptions == 'y':
+	if tobuild['inscriptions']:
 		corporatobuild.append('inscriptions')
 
-	if buildpapyri == 'y':
+	if tobuild['papyri']:
 		corporatobuild.append('papyri')
 
-	if buildchristians == 'y':
+	if tobuild['christians']:
 		corporatobuild.append('christians')
 
 	for corpusname in corporatobuild:
@@ -112,18 +110,17 @@ if __name__ == '__main__':
 		corpusbuilder.remaptables(corpusname, corpusvars)
 		corpusbuilder.buildcorpusmetadata(corpusname, corpusvars)
 
-
 	#
 	# lexica, etc
 	#
 
-	if buildlex == 'y':
+	if tobuild['lex']:
 		print('building lexical dbs')
 		formatgklexicon()
 		formatlatlexicon()
 		timestampthebuild('lx')
 
-	if buildgram == 'y':
+	if tobuild['gram']:
 		print('building grammar dbs')
 		grammarloader('greek')
 		analysisloader('greek')
@@ -131,7 +128,7 @@ if __name__ == '__main__':
 		analysisloader('latin')
 		timestampthebuild('lm')
 
-	if buildcounts == 'y':
+	if tobuild['wordcounts']:
 		print('building wordcounts by (repeatedly) examining every line of every text in all available dbs: this might take a minute or two...')
 		# this can be dangerous if the number of workers is high and the RAM available is not substantial; not the most likely configuration?
 		# mpwordcounter() is the hazardous one; if your survive it headwordcounts() will never get you near the same level of resource use
