@@ -171,7 +171,7 @@ def poundsubstitutes(match):
 		74: u'\u205d',
 		75: u'\u002e',
 		80: u'\u0308',
-		81: r'＇', # fullwidth apostrophe instead of the dangerous simple apostrophe
+		81: r'＇',  # fullwidth apostrophe instead of the dangerous simple apostrophe
 		82: u'\u02ca',
 		83: u'\u02cb',
 		84: u'\u1fc0',
@@ -233,8 +233,8 @@ def poundsubstitutes(match):
 		163: u'\u00b6',
 		165: u'\u00d7',
 		166: u'\u2a5a',
-		167: u'\u039c\u039c', # supposed to stack this too
-		168: u'\u039c\u039c\u039c', # supposed to stack this too
+		167: u'\u039c\u039c',  # supposed to stack this too
+		168: u'\u039c\u039c\u039c',  # supposed to stack this too
 		169: r'𐅵',
 		171: r'𐅵',
 		172: r'𐅵',

@@ -400,7 +400,7 @@ def bracketspacer(matchgroup):
 #
 
 
-def totallemmatization(parsedtextfile):
+def totallemmatization(parsedtextfile) -> list:
 	"""
 	will use decoded hex commands to build a citation value for every line in the text file
 	can produce a formatted line+citation, but really priming us for the move to the db

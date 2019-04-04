@@ -61,3 +61,18 @@ def highunicodefileload(filepath):
 	txt = ''.join(txt)
 
 	return txt
+
+
+def streamout(txt, outfile):
+	f = open(outfile, 'w')
+	f.write(txt)
+	f.close()
+	return
+
+
+def linesout(txt, outfile):
+	f = open(outfile, 'w')
+	for item in txt:
+		f.write("%s\n" % item)
+	f.close()
+	return

@@ -6,7 +6,14 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-debugauthor = 'TLG1304'
+import argparse
+import configparser
+from builder.file_io.filereaders import findauthors
+from builder.corpusbuilder import addoneauthor, buildauthorobject
+from builder.dbinteraction.connection import setconnection
+from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
+from builder.wordcounting.wordcountdbfunctions import deletetemporarydbs
+from builder.postbuild.postbuildmetadata import boundaryfinder, insertboundaries, calculatewordcounts, insertcounts
 
 """
 use this script to build and insert a single author into the database
@@ -21,15 +28,6 @@ but this script will RUIN any INS, DDP, or CHR database since the remapper will 
 this can be fixed by dodging builddbremappers() and instead deriving the ids from the extant data
 
 """
-
-import configparser
-from builder.file_io.filereaders import findauthors
-from builder.corpusbuilder import addoneauthor, buildauthorobject
-from builder.dbinteraction.connection import setconnection
-from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
-from builder.wordcounting.wordcountdbfunctions import deletetemporarydbs
-from builder.postbuild.postbuildmetadata import boundaryfinder, insertboundaries, calculatewordcounts, insertcounts
-
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
@@ -39,6 +37,28 @@ tlg = config['io']['tlg']
 phi = config['io']['phi']
 ddp = config['io']['ddp']
 ins = config['io']['ins']
+
+debugauthor = 'TLG1304'
+commandlineparser = argparse.ArgumentParser(description='pick the author to add; default is currently {d}'.format(d=debugauthor))
+commandlineparser.add_argument('--au', required=False, type=str, help='set author value [TLG/LAT + NNNN][INS/DDP/CHR work, but this will *damage* the current installation]')
+commandlineparser.add_argument('--debugoutput', action='store_true', help='generate the debug files in "{loc}"; add newlines after control sequences'.format(loc=outputdir))
+commandlineparser.add_argument('--debugoutputallowlonglines', action='store_true', help='generate the debug files and allow output files with a single (very, very long) line'.format(loc=outputdir))
+# commandlineparser.add_argument('--skip', action='store_true', help='skip db insertion; just generate the debug files')
+commandlineargs = commandlineparser.parse_args()
+
+useoutputfiles = False
+usenewlines = False
+
+if commandlineargs.au:
+	debugauthor = commandlineargs.au
+
+if commandlineargs.debugoutput:
+	useoutputfiles = True
+	usenewlines = True
+
+if commandlineargs.debugoutputskipnewlines:
+	useoutputfiles = True
+	usenewlines = False
 
 mapper = {
 	'TLG': {'lg': 'G', 'db': tlg, 'uidprefix': 'gr', 'datapath': config['io']['tlg'], 'tmpprefix': None},
@@ -64,7 +84,7 @@ authordict = {debugauthor: myauthorname}
 
 dbc = setconnection(config)
 cur = dbc.cursor()
-result = addoneauthor(authordict, lg, uidprefix, datapath, dataprefix, dbc, cur)
+result = addoneauthor(authordict, lg, uidprefix, datapath, dataprefix, dbc, debugoutput=useoutputfiles, debugnewlines=usenewlines)
 print(result)
 dbc.commit()
 

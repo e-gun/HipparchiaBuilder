@@ -265,7 +265,7 @@ def checkextant(authorlist, datapath):
 	return pruneddict
 
 
-def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection):
+def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection, debugoutput=False, debugnewlines=True):
 	"""
 
 	I need an authtab pair within a one-item dict: {'0022':'Marcus Porcius &1Cato&\x80Cato'}
@@ -286,14 +286,14 @@ def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnec
 	authorobj = buildauthorobject(number, language, datapath, uidprefix, dataprefix)
 	authorobj.addauthtabname(name)
 	authorobj.language = language
-	thecollectedworksof(authorobj, language, datapath, dbconnection)
+	thecollectedworksof(authorobj, language, datapath, dbconnection, debugoutput, debugnewlines)
 	buildtime = round(time.time() - starttime, 2)
 	success = number+' '+authorobj.cleanname+' '+str(buildtime)+'s'
 	
 	return success
 
 
-def thecollectedworksof(authorobject, language, datapath, dbconnection):
+def thecollectedworksof(authorobject, language, datapath, dbconnection, debugoutput=False, debugnewlines=True):
 	"""
 	give me a authorobject and i will build you a corpus in three stages
 	[a] initial parsing of original files
@@ -302,8 +302,8 @@ def thecollectedworksof(authorobject, language, datapath, dbconnection):
 
 	:return:
 	"""
-	txt = initialworkparsing(authorobject, language, datapath)
-	txt = secondaryworkparsing(authorobject, txt)
+	txt = initialworkparsing(authorobject, language, datapath, debugoutput, debugnewlines)
+	txt = secondaryworkparsing(authorobject, txt, debugoutput, debugnewlines)
 	databaseloading(txt, authorobject, dbconnection)
 
 	return
@@ -350,7 +350,7 @@ def buildauthorobject(authortabnumber, language, datapath, uidprefix, dataprefix
 	return authorobj
 
 
-def initialworkparsing(authorobject, language, datapath):
+def initialworkparsing(authorobject, language, datapath, debugoutput=False, debugnewlines=True):
 	"""
 
 	grab a raw file and start cleaning it up; the order of files and of items within files usually matters
@@ -367,7 +367,11 @@ def initialworkparsing(authorobject, language, datapath):
 	:return:
 	"""
 
-	txt = filereaders.highunicodefileload(datapath + authorobject.dataprefix+authorobject.number + '.TXT')
+	outputdir = config['io']['outputdir']
+	outsuffix = config['io']['debugoutfile']
+	filename = '{dir}{af}_1{count}_{fnc}{suffix}'
+
+	thetext = filereaders.highunicodefileload(datapath + authorobject.dataprefix+authorobject.number + '.TXT')
 
 	initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
 	greekmiddle = [colonshift, replacegreekmarkup, replacecoptic, latinfontlinemarkupprober,
@@ -380,13 +384,22 @@ def initialworkparsing(authorobject, language, datapath):
 	else:
 		functionlist = initial + latinmiddle + final
 
+	count = 0
 	for f in functionlist:
-		txt = f(txt)
+		thetext = f(thetext)
 
-	return txt
+		if debugoutput:
+			count += 1
+			fn = filename.format(dir=outputdir, af=authorobject.dataprefix+authorobject.number, count=chr(count+96), fnc=getattr(f, '__name__'), suffix=outsuffix)
+			if debugnewlines:
+				filereaders.streamout(re.sub(' █', '\n█', thetext), fn)
+			else:
+				filereaders.streamout(thetext, fn)
+
+	return thetext
 
 
-def secondaryworkparsing(authorobject, txt):
+def secondaryworkparsing(authorobject, thetext, debugoutput=False, debugnewlines=True):
 	"""
 
 	the next big step is turning the datastream into a citeable text
@@ -394,18 +407,46 @@ def secondaryworkparsing(authorobject, txt):
 	the datastream is about to start having 'lines' and these are going to be counted and sorted, etc.
 
 	:param authorobject:
-	:param txt:
+	:param thetext:
 	:return:
 	"""
+	outputdir = config['io']['outputdir']
+	outsuffix = config['io']['debugoutfile']
+	filename = '{dir}{af}_2{count}_{fnc}{suffix}'
 
-	lemmatized = addcdlabels(txt, authorobject.number)
-	lemmatized = hexrunner(lemmatized)
-	lemmatized = lastsecondsubsitutions(lemmatized)
-	lemmatized = debughostilesubstitutions(lemmatized)
-	lemmatized = insertnewlines(lemmatized)
-	dbreadyversion = totallemmatization(lemmatized)
+	# first: the two-argument function
+	thetext = addcdlabels(thetext, authorobject.number)
 
-	return dbreadyversion
+	if debugoutput:
+		count = 1
+		fn = filename.format(dir=outputdir, af=authorobject.dataprefix + authorobject.number, count=chr(count + 96), fnc='addcdlabels', suffix=outsuffix)
+
+		if debugnewlines:
+			filereaders.streamout(re.sub(' █', '\n█', thetext), fn)
+		else:
+			filereaders.streamout(thetext, fn)
+
+	# next, the one-argument functions
+	functionlist = [hexrunner, lastsecondsubsitutions, debughostilesubstitutions, insertnewlines, totallemmatization]
+
+	count = 1
+	for f in functionlist:
+		thetext = f(thetext)
+
+		if debugoutput:
+			if isinstance(thetext, list):
+				outputfunction = filereaders.linesout
+			else:
+				outputfunction = filereaders.streamout
+			count += 1
+			fn = filename.format(dir=outputdir, af=authorobject.dataprefix+authorobject.number, count=chr(count+96), fnc=getattr(f, '__name__'), suffix=outsuffix)
+
+			if debugnewlines and not isinstance(thetext, list):
+				outputfunction(re.sub(' █', '\n█', thetext), fn)
+			else:
+				outputfunction(thetext, fn)
+
+	return thetext
 
 
 def databaseloading(dbreadyversion, authorobject, dbconnection):
