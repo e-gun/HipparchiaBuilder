@@ -18,6 +18,8 @@ def getcommandlineargs():
 
 	commandlineparser = argparse.ArgumentParser(description='available overrides to "config.ini" for "makecorpora.py"; setting any override means that *only* what is explicitly requested will be built')
 
+	commandlineparser.add_argument('--all', action='store_true', help='build absolutely everything [this will ignore any other values you set on the command line]')
+	commandlineparser.add_argument('--allbutwordcounts', action='store_true', help='everything other than the wordcounts')
 	commandlineparser.add_argument('--latinauthors', action='store_true', help='build the database of Latin authors')
 	commandlineparser.add_argument('--greekauthors', action='store_true', help='build the database of Greek authors')
 	commandlineparser.add_argument('--inscriptions', action='store_true', help='build the database of (mostly Greek) inscriptions')

@@ -22,9 +22,17 @@ config.read('config.ini', encoding='utf8')
 
 tobuild = tobuildaccordingtoconfigfile()
 commandlineargs = getcommandlineargs()
-ovverride = {getattr(commandlineargs, k) for k in tobuild.keys() if getattr(commandlineargs, k)}
+additionalchecks = [commandlineargs.all, commandlineargs.allbutwordcounts]
+ovverride = {getattr(commandlineargs, k) for k in tobuild.keys() if getattr(commandlineargs, k)}.union({a for a in additionalchecks if a})
+
 if ovverride:
-	tobuild = {k: getattr(commandlineargs, k) for k in tobuild.keys()}
+	if commandlineargs.all:
+		tobuild = {k: True for k in tobuild.keys()}
+	elif commandlineargs.allbutwordcounts:
+		tobuild = {k: True for k in tobuild.keys()}
+		tobuild['wordcounts'] = False
+	else:
+		tobuild = {k: getattr(commandlineargs, k) for k in tobuild.keys()}
 
 start = time.time()
 
