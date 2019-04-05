@@ -60,6 +60,9 @@ if commandlineargs.debugoutputallowlonglines:
 	useoutputfiles = True
 	usenewlines = False
 
+if commandlineargs.skipdbload:
+	useoutputfiles = True
+
 mapper = {
 	'TLG': {'lg': 'G', 'db': tlg, 'uidprefix': 'gr', 'datapath': config['io']['tlg'], 'tmpprefix': None},
 	'LAT': {'lg': 'L', 'db': phi, 'uidprefix': 'lt', 'datapath': config['io']['phi'], 'tmpprefix': None},
