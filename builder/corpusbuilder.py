@@ -265,7 +265,7 @@ def checkextant(authorlist, datapath):
 	return pruneddict
 
 
-def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection, debugoutput=False, debugnewlines=True):
+def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnection, debugoutput=False, debugnewlines=True, skipdbload=False):
 	"""
 
 	I need an authtab pair within a one-item dict: {'0022':'Marcus Porcius &1Cato&\x80Cato'}
@@ -286,14 +286,14 @@ def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnec
 	authorobj = buildauthorobject(number, language, datapath, uidprefix, dataprefix)
 	authorobj.addauthtabname(name)
 	authorobj.language = language
-	thecollectedworksof(authorobj, language, datapath, dbconnection, debugoutput, debugnewlines)
+	thecollectedworksof(authorobj, language, datapath, dbconnection, debugoutput, debugnewlines, skipdbload)
 	buildtime = round(time.time() - starttime, 2)
 	success = number+' '+authorobj.cleanname+' '+str(buildtime)+'s'
 	
 	return success
 
 
-def thecollectedworksof(authorobject, language, datapath, dbconnection, debugoutput=False, debugnewlines=True):
+def thecollectedworksof(authorobject, language, datapath, dbconnection, debugoutput=False, debugnewlines=True, skipdbload=False):
 	"""
 	give me a authorobject and i will build you a corpus in three stages
 	[a] initial parsing of original files
@@ -304,7 +304,10 @@ def thecollectedworksof(authorobject, language, datapath, dbconnection, debugout
 	"""
 	txt = initialworkparsing(authorobject, language, datapath, debugoutput, debugnewlines)
 	txt = secondaryworkparsing(authorobject, txt, debugoutput, debugnewlines)
-	databaseloading(txt, authorobject, dbconnection)
+	if not skipdbload:
+		databaseloading(txt, authorobject, dbconnection)
+	else:
+		print(authorobject.cleanname, 'built but not loaded')
 
 	return
 

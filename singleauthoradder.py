@@ -43,7 +43,7 @@ commandlineparser = argparse.ArgumentParser(description='pick the author to add;
 commandlineparser.add_argument('--au', required=False, type=str, help='set author value [TLG/LAT + NNNN][INS/DDP/CHR work, but this will *damage* the current installation]')
 commandlineparser.add_argument('--debugoutput', action='store_true', help='generate the debug files in "{loc}"; add newlines after control sequences'.format(loc=outputdir))
 commandlineparser.add_argument('--debugoutputallowlonglines', action='store_true', help='generate the debug files and allow output files with a single (very, very long) line'.format(loc=outputdir))
-# commandlineparser.add_argument('--skip', action='store_true', help='skip db insertion; just generate the debug files')
+commandlineparser.add_argument('--skipdbload', action='store_true', help='skip db insertion; just generate the debug files')
 commandlineargs = commandlineparser.parse_args()
 
 useoutputfiles = False
@@ -56,7 +56,7 @@ if commandlineargs.debugoutput:
 	useoutputfiles = True
 	usenewlines = True
 
-if commandlineargs.debugoutputskipnewlines:
+if commandlineargs.debugoutputallowlonglines:
 	useoutputfiles = True
 	usenewlines = False
 
@@ -84,7 +84,7 @@ authordict = {debugauthor: myauthorname}
 
 dbc = setconnection(config)
 cur = dbc.cursor()
-result = addoneauthor(authordict, lg, uidprefix, datapath, dataprefix, dbc, debugoutput=useoutputfiles, debugnewlines=usenewlines)
+result = addoneauthor(authordict, lg, uidprefix, datapath, dataprefix, dbc, debugoutput=useoutputfiles, debugnewlines=usenewlines, skipdbload=commandlineargs.skipdbload)
 print(result)
 dbc.commit()
 
@@ -101,29 +101,30 @@ else:
 	a = buildauthorobject(debugauthor, lg, db, uidprefix, dataprefix)
 	newauthors = [a]
 
-# firsts and lasts
-for a in newauthors:
-	print('inserting work db metatata: firsts and lasts')
-	query = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid DESC'
-	data = (a.universalid+'%',)
-	cur.execute(query, data)
-	results = cur.fetchall()
-	uids = [r[0] for r in results]
+if not commandlineargs.skipdbload:
+	# firsts and lasts
+	for a in newauthors:
+		print('inserting work db metatata: firsts and lasts')
+		query = 'SELECT universalid FROM works WHERE universalid LIKE %s ORDER BY universalid DESC'
+		data = (a.universalid+'%',)
+		cur.execute(query, data)
+		results = cur.fetchall()
+		uids = [r[0] for r in results]
 
-	boundaries = boundaryfinder(uids)
-	insertboundaries(boundaries)
+		boundaries = boundaryfinder(uids)
+		insertboundaries(boundaries)
 
-# wordcounts
-for a in newauthors:
-	print('inserting work db metatata: wordcounts')
-	query = 'SELECT universalid FROM works WHERE wordcount IS NULL ORDER BY universalid ASC'
-	cur.execute(query)
-	results = cur.fetchall()
-	dbc.commit()
+	# wordcounts
+	for a in newauthors:
+		print('inserting work db metatata: wordcounts')
+		query = 'SELECT universalid FROM works WHERE wordcount IS NULL ORDER BY universalid ASC'
+		cur.execute(query)
+		results = cur.fetchall()
+		dbc.commit()
 
-	uids = [r[0] for r in results]
+		uids = [r[0] for r in results]
 
-	counts = calculatewordcounts(uids)
-	insertcounts(counts)
+		counts = calculatewordcounts(uids)
+		insertcounts(counts)
 
 del dbc
