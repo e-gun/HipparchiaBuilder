@@ -338,7 +338,6 @@ def debughostilesubstitutions(texttoclean):
 
 	betacodetuples = [(r'[\$]', r''),]
 
-
 	# note that '&' will return to the text via the hexrunner: it can be embedded in the annotations
 	# and you will want it later in order to format that material when it hits HipparchiaServer:
 	# in 'Gel. &3N.A.& 20.3.2' the '&3' turns on italics and stripping & leaves you with 3N.A. (which is hard to deal with)
@@ -498,11 +497,11 @@ def addcdlabels(texttoclean, authornumber):
 	replace = '\n<hmu_end_of_cd_block_re-initialize_key_variables />'
 	texttoclean = re.sub(search, replace, texttoclean)
 
+	template = '█ⓔⓕ █⑧⓪ █ⓑ{one} █ⓑ{two} █ⓑ{three} █ⓑ{four} █ⓕⓕ '
 	authornumber = hextohighunicode(authornumber)
 	digits = re.match(r'(.)(.)(.)(.)', authornumber)
-	search = '█ⓔⓕ █⑧⓪ █ⓑ' + digits.group(1) + ' █ⓑ' + digits.group(2) + ' █ⓑ' \
-	         + digits.group(3) + ' █ⓑ' + digits.group(4) + ' █ⓕⓕ '
-	replace = '<hmu_cd_assert_author_number value=\"' + highunicodetohex(authornumber) + '\"/>'
+	search = template.format(one=digits.group(1), two=digits.group(2), three=digits.group(3), four=digits.group(4))
+	replace = '<hmu_cd_assert_author_number value=\"{v}\"/>'.format(v=highunicodetohex(authornumber))
 	texttoclean = re.sub(search, replace, texttoclean)
 
 	# 'primary level (81)' info stored in a run of 6 bytes:
@@ -521,7 +520,7 @@ def addcdlabels(texttoclean, authornumber):
 	replace = r'<hmu_cd_assert_work_abbreviation betacodeval="\2"/>'
 	texttoclean = re.sub(search, replace, texttoclean)
 
-	# 'tertiray level (83)' info stored in a run of bytes whose length varies: add 127 to them and you get an ascii value
+	# 'tertiary level (83)' info stored in a run of bytes whose length varies: add 127 to them and you get an ascii value
 	# 0xef 0x83 0xc1 0xf0 0xf5 0xec 0xff
 	search = r'(█ⓔⓕ\s█⑧③\s((█..\s){1,}?)█ⓕⓕ) '
 	replace = r'<hmu_cd_assert_author_abbrev betacodeval="\2"/>'

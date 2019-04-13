@@ -1096,7 +1096,7 @@ def ltcurlybracketsubstitutes(match):
 		39: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_39 />',
 		40: r'<speaker>',
 		41: r'<span class="stagedirection">',
-		43: r'<span class="serviusformatting">',
+		43: r'<hmu_serviusformatting>',
 	}
 
 	try:
@@ -1138,7 +1138,7 @@ def rtcurlybracketsubstitutes(match):
 		29: r'</span>',  # hmu_emendation_by_editor_of_text_not_obviously_incorrect
 		40: r'</speaker>',  # hmu_speaker
 		41: r'</span>',  # hmu_stage_direction
-		43: r'</span>',  # hmu_servius_bracket
+		43: r'</hmu_serviusformatting>',  # hmu_servius_bracket
 	}
 
 	try:
