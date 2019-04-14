@@ -324,22 +324,39 @@ def removeshiftsymmetry(groupone, grouptwo, groupthree):
 	return value
 
 
-def hmufontshiftsintospans(texttoclean, language):
+def hmuintospans(texttoclean, language):
 	"""
 
-	turn '<hmu_fontshift_latin_italic>b </hmu_fontshift_latin_italic>'
+	turn
+		'<hmu_fontshift_latin_italic>b </hmu_fontshift_latin_italic>'
+	into
+		'<span class="latin italic">b </span>'
 
-	into '<span class="latin italic">b </span>'
+	AND
+
+	convert
+		<hmu_span_xxx> ... </hmu_span_xxx>
+	into
+		<span class="xxx">...</span>
 
 	:param texttoclean:
 	:return:
 	"""
+
+	if config['buildoptions']['htmlifydatabase'] == 'n':
+		return texttoclean
 
 	shiftfinder = re.compile(r'<hmu_fontshift_(.*?)_(.*?)>')
 	shiftcleaner = re.compile(r'</hmu_fontshift_.*?>')
 
 	texttoclean = re.sub(shiftfinder, lambda x: matchskipper(x.group(1), x.group(2), language), texttoclean)
 	texttoclean = re.sub(shiftcleaner, r'</span>', texttoclean)
+
+	hmuopenfinder = re.compile(r'<hmu_span_(.*?)>')
+	hmuclosefinder = re.compile(r'</hmu_span_(.*?)>')
+
+	texttoclean = re.sub(hmuopenfinder, r'<span class="\1">', texttoclean)
+	texttoclean = re.sub(hmuclosefinder, r'</span>', texttoclean)
 
 	return texttoclean
 
@@ -353,7 +370,7 @@ def latinhmufontshiftsintospans(texttoclean):
 	:return:
 	"""
 
-	return hmufontshiftsintospans(texttoclean, 'latin')
+	return hmuintospans(texttoclean, 'latin')
 
 
 def greekhmufontshiftsintospans(texttoclean):
@@ -365,8 +382,7 @@ def greekhmufontshiftsintospans(texttoclean):
 	:return:
 	"""
 
-
-	return hmufontshiftsintospans(texttoclean, 'greek')
+	return hmuintospans(texttoclean, 'greek')
 
 
 def matchskipper(groupone, grouptwo, language):

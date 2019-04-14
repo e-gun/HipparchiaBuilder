@@ -369,7 +369,7 @@ def poundsubstitutes(match):
 		545: r'<hmu_idiosyncratic_char betacodeval="545">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		546: r'<hmu_idiosyncratic_char betacodeval="546">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		547: r'<hmu_idiosyncratic_char betacodeval="547">◦</hmu_idiosyncratic_char>',  # idiosyncratic
-		548: r'<span class="superscript">‖̴</span>', # 2016+0334
+		548: r'<hmu_span_superscript_superscript>‖̴</hmu_span_superscript_superscript>', # 2016+0334
 		549: r'<hmu_idiosyncratic_char betacodeval="549">◦</hmu_idiosyncratic_char>',  # idiosyncratic
 		550: u'\u003a\u003a\u2e2e',
 		551: u'\u25cc',
@@ -755,7 +755,7 @@ def poundsubstitutes(match):
 		1506: u'\u0300\u0306',
 		1509: r'πληθ',  # supposed to be a symbol
 		1510: u'Α\u0338<6\u0304ν\u002f>6',  # A%162<6E%26N%3>6 [!]
-		1511: r'π<span class="superscript">ε:`</span>',
+		1511: r'π<hmu_span_superscript>ε:`</hmu_span_superscript>',
 		# 1806: [not known by PHI]
 		1806: r'<hmu_undocumented_poundsign betacodeval="1806">⊚</hmu_undocumented_poundsign>'
 	}
@@ -854,8 +854,8 @@ def percentsubstitutes(match):
 		73: r'<hmu_papyrological_fraction>⅟<span class="denominator">100</span></hmu_papyrological_fraction>',
 		75: r'<hmu_undocumented_percentsign betacodeval="75">⊚</hmu_undocumented_percentsign>',
 		79: r'<hmu_undocumented_percentsign betacodeval="79">⊚</hmu_undocumented_percentsign>',
-		80: u'<span class="italic"> v. </span>',
-		81: r'<span class="italic"> vac. </span>',
+		80: u'<hmu_span_italic> v. </hmu_span_italic>',
+		81: r'<hmu_span_italic> vac. </hmu_span_italic>',
 		91: u'\u0485',
 		92: u'\u0486',
 		93: u'\u1dc0',
@@ -931,10 +931,10 @@ def leftbracketsubstitutions(match):
 		7: '⌈',
 		8: '⌊',
 		9: u'\u2027',
-		10: r'<span class="largerthannormal">[</span>',
+		10: r'<hmu_span_largerthannormal>[</hmu_span_largerthannormal>',
 		11: u'\u208d',
 		12: u'\u2192',
-		13: u'<span class="italic">\u005b',  # supposed to be italic as well
+		13: u'<hmu_span_italic>\u005b',  # supposed to be italic as well
 		14: u'\u007c\u003a',
 		17: u'\u230a\u230a',
 		18: u'27ea',
@@ -947,10 +947,10 @@ def leftbracketsubstitutions(match):
 		32: u'\u239d',
 		# this one is odd: you will 'open' it 17x in dp0002 and 'close' it 1x; what is really going on?
 		33: r'<hmu_parenthesis_ancient_punctuation>｟',
-		34: r'<span class="parenthesis_deletion_marker>"⸨',
+		34: r'<hmu_span_parenthesis_deletion_marker>"⸨',
 		35: r'<hmu_papyrological_project_lt_bracket_35 />',
 		49: r'<hmu_papyrological_project_lt_bracket_49 />', # 49-35
-		51: '<span class="erasedepigraphicaltext">'
+		51: '<hmu_span_erasedepigraphicaltext>'
 	}
 
 	try:
@@ -984,10 +984,10 @@ def rightbracketsubstitutions(match):
 		7: '⌉',
 		8: '⌋',
 		9: u'\u2027',
-		10: r'<span class="largerthannormal">]</span>',
+		10: r'<hmu_span_largerthannormal>]</hmu_span_largerthannormal>',
 		11: u'\u208e',
 		12: u'\u2190',
-		13: u'\u005d</span>',  # supposed to be italic as well
+		13: u'\u005d</hmu_span_italic>',  # supposed to be italic as well
 		14: u'\u003a\u007c',  # ':|'
 		17: u'\u230b\u230b',  # '⌋⌋'
 		18: u'\u27eb',  # '⟫'
@@ -999,10 +999,10 @@ def rightbracketsubstitutions(match):
 		31: u'\u239f',
 		32: u'\u23a0',  # '⎠' typo in betacode manual: should say 23a0 and not 32a0 (㊠)
 		33: r'｠</hmu_parenthesis_ancient_punctuation>',
-		34: r'⸩</span>',  # parenthesis_deletion_marker
+		34: r'⸩</hmu_span_parenthesis_deletion_marker>',
 		35: r'<hmu_papyrological_project_rt_bracket_35 />',
 		49: r'<hmu_papyrological_project_rt_bracket_49 />',  # 49-35
-		51: r'</span>',  # erasedepigraphicaltext
+		51: r'</hmu_span_erasedepigraphicaltext>'
 	}
 
 	try:
@@ -1070,20 +1070,20 @@ def ltcurlybracketsubstitutes(match):
 
 	substitutions = {
 		1: r'<hmutitle>',
-		2: r'<span class="hmu_marginaltext">',
-		3: r'<span class="hmu_scholium">',
-		4: r'<span class="hmu_unconventional_form_written_by_scribe">',
-		5: r'<span class="hmu_form_altered_by_scribe">',
-		6: r'<span class="hmu_discarded_form">',
-		7: r'<span class="hmu_reading_discarded_in_another_source">',
-		8: r'<span class="hmu_numerical_equivalent">',
-		9: r'<span class="hmu_alternative_reading">',
+		2: r'<hmu_span_hmu_marginaltext>',
+		3: r'<hmu_span_hmu_scholium>',
+		4: r'<hmu_span_hmu_unconventional_form_written_by_scribe>',
+		5: r'<hmu_span_hmu_form_altered_by_scribe>',
+		6: r'<hmu_span_hmu_discarded_form>',
+		7: r'<hmu_span_hmu_reading_discarded_in_another_source>',
+		8: r'<hmu_span_hmu_numerical_equivalent>',
+		9: r'<hmu_span_hmu_alternative_reading>',
 		# 10: u'\u0332',
 		10: r'⟨', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
-		26: r'<span class="hmu_rectified_form">',
+		26: r'<hmu_span_hmu_rectified_form>',
 		27: u'\u0359',
-		28: r'<span class="hmu_date_or_numeric_equivalent_of_date">',
-		29: r'<span class="hmu_emendation_by_editor_of_text_not_obviously_incorrect">',
+		28: r'<hmu_span_hmu_date_or_numeric_equivalent_of_date>',
+		29: r'<hmu_span_hmu_emendation_by_editor_of_text_not_obviously_incorrect>',
 		30: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_30 />',
 		31: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_31 />',
 		32: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_32 />',
@@ -1095,8 +1095,8 @@ def ltcurlybracketsubstitutes(match):
 		38: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_38 />',
 		39: r'<hmu_unhandled_bracket_inscriptional_project_non_text_characters_39 />',
 		40: r'<speaker>',
-		41: r'<span class="stagedirection">',
-		43: r'<hmu_serviusformatting>',
+		41: r'<hmu_span_stagedirection>',
+		43: r'<hmu_serviusformatting>',  # not the same as most 'spans' since this is often multi-line; 'span' will confuse the paragraph catcher in HipparchiaServer
 	}
 
 	try:
@@ -1119,26 +1119,26 @@ def rtcurlybracketsubstitutes(match):
 	val = int(match.group(1))
 
 	substitutions = {
-		1: r'</hmutitle>',  # hmu_title
-		2: r'</span>',  # hmu_marginal_text
-		3: r'</span>',  # hmu_reference_in_scholium
-		4: r'</span>',  # hmu_unconventional_form_written_by_scribe
-		5: r'</span>',  # hmu_form_altered_by_scribe
-		6: r'</span>',  # hmu_discarded_form
-		7: r'</span>',  # hmu_reading_discarded_in_another_source
-		8: r'</span>',  # hmu_numerical_equivalent
-		9: r'</span>',  # hmu_alternative_reading
+		1: r'</hmutitle>',
+		2: r'</hmu_span_hmu_marginal_text>',
+		3: r'</hmu_span_hmu_reference_in_scholium>',
+		4: r'</hmu_span_hmu_unconventional_form_written_by_scribe>',
+		5: r'</hmu_span_hmu_form_altered_by_scribe>',
+		6: r'</hmu_span_hmu_discarded_form>',
+		7: r'</hmu_span_hmu_reading_discarded_in_another_source>',
+		8: r'</hmu_span_hmu_numerical_equivalent>',
+		9: r'</hmu_span_hmu_alternative_reading>',
 		# 10: u'\u0332',
 		# cf. ltanglebracketsubstitutes() #1
 		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
 		10: r'⟩', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
-		26: r'</span>',  # hmu_rectified_form
+		26: r'</hmu_span_hmu_rectified_form>',
 		27: u'\u0359',
-		28: r'</span>',  # hmu_date_or_numeric_equivalent_of_date
-		29: r'</span>',  # hmu_emendation_by_editor_of_text_not_obviously_incorrect
-		40: r'</speaker>',  # hmu_speaker
-		41: r'</span>',  # hmu_stage_direction
-		43: r'</hmu_serviusformatting>',  # hmu_servius_bracket
+		28: r'</hmu_span_hmu_date_or_numeric_equivalent_of_date>',
+		29: r'</hmu_span_hmu_emendation_by_editor_of_text_not_obviously_incorrect>',
+		40: r'</speaker>',
+		41: r'</hmu_span_stagedirection>',
+		43: r'</hmu_serviusformatting>'
 	}
 
 	try:

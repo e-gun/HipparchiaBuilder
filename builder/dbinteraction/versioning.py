@@ -8,6 +8,9 @@
 
 import configparser
 from datetime import datetime
+
+import psycopg2
+
 from builder.dbinteraction.connection import setconnection
 
 #sqltemplateversion = 7242017
@@ -33,9 +36,10 @@ def versiontablemaker(dbconnection):
 
 	query = """
 		CREATE TABLE public.builderversion 
-			(templateversion integer,
+			( templateversion integer,
 			corpusname character varying(2),
-			corpusbuilddate character varying(20)) 
+			corpusbuilddate character varying(20),
+			buildoptions character varying(512) )
 			WITH ( OIDS=FALSE );
 		"""
 
@@ -58,6 +62,13 @@ def timestampthebuild(corpusname, dbconnection=None):
 	:param cursor:
 	:return:
 	"""
+
+	optionrecord = list()
+	optionstotrack = ['hideknownblemishes', 'htmlifydatabase', 'simplifybrackets', 'simplifyquotes', 'smartsinglequotes']
+	for o in optionstotrack:
+		setting = config['buildoptions'][o]
+		optionrecord.append('{o}: {s}'.format(o=o, s=setting))
+	options = ', '.join(optionrecord)
 
 	if not dbconnection:
 		dbconnection = setconnection()
@@ -98,9 +109,15 @@ def timestampthebuild(corpusname, dbconnection=None):
 
 	dbconnection.commit()
 
-	q = 'INSERT INTO builderversion ( templateversion, corpusname, corpusbuilddate ) VALUES (%s, %s, %s)'
-	d = (sqltemplateversion, corpusname, now)
-	dbcursor.execute(q, d)
+	q = 'INSERT INTO builderversion ( templateversion, corpusname, corpusbuilddate, buildoptions ) VALUES (%s, %s, %s, %s)'
+	d = (sqltemplateversion, corpusname, now, options)
+
+	try:
+		dbcursor.execute(q, d)
+	except psycopg2.errors.UndefinedColumn:
+		# you tried to add to an old version table
+		versiontablemaker(dbconnection)
+		dbcursor.execute(q, d)
 
 	dbconnection.connectioncleanup()
 
