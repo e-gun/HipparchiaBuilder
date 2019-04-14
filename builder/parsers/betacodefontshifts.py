@@ -18,6 +18,12 @@ if config['buildoptions']['warnings'] == 'y':
 else:
 	warnings = False
 
+try:
+	config['buildoptions']['htmlifydatabase']
+except KeyError:
+	print('"htmlifydatabase" option not set under "buildoptions" in "config.ini"')
+	print('\topting for a default value of "y"')
+
 
 def replacegreekmarkup(texttoclean):
 	"""
@@ -324,7 +330,7 @@ def removeshiftsymmetry(groupone, grouptwo, groupthree):
 	return value
 
 
-def hmuintospans(texttoclean, language):
+def hmuintospans(texttoclean, language, force=False):
 	"""
 
 	turn
@@ -343,13 +349,24 @@ def hmuintospans(texttoclean, language):
 	:return:
 	"""
 
-	if config['buildoptions']['htmlifydatabase'] == 'n':
+	if not texttoclean:
+		# you sent 'None' here when cleaning the papyrus metadata
+		return
+
+	try:
+		htmlify = config['buildoptions']['htmlifydatabase']
+	except KeyError:
+		# you have an old config
+		htmlify = 'y'
+
+	if htmlify == 'n' and not force:
 		return texttoclean
 
 	shiftfinder = re.compile(r'<hmu_fontshift_(.*?)_(.*?)>')
 	shiftcleaner = re.compile(r'</hmu_fontshift_.*?>')
 
 	texttoclean = re.sub(shiftfinder, lambda x: matchskipper(x.group(1), x.group(2), language), texttoclean)
+
 	texttoclean = re.sub(shiftcleaner, r'</span>', texttoclean)
 
 	hmuopenfinder = re.compile(r'<hmu_span_(.*?)>')

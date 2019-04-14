@@ -18,6 +18,7 @@ from builder.dbinteraction.dbdataintoobjects import dbauthorandworkloader
 from builder.dbinteraction.dbhelperfunctions import authortablemaker
 from builder.dbinteraction.dbloading import generatecopystream
 from builder.dbinteraction.genericworkerobject import GenericInserterObject
+from builder.parsers.betacodefontshifts import hmuintospans
 from builder.parsers.swappers import forceregexsafevariants
 from builder.postbuild.postbuilddating import convertdate
 from builder.wordcounting.wordcounthelperfunctions import rebasedcounter
@@ -257,6 +258,7 @@ def registernewworks(newworktuples):
 
 		q = 'INSERT INTO works ( {c} ) VALUES ( {v} ) '.format(c=columns, v=valstring)
 		d = vals
+
 		dbcursor.execute(q, d)
 		if count % 2500 == 0:
 			dbconnection.commit()
@@ -345,7 +347,7 @@ def buildnewworkmetata(workandtitletuplelist):
 	resultsdict = {w[0]: {
 		'publication_info': w[1],
 		'provenance': w[2],
-		'recorded_date': w[3],
+		'recorded_date': hmuintospans(w[3], 'latin', force=True),
 		'converted_date': w[4],
 		'transmission': w[5],
 		'worktype': w[6],
