@@ -13,6 +13,7 @@ import psycopg2
 
 from builder.dbinteraction.connection import setconnection
 
+hipparchiabuilderversion = '1.2.0'
 #sqltemplateversion = 7242017
 sqltemplateversion = 2242018
 
@@ -38,7 +39,7 @@ def versiontablemaker(dbconnection):
 		CREATE TABLE public.builderversion 
 			( templateversion integer,
 			corpusname character varying(2),
-			corpusbuilddate character varying(20),
+			corpusbuilddate character varying(64),
 			buildoptions character varying(512) )
 			WITH ( OIDS=FALSE );
 		"""
@@ -66,8 +67,12 @@ def timestampthebuild(corpusname, dbconnection=None):
 	optionrecord = list()
 	optionstotrack = ['hideknownblemishes', 'htmlifydatabase', 'simplifybrackets', 'simplifyquotes', 'smartsinglequotes']
 	for o in optionstotrack:
-		setting = config['buildoptions'][o]
-		optionrecord.append('{o}: {s}'.format(o=o, s=setting))
+		try:
+			setting = config['buildoptions'][o]
+			optionrecord.append('{o}: {s}'.format(o=o, s=setting))
+		except KeyError:
+			# you did not have 'htmlifydatabase' in your config.ini?
+			pass
 	options = ', '.join(optionrecord)
 
 	if not dbconnection:
@@ -86,11 +91,11 @@ def timestampthebuild(corpusname, dbconnection=None):
 		# d = datetime.now().strftime("%Y-%m-%d %H:%M")
 		d = datetime.now().strftime("%Y-%m-%d")
 		if commit:
-			now = '{c} @ {d}'.format(d=d, c=commit[0:6])
+			datestamp = '{v} ({c}) @ {d}'.format(v=hipparchiabuilderversion, d=d, c=commit[0:6])
 		else:
-			now = d
+			datestamp = '{v} @ {d}'.format(v=hipparchiabuilderversion, d=d)
 	else:
-		now = '[an undated build]'
+		datestamp = '[an undated build]'
 
 	q = 'SELECT to_regclass(%s);'
 	d = ('public.builderversion',)
@@ -110,7 +115,7 @@ def timestampthebuild(corpusname, dbconnection=None):
 	dbconnection.commit()
 
 	q = 'INSERT INTO builderversion ( templateversion, corpusname, corpusbuilddate, buildoptions ) VALUES (%s, %s, %s, %s)'
-	d = (sqltemplateversion, corpusname, now, options)
+	d = (sqltemplateversion, corpusname, datestamp, options)
 
 	try:
 		dbcursor.execute(q, d)
@@ -118,7 +123,10 @@ def timestampthebuild(corpusname, dbconnection=None):
 		# you tried to add to an old version table
 		versiontablemaker(dbconnection)
 		dbcursor.execute(q, d)
-
+	except psycopg2.errors.StringDataRightTruncation:
+		# you tried to add to an old version table with 'corpusbuilddate character varying(20)'
+		versiontablemaker(dbconnection)
+		dbcursor.execute(q, d)
 	dbconnection.connectioncleanup()
 
 	return
