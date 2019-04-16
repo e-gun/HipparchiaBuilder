@@ -434,3 +434,55 @@ def matchskipper(groupone, grouptwo, language):
 		spanner = '<span class="{b}">'.format(a=groupone, b=grouptwo)
 
 	return spanner
+
+
+"""
+HTMLIFYDATABASE EFFECTS
+
+hipparchiaDB=> SELECT index, marked_up_line FROM gr0085 where index > 14690 order by index asc limit 15;
+ index |                                                    marked_up_line
+-------+----------------------------------------------------------------------------------------------------------------------
+ 14691 | ἐνθουϲιᾷ δὴ δῶμα, βακχεύει ϲτέγη
+ 14692 | ὅϲτιϲ χιτῶναϲ βαϲϲάραϲ τε Λυδίαϲ
+ 14693 | ἔχει ποδήρειϲ <hmu_standalone_endofpage />
+ 14694 | τίϲ ποτ’ ἔϲθ’ ὁ μουϲόμαντιϲ †ἄλλοϲ ἀβρατοῦϲ ὃν ϲθένει† <hmu_standalone_endofpage />
+ 14695 | <speaker>ΛΥΚ.</speaker> (<span class="latin smallerthannormal">ad Bacchum captivum</span>)·
+ 14696 | ποδαπὸϲ ὁ γύννιϲ; τίϲ πάτρα; τίϲ ἡ ϲτολή;
+ 14697 | <span class="hmu_expanded_text"><span class="smallerthannormal">τίϲ ἡ τάραξιϲ</span> τοῦ βίου; τί βάρβιτοϲ</span>
+ 14698 | λαλεῖ κροκωτῷ; <span class="hmu_expanded_text">τί δὲ δορὰ</span> κεκρυφάλῳ;
+ 14699 | τί λήκυθοϲ καὶ ϲτρόφιον; ὡϲ οὐ ξύμφορον.
+ 14700 | <span class="hmu_expanded_text">τίϲ δαὶ</span> κατόπτρου <span class="hmu_expanded_text">καὶ ξίφουϲ</span> κοινωνία;
+ 14701 | ϲύ τ’ αὐτόϲ, ὦ παῖ, πότερον ὡϲ ἀνὴρ τρέφῃ;
+ 14702 | καὶ ποῦ πέοϲ; ποῦ χλαῖνα; ποῦ Λακωνικαί; <hmu_standalone_endofpage />
+ 14703 | ἀλλ’ ὡϲ γυνὴ δῆτ’; εἶτα ποῦ τὰ τιτθία;
+ 14704 | <span class="hmu_expanded_text">τί φῄϲ; τί ϲιγᾷϲ</span>; ἀλλὰ δῆτ’ ἐκ τοῦ μέλουϲ
+ 14705 | ζητῶ ϲ’, ἐπειδή γ’ αὐτὸϲ οὐ βούλει φράϲαι;
+(15 rows)
+
+VS
+
+hipparchiaDB=# SELECT index, marked_up_line FROM gr0085 where index > 14690 order by index asc limit 15;
+ index |                                                                           marked_up_line
+-------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 14691 | ἐνθουϲιᾷ δὴ δῶμα, βακχεύει ϲτέγη
+ 14692 | ὅϲτιϲ χιτῶναϲ βαϲϲάραϲ τε Λυδίαϲ
+ 14693 | ἔχει ποδήρειϲ <hmu_standalone_endofpage />
+ 14694 | τίϲ ποτ’ ἔϲθ’ ὁ μουϲόμαντιϲ †ἄλλοϲ ἀβρατοῦϲ ὃν ϲθένει† <hmu_standalone_endofpage />
+ 14695 | <speaker>ΛΥΚ.</speaker> (<hmu_fontshift_latin_smallerthannormal>ad Bacchum captivum</hmu_fontshift_latin_smallerthannormal>)·
+ 14696 | ποδαπὸϲ ὁ γύννιϲ; τίϲ πάτρα; τίϲ ἡ ϲτολή;
+ 14697 | <hmu_span_expanded_text><hmu_fontshift_greek_smallerthannormal>τίϲ ἡ τάραξιϲ</hmu_span_expanded_text> τοῦ βίου; τί βάρβιτοϲ</hmu_fontshift_greek_smallerthannormal>
+ 14698 | λαλεῖ κροκωτῷ; <hmu_span_expanded_text>τί δὲ δορὰ</hmu_span_expanded_text> κεκρυφάλῳ;
+ 14699 | τί λήκυθοϲ καὶ ϲτρόφιον; ὡϲ οὐ ξύμφορον.
+ 14700 | <hmu_span_expanded_text>τίϲ δαὶ</hmu_span_expanded_text> κατόπτρου <hmu_span_expanded_text>καὶ ξίφουϲ</hmu_span_expanded_text> κοινωνία;
+ 14701 | ϲύ τ’ αὐτόϲ, ὦ παῖ, πότερον ὡϲ ἀνὴρ τρέφῃ;
+ 14702 | καὶ ποῦ πέοϲ; ποῦ χλαῖνα; ποῦ Λακωνικαί; <hmu_standalone_endofpage />
+ 14703 | ἀλλ’ ὡϲ γυνὴ δῆτ’; εἶτα ποῦ τὰ τιτθία;
+ 14704 | <hmu_span_expanded_text>τί φῄϲ; τί ϲιγᾷϲ</hmu_span_expanded_text>; ἀλλὰ δῆτ’ ἐκ τοῦ μέλουϲ
+ 14705 | ζητῶ ϲ’, ἐπειδή γ’ αὐτὸϲ οὐ βούλει φράϲαι;
+(15 rows)
+
+
+
+
+
+"""

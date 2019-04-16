@@ -1129,6 +1129,7 @@ def rtcurlybracketsubstitutes(match):
 		8: r'</hmu_span_hmu_numerical_equivalent>',
 		9: r'</hmu_span_hmu_alternative_reading>',
 		# 10: u'\u0332',
+		# 10: u'\u0332',
 		# cf. ltanglebracketsubstitutes() #1
 		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
 		10: r'⟩', # the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
@@ -1169,47 +1170,47 @@ def ltanglebracketsubstitutes(match):
 		3: '',
 		4: '',
 		5: '',
-		6: r'<span class="superscript">',  # hmu_shift_font_to_superscript
-		7: r'<span class="subscript">',  # hmu_shift_font_to_subscript
+		6: r'<hmu_span_superscript>',  # hmu_shift_font_to_superscript
+		7: r'<hmu_span_subscript>',  # hmu_shift_font_to_subscript
 		8: '',
-		9: r'<span class="hmu_textual_lemma">',  # hmu_textual_lemma
-		10: r'<span class="hmu_stacked_text_lower">',  # hmu_stacked_text_lower
-		11: r'<span class="hmu_stacked_text_upper">',  # hmu_stacked_text_upper
-		12: r'<span class="nonstandarddirection">',
+		9: r'<hmu_span_textual_lemma>',  # hmu_textual_lemma
+		10: r'<hmu_span_stacked_text_lower>',  # hmu_stacked_text_lower
+		11: r'<hmu_span_stacked_text_upper>',  # hmu_stacked_text_upper
+		12: r'<hmu_span_nonstandarddirection>',
 		13: r'<hmu_standalone_singlelinespacing_in_doublespacedtext />',
-		14: r'<span class="interlineartext">',
-		15: r'<span class="interlinearmarginalia">',  # hmu_interlinear_marginalia
+		14: r'<hmu_span_interlineartext>',
+		15: r'<hmu_span_interlinearmarginalia>',  # hmu_interlinear_marginalia
 		16: u'\u2035',
 		17: '',  # Combining Double Underline
 		19: u'\u2035',
-		20: r'<span class="hmu_expanded_text">',  # hmu_expanded_text
-		21: r'<span class="hmu_latin_expanded_text">',  # hmu_latin_expanded_text
+		20: r'<hmu_span_expanded_text>',  # hmu_expanded_text
+		21: r'<hmu_span_latin_expanded_text>',  # hmu_latin_expanded_text
 		22: r'<hmu_undocumented_anglebracketspan22>',
 		24: r'<hmu_undocumented_anglebracketspan24>',
-		30: r'<span class="overline">',  # Combining Overline and Dependent Vertical Bars
-		31: r'<span class="strikethrough">',
-		32: r'<span class="hmu_overline_and_underline">',  # hmu_overline_and_underline
+		30: r'<hmu_span_overline>',  # Combining Overline and Dependent Vertical Bars
+		31: r'<hmu_span_strikethrough>',
+		32: r'<hmu_span_overline_and_underline>',  # hmu_overline_and_underline
 		34: r'⁄',  # fractions (which have balanced sets of markup...)
 		48: r'<hmu_undocumented_anglebracketspan48>',
 		50: r'<hmu_undocumented_anglebracketspan50>',
 		51: r'<hmu_undocumented_anglebracketspan51>',
 		52: r'<hmu_undocumented_anglebracketspan52>',
 		53: r'<hmu_undocumented_anglebracketspan53>',
-		60: r'<span class="hmu_preferred_epigraphical_text_used">',
-		61: r'<span class="hmu_epigraphical_text_inserted_after_erasure">',
-		62: r'<span class="lineover">',
-		63: r'<span class="hmu_epigraphical_text_after_correction">',
-		64: r'<span class="letterbox">',
+		60: r'<hmu_span_preferred_epigraphical_text_used>',
+		61: r'<hmu_span_epigraphical_text_inserted_after_erasure>',
+		62: r'<hmu_span_lineover>',
+		63: r'<hmu_span_epigraphical_text_after_correction>',
+		64: r'<hmu_span_letterbox>',
 		65: r'<hmu_epigraphical_letters_enclosed_in_wreath>',
 		66: r'<hmu_epigraphical_project_escape_66>',
 		67: r'<hmu_epigraphical_project_escape_67>',
 		68: r'<hmu_epigraphical_project_escape_68>',
 		69: r'<hmu_epigraphical_project_escape_69>',
-		70: r'<span class="diagram">',  # hmu_inset_diagram
-		71: r'<span class="diagramsection">',  # hmu_inset_diagram
-		72: r'<span class="diagramrelation">',  # hmu_logical_relationship_in_diagram
-		73: r'<span class="diagramlvl03">',
-		74: r'<span class="diagramlvl04">',
+		70: r'<hmu_span_diagram>',  # hmu_inset_diagram
+		71: r'<hmu_span_diagramsection>',  # hmu_inset_diagram
+		72: r'<hmu_span_diagramrelation>',  # hmu_logical_relationship_in_diagram
+		73: r'<hmu_span_diagramlvl03>',
+		74: r'<hmu_span_diagramlvl04>',
 		96: r'<hmu_undocumented_anglebracketspan96>',
 	}
 
@@ -1239,37 +1240,37 @@ def rtanglebracketsubstitutes(match):
 		3: u'\u0361',  # Combining Inverted Breve
 		4: u'\u035c',  # Combining Breve Below
 		5: u'\u035d',  # Combining Breve
-		6: r'</span>',  # hmu_shift_font_to_superscript
-		7: r'</span>',  # hmu_shift_font_to_subscript
+		6: r'</hmu_span_superscript>',  # hmu_shift_font_to_superscript
+		7: r'</hmu_span_subscript>',  # hmu_shift_font_to_subscript
 		8: u'\u0333',
-		9: r'</span>',  # hmu_textual_lemma
-		10: r'</span>',  # hmu_stacked_text_lower
-		11: r'</span>',  # hmu_stacked_text_upper
-		12: r'</span>',  # nonstandarddirection
+		9: r'</hmu_span_textual_lemma>',  # hmu_textual_lemma
+		10: r'</hmu_span_stacked_text_lower>',  # hmu_stacked_text_lower
+		11: r'</hmu_span_stacked_text_upper>',  # hmu_stacked_text_upper
+		12: r'</hmu_span_nonstandarddirection>',  # nonstandarddirection
 		13: r'<hmu_standalone_singlelinespacing_in_doublespacedtext />',
-		14: r'</span>',  # interlineartext
-		15: r'</span>',  # hmu_interlinear_marginalia
+		14: r'</hmu_span_interlineartext>',  # interlineartext
+		15: r'</hmu_span_interlinearmarginalia>',  # hmu_interlinear_marginalia
 		16: u'\u2032',
 		17: u'u\0333',
 		19: u'\u2032',
-		20: r'</span>',  # hmu_expanded_text
-		21: r'</span>',  # hmu_expanded_text
+		20: r'</hmu_span_expanded_text>',
+		21: r'</hmu_span_latin_expanded_text>',
 		22: r'</hmu_undocumented_anglebracketspan22>',
-		24: r'<hmu_undocumented_anglebracketspan24>',
-		30: r'</span>',  # Combining Overline and Dependent Vertical Bars
-		31: r'</span>',  # strikethrough
-		32: r'</span>',  # hmu_overline_and_underline
+		24: r'</hmu_undocumented_anglebracketspan24>',
+		30: r'</hmu_span_overline>',  # Combining Overline and Dependent Vertical Bars
+		31: r'</hmu_span_strikethrough>',  # strikethrough
+		32: r'</hmu_span_overline_and_underline>',  # hmu_overline_and_underline
 		34: '',  # fractions
 		48: r'<hmu_undocumented_anglebracketspan48>',
 		50: r'</hmu_undocumented_anglebracketspan50>',
 		51: r'</hmu_undocumented_anglebracketspan51>',
 		52: r'</hmu_undocumented_anglebracketspan52>',
 		53: r'</hmu_undocumented_anglebracketspan53>',
-		60: r'</span>',  # hmu_preferred_epigraphical_text_used
-		61: r'</span>',  # hmu_epigraphical_text_inserted_after_erasure
-		62: r'</span>',  # epigraphical line over letters
-		63: r'</span>',  # hmu_epigraphical_text_after_correction
-		64: r'</span>',  # letters in a box
+		60: r'</hmu_span_preferred_epigraphical_text_used>',  # hmu_preferred_epigraphical_text_used
+		61: r'</hmu_span_epigraphical_text_inserted_after_erasure>',  # hmu_epigraphical_text_inserted_after_erasure
+		62: r'</hmu_span_lineover>',  # epigraphical line over letters
+		63: r'</hmu_span_epigraphical_text_after_correction>',  # hmu_epigraphical_text_after_correction
+		64: r'</hmu_span_letterbox>',  # letters in a box
 		65: r'</hmu_epigraphical_letters_enclosed_in_wreath>',
 		66: r'</hmu_epigraphical_project_escape_66>',
 		67: r'</hmu_epigraphical_project_escape_67>',
