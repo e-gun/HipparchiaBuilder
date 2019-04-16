@@ -1120,7 +1120,7 @@ def rtcurlybracketsubstitutes(match):
 
 	substitutions = {
 		1: r'</hmutitle>',
-		2: r'</hmu_span_hmu_marginal_text>',
+		2: r'</hmu_span_hmu_marginaltext>',
 		3: r'</hmu_span_hmu_reference_in_scholium>',
 		4: r'</hmu_span_hmu_unconventional_form_written_by_scribe>',
 		5: r'</hmu_span_hmu_form_altered_by_scribe>',
