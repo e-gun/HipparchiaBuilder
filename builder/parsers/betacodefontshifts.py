@@ -482,7 +482,22 @@ hipparchiaDB=# SELECT index, marked_up_line FROM gr0085 where index > 14690 orde
 (15 rows)
 
 
+TODO... 
+Note the irrationality (for HTML) of the following (which is masked by the 'spanner'):
+[need 'EX_ON' + 'SM_ON' + 'SM_OFF' + 'EX_OFF' + 'SM_ON' + 'SM_OFF' ]
 
+hipparchiaDB=# SELECT index, marked_up_line FROM gr0085 where index = 14697;
+ index |                                                                           marked_up_line
+-------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 14697 | <hmu_span_expanded_text><hmu_fontshift_greek_smallerthannormal>τίϲ ἡ τάραξιϲ</hmu_span_expanded_text> τοῦ βίου; τί βάρβιτοϲ</hmu_fontshift_greek_smallerthannormal>
+(1 row)
+
+
+hipparchiaDB=> SELECT index, marked_up_line FROM gr0085 where index = 14697;
+ index |                                                marked_up_line
+-------+---------------------------------------------------------------------------------------------------------------
+ 14697 | <span class="expanded_text"><span class="smallerthannormal">τίϲ ἡ τάραξιϲ</span> τοῦ βίου; τί βάρβιτοϲ</span>
+(1 row)
 
 
 """
