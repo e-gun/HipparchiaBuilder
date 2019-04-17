@@ -6,6 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
+from typing import List
 
 import configparser
 import re
@@ -636,3 +637,154 @@ def insertnewlines(txt):
 	txt = txt.split('\n')
 
 	return txt
+
+
+def fixhmuoragnizationlinebyline(txt: List[str]) -> List[str]:
+	"""
+
+	the original data has improper nesting of some tags; try to fix that
+
+	this is meaningless if you have set htmlifydatabase to 'y' since the 'spanning' will hide the phenomenon
+
+	:param txt:
+	:return:
+	"""
+
+	try:
+		htmlify = config['buildoptions']['htmlifydatabase']
+	except KeyError:
+		htmlify = 'y'
+
+	try:
+		rationalizetags = config['buildoptions']['rationalizetags']
+	except KeyError:
+		rationalizetags = 'n'
+
+	if htmlify == 'y' or rationalizetags == 'n':
+		pass
+	else:
+		txt = [fixhmuirrationaloragnization(x) for x in txt]
+
+	return txt
+
+
+def fixhmuirrationaloragnization(worlkine: str):
+		"""
+
+		Note the irrationality (for HTML) of the following (which is masked by the 'spanner'):
+		[have 'EX_ON' + 'SM_ON' + 'EX_OFF' + 'SM_OFF']
+		[need 'EX_ON' + 'SM_ON' + 'SM_OFF' + 'EX_OFF' + 'SM_ON' + 'SM_OFF' ]
+
+		hipparchiaDB=# SELECT index, marked_up_line FROM gr0085 where index = 14697;
+		 index |                                                                           marked_up_line
+		-------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		 14697 | <hmu_span_expanded_text><hmu_fontshift_greek_smallerthannormal>τίϲ ἡ τάραξιϲ</hmu_span_expanded_text> τοῦ βίου; τί βάρβιτοϲ</hmu_fontshift_greek_smallerthannormal>
+		(1 row)
+
+
+		hipparchiaDB=> SELECT index, marked_up_line FROM gr0085 where index = 14697;
+		 index |                                                marked_up_line
+		-------+---------------------------------------------------------------------------------------------------------------
+		 14697 | <span class="expanded_text"><span class="smallerthannormal">τίϲ ἡ τάραξιϲ</span> τοῦ βίου; τί βάρβιτοϲ</span>
+		(1 row)
+
+
+		fixing this is an interesting question; it seems likely that I have missed some way of doing it wrong...
+		but note 'b' below: this is pretty mangled and the output is roughly right...
+
+		invalidline = '<hmu_span_expanded_text><hmu_fontshift_greek_smallerthannormal>τίϲ ἡ τάραξιϲ</hmu_span_expanded_text> τοῦ βίου; τί βάρβιτοϲ</hmu_fontshift_greek_smallerthannormal>'
+		openspans {0: 'span_expanded_text', 24: 'fontshift_greek_smallerthannormal'}
+		closedspans {76: 'span_expanded_text', 123: 'fontshift_greek_smallerthannormal'}
+		balancetest [(False, False, True)]
+
+		validline = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<hmu_fontshift_latin_smallcapitals>errantes</hmu_fontshift_latin_smallcapitals><hmu_fontshift_latin_normal> pascentes, ut alibi “mille meae Siculis</hmu_fontshift_latin_normal>'
+		openspans {36: 'fontshift_latin_smallcapitals', 115: 'fontshift_latin_normal'}
+		closedspans {79: 'fontshift_latin_smallcapitals', 183: 'fontshift_latin_normal'}
+		balancetest [(False, True, False)]
+
+		# need a third check: or not (open[okeys[x]] == closed[ckeys[x]])
+		z = '&nbsp;&nbsp;&nbsp;<hmu_fontshift_latin_normal>II 47.</hmu_fontshift_latin_normal><hmu_fontshift_latin_italic> prognosticorum causas persecuti sunt et <hmu_span_latin_expanded_text>Boëthus Stoicus</hmu_span_latin_expanded_text>,</hmu_fontshift_latin_italic>'
+		openspans {18: 'fontshift_latin_normal', 81: 'fontshift_latin_italic', 150: 'span_latin_expanded_text'}
+		closedspans {52: 'fontshift_latin_normal', 195: 'span_latin_expanded_text', 227: 'fontshift_latin_italic'}
+		balancetest [(False, True, False), (True, False, True)]
+
+		a = '[]κακ<hmu_span_superscript>η</hmu_span_superscript> βου<hmu_span_superscript>λ</hmu_span_superscript>'
+		openspans {5: 'span_superscript', 55: 'span_superscript'}
+		closedspans {28: 'span_superscript', 78: 'span_superscript'}
+		balancetest [(False, True, False)]
+
+		b = []κακ<hmu_span_superscript>η</hmu_span_superscript> β<hmu_span_x>ο<hmu_span_y>υab</hmu_span_x>c<hmu_span_superscript>λ</hmu_span_y></hmu_span_superscript>
+		testresult (False, True, False)
+		testresult (False, False, True)
+		testresult (False, False, True)
+		balanced to:
+			[]κακ<hmu_span_superscript>η</hmu_span_superscript> β<hmu_span_x>ο<hmu_span_y>υab</hmu_span_y></hmu_span_x><hmu_span_y>c<hmu_span_superscript>λ</hmu_span_superscript></hmu_span_y><hmu_span_superscript></hmu_span_superscript>
+
+		"""
+
+		opener = re.compile(r'<hmu_(span|fontshift)_(.*?)>')
+		closer = re.compile(r'</hmu_(span|fontshift)_(.*?)>')
+
+		openings = list(re.finditer(opener, worlkine))
+		openspans = {x.span()[0]: '{a}_{b}'.format(a=x.group(1), b=x.group(2)) for x in openings}
+
+		closings = list(re.finditer(closer, worlkine))
+		closedspans = {x.span()[0]: '{a}_{b}'.format(a=x.group(1), b=x.group(2)) for x in closings}
+
+		balancetest = list()
+		invalidpattern = (False, False, True)
+
+		if len(openspans) == len(closedspans) and len(openspans) > 1:
+			# print('openspans', openspans)
+			# print('closedspans', closedspans)
+
+			rng = range(len(openspans) - 1)
+			okeys = sorted(openspans.keys())
+			ckeys = sorted(closedspans.keys())
+			# test 1: a problem if the next open ≠ this close and next open position comes before this close position
+			#   	open: {0: 'span_expanded_text', 24: 'fontshift_greek_smallerthannormal'}
+			# 		closed: {76: 'span_expanded_text', 123: 'fontshift_greek_smallerthannormal'}
+			# test 2: succeed if the next open comes after the this close AND the this set of tags match
+			#       open {18: 'fontshift_latin_normal', 81: 'fontshift_latin_italic', 150: 'span_latin_expanded_text'}
+			# 		closed {52: 'fontshift_latin_normal', 195: 'span_latin_expanded_text', 227: 'fontshift_latin_italic'}
+			# test 3: succeed if the next open comes before the previous close
+
+			testone = [not (openspans[okeys[x + 1]] != closedspans[ckeys[x]]) and (okeys[x + 1] < ckeys[x]) for x in rng]
+			testtwo = [okeys[x + 1] > ckeys[x] and openspans[okeys[x]] == closedspans[ckeys[x]] for x in rng]
+			testthree = [okeys[x + 1] < ckeys[x] for x in rng]
+
+			balancetest = [(testone[x], testtwo[x], testthree[x]) for x in rng]
+			# print('balancetest', balancetest)
+
+		if invalidpattern in balancetest:
+			# print('{a} needs balancing:\n\t{b}'.format(a=str(), b=worlkine))
+			modifications = list()
+			balancetest.reverse()
+			itemnumber = 0
+			while balancetest:
+				testresult = balancetest.pop()
+				if testresult == invalidpattern:
+					needinsertionat = ckeys[itemnumber]
+					insertionreopentag = openings[itemnumber + 1].group(0)
+					insertionclosetag = re.sub(r'<', r'</', openings[itemnumber + 1].group(0))
+					modifications.append({'item': itemnumber,
+					                      'position': needinsertionat,
+					                      'closetag': insertionclosetag,
+					                      'opentag': insertionreopentag})
+				itemnumber += 1
+
+			newline = str()
+			placeholder = 0
+			for m in modifications:
+				item = m['item']
+				newline += worlkine[placeholder:m['position']]
+				newline += m['closetag']
+				newline += closings[item].group(0)
+				newline += m['opentag']
+				placeholder = m['position'] + len(closings[item].group(0))
+			newline += worlkine[placeholder:]
+
+			# print('{a} balanced to:\n\t{b}'.format(a=str(), b=newline))
+			worlkine = newline
+
+		return worlkine

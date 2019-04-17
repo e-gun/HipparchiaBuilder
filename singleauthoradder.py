@@ -38,7 +38,7 @@ phi = config['io']['phi']
 ddp = config['io']['ddp']
 ins = config['io']['ins']
 
-debugauthor = 'TLG1304'
+debugauthor = 'TLG0085'
 commandlineparser = argparse.ArgumentParser(description='pick the author to add; default is currently {d}'.format(d=debugauthor))
 commandlineparser.add_argument('--au', required=False, type=str, help='set author value [TLG/LAT + NNNN][INS/DDP/CHR work, but this will *damage* the current installation]')
 commandlineparser.add_argument('--debugoutput', action='store_true', help='generate the debug files in "{loc}"; add newlines after control sequences'.format(loc=outputdir))

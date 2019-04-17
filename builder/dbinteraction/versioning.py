@@ -13,7 +13,7 @@ import psycopg2
 
 from builder.dbinteraction.connection import setconnection
 
-hipparchiabuilderversion = '1.2.1'
+hipparchiabuilderversion = '1.2.2'
 #sqltemplateversion = 7242017
 sqltemplateversion = 2242018
 
@@ -65,7 +65,7 @@ def timestampthebuild(corpusname, dbconnection=None):
 	"""
 
 	optionrecord = list()
-	optionstotrack = ['hideknownblemishes', 'htmlifydatabase', 'simplifybrackets', 'simplifyquotes', 'smartsinglequotes']
+	optionstotrack = ['hideknownblemishes', 'htmlifydatabase', 'rationalizetags', 'simplifybrackets', 'simplifyquotes', 'smartsinglequotes']
 	for o in optionstotrack:
 		try:
 			setting = config['buildoptions'][o]

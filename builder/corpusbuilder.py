@@ -31,8 +31,8 @@ from builder.parsers.betacodefontshifts import greekhmufontshiftsintospans, lati
 from builder.parsers.copticsubstitutions import replacecoptic
 from builder.parsers.latinsubstitutions import latindiacriticals
 from builder.parsers.regexsubstitutions import addcdlabels, cleanuplingeringmesses, colonshift, \
-	debughostilesubstitutions, earlybirdsubstitutions, hexrunner, insertnewlines, lastsecondsubsitutions, \
-	replacequotationmarks, totallemmatization
+	debughostilesubstitutions, earlybirdsubstitutions, fixhmuoragnizationlinebyline, hexrunner, insertnewlines, \
+	lastsecondsubsitutions, replacequotationmarks, totallemmatization
 from builder.postbuild.postbuildmetadata import buildtrigramindices, findwordcounts, insertfirstsandlasts
 from builder.postbuild.secondpassdbrewrite import assignlanguagetonewworks, builddbremappers, compilenewauthors, \
 	compilenewworks, registernewworks
@@ -430,7 +430,7 @@ def secondaryworkparsing(authorobject, thetext, debugoutput=False, debugnewlines
 			filereaders.streamout(thetext, fn)
 
 	# next, the one-argument functions
-	functionlist = [hexrunner, lastsecondsubsitutions, debughostilesubstitutions, insertnewlines, totallemmatization]
+	functionlist = [hexrunner, lastsecondsubsitutions, debughostilesubstitutions, insertnewlines, fixhmuoragnizationlinebyline, totallemmatization]
 
 	count = 1
 	for f in functionlist:
