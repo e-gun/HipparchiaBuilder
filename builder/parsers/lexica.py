@@ -16,7 +16,7 @@ from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetaco
 # lexica parser helpers
 #
 
-def greekwithoutvowellengths(betagreek):
+def greekwithoutvowellengths(betagreek: str) -> str:
 	"""
 	quick vowel len stripper that then sends you to greek conversion
 
@@ -60,7 +60,7 @@ def greekwithvowellengths(ttc):
 	return ttc
 
 
-def latinvowellengths(texttoclean):
+def latinvowellengths(texttoclean: str) -> str:
 	"""
 	now you have a new problem: matching vowel lengths when the TXT files do not have that information
 	only send items this way whose transformation will prevent successful searches
@@ -93,14 +93,14 @@ def latinvowellengths(texttoclean):
 	return texttoclean
 
 
-def betaconvertandsave(convertme):
+def betaconvertandsave(convertme: re.Match) -> str:
 	betagreek = convertme.group(1)
 	notgreek = convertme.group(2)
 	unigreek = replacegreekbetacode(betagreek.upper())+notgreek
 	return unigreek
 
 
-def lsjgreekswapper(match):
+def lsjgreekswapper(match: re.Match) -> str:
 	"""
 	greekfinder in mpgreekdictionaryinsert() will find 5 things:
 		match1 + match 3 + match 4 reassembles the markup block
@@ -128,7 +128,7 @@ def lsjgreekswapper(match):
 	return substitute
 
 
-def translationsummary(fullentry, translationlabel):
+def translationsummary(fullentry: str, translationlabel: str) -> str:
 	"""
 
 	sample:

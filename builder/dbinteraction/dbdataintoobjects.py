@@ -13,14 +13,14 @@ from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.dbhelperfunctions import resultiterator
 
 
-def dbfetchauthorobject(uid, cursor):
+def dbfetchauthorobject(uid, dbcursor):
 	# only call this AFTER you have built all of the work objects so that they can be placed into it
 
 	query = 'SELECT * from authors where universalid = %s'
 	data = (uid,)
-	cursor.execute(query, data)
+	dbcursor.execute(query, data)
 	try:
-		results = cursor.fetchone()
+		results = dbcursor.fetchone()
 	except:
 		# note that there is no graceful way out of this: you have to have an authorobject in the end
 		print('failed to find the requested author:', query, data)

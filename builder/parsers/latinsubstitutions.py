@@ -9,7 +9,7 @@
 import re
 
 
-def latindiacriticals(texttoclean):
+def latindiacriticals(texttoclean: str) -> str:
 	"""
 
 	find text with latin diacritical marks
@@ -26,7 +26,7 @@ def latindiacriticals(texttoclean):
 	return texttoclean
 
 
-def latinsubstitutes(matchgroup):
+def latinsubstitutes(matchgroup) -> str:
 
 	val = matchgroup.group(0)
 

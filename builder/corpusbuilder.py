@@ -12,10 +12,12 @@ import re
 import time
 from multiprocessing import Manager
 from os import path
+from typing import List
 
 import builder.dbinteraction.dbhelperfunctions
 import builder.dbinteraction.dbprepsubstitutions
 import builder.parsers.betacodefontshifts
+from builder.builderclasses import dbAuthor
 from builder.dbinteraction import dbloading
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.dbhelperfunctions import resetauthorsandworksdbs
@@ -293,7 +295,7 @@ def addoneauthor(authordict, language, uidprefix, datapath, dataprefix, dbconnec
 	return success
 
 
-def thecollectedworksof(authorobject, language, datapath, dbconnection, debugoutput=False, debugnewlines=True, skipdbload=False):
+def thecollectedworksof(authorobject: dbAuthor, language: str, datapath: str, dbconnection, debugoutput=False, debugnewlines=True, skipdbload=False):
 	"""
 	give me a authorobject and i will build you a corpus in three stages
 	[a] initial parsing of original files
@@ -353,7 +355,7 @@ def buildauthorobject(authortabnumber, language, datapath, uidprefix, dataprefix
 	return authorobj
 
 
-def initialworkparsing(authorobject, language, datapath, debugoutput=False, debugnewlines=True):
+def initialworkparsing(authorobject, language, datapath, debugoutput=False, debugnewlines=True) -> str:
 	"""
 
 	grab a raw file and start cleaning it up; the order of files and of items within files usually matters
@@ -402,7 +404,7 @@ def initialworkparsing(authorobject, language, datapath, debugoutput=False, debu
 	return thetext
 
 
-def secondaryworkparsing(authorobject, thetext, debugoutput=False, debugnewlines=True):
+def secondaryworkparsing(authorobject, thetext: str, debugoutput=False, debugnewlines=True) -> List[str]:
 	"""
 
 	the next big step is turning the datastream into a citeable text
@@ -434,6 +436,7 @@ def secondaryworkparsing(authorobject, thetext, debugoutput=False, debugnewlines
 
 	count = 1
 	for f in functionlist:
+		# note that we are shifting types in the course of this: str -> str; str -> list; list -> list
 		thetext = f(thetext)
 
 		if debugoutput:

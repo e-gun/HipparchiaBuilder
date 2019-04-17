@@ -7,6 +7,7 @@
 
 import configparser
 import re
+from typing import List
 
 from builder import file_io
 from builder.dbinteraction.dbdataintoobjects import loadallauthorsasobjects, loadallworksasobjects
@@ -21,11 +22,15 @@ config.read('config.ini', encoding='utf8')
 tlg = config['io']['tlg']
 
 
-def languagesubstitutes(opentag, foundtext, closetag):
+def languagesubstitutes(opentag: str, foundtext: str, closetag: str) -> str:
 	"""
+	
 	tricky because greek is not turned off properly
-	:param matchgroup:
-	:return:
+	
+	:param opentag: 
+	:param foundtext: 
+	:param closetag: 
+	:return: 
 	"""
 
 	clean = re.sub(r'(&1){0,1}\[2', r'⟨', foundtext)
@@ -56,7 +61,7 @@ def languagesubstitutes(opentag, foundtext, closetag):
 	return clean
 
 
-def loadgkcanon(canonfile):
+def loadgkcanon(canonfile: str):
 	"""
 
 	this is suprisingly slow at the end of a build
@@ -96,7 +101,7 @@ def loadgkcanon(canonfile):
 	return
 
 
-def gkcanoncleaner(txt):
+def gkcanoncleaner(txt: str) -> str:
 	"""
 	tidy up the greek canon file
 
@@ -236,7 +241,7 @@ def gkcanoncleaner(txt):
 	return txt
 
 
-def temptableauthorline(newauthorinfo, allauthors):
+def temptableauthorline(newauthorinfo: str, allauthors: dict) -> List[str]:
 	"""
 
 	prepare a line of author data to send to the temporary table
@@ -252,26 +257,26 @@ def temptableauthorline(newauthorinfo, allauthors):
 
 	try:
 		a = 'gr' + au.group(1)
-	except:
+	except AttributeError:
 		a = 'gr0000'
 
 	short = re.search(sh, newauthorinfo)
 	try:
 		s = re.sub('/s+$', '', short.group(1))
 		s = re.sub(percents, percentsubstitutes, s)
-	except:
-		s = ''
+	except AttributeError:
+		s = str()
 
 	try:
 		ao = allauthors[a]
 		name = ao.shortname
 	except:
-		name = ''
+		name = str()
 
 	try:
 		name = re.sub('/s+$', '', name)
 	except:
-		name = ''
+		name = str()
 
 	if len(name) < 1:
 		name = s
@@ -325,7 +330,8 @@ def temptableworkline(newworkinfo, allworks):
 
 	try:
 		count = int(re.sub(r'[^\d]', '', count.group(1)))
-	except:
+	except AttributeError:
+		# AttributeError: 'NoneType' object has no attribute 'group'
 		count = -1
 
 	try:
@@ -333,12 +339,12 @@ def temptableworkline(newworkinfo, allworks):
 		if n[0] == '1':
 			# why are these still here?
 			n = n[1:]
-	except:
+	except AttributeError:
 		if work.group(1) == '0058w001':
 			n = 'Poliorcetica'  # 0058w001 does not have a name with this version of the parser....: 'wrk &1Poliorcetica&'
 		else:
 			# print('no name for',work.group(1))
-			n = ''
+			n = str()
 
 	if re.search(r'\[Sp\.\]', n) is not None:
 		authentic = False
@@ -347,8 +353,8 @@ def temptableworkline(newworkinfo, allworks):
 
 	try:
 		p = pub.group(1)
-	except:
-		p = ''
+	except AttributeError:
+		p = str()
 
 	p = re.sub(percents, percentsubstitutes, p)
 	p = re.sub(ands, andsubstitutes, p)
@@ -356,8 +362,8 @@ def temptableworkline(newworkinfo, allworks):
 
 	try:
 		g = genre.group(1)
-	except:
-		g = ''
+	except AttributeError:
+		g = str()
 
 	g = re.sub(percents, percentsubstitutes, g)
 	g = re.sub(r' $', '', g)
@@ -366,13 +372,13 @@ def temptableworkline(newworkinfo, allworks):
 
 	try:
 		tr = trans.group(1)
-	except:
-		tr = ''
+	except AttributeError:
+		tr = str()
 
 	try:
 		wt = wtype.group(1)
-	except:
-		wt = ''
+	except AttributeError:
+		wt = str()
 
 	wt = re.sub(percents, percentsubstitutes, wt)
 	wt = re.sub(r' $', '', wt)
@@ -421,7 +427,7 @@ def temptableworkline(newworkinfo, allworks):
 	return newdata
 
 
-def peekatcanon(workdbname):
+def peekatcanon(workdbname: str) -> List[str]:
 	"""
 	an emergency appeal to the canon for a work's structure
 
@@ -441,7 +447,7 @@ def peekatcanon(workdbname):
 	# careful - structure set to {0: 'Volumépagéline'} [gr0598]
 	allauthors = loadallauthorsasobjects()
 	txt = gkcanoncleaner(txt, allauthors)
-	structure = []
+	structure = list()
 	for line in txt:
 		if line[0:6] == '\t<work':
 			if re.search(workdbname[2:],line) is not None:

@@ -8,7 +8,8 @@
 
 import re
 
-def replacecoptic(texttoclean):
+
+def replacecoptic(texttoclean: str) -> str:
 	"""
 
 	:param texttoclean:
@@ -24,7 +25,7 @@ def replacecoptic(texttoclean):
 	return cleaned
 
 
-def copticprobe(match):
+def copticprobe(match: re.Match) -> str:
 	"""
 
 	:param match:
@@ -47,10 +48,10 @@ def copticprobe(match):
 	return newcoptic
 
 
-def copticuppercases(val):
+def copticuppercases(toreplace: str) -> str:
 	"""
 
-	:param val:
+	:param toreplace:
 	:return:
 	"""
 
@@ -89,15 +90,15 @@ def copticuppercases(val):
 	}
 
 	try:
-		substitute = substitutions[val]
+		substitute = substitutions[toreplace]
 	except KeyError:
-		# print('coptic capital confusion:', val)
-		substitute = val
+		# print('coptic capital confusion:', toreplace)
+		substitute = toreplace
 
 	return substitute
 
 
-def copticlowercases(val):
+def copticlowercases(toreplace: str) -> str:
 
 	substitutions = {
 		'A': u'\u2c81',
@@ -135,10 +136,10 @@ def copticlowercases(val):
 	}
 
 	try:
-		substitute = substitutions[val]
+		substitute = substitutions[toreplace]
 	except KeyError:
 		# print('coptic lowercase confusion:', val)
-		substitute = val
+		substitute = toreplace
 
 	return substitute
 
