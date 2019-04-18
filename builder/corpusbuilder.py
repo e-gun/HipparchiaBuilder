@@ -455,7 +455,7 @@ def secondaryworkparsing(authorobject, thetext: str, debugoutput=False, debugnew
 	return thetext
 
 
-def databaseloading(dbreadyversion, authorobject, dbconnection):
+def databaseloading(dbreadyversion: list, authorobject: dbAuthor, dbconnection):
 	"""
 
 	a little more cleaning, then insert this material into the database

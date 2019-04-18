@@ -31,6 +31,16 @@ in addition to the build environment itself, you will need: the `data` to insert
 After `config.ini` has been properly edited you can run `makecorpora.py`. A default installation will 
 be pre-configured to build all of the databases on the first run.
 
+Little or no little editing of `config.ini` is required to get a working build. You can get away with zero 
+edits if you position the raw data in the default locations (i.e., in subfolders under `../HipparchiaData/`. 
+Otherwise you have to make sure that `phi`, `tlg`, `...` inside of `config.ini`
+all point to the locations where you have staged the data.
+
+If you do not know where/how to find `../HipparchiaData/latin/` or `/Volumes/PHI0005`, you might have problems.
+You will need to learn the basics of how to read and edit file path names so that you know where to put things. 
+
+To build, you just call the `makecorpora.py` script. 
+
 ```
     % cd ~/hipparchia_venv/HipparchiaBuilder/
     % ./makecorpora.py
@@ -54,7 +64,7 @@ minimum software requirements:
 hardware recommendations:
 ```
 	a multicore processor
-	2G of RAM can accommodate 12 workers UNTIL you do the word counts
+	2G of RAM can accommodate as many as 12 workers UNTIL you do the word counts
 	word counts can fill 16G or RAM very fast: wordcounter() is capped at 4 workers (and will use over 12GB)
 	SSD with 15G spare space: 12G for the output and 3G for the input.
 	[du -h -d 0 inside of /usr/local/var/postgres outputs '12G']
