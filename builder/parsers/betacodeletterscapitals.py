@@ -12,6 +12,7 @@ import configparser
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
+
 def capitalletters(betacode):
 	# needs to be done in order of length of regex string
 	# capital + breathing + accent + adscript
@@ -82,7 +83,7 @@ def capitalletters(betacode):
 	return unicode
 
 
-def capitalsigmassubsitutes(match):
+def capitalsigmassubsitutes(match: re.Match) -> str:
 	substitutions = {
 		3: u'\u03f9'
 		}
@@ -96,7 +97,7 @@ def capitalsigmassubsitutes(match):
 
 
 # capital + breathing + accent + adscript
-def capitalsmoothgraveadscript(match):
+def capitalsmoothgraveadscript(match: re.Match) -> str:
 	substitutions = {
 		'A': u'ᾊ',
 		'E': u'',
@@ -112,7 +113,7 @@ def capitalsmoothgraveadscript(match):
 	return substitute
 
 
-def capitalroughgraveadscript(match):
+def capitalroughgraveadscript(match: re.Match) -> str:
 	substitutions = {
 		'A': u'ᾋ',
 		'E': u'',
@@ -128,7 +129,7 @@ def capitalroughgraveadscript(match):
 	return substitute
 
 
-def capitalsmoothacuteadscript(match):
+def capitalsmoothacuteadscript(match: re.Match) -> str:
 	substitutions = {
 		'A': u'ᾌ',
 		'E': u'',
@@ -144,7 +145,7 @@ def capitalsmoothacuteadscript(match):
 	return substitute
 
 
-def capitalroughacuteadscript(match):
+def capitalroughacuteadscript(match: re.Match) -> str:
 	substitutions = {
 		'A': u'ᾍ',
 		'E': u'',
@@ -160,7 +161,7 @@ def capitalroughacuteadscript(match):
 	return substitute
 
 
-def capitalsmoothcircumflexadscript(match):
+def capitalsmoothcircumflexadscript(match: re.Match) -> str:
 	substitutions = {
 		'A': u'ᾎ',
 		'E': u'',
@@ -176,7 +177,7 @@ def capitalsmoothcircumflexadscript(match):
 	return substitute
 
 
-def capitalroughcircumflexadscript(match):
+def capitalroughcircumflexadscript(match: re.Match) -> str:
 	substitutions = {
 		'A': u'ᾏ',
 		'E': u'',
@@ -193,7 +194,7 @@ def capitalroughcircumflexadscript(match):
 
 
 # capital + breathing + accent
-def capitalsmoothgrave(match):
+def capitalsmoothgrave(match: re.Match) -> str:
 	substitutions = {
 		'A': u'Ἂ',
 		'E': u'Ἒ',
@@ -209,7 +210,7 @@ def capitalsmoothgrave(match):
 	return substitute
 
 
-def capitalroughgrave(match):
+def capitalroughgrave(match: re.Match) -> str:
 	substitutions = {
 		'A': u'Ἃ',
 		'E': u'Ἓ',
@@ -225,7 +226,7 @@ def capitalroughgrave(match):
 	return substitute
 
 
-def capitalsmoothacute(match):
+def capitalsmoothacute(match: re.Match) -> str:
 	substitutions = {
 		'A': u'Ἄ',
 		'E': u'Ἔ',
@@ -241,7 +242,7 @@ def capitalsmoothacute(match):
 	return substitute
 
 
-def capitalroughacute(match):
+def capitalroughacute(match: re.Match) -> str:
 	substitutions = {
 		'A': u'Ἅ',
 		'E': u'Ἕ',
@@ -257,7 +258,7 @@ def capitalroughacute(match):
 	return substitute
 
 
-def capitalsmoothcircumflex(match):
+def capitalsmoothcircumflex(match: re.Match) -> str:
 	substitutions = {
 		'A': u'Ἆ',
 		'E': u'',
@@ -273,7 +274,7 @@ def capitalsmoothcircumflex(match):
 	return substitute
 
 
-def capitalroughcircumflex(match):
+def capitalroughcircumflex(match: re.Match) -> str:
 	substitutions = {
 		'A': u'Ἇ',
 		'E': u'',
@@ -290,7 +291,7 @@ def capitalroughcircumflex(match):
 
 
 # capital + breathing
-def capitalsmooth(match):
+def capitalsmooth(match: re.Match) -> str:
 	substitutions = {
 		'A': u'Ἀ',
 		'E': u'Ἐ',
@@ -307,7 +308,7 @@ def capitalsmooth(match):
 	return substitute
 
 
-def capitalrough(match):
+def capitalrough(match: re.Match) -> str:
 	substitutions = {
 		'A': u'Ἁ',
 		'E': u'Ἑ',
@@ -325,7 +326,7 @@ def capitalrough(match):
 
 
 # capital + accent
-def capitalgrave(match):
+def capitalgrave(match: re.Match) -> str:
 	"""
 
 	this sort of thing will get requested, but it looks nuts:
@@ -367,7 +368,7 @@ def capitalgrave(match):
 	return substitute
 
 
-def capitalacute(match):
+def capitalacute(match: re.Match) -> str:
 	"""
 
 	this sort of thing will get requested, but it looks nuts:
@@ -404,7 +405,7 @@ def capitalacute(match):
 
 	return substitute
 
-def capitalcircumflex(match):
+def capitalcircumflex(match: re.Match) -> str:
 	"""
 
 	this sort of thing will get requested, but it looks nuts:
@@ -441,7 +442,7 @@ def capitalcircumflex(match):
 
 	return substitute
 
-def capitaladscript(match):
+def capitaladscript(match: re.Match) -> str:
 	substitutions = {
 		'A': u'ᾼ',
 		'E': u'',
@@ -457,7 +458,7 @@ def capitaladscript(match):
 	return substitute
 
 
-def capitals(match):
+def capitals(match: re.Match) -> str:
 	substitutions = {
 		'A': u'Α',
 		'B': u'Β',
@@ -469,7 +470,7 @@ def capitals(match):
 		'H': u'Η',
 		'I': u'Ι',
 		'J': u'⒣',
-		# need the unused J because Roman characters are present; but see IG I3 1-2 [1-500 501-1517]) - 370: fr d-f, line 69 - Jέ[κτει Jεμέραι -- ⒣εμέραι is what we want
+		# need the unused J because Roman characters are present; see IG I3 1-2 [1-500 501-1517]) - 370: fr d-f, line 69 - Jέ[κτει Jεμέραι -- ⒣εμέραι is what we want
 		'K': u'Κ',
 		'L': u'Λ',
 		'M': u'Μ',

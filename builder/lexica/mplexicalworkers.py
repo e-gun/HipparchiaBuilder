@@ -17,7 +17,7 @@ from builder.parsers.lexica import betaconvertandsave, greekwithoutvowellengths,
 from builder.parsers.swappers import superscripterone, superscripterzero
 
 
-def mplatindictionaryinsert(dictdb, entries, dbconnection):
+def mplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 	"""
 
 	work on dictdb entries
@@ -80,7 +80,7 @@ def mplatindictionaryinsert(dictdb, entries, dbconnection):
 						print('died at', entry)
 						body = ''
 				info = segments.group(2)
-				parsedinfo = re.search('id="(.*?)"\stype="(.*?)"\skey="(.*?)" opt="(.*?)"', info)
+				parsedinfo = re.search('id="(.*?)" type="(.*?)" key="(.*?)" opt="(.*?)"', info)
 				idnum = parsedinfo.group(1)
 				etype = parsedinfo.group(2)  # will go unused
 				key = parsedinfo.group(3)
@@ -125,7 +125,7 @@ def mplatindictionaryinsert(dictdb, entries, dbconnection):
 	return
 
 
-def mpgreekdictionaryinsert(dictdb, entries, dbconnection):
+def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 	"""
 
 	work on dictdb entries

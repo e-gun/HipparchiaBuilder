@@ -81,7 +81,7 @@ def formatlatlexicon():
 	return
 
 
-def grammarloader(language):
+def grammarloader(language: str):
 	"""
 	pick and language to shove into the grammardb; parse; shove
 
@@ -130,7 +130,7 @@ def grammarloader(language):
 	return
 
 
-def analysisloader(language):
+def analysisloader(language: str):
 	"""
 
 	turn 'greek-analyses.txt' into a db table
@@ -213,7 +213,7 @@ def analysisloader(language):
 	return
 
 
-def resettable(tablename, tablestructurelist, indexcolumn):
+def resettable(tablename: str, tablestructurelist: list, indexcolumn: str):
 	"""
 
 	drop old table and create a new empty table
@@ -227,29 +227,29 @@ def resettable(tablename, tablestructurelist, indexcolumn):
 	:return:
 	"""
 
-	dbc = setconnection()
-	cursor = dbc.cursor()
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
 
 	columns = ', '.join(tablestructurelist)
 
 	q = 'DROP TABLE IF EXISTS public.{tn}; DROP INDEX IF EXISTS {tn}_idx;'.format(tn=tablename)
-	cursor.execute(q)
+	dbcursor.execute(q)
 
 	q = 'CREATE TABLE public.{tn} ( {c} ) WITH ( OIDS=FALSE );'.format(tn=tablename, c=columns)
-	cursor.execute(q)
+	dbcursor.execute(q)
 
 	q = 'GRANT SELECT ON TABLE public.{tn} TO hippa_rd;'.format(tn=tablename)
-	cursor.execute(q)
+	dbcursor.execute(q)
 
 	q = 'CREATE INDEX {tn}_idx ON public.{tn} USING btree ({ic} COLLATE pg_catalog."default");'.format(tn=tablename, ic=indexcolumn)
-	cursor.execute(q)
+	dbcursor.execute(q)
 
-	dbc.connectioncleanup()
+	dbconnection.connectioncleanup()
 
 	return
 
 
-def getlexicaltablestructuredict(tablename):
+def getlexicaltablestructuredict(tablename: str) -> dict:
 	"""
 
 	find out what to send resettable()

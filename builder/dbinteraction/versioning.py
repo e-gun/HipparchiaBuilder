@@ -54,7 +54,7 @@ def versiontablemaker(dbconnection):
 	return
 
 
-def timestampthebuild(corpusname, dbconnection=None):
+def timestampthebuild(corpusname: str, dbconnection=None):
 	"""
 
 	store the build time and template version in the DB
@@ -132,7 +132,7 @@ def timestampthebuild(corpusname, dbconnection=None):
 	return
 
 
-def readgitdata():
+def readgitdata() -> str:
 	"""
 
 	find the commit value for the code used for this build
@@ -145,7 +145,7 @@ def readgitdata():
 	"""
 
 	gitfile = './.git/logs/HEAD'
-	line = ''
+	line = str()
 
 	with open(gitfile) as fh:
 		for line in fh:

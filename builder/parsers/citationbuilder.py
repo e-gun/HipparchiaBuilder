@@ -13,7 +13,7 @@ from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.latinsubstitutions import latindiacriticals
 
 
-def citationbuilder(hexsequence):
+def citationbuilder(hexsequence: re.Match) -> str:
 	"""
 	NOTE: this function expects a call from re.sub and so you need a match.group()
 
@@ -46,7 +46,7 @@ def citationbuilder(hexsequence):
 	hexsequence = re.split(r'█', hexsequence)
 	hexsequence.reverse()
 	hexsequence.pop()
-	fullcitation = ''
+	fullcitation = str()
 
 	actionmapper = {
 		8: nyb08,
@@ -85,7 +85,7 @@ def citationbuilder(hexsequence):
 	return fullcitation
 
 
-def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
+def levelsixparsing(action, actionmapper, fullcitation, hexsequence) -> tuple:
 	"""
 
 	because level6 is its own world
@@ -158,7 +158,7 @@ def levelsixparsing(action, actionmapper, fullcitation, hexsequence):
 # was useful when originally coding, but easily refactored if you decide that this is all bug free...
 #
 
-def nybbler(singlehexval):
+def nybbler(singlehexval: str) -> tuple:
 	"""
 	take a character and split it into two chunks of info: 'textlevel' on left and 'action' on right
 	:param singlehexval:
@@ -172,7 +172,7 @@ def nybbler(singlehexval):
 	return textlevel, action
 
 
-def nyb08(hexsequence):
+def nyb08(hexsequence: str) -> tuple:
 	# 8 -> read 7 bits of next number [& int('7f', 16)]
 	if len(hexsequence) > 0:
 		citation = str(int(hexsequence.pop(), 16) & int('7f', 16))
@@ -182,7 +182,7 @@ def nyb08(hexsequence):
 	return citation, hexsequence
 
 
-def nyb09(hexsequence):
+def nyb09(hexsequence: str) -> tuple:
 	#   9 -> read a number and then a character
 	if len(hexsequence) > 0:
 		citation = str(int(hexsequence.pop(), 16) & int('7f', 16))
@@ -196,7 +196,7 @@ def nyb09(hexsequence):
 	return citation, hexsequence
 
 
-def nyb10(hexsequence):
+def nyb10(hexsequence: str) -> tuple:
 	# 10 -> read a number and then an ascii string
 	if len(hexsequence) > 0:
 		citation = str(int(hexsequence.pop(), 16) & int('7f', 16))
@@ -213,7 +213,7 @@ def nyb10(hexsequence):
 	return citation, hexsequence
 
 
-def nyb11(hexsequence):
+def nyb11(hexsequence: str) -> tuple:
 	# 11 -> next two bytes are a 14 bit number
 	if len(hexsequence) > 1:
 		firstbyte = int(hexsequence.pop(), 16) & int('7f', 16)
@@ -225,7 +225,7 @@ def nyb11(hexsequence):
 	return citation, hexsequence
 
 
-def nyb12(hexsequence):
+def nyb12(hexsequence: str) -> tuple:
 	# 12 -> a 2-byte number, then a character
 	citation = ''
 	if len(hexsequence) > 0:
@@ -244,7 +244,7 @@ def nyb12(hexsequence):
 	return citation, hexsequence
 
 
-def nyb13(hexsequence):
+def nyb13(hexsequence: str) -> tuple:
 	# 13 -> a 2-byte number, then a string
 	citation = ''
 	if len(hexsequence) > 0:
@@ -266,7 +266,7 @@ def nyb13(hexsequence):
 	return citation, hexsequence
 
 
-def nyb14(hexsequence):
+def nyb14(hexsequence: str) -> tuple:
 	# 14 -> append a char to the counter number
 	# this will not work properly right now: merely replacing, not appending; need to find a test case
 	# gellius has one. somewhere...
@@ -279,7 +279,7 @@ def nyb14(hexsequence):
 	return citation, hexsequence
 
 
-def nyb15(hexsequence):
+def nyb15(hexsequence: str) -> tuple:
 	# 15 -> an ascii string follows
 	citation = ''
 	stop = False

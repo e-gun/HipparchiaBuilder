@@ -16,7 +16,7 @@ config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
 
-def dbprepper(dbunreadyversion):
+def dbprepper(dbunreadyversion: list) -> deque:
 	"""
 	pull out markups, etc
 	:param dbunreadyversion:
@@ -62,7 +62,7 @@ def dbprepper(dbunreadyversion):
 	return dbreadyversion
 
 
-def cleanblanks(dbunreadyversion):
+def cleanblanks(dbunreadyversion: list) -> list:
 	"""
 	multiple sets and level shifts in rapid succession sometimes leaves blank lines that are 'numbered': zap them
 
@@ -99,7 +99,7 @@ def cleanblanks(dbunreadyversion):
 	return dbreadyversion
 
 
-def dbpdeincrement(dbunreadyversion):
+def dbpdeincrement(dbunreadyversion: list) -> deque:
 	"""
 	a formattind stripper:
 	
@@ -136,7 +136,7 @@ def dbpdeincrement(dbunreadyversion):
 	return dbreadyversion
 
 
-def dbstrippedliner(dbunreadyversion):
+def dbstrippedliner(dbunreadyversion: deque) -> deque:
 	"""
 	generate the easy to search stripped column
 	
@@ -214,7 +214,7 @@ def dbstrippedliner(dbunreadyversion):
 	return dbreadyversion
 
 
-def dbswapoutbadcharsfromcitations(dbunreadyversion):
+def dbswapoutbadcharsfromcitations(dbunreadyversion: deque) -> deque:
 	"""
 
 	sample in:
@@ -251,7 +251,7 @@ def dbswapoutbadcharsfromcitations(dbunreadyversion):
 	return dbreadyversion
 
 
-def dbfindhypens(dbunreadyversion):
+def dbfindhypens(dbunreadyversion: deque) -> deque:
 	"""
 
 	sample in:
@@ -325,7 +325,7 @@ def dbfindannotations(dbunreadyversion):
 	return dbreadyversion
 
 
-def hmutonbsp(dbunreadyversion):
+def hmutonbsp(dbunreadyversion: list) -> deque:
 	"""
 	pseudo-markup into html
 	this is a place where some commitments that have been deferred will get made
@@ -363,7 +363,7 @@ def quarterspacer(matchgroup):
 	return substitution
 
 
-def noleadingortrailingwhitespace(dbunreadyversion):
+def noleadingortrailingwhitespace(dbunreadyversion: list) -> deque:
 	"""
 	get rid of whitespace at ends of columns
 	otherwise HipparchiaServer is constantly doing this
@@ -380,7 +380,7 @@ def noleadingortrailingwhitespace(dbunreadyversion):
 	return dbreadyversion
 
 
-def consolidatecontiguouslines(previousline, thisline, hypenatedword, transtable):
+def consolidatecontiguouslines(previousline: list, thisline: list, hypenatedword: str, transtable):
 	"""
 
 	helper function for the stripped line column: if a previousline ends with a hypenated word:
