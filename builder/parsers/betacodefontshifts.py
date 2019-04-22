@@ -305,7 +305,7 @@ def andsubstitutes(groupone, grouptwo, groupthree):
 	return substitute
 
 
-def removeshiftsymmetry(groupone, grouptwo, groupthree):
+def removeshiftsymmetry(groupone: str, grouptwo: str, groupthree: str) -> str:
 	"""
 
 	notice that we are requesting 'unlatin + unsmall' in:
@@ -322,7 +322,7 @@ def removeshiftsymmetry(groupone, grouptwo, groupthree):
 	:return:
 	"""
 
-	value = '&' + groupone + grouptwo + '$'
+	value = '&{one}{two}$'.format(one=groupone, two=grouptwo)
 
 	if groupone != groupthree:
 		value += groupthree
@@ -330,7 +330,7 @@ def removeshiftsymmetry(groupone, grouptwo, groupthree):
 	return value
 
 
-def hmuintospans(texttoclean, language, force=False):
+def hmuintospans(texttoclean: str, language: str, force=False) -> str:
 	"""
 
 	turn
@@ -346,12 +346,14 @@ def hmuintospans(texttoclean, language, force=False):
 		<span class="xxx">...</span>
 
 	:param texttoclean:
+	:param language:
+	:param force:
 	:return:
 	"""
 
 	if not texttoclean:
 		# you sent 'None' here when cleaning the papyrus metadata
-		return
+		return str()
 
 	try:
 		htmlify = config['buildoptions']['htmlifydatabase']

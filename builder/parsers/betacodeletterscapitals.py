@@ -13,7 +13,7 @@ config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
 
-def capitalletters(betacode):
+def capitalletters(betacode: str) -> str:
 	# needs to be done in order of length of regex string
 	# capital + breathing + accent + adscript
 	# '*)/W|ETO GOU=N KAI\ O( *DIONU/SIOS...'
@@ -90,7 +90,7 @@ def capitalsigmassubsitutes(match: re.Match) -> str:
 
 	try:
 		substitute = substitutions[match.group(1)]
-	except:
+	except KeyError:
 		substitute = 'Σ'
 
 	return substitute

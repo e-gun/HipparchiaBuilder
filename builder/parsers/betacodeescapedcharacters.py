@@ -23,7 +23,7 @@ else:
 	simplequotes = False
 
 
-def replaceaddnlchars(texttoclean):
+def replaceaddnlchars(texttoclean: str) -> str:
 	"""
 	purge #, %, [, {, < markup
 	this method is 10x faster than going through over and over again:
@@ -71,7 +71,7 @@ def replaceaddnlchars(texttoclean):
 	return texttoclean
 
 
-def singletonsubstitutes(match):
+def singletonsubstitutes(match: re.Match) -> str:
 	"""
 	turn lone escaped items into unicode: #%@{}
 	:param match:
@@ -97,7 +97,7 @@ def singletonsubstitutes(match):
 	return substitute
 
 
-def poundsubstitutes(match):
+def poundsubstitutes(match: re.Match) -> str:
 	"""
 	turn # into unicode
 	:param match:
@@ -771,7 +771,7 @@ def poundsubstitutes(match):
 	return substitute
 
 
-def percentsubstitutes(match):
+def percentsubstitutes(match: re.Match) -> str:
 	"""
 	turn % into unicode
 
@@ -910,7 +910,7 @@ def percentsubstitutes(match):
 	return substitute
 
 
-def leftbracketsubstitutions(match):
+def leftbracketsubstitutions(match: re.Match) -> str:
 	"""
 	turn [N into unicode
 	:param match:
@@ -963,7 +963,7 @@ def leftbracketsubstitutions(match):
 	return substitute
 
 
-def rightbracketsubstitutions(match):
+def rightbracketsubstitutions(match: re.Match) -> str:
 	"""
 	turn ]N into unicode
 	:param match:
@@ -1015,7 +1015,7 @@ def rightbracketsubstitutions(match):
 	return substitute
 
 
-def atsignsubstitutions(match):
+def atsignsubstitutions(match: re.Match) -> str:
 	"""
 	turn @N into unicode
 	:param match:
@@ -1028,24 +1028,24 @@ def atsignsubstitutions(match):
 		1: r'<hmu_standalone_endofpage />',
 		2: r'<hmu_standalone_column_end />',
 		3: r'<hmu_standalone_omitted_graphic_marker />',
-		4: r'<hmu_standalone_table />',
-		5: r'</span>',
+		4: r'<hmu_standalone_table_starts />',
+		5: r'<hmu_standalone_table_ends />',
 		6: r'<br />',
 		7: r'——————',
 		8: r'———',  # hmu_standalone_mid_line_citation_boundary
-		9: r'<span class="breakintext">[break in text for unknown length]</span>',
+		9: r'<hmu_span_breakintext">[break in text for unknown length]</hmu_span_breakintext>',
 		10: r'<hmu_standalone_linetoolongforscreen />',
 		11: r'<hmu_standalone_tablecellindicator />',
 		12: r'<hmu_standalone_subcellindicator />',
 		20: r'<hmu_standalone_start_of_columnar_text />',
-		21: r'</span>',
+		21: r'</hmu_standalone_end_of_columnar_text>',
 		30: r'<hmu_standalone_start_of_stanza />',
 		50: r'<hmu_standalone_writing_perpendicular_to_main_text />',
 		51: r'<hmu_standalone_writing_inverse_to_main_text />',
-		70: r'<span class="quotedtext">',
-		71: r'</span>',
-		73: r'<span class="poetictext">',
-		74: r'</span>',
+		70: r'<hmu_span_quotedtext>',
+		71: r'</hmu_span_quotedtext>',
+		73: r'<hmu_span_poetictext>',
+		74: r'</hmu_span_poetictext>',
 
 	}
 
@@ -1059,7 +1059,7 @@ def atsignsubstitutions(match):
 	return substitute
 
 
-def ltcurlybracketsubstitutes(match):
+def ltcurlybracketsubstitutes(match: re.Match) -> str:
 	"""
 	turn {N into markup or unicode
 	:param match:
@@ -1109,7 +1109,7 @@ def ltcurlybracketsubstitutes(match):
 	return substitute
 
 
-def rtcurlybracketsubstitutes(match):
+def rtcurlybracketsubstitutes(match: re.Match) -> str:
 	"""
 	turn {N into markup or unicode
 	:param match:
@@ -1152,7 +1152,7 @@ def rtcurlybracketsubstitutes(match):
 	return substitute
 
 
-def ltanglebracketsubstitutes(match):
+def ltanglebracketsubstitutes(match: re.Match) -> str:
 	"""
 	turn <N into unicode
 	:param match:
@@ -1162,17 +1162,17 @@ def ltanglebracketsubstitutes(match):
 	val = int(match.group(1))
 
 	substitutions = {
-		# 1: '',
+		# 1: str(),
 		# Diogenes seems to have decided that this is the way to go; I wonder how often you will be sorry that you do not have \u0332 instead...
 		1: '⟨',
 	# the inactive version is what the betacode manual says to do, but in the inscriptions we just want brackets and not a combining underline
 		2: u'\u2035',
-		3: '',
-		4: '',
-		5: '',
+		3: str(),
+		4: str(),
+		5: str(),
 		6: r'<hmu_span_superscript>',  # hmu_shift_font_to_superscript
 		7: r'<hmu_span_subscript>',  # hmu_shift_font_to_subscript
-		8: '',
+		8: str(),
 		9: r'<hmu_span_textual_lemma>',  # hmu_textual_lemma
 		10: r'<hmu_span_stacked_text_lower>',  # hmu_stacked_text_lower
 		11: r'<hmu_span_stacked_text_upper>',  # hmu_stacked_text_upper
@@ -1181,7 +1181,7 @@ def ltanglebracketsubstitutes(match):
 		14: r'<hmu_span_interlineartext>',
 		15: r'<hmu_span_interlinearmarginalia>',  # hmu_interlinear_marginalia
 		16: u'\u2035',
-		17: '',  # Combining Double Underline
+		17: str(),  # Combining Double Underline
 		19: u'\u2035',
 		20: r'<hmu_span_expanded_text>',  # hmu_expanded_text
 		21: r'<hmu_span_latin_expanded_text>',  # hmu_latin_expanded_text
@@ -1224,7 +1224,7 @@ def ltanglebracketsubstitutes(match):
 	return substitute
 
 
-def rtanglebracketsubstitutes(match):
+def rtanglebracketsubstitutes(match: re.Match) -> str:
 	"""
 	turn >N into unicode
 	:param match:
@@ -1260,7 +1260,7 @@ def rtanglebracketsubstitutes(match):
 		30: r'</hmu_span_overline>',  # Combining Overline and Dependent Vertical Bars
 		31: r'</hmu_span_strikethrough>',  # strikethrough
 		32: r'</hmu_span_overline_and_underline>',  # hmu_overline_and_underline
-		34: '',  # fractions
+		34: str(),  # fractions
 		48: r'<hmu_undocumented_anglebracketspan48>',
 		50: r'</hmu_undocumented_anglebracketspan50>',
 		51: r'</hmu_undocumented_anglebracketspan51>',
@@ -1276,11 +1276,11 @@ def rtanglebracketsubstitutes(match):
 		67: r'</hmu_epigraphical_project_escape_67>',
 		68: r'</hmu_epigraphical_project_escape_68>',
 		69: r'</hmu_epigraphical_project_escape_69>',
-		70: r'</span>',  # hmu_inset_diagram
-		71: r'</span>',  # hmu_discrete_section_of_diagram
-		72: r'</span>',  # hmu_logical_relationship_in_diagram
-		73: r'</span>',  #<span class="diagramlvl03">',
-		74: r'</span>',  #<span class="diagramlvl04">'
+		70: r'</hmu_span_diagram>', 
+		71: r'</hmu_span_diagramsection>',  
+		72: r'</hmu_span_diagramrelation>', 
+		73: r'</hmu_span_diagramlvl03>', 
+		74: r'</hmu_span_diagramlvl04>',
 		96: r'</hmu_undocumented_anglebracketspan96>',
 	}
 
@@ -1294,7 +1294,7 @@ def rtanglebracketsubstitutes(match):
 	return substitute
 
 
-def quotesubstitutesa(match):
+def quotesubstitutesa(match: re.Match) -> str:
 	"""
 	turn "N into unicode
 	have to do this first because html quotes are going to appear soon
@@ -1337,7 +1337,7 @@ def quotesubstitutesa(match):
 	return substitute
 
 
-def quotesubstitutesb(match):
+def quotesubstitutesb(match: re.Match) -> str:
 	"""
 	turn "N into unicode
 	:param match:

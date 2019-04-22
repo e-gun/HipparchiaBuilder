@@ -312,7 +312,7 @@ def findnewtitles(newworktuples):
 	return workandtitletuplelist
 
 
-def buildnewworkmetata(workandtitletuplelist):
+def buildnewworkmetata(workandtitletuplelist) -> dict:
 	"""
 
 	supplement the workinfodict with more information about the works
