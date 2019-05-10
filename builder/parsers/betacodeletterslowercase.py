@@ -440,8 +440,8 @@ def lowercaseacutediaresis(match: re.Match) -> str:
 		'E': u'',
 		'I': u'ΐ',
 		'O': u'',
-		'U': u'',
-		'H': u'ΰ',
+		'U': u'ΰ',
+		'H': u'',
 		'W': u'',
 	}
 
