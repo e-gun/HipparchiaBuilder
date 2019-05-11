@@ -119,16 +119,14 @@ def timestampthebuild(corpusname: str, dbconnection=None):
 
 	try:
 		dbcursor.execute(q, d)
-	except psycopg2.errors.UndefinedColumn:
-		# you tried to add to an old version table
-		versiontablemaker(dbconnection)
-		dbcursor.execute(q, d)
-	except psycopg2.errors.StringDataRightTruncation:
-		# you tried to add to an old version table with 'corpusbuilddate character varying(20)'
-		versiontablemaker(dbconnection)
-		dbcursor.execute(q, d)
-	except AttributeError:
-		# AttributeError: module 'psycopg2' has no attribute 'errors'
+	except:
+		# psycopg2.errors.UndefinedColumn:
+		#   you tried to add to an old version table
+		# psycopg2.errors.StringDataRightTruncation:
+		#   you tried to add to an old version table with 'corpusbuilddate character varying(20)'
+		# AttributeError:
+		#   module 'psycopg2' has no attribute 'errors'
+		# owing to the possibility of the last, we skip the prior two... [bleh]
 		versiontablemaker(dbconnection)
 		dbcursor.execute(q, d)
 
