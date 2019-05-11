@@ -12,8 +12,14 @@ from builder.parsers.swappers import highunicodetohex, forceregexsafevariants, a
 from builder.parsers.betacodeescapedcharacters import replaceaddnlchars
 from builder.parsers.latinsubstitutions import latindiacriticals
 
+try:
+	regexmatch = re.Match
+except AttributeError:
+	# python < 3.7
+	regexmatch = object()
 
-def citationbuilder(hexsequence: re.Match) -> str:
+
+def citationbuilder(hexsequence: regexmatch) -> str:
 	"""
 	NOTE: this function expects a call from re.sub and so you need a match.group()
 
@@ -172,7 +178,7 @@ def nybbler(singlehexval: str) -> tuple:
 	return textlevel, action
 
 
-def nyb08(hexsequence: str) -> tuple:
+def nyb08(hexsequence: list) -> tuple:
 	# 8 -> read 7 bits of next number [& int('7f', 16)]
 	if len(hexsequence) > 0:
 		citation = str(int(hexsequence.pop(), 16) & int('7f', 16))
@@ -182,7 +188,7 @@ def nyb08(hexsequence: str) -> tuple:
 	return citation, hexsequence
 
 
-def nyb09(hexsequence: str) -> tuple:
+def nyb09(hexsequence: list) -> tuple:
 	#   9 -> read a number and then a character
 	if len(hexsequence) > 0:
 		citation = str(int(hexsequence.pop(), 16) & int('7f', 16))
@@ -196,7 +202,7 @@ def nyb09(hexsequence: str) -> tuple:
 	return citation, hexsequence
 
 
-def nyb10(hexsequence: str) -> tuple:
+def nyb10(hexsequence: list) -> tuple:
 	# 10 -> read a number and then an ascii string
 	if len(hexsequence) > 0:
 		citation = str(int(hexsequence.pop(), 16) & int('7f', 16))
@@ -213,7 +219,7 @@ def nyb10(hexsequence: str) -> tuple:
 	return citation, hexsequence
 
 
-def nyb11(hexsequence: str) -> tuple:
+def nyb11(hexsequence: list) -> tuple:
 	# 11 -> next two bytes are a 14 bit number
 	if len(hexsequence) > 1:
 		firstbyte = int(hexsequence.pop(), 16) & int('7f', 16)
@@ -225,7 +231,7 @@ def nyb11(hexsequence: str) -> tuple:
 	return citation, hexsequence
 
 
-def nyb12(hexsequence: str) -> tuple:
+def nyb12(hexsequence: list) -> tuple:
 	# 12 -> a 2-byte number, then a character
 	citation = ''
 	if len(hexsequence) > 0:
@@ -244,7 +250,7 @@ def nyb12(hexsequence: str) -> tuple:
 	return citation, hexsequence
 
 
-def nyb13(hexsequence: str) -> tuple:
+def nyb13(hexsequence: list) -> tuple:
 	# 13 -> a 2-byte number, then a string
 	citation = ''
 	if len(hexsequence) > 0:
@@ -266,7 +272,7 @@ def nyb13(hexsequence: str) -> tuple:
 	return citation, hexsequence
 
 
-def nyb14(hexsequence: str) -> tuple:
+def nyb14(hexsequence: list) -> tuple:
 	# 14 -> append a char to the counter number
 	# this will not work properly right now: merely replacing, not appending; need to find a test case
 	# gellius has one. somewhere...
@@ -279,7 +285,7 @@ def nyb14(hexsequence: str) -> tuple:
 	return citation, hexsequence
 
 
-def nyb15(hexsequence: str) -> tuple:
+def nyb15(hexsequence: list) -> tuple:
 	# 15 -> an ascii string follows
 	citation = ''
 	stop = False

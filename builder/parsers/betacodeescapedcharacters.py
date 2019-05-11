@@ -22,6 +22,12 @@ if config['buildoptions']['simplifyquotes'] == 'y':
 else:
 	simplequotes = False
 
+try:
+	regexmatch = re.Match
+except AttributeError:
+	# python < 3.7
+	regexmatch = object()
+
 
 def replaceaddnlchars(texttoclean: str) -> str:
 	"""
@@ -71,7 +77,7 @@ def replaceaddnlchars(texttoclean: str) -> str:
 	return texttoclean
 
 
-def singletonsubstitutes(match: re.Match) -> str:
+def singletonsubstitutes(match: regexmatch) -> str:
 	"""
 	turn lone escaped items into unicode: #%@{}
 	:param match:
@@ -97,7 +103,7 @@ def singletonsubstitutes(match: re.Match) -> str:
 	return substitute
 
 
-def poundsubstitutes(match: re.Match) -> str:
+def poundsubstitutes(match: regexmatch) -> str:
 	"""
 	turn # into unicode
 	:param match:
@@ -771,7 +777,7 @@ def poundsubstitutes(match: re.Match) -> str:
 	return substitute
 
 
-def percentsubstitutes(match: re.Match) -> str:
+def percentsubstitutes(match: regexmatch) -> str:
 	"""
 	turn % into unicode
 
@@ -910,7 +916,7 @@ def percentsubstitutes(match: re.Match) -> str:
 	return substitute
 
 
-def leftbracketsubstitutions(match: re.Match) -> str:
+def leftbracketsubstitutions(match: regexmatch) -> str:
 	"""
 	turn [N into unicode
 	:param match:
@@ -963,7 +969,7 @@ def leftbracketsubstitutions(match: re.Match) -> str:
 	return substitute
 
 
-def rightbracketsubstitutions(match: re.Match) -> str:
+def rightbracketsubstitutions(match: regexmatch) -> str:
 	"""
 	turn ]N into unicode
 	:param match:
@@ -1015,7 +1021,7 @@ def rightbracketsubstitutions(match: re.Match) -> str:
 	return substitute
 
 
-def atsignsubstitutions(match: re.Match) -> str:
+def atsignsubstitutions(match: regexmatch) -> str:
 	"""
 	turn @N into unicode
 	:param match:
@@ -1059,7 +1065,7 @@ def atsignsubstitutions(match: re.Match) -> str:
 	return substitute
 
 
-def ltcurlybracketsubstitutes(match: re.Match) -> str:
+def ltcurlybracketsubstitutes(match: regexmatch) -> str:
 	"""
 	turn {N into markup or unicode
 	:param match:
@@ -1109,7 +1115,7 @@ def ltcurlybracketsubstitutes(match: re.Match) -> str:
 	return substitute
 
 
-def rtcurlybracketsubstitutes(match: re.Match) -> str:
+def rtcurlybracketsubstitutes(match: regexmatch) -> str:
 	"""
 	turn {N into markup or unicode
 	:param match:
@@ -1152,7 +1158,7 @@ def rtcurlybracketsubstitutes(match: re.Match) -> str:
 	return substitute
 
 
-def ltanglebracketsubstitutes(match: re.Match) -> str:
+def ltanglebracketsubstitutes(match: regexmatch) -> str:
 	"""
 	turn <N into unicode
 	:param match:
@@ -1224,7 +1230,7 @@ def ltanglebracketsubstitutes(match: re.Match) -> str:
 	return substitute
 
 
-def rtanglebracketsubstitutes(match: re.Match) -> str:
+def rtanglebracketsubstitutes(match: regexmatch) -> str:
 	"""
 	turn >N into unicode
 	:param match:
@@ -1294,7 +1300,7 @@ def rtanglebracketsubstitutes(match: re.Match) -> str:
 	return substitute
 
 
-def quotesubstitutesa(match: re.Match) -> str:
+def quotesubstitutesa(match: regexmatch) -> str:
 	"""
 	turn "N into unicode
 	have to do this first because html quotes are going to appear soon
@@ -1337,7 +1343,7 @@ def quotesubstitutesa(match: re.Match) -> str:
 	return substitute
 
 
-def quotesubstitutesb(match: re.Match) -> str:
+def quotesubstitutesb(match: regexmatch) -> str:
 	"""
 	turn "N into unicode
 	:param match:

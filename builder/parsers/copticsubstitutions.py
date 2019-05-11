@@ -8,6 +8,12 @@
 
 import re
 
+try:
+	regexmatch = re.Match
+except AttributeError:
+	# python < 3.7
+	regexmatch = object()
+
 
 def replacecoptic(texttoclean: str) -> str:
 	"""
@@ -25,7 +31,7 @@ def replacecoptic(texttoclean: str) -> str:
 	return cleaned
 
 
-def copticprobe(match: re.Match) -> str:
+def copticprobe(match: regexmatch) -> str:
 	"""
 
 	:param match:

@@ -12,6 +12,13 @@ from string import punctuation
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode
 
 
+try:
+	regexmatch = re.Match
+except AttributeError:
+	# python < 3.7
+	regexmatch = object()
+
+
 #
 # lexica parser helpers
 #
@@ -100,7 +107,7 @@ def betaconvertandsave(convertme: re.Match) -> str:
 	return unigreek
 
 
-def lsjgreekswapper(match: re.Match) -> str:
+def lsjgreekswapper(match: regexmatch) -> str:
 	"""
 	greekfinder in mpgreekdictionaryinsert() will find 5 things:
 		match1 + match 3 + match 4 reassembles the markup block

@@ -12,6 +12,12 @@ import configparser
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
+try:
+	regexmatch = re.Match
+except AttributeError:
+	# python < 3.7
+	regexmatch = object()
+
 
 def lowercaseletters(betacode: str) -> str:
 	"""
@@ -145,7 +151,7 @@ def lowercaseletters(betacode: str) -> str:
 	return unicode
 
 
-def lowercasesigmassubsitutes(match: re.Match) -> str:
+def lowercasesigmassubsitutes(match: regexmatch) -> str:
 	substitutions = {
 		1: u'σ',
 		2: u'ς',
@@ -161,7 +167,7 @@ def lowercasesigmassubsitutes(match: re.Match) -> str:
 
 
 # lowercase + breathing + accent + subscript
-def lowercasesmoothgravesubscript(match: re.Match) -> str:
+def lowercasesmoothgravesubscript(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾂ',
 		'E': u'',
@@ -177,7 +183,7 @@ def lowercasesmoothgravesubscript(match: re.Match) -> str:
 	return substitute
 
 
-def lowercaseroughgravesubscript(match: re.Match) -> str:
+def lowercaseroughgravesubscript(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾃ',
 		'E': u'',
@@ -193,7 +199,7 @@ def lowercaseroughgravesubscript(match: re.Match) -> str:
 	return substitute
 
 
-def lowercasesmoothacutesubscript(match: re.Match) -> str:
+def lowercasesmoothacutesubscript(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾄ',
 		'E': u'',
@@ -209,7 +215,7 @@ def lowercasesmoothacutesubscript(match: re.Match) -> str:
 	return substitute
 
 
-def lowercaseroughacutesubscript(match: re.Match) -> str:
+def lowercaseroughacutesubscript(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾅ',
 		'E': u'',
@@ -225,7 +231,7 @@ def lowercaseroughacutesubscript(match: re.Match) -> str:
 	return substitute
 
 
-def lowercasesmoothcircumflexsubscript(match: re.Match) -> str:
+def lowercasesmoothcircumflexsubscript(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾆ',
 		'E': u'',
@@ -241,7 +247,7 @@ def lowercasesmoothcircumflexsubscript(match: re.Match) -> str:
 	return substitute
 
 
-def lowercaseroughcircumflexsubscript(match: re.Match) -> str:
+def lowercaseroughcircumflexsubscript(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾇ',
 		'E': u'',
@@ -258,7 +264,7 @@ def lowercaseroughcircumflexsubscript(match: re.Match) -> str:
 
 
 # lowercase + breathing + accent
-def lowercasesmoothgrave(match: re.Match) -> str:
+def lowercasesmoothgrave(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ἂ',
 		'E': u'ἒ',
@@ -274,7 +280,7 @@ def lowercasesmoothgrave(match: re.Match) -> str:
 	return substitute
 
 
-def lowercaseroughgrave(match: re.Match) -> str:
+def lowercaseroughgrave(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ἃ',
 		'E': u'ἓ',
@@ -290,7 +296,7 @@ def lowercaseroughgrave(match: re.Match) -> str:
 	return substitute
 
 
-def lowercasesmoothacute(match: re.Match) -> str:
+def lowercasesmoothacute(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ἄ',
 		'E': u'ἔ',
@@ -306,7 +312,7 @@ def lowercasesmoothacute(match: re.Match) -> str:
 	return substitute
 
 
-def lowercaseroughacute(match: re.Match) -> str:
+def lowercaseroughacute(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ἅ',
 		'E': u'ἕ',
@@ -322,7 +328,7 @@ def lowercaseroughacute(match: re.Match) -> str:
 	return substitute
 
 
-def lowercasesmoothcircumflex(match: re.Match) -> str:
+def lowercasesmoothcircumflex(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ἆ',
 		'E': u'ἐ͂',  # IG 104.27: AI)/TIOS E)=I FO/NO --> αἴτιος ἐ͂ι φόνο [U1f10 + U0342]
@@ -338,7 +344,7 @@ def lowercasesmoothcircumflex(match: re.Match) -> str:
 	return substitute
 
 
-def lowercaseroughcircumflex(match: re.Match) -> str:
+def lowercaseroughcircumflex(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ἇ',
 		'E': u'ἑ͂',  # IG: TE=S BOLE=S E(=I
@@ -355,7 +361,7 @@ def lowercaseroughcircumflex(match: re.Match) -> str:
 
 
 # lowercase + accent + subscript
-def lowercasegravesub(match: re.Match) -> str:
+def lowercasegravesub(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾲ',
 		'H': u'ῂ',
@@ -367,7 +373,7 @@ def lowercasegravesub(match: re.Match) -> str:
 	return substitute
 
 
-def lowercaseacutedsub(match: re.Match) -> str:
+def lowercaseacutedsub(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾴ',
 		'H': u'ῄ',
@@ -379,7 +385,7 @@ def lowercaseacutedsub(match: re.Match) -> str:
 	return substitute
 
 
-def lowercasesircumflexsub(match: re.Match) -> str:
+def lowercasesircumflexsub(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾷ',
 		'H': u'ῇ',
@@ -393,7 +399,7 @@ def lowercasesircumflexsub(match: re.Match) -> str:
 
 # lowercase + breathing + subscript
 
-def lowercasesmoothsub(match: re.Match) -> str:
+def lowercasesmoothsub(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾀ',
 		'H': u'ᾐ',
@@ -405,7 +411,7 @@ def lowercasesmoothsub(match: re.Match) -> str:
 	return substitute
 
 
-def lowercaseroughsub(match: re.Match) -> str:
+def lowercaseroughsub(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾁ',
 		'H': u'ᾑ',
@@ -418,7 +424,7 @@ def lowercaseroughsub(match: re.Match) -> str:
 
 
 # lowercase + accent + diaresis
-def lowercasegravediaresis(match: re.Match) -> str:
+def lowercasegravediaresis(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'',
 		'E': u'',
@@ -434,7 +440,7 @@ def lowercasegravediaresis(match: re.Match) -> str:
 	return substitute
 
 
-def lowercaseacutediaresis(match: re.Match) -> str:
+def lowercaseacutediaresis(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'',
 		'E': u'',
@@ -450,7 +456,7 @@ def lowercaseacutediaresis(match: re.Match) -> str:
 	return substitute
 
 
-def lowercasesircumflexdiaresis(match: re.Match) -> str:
+def lowercasesircumflexdiaresis(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'',
 		'E': u'',
@@ -467,7 +473,7 @@ def lowercasesircumflexdiaresis(match: re.Match) -> str:
 
 
 # lowercase + breathing
-def lowercasesmooth(match: re.Match) -> str:
+def lowercasesmooth(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ἀ',
 		'E': u'ἐ',
@@ -484,7 +490,7 @@ def lowercasesmooth(match: re.Match) -> str:
 	return substitute
 
 
-def lowercaserough(match: re.Match) -> str:
+def lowercaserough(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ἁ',
 		'E': u'ἑ',
@@ -502,7 +508,7 @@ def lowercaserough(match: re.Match) -> str:
 
 
 # lowercase + accent
-def lowercasegrave(match: re.Match) -> str:
+def lowercasegrave(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ὰ',
 		'E': u'ὲ',
@@ -518,7 +524,7 @@ def lowercasegrave(match: re.Match) -> str:
 	return substitute
 
 
-def lowercaseacute(match: re.Match) -> str:
+def lowercaseacute(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ά',
 		'E': u'έ',
@@ -534,7 +540,7 @@ def lowercaseacute(match: re.Match) -> str:
 	return substitute
 
 
-def lowercascircumflex(match: re.Match) -> str:
+def lowercascircumflex(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾶ',
 		'E': u'\u03b5\u0342',
@@ -553,7 +559,7 @@ def lowercascircumflex(match: re.Match) -> str:
 
 
 # lowercase + diaresis
-def lowercasediaresis(match: re.Match) -> str:
+def lowercasediaresis(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'',
 		'E': u'',
@@ -570,7 +576,7 @@ def lowercasediaresis(match: re.Match) -> str:
 
 
 # lowercase + subscript
-def lowercasesubscript(match: re.Match) -> str:
+def lowercasesubscript(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'ᾳ',
 		'E': u'',
@@ -587,7 +593,7 @@ def lowercasesubscript(match: re.Match) -> str:
 
 
 # lowercases
-def lowercases(match: re.Match) -> str:
+def lowercases(match: regexmatch) -> str:
 	substitutions = {
 		'A': u'α',
 		'B': u'β',

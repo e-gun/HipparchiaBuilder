@@ -101,7 +101,7 @@ def loadgkcanon(canonfile: str):
 	return
 
 
-def gkcanoncleaner(txt: str) -> str:
+def gkcanoncleaner(txt: str) -> List[str]:
 	"""
 	tidy up the greek canon file
 
@@ -235,10 +235,10 @@ def gkcanoncleaner(txt: str) -> str:
 	txt = re.sub(r'`', r'', txt)
 
 	txt = latindiacriticals(txt)
-	txt = txt.split('\n')
+	listofstrings = txt.split('\n')
 	# txt = txt[:-1]
 
-	return txt
+	return listofstrings
 
 
 def temptableauthorline(newauthorinfo: str, allauthors: dict) -> List[str]:
@@ -284,7 +284,7 @@ def temptableauthorline(newauthorinfo: str, allauthors: dict) -> List[str]:
 	return [a, name]
 
 
-def temptableworkline(newworkinfo, allworks):
+def temptableworkline(newworkinfo, allworks) -> List[str]:
 	"""
 	prepare a line of author data to send to the temporary table
 
