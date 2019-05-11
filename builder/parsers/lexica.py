@@ -100,7 +100,7 @@ def latinvowellengths(texttoclean: str) -> str:
 	return texttoclean
 
 
-def betaconvertandsave(convertme: re.Match) -> str:
+def betaconvertandsave(convertme: regexmatch) -> str:
 	betagreek = convertme.group(1)
 	notgreek = convertme.group(2)
 	unigreek = replacegreekbetacode(betagreek.upper())+notgreek
