@@ -127,6 +127,11 @@ def timestampthebuild(corpusname: str, dbconnection=None):
 		# you tried to add to an old version table with 'corpusbuilddate character varying(20)'
 		versiontablemaker(dbconnection)
 		dbcursor.execute(q, d)
+	except AttributeError:
+		# AttributeError: module 'psycopg2' has no attribute 'errors'
+		versiontablemaker(dbconnection)
+		dbcursor.execute(q, d)
+
 	dbconnection.connectioncleanup()
 
 	return
