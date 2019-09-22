@@ -11,6 +11,7 @@ import configparser
 from collections import deque
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj, buildhipparchiatranstable
 from builder.parsers.regexsubstitutions import swapregexbrackets, makepunctuationsmall
+from builder.parsers.transliteration import transliteratecolums
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
@@ -51,6 +52,14 @@ def dbprepper(dbunreadyversion: list) -> deque:
 	dbunreadyversion = cleanblanks(dbunreadyversion)
 	dbunreadyversion = dbpdeincrement(dbunreadyversion)
 	dbunreadyversion = dbstrippedliner(dbunreadyversion)
+
+	try:
+		if config['playground']['transliterate'] == 'y':
+			dbunreadyversion = transliteratecolums(dbunreadyversion)
+	except KeyError:
+		# your config file is old...
+		pass
+
 	# you will have problems browsing to 'Left/Right (1b:2)' if you don't do something here
 	dbunreadyversion = dbswapoutbadcharsfromcitations(dbunreadyversion)
 	dbunreadyversion = dbfindhypens(dbunreadyversion)
