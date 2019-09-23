@@ -27,14 +27,14 @@ def transliteratecolums(deprepdeque: deque):
 	:return:
 	"""
 
-	columns = [2, 3]
+	columns = [2, 3, 4]
 	for c in columns:
 		deprepdeque = transliteratethedeque(deprepdeque, c)
 
 	return deprepdeque
 
 
-def transliteratethedeque(deprepdeque: deque, workingcolumn=3) -> deque:
+def transliteratethedeque(deprepdeque: deque, workingcolumn=4) -> deque:
 	"""
 
 	3: modify the stripped column
@@ -54,7 +54,10 @@ def transliteratethedeque(deprepdeque: deque, workingcolumn=3) -> deque:
 			if c != workingcolumn:
 				newline.append(line[c])
 			else:
-				newline.append(modified)
+				if workingcolumn == 4:
+					newline.append(modified.lower())
+				else:
+					newline.append(modified)
 		dbreadyversion.append(newline)
 
 	return dbreadyversion
