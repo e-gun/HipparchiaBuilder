@@ -7,8 +7,10 @@
 """
 
 import configparser
+import io
 import re
 from multiprocessing import Manager
+
 
 import psycopg2
 
@@ -205,8 +207,11 @@ def compilenewworks(newauthors, wkmapper):
 	return newworktuples
 
 
-def newregisternewworks(newworktuples):
+def registernewworks(newworktuples):
 	"""
+
+	this is convoluted because doing 200k inserts is very slow
+
 	WORKS
 
 	universalid character(10),
@@ -230,6 +235,10 @@ def newregisternewworks(newworktuples):
 	lastline integer,
 	authentic boolean
 
+	print(list(workinfodict.items())[0])
+	i.e., (k, v)
+	('ch0c01w5mn', {'publication_info': '', 'provenance': '[unknown]', 'recorded_date': '[unknown]', 'converted_date': 2500, 'transmission': 'inscription', 'worktype': 'inscription', 'annotationsatindexvalue': ('', 7152), 'title': '999'})
+
 
 	https://www.citusdata.com/blog/2017/11/08/faster-bulk-loading-in-postgresql-with-copy/
 
@@ -246,79 +255,126 @@ def newregisternewworks(newworktuples):
 	:return:
 	"""
 
+	thetable = 'works'
+
+	nonstrings = ['wordcount', 'firstline', 'lastline', 'authentic', 'converted_date']
+
+	tablestructure = {
+		'universalid': 0,
+		'title': 1,
+		'language': 2,
+		'publication_info': 3,
+		'levellabels_00': 4,
+		'levellabels_01': 5,
+		'levellabels_02': 6,
+		'levellabels_03': 7,
+		'levellabels_04': 8,
+		'levellabels_05': 9,
+		'workgenre': 10,
+		'transmission': 11,
+		'worktype': 12,
+		'provenance': 13,
+		'recorded_date': 14,
+		'converted_date': 15,
+		'wordcount': 16,
+		'firstline': 17,
+		'lastline': 18,
+		'authentic': 19
+	}
+
+	rowsintolabels = {
+		1: 'universalid',
+		2: 'title',
+		3: 'language',
+		4: 'publication_info',
+		5: 'levellabels_00',
+		6: 'levellabels_01',
+		7: 'levellabels_02',
+		8: 'levellabels_03',
+		9: 'levellabels_04',
+		10: 'levellabels_05',
+		11: 'workgenre',
+		12: 'transmission',
+		13: 'worktype',
+		14: 'provenance',
+		15: 'recorded_date',
+		16: 'converted_date',
+		17: 'wordcount',
+		18: 'firstline',
+		19: 'lastline',
+		20: 'authentic'
+	}
+
+	loadingcolumns = [rowsintolabels[k] for k in sorted(rowsintolabels.keys()) if rowsintolabels[k] not in nonstrings]
+
 	dbconnection = setconnection()
 	dbcursor = dbconnection.cursor()
 
 	workandtitletuplelist = findnewtitles(newworktuples)
 	workinfodict = buildnewworkmetata(workandtitletuplelist)
 
-	print(list(workinfodict.items())[0])
+	print('registering {w} new works'.format(w=len(workinfodict)))
+
+	pgcopydata = list()
 
 	for w in workinfodict.keys():
-		vals = list()
-		vals.append(w)  #universalid
+		# we have to skip integers and so 'converted_date', etc
+		vals = ['' for _ in range(20-len(nonstrings))]
+		vals[tablestructure['universalid']] = w
+		vals[tablestructure['title']] = workinfodict[w]['title']
+		vals[tablestructure['levellabels_00']] = 'line'
+		vals[tablestructure['levellabels_01']] = ' '
+		if w[0:2] in ['in', 'ch']:
+			g = 'Inscr.'
+		elif w[0:2] in ['dp']:
+			g = 'Docu.'
+		else:
+			g = 'Unk.'
+		vals[tablestructure['workgenre']] = g
+		for k in workinfodict[w].keys():
+			if k != 'annotationsatindexvalue' and k not in nonstrings:
+				vals[tablestructure[k]] = workinfodict[w][k]
+		pgcopydata.append('\t'.join(vals))
 
+	rawio = io.StringIO()
+	rawio.write('\n'.join(pgcopydata))
+	rawio.seek(0)
 
-	return
+	dbcursor.copy_from(rawio, thetable, columns=loadingcolumns)
 
-
-def registernewworks(newworktuples):
-	"""
-
-	you have a list, now register the contents: INSERT into a pre-cleaned works table
-
-	newworktuples = [(newwkid1, oldworkdb1, docname1), (newwkid2, oldworkdb2, docname2), ...]
-
-	note that the notations could be further refactored to trim down on the UPDATES
-
-	:param newworktuples:
-	:return:
-	"""
-	dbconnection = setconnection()
-	dbcursor = dbconnection.cursor()
-
-	workandtitletuplelist = findnewtitles(newworktuples)
-	workinfodict = buildnewworkmetata(workandtitletuplelist)
-
-	# workinfodict has ids as keys ('in0006w0lk') and then a dict attached that contains db keys and values: 'title': 'Attica (IG II/III2 3,1 [2789-5219]) - 3536', etc.
-	# note that you also have the key 'annotationsatindexvalue' it contains an index value and the notes to insert at that index location
-	# it will eventually require q = 'UPDATE '+db+' SET annotations=%s WHERE index=%s'
-
-	# insert new works into the works table: deletetemporarydbs() means that this is INSERT and not UPDATE
-
-	print('registering', len(workinfodict), 'new works')
-
+	# 'converted_date' has not been registered yet
+	print('updating the dates in {w} works'.format(w=len(workinfodict)))
+	
+	q = 'CREATE TEMP TABLE tmp_{tb} AS SELECT * FROM {tb} LIMIT 0'.format(tb=thetable)
+	dbcursor.execute(q)
+	
 	count = 0
 	for w in workinfodict.keys():
 		count += 1
-		columns = ['universalid', 'levellabels_00', 'levellabels_01']
-		vals = [w, 'line', ' ']  # the whitesapce matters for levellabels_01
-		valstring = ['%s', '%s', '%s']
-		# set genres: not elegant, but...
-		if w[0:2] in ['in', 'ch']:
-			columns.append('workgenre')
-			vals.append('Inscr.')
-			valstring.append('%s')
-		if w[0:2] in ['dp']:
-			columns.append('workgenre')
-			vals.append('Docu.')
-			valstring.append('%s')
-		for key in workinfodict[w].keys():
-			if key != 'annotationsatindexvalue':
-				columns.append(key)
-				vals.append(workinfodict[w][key])
-				valstring.append('%s')
-		columns = ', '.join(columns)
-		valstring = ', '.join(valstring)
-		vals = [forceregexsafevariants(v) for v in vals]
-		vals = tuple(vals)
+		dbconnection.checkneedtocommit(count)
+		q = 'INSERT INTO tmp_{tb} (universalid, converted_date) VALUES ( %s, %s)'.format(tb=thetable)
+		try:
+			d = (w, workinfodict[w]['converted_date'])
+			dbcursor.execute(q, d)
+		except KeyError:
+			# no date...
+			pass
 
-		q = 'INSERT INTO works ( {c} ) VALUES ( {v} ) '.format(c=columns, v=valstring)
-		d = vals
+	dbconnection.commit()
 
-		dbcursor.execute(q, d)
-		if count % 2500 == 0:
-			dbconnection.commit()
+	qtemplate = """
+		UPDATE {tb} SET
+			converted_date = tmp_{tb}.converted_date
+		FROM tmp_{tb}
+		WHERE {tb}.universalid = tmp_{tb}.universalid
+	"""
+
+	q = qtemplate.format(tb=thetable)
+	dbcursor.execute(q)
+	dbconnection.commit()
+
+	q = 'DROP TABLE tmp_{tb}'.format(tb=thetable)
+	dbcursor.execute(q)
 	dbconnection.commit()
 
 	print('updating the notations in {w} works'.format(w=len(workinfodict)))
@@ -339,6 +395,7 @@ def registernewworks(newworktuples):
 		if count % 5000 == 0:
 			print('\t', count, 'works updated')
 
+	dbconnection.commit()
 	dbconnection.connectioncleanup()
 
 	return
