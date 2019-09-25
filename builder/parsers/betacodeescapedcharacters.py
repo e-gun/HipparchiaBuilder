@@ -71,20 +71,20 @@ def replaceaddnlchars(texttoclean: str) -> str:
 	rtanglebracket = re.compile(r'>(\d{1,2})')
 	texttoclean = re.sub(rtanglebracket, rtanglebracketsubstitutes, texttoclean)
 
-	singletons = re.compile(r'[#%@{}]')
-	texttoclean = re.sub(singletons, singletonsubstitutes, texttoclean)
+	texttoclean = singletonsubstitutes(texttoclean)
 
 	return texttoclean
 
 
-def singletonsubstitutes(match: regexmatch) -> str:
+def singletonsubstitutes(texttoclean: str) -> str:
 	"""
 	turn lone escaped items into unicode: #%@{}
 	:param match:
 	:return:
 	"""
 
-	val = match.group(0)
+	target = re.compile(r'[#%@{}]')
+	matchgroup = 0
 
 	substitutions = {
 		'#': u'\u0374',
@@ -94,13 +94,14 @@ def singletonsubstitutes(match: regexmatch) -> str:
 		'}': r'</speaker>'
 	}
 
-	try:
-		substitute = substitutions[val]
-	except KeyError:
-		print('\tsingletonsubstitutes() sent an invalid value:', val)
-		substitute = val
+	swapper = lambda x: substitutions[x.group(matchgroup)]
 
-	return substitute
+	try:
+		texttoclean = re.sub(target, swapper, texttoclean)
+	except KeyError:
+		print('\tswapper in singletonsubstitutes() was sent an invalid substitutions{} key')
+
+	return texttoclean
 
 
 def poundsubstitutes(match: regexmatch) -> str:

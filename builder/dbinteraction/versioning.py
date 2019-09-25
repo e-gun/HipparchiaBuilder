@@ -13,7 +13,7 @@ import psycopg2
 
 from builder.dbinteraction.connection import setconnection
 
-hipparchiabuilderversion = '1.2.3'
+hipparchiabuilderversion = '1.2.4'
 #sqltemplateversion = 7242017
 sqltemplateversion = 2242018
 

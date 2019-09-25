@@ -205,6 +205,63 @@ def compilenewworks(newauthors, wkmapper):
 	return newworktuples
 
 
+def newregisternewworks(newworktuples):
+	"""
+	WORKS
+
+	universalid character(10),
+	title character varying(512),
+	language character varying(10),
+	publication_info text,
+	levellabels_00 character varying(64),
+	levellabels_01 character varying(64),
+	levellabels_02 character varying(64),
+	levellabels_03 character varying(64),
+	levellabels_04 character varying(64),
+	levellabels_05 character varying(64),
+	workgenre character varying(32),
+	transmission character varying(32),
+	worktype character varying(32),
+	provenance character varying(64),
+	recorded_date character varying(64),
+	converted_date integer,
+	wordcount integer,
+	firstline integer,
+	lastline integer,
+	authentic boolean
+
+
+	https://www.citusdata.com/blog/2017/11/08/faster-bulk-loading-in-postgresql-with-copy/
+
+	conn = psycopg2.connect(DSN)
+	curs = conn.cursor()
+
+	data = StringIO.StringIO()
+	data.write('\n'.join(['1', '2','3']))
+	data.seek(0)
+
+	curs.copy_from(data, 'my_table')
+
+	:param newworktuples:
+	:return:
+	"""
+
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
+
+	workandtitletuplelist = findnewtitles(newworktuples)
+	workinfodict = buildnewworkmetata(workandtitletuplelist)
+
+	print(list(workinfodict.items())[0])
+
+	for w in workinfodict.keys():
+		vals = list()
+		vals.append(w)  #universalid
+
+
+	return
+
+
 def registernewworks(newworktuples):
 	"""
 
