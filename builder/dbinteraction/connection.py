@@ -127,7 +127,12 @@ class GenericConnectionObject(object):
 		return getattr(self.dbconnection, 'autocommit')
 
 	def setdefaultisolation(self):
-		self.dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_DEFAULT)
+		try:
+			self.dbconnection.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_DEFAULT)
+		except psycopg2.InterfaceError:
+			# ubuntu19 and fedora31 coughed this up
+			# psycopg2.InterfaceError: connection already closed
+			pass
 
 	def cursor(self):
 		return self.curs
@@ -274,7 +279,8 @@ class PooledConnectionObject(GenericConnectionObject):
 		try:
 			self.dbconnection.set_session(readonly=False)
 		except psycopg2.OperationalError:
-			print('change your connection type to "simple" in "config.ini"; pooled connections are failing')
+			# print('change your connection type to "simple" in "config.ini"; pooled connections are failing')
+			pass
 
 		self.setdefaultisolation()
 		self.pool.putconn(self.dbconnection, key=self.uniquename)
