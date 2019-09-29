@@ -10,7 +10,7 @@ import configparser
 import io
 import re
 from multiprocessing import Manager
-
+from typing import List
 
 import psycopg2
 
@@ -207,10 +207,10 @@ def compilenewworks(newauthors, wkmapper):
 	return newworktuples
 
 
-def registernewworks(newworktuples):
+def insertnewworkdata(newworktuples):
 	"""
 
-	this is convoluted because doing 200k inserts is very slow
+	call a series of functions to register the newly extracted works
 
 	WORKS
 
@@ -235,10 +235,28 @@ def registernewworks(newworktuples):
 	lastline integer,
 	authentic boolean
 
+	:param newworktuples:
+	:return:
+	"""
+
+	thetable = 'works'
+	workandtitletuplelist = findnewtitles(newworktuples)
+	workinfodict = buildnewworkmetata(workandtitletuplelist)
+
+	registernewworks(workinfodict, thetable)
+	registernewdates(workinfodict, thetable)
+	registernewnotes(workinfodict)
+
+	return
+
+
+def registernewworks(workinfodict: dict, thetable: str):
+	"""
+	this is convoluted because doing 200k inserts is very slow
+
 	print(list(workinfodict.items())[0])
 	i.e., (k, v)
 	('ch0c01w5mn', {'publication_info': '', 'provenance': '[unknown]', 'recorded_date': '[unknown]', 'converted_date': 2500, 'transmission': 'inscription', 'worktype': 'inscription', 'annotationsatindexvalue': ('', 7152), 'title': '999'})
-
 
 	https://www.citusdata.com/blog/2017/11/08/faster-bulk-loading-in-postgresql-with-copy/
 
@@ -251,11 +269,13 @@ def registernewworks(newworktuples):
 
 	curs.copy_from(data, 'my_table')
 
-	:param newworktuples:
+	:param workinfodict:
+	:param thetable:
 	:return:
 	"""
-
-	thetable = 'works'
+	print('registering {w} new works'.format(w=len(workinfodict)))
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
 
 	nonstrings = ['wordcount', 'firstline', 'lastline', 'authentic', 'converted_date']
 
@@ -307,19 +327,11 @@ def registernewworks(newworktuples):
 
 	loadingcolumns = [rowsintolabels[k] for k in sorted(rowsintolabels.keys()) if rowsintolabels[k] not in nonstrings]
 
-	dbconnection = setconnection()
-	dbcursor = dbconnection.cursor()
-
-	workandtitletuplelist = findnewtitles(newworktuples)
-	workinfodict = buildnewworkmetata(workandtitletuplelist)
-
-	print('registering {w} new works'.format(w=len(workinfodict)))
-
 	pgcopydata = list()
 
 	for w in workinfodict.keys():
 		# we have to skip integers and so 'converted_date', etc
-		vals = ['' for _ in range(20-len(nonstrings))]
+		vals = ['' for _ in range(20 - len(nonstrings))]
 		vals[tablestructure['universalid']] = w
 		vals[tablestructure['title']] = workinfodict[w]['title']
 		vals[tablestructure['levellabels_00']] = 'line'
@@ -342,12 +354,28 @@ def registernewworks(newworktuples):
 
 	dbcursor.copy_from(rawio, thetable, columns=loadingcolumns)
 
-	# 'converted_date' has not been registered yet
+	dbconnection.commit()
+	dbconnection.connectioncleanup()
+	return
+
+
+def registernewdates(workinfodict: dict, thetable: str):
+	"""
+
+	enter the new dates into the db...
+
+	:param workinfodict:
+	:param thetable:
+	:return:
+	"""
 	print('updating the dates in {w} works'.format(w=len(workinfodict)))
-	
+
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
+
 	q = 'CREATE TEMP TABLE tmp_{tb} AS SELECT * FROM {tb} LIMIT 0'.format(tb=thetable)
 	dbcursor.execute(q)
-	
+
 	count = 0
 	for w in workinfodict.keys():
 		count += 1
@@ -376,6 +404,20 @@ def registernewworks(newworktuples):
 	q = 'DROP TABLE tmp_{tb}'.format(tb=thetable)
 	dbcursor.execute(q)
 	dbconnection.commit()
+	dbconnection.connectioncleanup()
+	return
+
+
+def registernewnotes(workinfodict: dict):
+	"""
+
+	enter the notations into the db...
+
+	:param workinfodict:
+	:return:
+	"""
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
 
 	print('updating the notations in {w} works'.format(w=len(workinfodict)))
 
@@ -397,7 +439,6 @@ def registernewworks(newworktuples):
 
 	dbconnection.commit()
 	dbconnection.connectioncleanup()
-
 	return
 
 
@@ -696,7 +737,7 @@ def buildworkmetadatatuples(workpile, commitcount, metadatalist, dbconnection):
 	return metadatalist
 
 
-def modifyauthorsdb(newentryname, worktitle, dbcursor):
+def modifyauthorsdb(newentryname: str, worktitle: str, dbcursor):
 	"""
 	the idxname of something like "ZZ0080" will be "Black Sea and Scythia Minor"
 	the title of "in0001" should be set to "Black Sea and Scythia Minor IosPE I(2) [Scythia]"
@@ -793,8 +834,13 @@ def insertnewworksintonewauthor(newwkuid, results, dbcursor):
 	return
 
 
-def generatemodifiedtuples(results, newwkuid):
+def generatemodifiedtuples(results: List[tuple], newwkuid: str):
 	"""
+	in:
+		results[0] (28381, 'ZZ0130w001', '3543', '1', '1', '1', '1', 'p1', '<span class="hmu_marginaltext"><span class="italic">inter lineas:</span><span class="normal"></span></span>', 'inter lineas', 'inter lineas', '', '')
+
+	out:
+		newdata[0] (28381, 'ch0c01w35b', '-1', '-1', '-1', '-1', 'recto', 'p1', '<span class="hmu_marginaltext"><span class="italic">inter lineas:</span><span class="normal"></span></span>', 'inter lineas', 'inter lineas', '', '')
 
 	:param results:
 	:param newwkuid:
@@ -833,7 +879,7 @@ def generatemodifiedtuples(results, newwkuid):
 	return newdata
 
 
-def assignlanguagetonewworks(dbprefix):
+def assignlanguagetonewworks(dbprefix: str):
 	"""
 
 	look at every work of the format 'inXXXX'
@@ -883,7 +929,7 @@ def assignlanguagetonewworks(dbprefix):
 	return
 
 
-def determineworklanguage(strippedlines):
+def determineworklanguage(strippedlines: List[str]):
 	"""
 
 	read a collection of lines
@@ -918,7 +964,7 @@ def determineworklanguage(strippedlines):
 		return 'L'
 
 
-def insertlanguagedata(languagetuplelist):
+def insertlanguagedata(languagetuplelist: List[tuple]):
 	"""
 
 	avoid a long run of UPDATE statements: use a tmp table

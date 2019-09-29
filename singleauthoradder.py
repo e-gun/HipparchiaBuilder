@@ -11,7 +11,7 @@ import configparser
 from builder.file_io.filereaders import findauthors
 from builder.corpusbuilder import addoneauthor, buildauthorobject
 from builder.dbinteraction.connection import setconnection
-from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, registernewworks
+from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, insertnewworkdata
 from builder.wordcounting.wordcountdbfunctions import deletetemporarydbs
 from builder.postbuild.postbuildmetadata import boundaryfinder, insertboundaries, calculatewordcounts, insertcounts
 
@@ -98,7 +98,7 @@ if remap:
 	aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 	newauthors = compilenewauthors(aumapper, wkmapper)
 	newworktuples = compilenewworks(newauthors, wkmapper)
-	registernewworks(newworktuples)
+	insertnewworkdata(newworktuples)
 	deletetemporarydbs(tmpprefix)
 else:
 	a = buildauthorobject(debugauthor, lg, db, uidprefix, dataprefix)

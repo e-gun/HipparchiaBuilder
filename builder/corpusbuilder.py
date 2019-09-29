@@ -37,7 +37,7 @@ from builder.parsers.regexsubstitutions import addcdlabels, cleanuplingeringmess
 	lastsecondsubsitutions, replacequotationmarks, totallemmatization
 from builder.postbuild.postbuildmetadata import buildtrigramindices, findwordcounts, insertfirstsandlasts
 from builder.postbuild.secondpassdbrewrite import assignlanguagetonewworks, builddbremappers, compilenewauthors, \
-	compilenewworks, registernewworks
+	compilenewworks, insertnewworkdata
 from builder.wordcounting.wordcountdbfunctions import deletetemporarydbs
 from builder.workers import setworkercount
 
@@ -165,7 +165,7 @@ def remaptables(corpusname, corpusvars):
 		aumapper, wkmapper = builddbremappers(tmpprefix, permprefix)
 		newauthors = compilenewauthors(aumapper, wkmapper)
 		newworktuples = compilenewworks(newauthors, wkmapper)
-		registernewworks(newworktuples)
+		insertnewworkdata(newworktuples)
 		assignlanguagetonewworks(permprefix)
 		deletetemporarydbs(tmpprefix)
 
