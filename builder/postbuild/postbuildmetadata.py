@@ -117,29 +117,35 @@ def insertboundaries(boundariestuplelist):
 	:return:
 	"""
 
+	loadingcolumns = ['universalid', 'firstline', 'lastline']
+
 	dbconnection = setconnection()
-	cursor = dbconnection.cursor()
+	dbcursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_works AS SELECT * FROM works LIMIT 0'
-	cursor.execute(q)
+	dbcursor.execute(q)
 
-	count = 0
-	for b in boundariestuplelist:
-		count += 1
-		q = 'INSERT INTO tmp_works (universalid, firstline, lastline) VALUES ( %s, %s, %s)'
-		d = b
-		cursor.execute(q, d)
-		if count % 5000 == 0:
-			dbconnection.commit()
+	pgcopydata = ['{a}\t{b}\t{c}'.format(a=t[0], b=t[1], c=t[2]) for t in boundariestuplelist]
+
+	rawio = io.StringIO()
+	rawio.write('\n'.join(pgcopydata))
+	rawio.seek(0)
+
+	dbcursor.copy_from(rawio, 'tmp_works', columns=loadingcolumns)
 
 	dbconnection.commit()
-	q = 'UPDATE works SET firstline = tmp_works.firstline, lastline = tmp_works.lastline ' \
-			'FROM tmp_works WHERE works.universalid = tmp_works.universalid'
-	cursor.execute(q)
+	q = """
+	UPDATE works 
+		SET firstline = tmp_works.firstline, lastline = tmp_works.lastline 
+		FROM tmp_works 
+		WHERE works.universalid = tmp_works.universalid
+	"""
+
+	dbcursor.execute(q)
 	dbconnection.commit()
 
 	q = 'DROP TABLE tmp_works'
-	cursor.execute(q)
+	dbcursor.execute(q)
 
 	dbconnection.connectioncleanup()
 
@@ -250,6 +256,7 @@ def insertcounts(countdict):
 	dbcursor.execute(q)
 
 	pgcopydata = ['{a}\t{b}'.format(a=idnum, b=countdict[idnum]) for idnum in countdict.keys()]
+
 	rawio = io.StringIO()
 	rawio.write('\n'.join(pgcopydata))
 	rawio.seek(0)
