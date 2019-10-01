@@ -6,7 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
-
+import io
 from multiprocessing import Manager
 
 from builder.builderclasses import MPCounter
@@ -26,7 +26,7 @@ from builder.dbinteraction.genericworkerobject import GenericInserterObject
 """
 
 
-def insertfirstsandlasts(workcategoryprefix,):
+def insertfirstsandlasts(workcategoryprefix):
 	"""
 
 	public.works needs to know
@@ -229,6 +229,8 @@ def calculatewordcounts(uids):
 def insertcounts(countdict):
 	"""
 
+	avoid a long run of INSERT statements: use .copy_from
+
 	avoid a long run of UPDATE statements: use a tmp table
 
 	countdict:
@@ -239,29 +241,30 @@ def insertcounts(countdict):
 	:return:
 	"""
 
+	loadingcolumns = ['universalid', 'wordcount']
+
 	dbconnection = setconnection()
-	cursor = dbconnection.cursor()
+	dbcursor = dbconnection.cursor()
 
 	q = 'CREATE TEMP TABLE tmp_works AS SELECT * FROM works LIMIT 0'
-	cursor.execute(q)
+	dbcursor.execute(q)
 
-	count = 0
-	for idnum in countdict.keys():
-		count += 1
-		q = 'INSERT INTO tmp_works (universalid, wordcount) VALUES ( %s, %s )'
-		d = (idnum, countdict[idnum])
-		cursor.execute(q, d)
-		if count % 5000 == 0:
-			dbconnection.commit()
+	pgcopydata = ['{a}\t{b}'.format(a=idnum, b=countdict[idnum]) for idnum in countdict.keys()]
+	rawio = io.StringIO()
+	rawio.write('\n'.join(pgcopydata))
+	rawio.seek(0)
+
+	dbcursor.copy_from(rawio, 'tmp_works', columns=loadingcolumns)
 
 	dbconnection.commit()
 	q = 'UPDATE works SET wordcount = tmp_works.wordcount FROM tmp_works WHERE works.universalid = tmp_works.universalid'
-	cursor.execute(q)
+	dbcursor.execute(q)
 	dbconnection.commit()
 
 	q = 'DROP TABLE tmp_works'
-	cursor.execute(q)
+	dbcursor.execute(q)
 
+	dbconnection.commit()
 	dbconnection.connectioncleanup()
 
 	return
