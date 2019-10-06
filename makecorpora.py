@@ -7,6 +7,7 @@
 """
 
 import configparser
+import psutil
 import time
 from multiprocessing import freeze_support
 
@@ -14,7 +15,7 @@ from builder.configureatlaunch import getcommandlineargs, tobuildaccordingtoconf
 from builder import corpusbuilder
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.lexica.buildlexica import analysisloader, formatgklexicon, formatlatlexicon, grammarloader
-from builder.wordcounting.databasewordcounts import monowordcounter
+from builder.wordcounting.databasewordcounts import monowordcounter, rediswordcounter
 from builder.wordcounting.wordcountsbyheadword import headwordcounts
 
 config = configparser.ConfigParser()
@@ -143,6 +144,19 @@ if __name__ == '__main__':
 
 	if tobuild['wordcounts']:
 		print('building wordcounts by (repeatedly) examining every line of every text in all available dbs: this might take a minute or two...')
+		installedmem = psutil.virtual_memory().total / 1024 / 1024 / 1024
+		requiredmem = 12
+		if installedmem < requiredmem:
+			badnews = """
+		WARNING: 
+			c. {r}G RAM is required to build the wordcounts.
+			You have {i}G of RAM installed. 
+			The counts might fail.
+			If they do not fail, the count might be quite slow (because of "swapping")
+			[only the viery first set of counts requires the 12G of RAM]
+		WARNING
+			"""
+			print(badnews.format(r=requiredmem, i=installedmem))
 		# this can be dangerous if the number of workers is high and the RAM available is not substantial; not the most likely configuration?
 		# mpwordcounter() is the hazardous one; if your survive it headwordcounts() will never get you near the same level of resource use
 		# mpwordcounter(): Build took 8.69 minutes
@@ -150,6 +164,8 @@ if __name__ == '__main__':
 			# does not return counts properly: see notes
 			mpwordcounter()
 		else:
+			# see note on rediswordcounter(): do not use...
+			# rediswordcounter()
 			monowordcounter()
 		headwordcounts()
 		# if you do genres, brace yourself: Build took 84.11 minutes

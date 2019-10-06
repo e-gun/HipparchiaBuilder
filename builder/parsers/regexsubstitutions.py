@@ -5,7 +5,7 @@
 	License: GNU GENERAL PUBLIC LICENSE 3
 		(see LICENSE in the top level directory of the distribution)
 """
-
+from string import punctuation
 from typing import List
 
 import configparser
@@ -788,3 +788,30 @@ def insertnewlines(txt):
 	txt = txt.split('\n')
 
 	return txt
+
+
+def tidyupterm(word: str, punct=None) -> str:
+	"""
+
+	remove gunk that should not be present in a cleaned line
+	pass punct if you do not feel like compiling it 100k times
+	:param word:
+	:param punct:
+	:return:
+	"""
+
+	if not punct:
+		elidedextrapunct = '\′‵‘·̆́“”„—†⌈⌋⌊⟫⟪❵❴⟧⟦(«»›‹⟨⟩⸐„⸏⸖⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚̄⁝͜‖͡⸓͝'
+		extrapunct = elidedextrapunct + '’'
+		punct = re.compile('[{s}]'.format(s=re.escape(punctuation + extrapunct)))
+
+	# hard to know whether or not to do the editorial insertions stuff: ⟫⟪⌈⌋⌊
+	# word = re.sub(r'\[.*?\]','', word) # '[o]missa' should be 'missa'
+	word = re.sub(r'[0-9]', '', word)
+	word = re.sub(punct, '', word)
+
+	invals = u'jv'
+	outvals = u'iu'
+	word = word.translate(str.maketrans(invals, outvals))
+
+	return word

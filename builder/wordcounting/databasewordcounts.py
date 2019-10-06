@@ -12,13 +12,20 @@ from multiprocessing.pool import Pool
 from string import punctuation
 
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.dbdataintoobjects import grabminimallineobjectsfromlist, loadallauthorsasobjects, \
-	loadallworksasobjects, loadallworksintoallauthors, generatecomprehensivesetoflineobjects
+from builder.dbinteraction.dbdataintoobjects import generatecomprehensivesetoflineobjects, \
+	grabminimallineobjectsfromlist, loadallauthorsasobjects, loadallworksasobjects, loadallworksintoallauthors
 from builder.dbinteraction.dbloading import generatecopystream
 from builder.parsers.betacodeandunicodeinterconversion import buildhipparchiatranstable, cleanaccentsandvj
+from builder.parsers.regexsubstitutions import tidyupterm
+from builder.redisdbfunctions import buildrediswordlists, establishredisconnection, buildrediskeylists, deleterediswordlists, deleterediskeylists
 from builder.wordcounting.wordcountdbfunctions import createwordcounttable
 from builder.wordcounting.wordcounthelperfunctions import acuteforgrave, concordancemerger, grouper, unpackchainedranges
 from builder.workers import setworkercount
+
+try:
+	import redis
+except ImportError:
+	redis = None
 
 
 def monowordcounter(restriction=None, authordict=None, workdict=None):
@@ -537,33 +544,113 @@ def generatemasterconcorcdancevaluetuples(masterconcorcdance, letter):
 	return valuetuples
 
 
-def tidyupterm(word: str, punct=None) -> str:
+def rediswordcounter(restriction=None, authordict=None, workdict=None):
 	"""
 
-	remove gunk that should not be present in a cleaned line
-	pass punct if you do not feel like compiling it 100k times
-	:param word:
-	:param punct:
+	this is super slow and likely does not count properly
+
+	retrained only so that a bad wheel does not get re-invented...
+
+	the big blocks:
+		linedict = {l.universalid: l.wordlistasstring() for l in lineobjects}
+		l.wordlistasstring() x 11902961 is not good
+
+	buildrediswordlists() is very, very slow to load
+
+	it is so slow that you will not make up the loss by being able to reuse the k,v
+	over the course of iterated runs on the restricted sets
+
+	:param alllineobjects:
+	:param restriction:
+	:param authordict:
+	:param workdict:
 	:return:
 	"""
 
-	if not punct:
-		elidedextrapunct = '\′‵‘·̆́“”„—†⌈⌋⌊⟫⟪❵❴⟧⟦(«»›‹⟨⟩⸐„⸏⸖⸎⸑–⏑–⏒⏓⏔⏕⏖⌐∙×⁚̄⁝͜‖͡⸓͝'
-		extrapunct = elidedextrapunct + '’'
-		punct = re.compile('[{s}]'.format(s=re.escape(punctuation + extrapunct)))
+	# print('len(alllineobjects)', len(alllineobjects))
+	# len(alllineobjects) 11902961
 
-	# hard to know whether or not to do the editorial insertions stuff: ⟫⟪⌈⌋⌊
-	# word = re.sub(r'\[.*?\]','', word) # '[o]missa' should be 'missa'
-	word = re.sub(r'[0-9]', '', word)
-	word = re.sub(punct, '', word)
+	wordcounttable = 'wordcounts'
 
-	invals = u'jv'
-	outvals = u'iu'
-	word = word.translate(str.maketrans(invals, outvals))
+	if not authordict:
+		print('loading information about authors and works')
+		authordict = loadallauthorsasobjects()
+		workdict = loadallworksasobjects()
+		authordict = loadallworksintoallauthors(authordict, workdict)
 
-	return word
+	# [a] figure out which works we are looking for: idlist = ['lt1002', 'lt1351', 'lt2331', 'lt1038', 'lt0690', ...]
+	idlist = generatesearchidlist(restriction, authordict, workdict)
+
+	# [b] figure out what table index values we will need to assemble them: {tableid1: range1, tableid2: range2, ...}
+
+	dbdictwithranges = generatedbdictwithranges(idlist, workdict)
+
+	# [c] turn this into a list of lines we will need
+	# bug in convertrangedicttolineset() evident at firstpass
+	# len(alllineobjects) 11902961
+	# len(linesweneed) 2103514
+
+	linesweneed = list(convertrangedicttolineset(dbdictwithranges))
+	alllineobjects = generatecomprehensivesetoflineobjects()
+
+	print('building {n} lineobjects'.format(n=len(alllineobjects)))
+	lineobjects = [alllineobjects[l] for l in linesweneed]
+	# wordlistasstring() is a tab-delim list of words as a single string
+	linedict = {l.universalid: l.wordlistasstring() for l in lineobjects}
+	buildrediswordlists(linedict)
+	del lineobjects
+
+	workers = setworkercount()
+	chunksize = int(len(linedict) / workers) + 1
+	uidpiles = grouper(linedict.keys(), chunksize)
+	buildrediskeylists(uidpiles, workers)
+
+	with Pool(processes=workers) as pool:
+		getlistofdictionaries = [pool.apply_async(redisbuildindexdict, (w,)) for w in range(setworkercount())]
+		# you were returned [ApplyResult1, ApplyResult2, ...]
+		listofdictionaries = [result.get() for result in getlistofdictionaries]
+
+	# [e] merge the results
+	masterconcorcdance = concordancemerger(listofdictionaries)
+
+	# [f] totals are needed both initially and in the subsearches
+	masterconcorcdance = calculatetotals(masterconcorcdance)
+
+	# [g] build the tables if needed
+	if not restriction:
+		generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance)
+
+	deleterediswordlists(list(linedict.keys()))
+	deleterediskeylists(workers)
+
+	return masterconcorcdance
 
 
+def redisbuildindexdict(workernumber: int):
+	rc = establishredisconnection()
+	pilename = 'uidpile_{i}'.format(i=workernumber)
+	mylineids = rc.lrange(pilename, 0, -1)
+	mylineids = {x.decode() for x in mylineids}
+
+	pardialindex = dict()
+
+	for line in mylineids:
+		words = rc.smembers(line)
+		words = {x.decode() for x in words}
+
+		prefix = line[0:2]
+
+		for w in words:
+			# uncomment to watch individual words enter the dict
+			# if w == 'docilem':
+			# 	print(line.universalid, line.unformattedline())
+			try:
+				pardialindex[w][prefix] += 1
+			except KeyError:
+				pardialindex[w] = dict()
+				pardialindex[w][prefix] = 1
+
+	return pardialindex
 
 
 """
