@@ -8,6 +8,7 @@
 
 import configparser
 from multiprocessing import Manager
+import re
 
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.genericworkerobject import GenericInserterObject
@@ -22,6 +23,16 @@ def formatgklexicon():
 	"""
 
 	parse the XML for Liddell and Scott and insert it into the DB
+
+	TODO:
+
+	https://github.com/PerseusDL/lexica
+
+	https://github.com/helmadik/LSJLogeion
+
+	https://github.com/pjheslin/diogenes-prebuilt-data
+
+	Dik's files are too heavily pre-processed?
 
 	:return:
 	"""
@@ -40,11 +51,10 @@ def formatgklexicon():
 	print('formatting Liddell and Scott.', len(entries), 'entries to parse')
 
 	# testing
-	# entries = entries[10000:10010]
+	# entries = entries[1000:1010]
 
 	manager = Manager()
 	entries = manager.list(entries)
-
 	workerobject = GenericInserterObject(mpgreekdictionaryinsert, argumentlist=[dictdb, entries])
 	workerobject.dothework()
 

@@ -17,6 +17,154 @@ from builder.parsers.lexica import betaconvertandsave, greekwithoutvowellengths,
 from builder.parsers.swappers import superscripterone, superscripterzero
 
 
+def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
+	"""
+
+	LOGEION version
+
+	work on dictdb entries
+	assignable to an mp worker
+	insert into db at end
+
+	:param dictdb:
+	:param entries:
+	:param commitcount:
+	:return:
+	"""
+	if not dbconnection:
+		dbconnection = setconnection()
+
+	dbcursor = dbconnection.cursor()
+	dbconnection.setautocommit()
+
+	# places where you can find lang="greek"
+	# <foreign>; <orth>; <pron>; <quote>; <gen>; <itype>
+	# but there can be a nested tag: you can't convert its contents
+	# not clear how much one needs to care: but a search inside a match group could be implemented.
+
+	bodyfinder = re.compile(r'(<div2(.*?)>)(.*?)(</div2>)')
+	# <head extent="full" lang="greek" opt="n" orth_orig="θῠγάτηρ">θυγάτηρ</head>
+	headfinder = re.compile(r'<head extent="(.*?)" lang="(.*?)" opt="(.*?)" orth_orig="(.*?)">(.*?)</head>')
+	transfinder = re.compile(r'<trans>(.*?)</trans>')
+	parsedinfofinder = re.compile(r'orig_id="(.*?)" key="(.*?)" type="(.*?)" opt="(.*?)"')
+
+	posfinder = re.compile(r'<pos.*?>(.*?)</pos>')
+	prepfinder = re.compile(r'Prep. with')
+	conjfinder = re.compile(r'Conj\.,')
+	particlefinder = re.compile(r'Particle')
+	verbfindera = re.compile(r'<gram type="voice" .*?</gram>')
+	verbfinderb = re.compile(r'<tns.*?>(.*?)</tns>')
+
+	bodytrimmer = re.compile(r'(<bibl.*?</bibl>|<gram type="dialect".*?</gram>|<cit.*?</cit>)')
+
+	# <orth extent="full" lang="greek" opt="n">χύτρ-α</orth>, <gen lang="greek" opt="n">ἡ</gen>,
+	nounfindera = re.compile(r'<orth extent=".*?".*?</orth>, <gen.*?>(.*?)</gen>')
+	# <orth extent="full" lang="greek" opt="n">βωρεύϲ</orth>, <itype lang="greek" opt="n">εωϲ</itype>, <gen lang="greek" opt="n">ὁ</gen>
+	nounfinderb = re.compile(r'<orth extent=".*?".*?</orth>, <itype.*?</itype>, <gen.*?>(.*?)</gen>')
+	# <orth extent="full" lang="greek" opt="n">βωλο-ειδήϲ</orth>, <itype lang="greek" opt="n">έϲ</itype>,
+	twoterminationadjfinder = re.compile(r'<orth extent=".*?".*?</orth>, <itype.*?>(.*?)</itype>, <[^g]')
+	# <orth extent="full" lang="greek" opt="n">βωμιαῖοϲ</orth>, <itype lang="greek" opt="n">α</itype>, <itype lang="greek" opt="n">ον</itype>,
+	threeterminationadjfinder = re.compile(r'<orth extent=".*?".*?</orth>, <itype.*?>(.*?)</itype>, <itype .*?>.*?</itype>, <[^g]')
+
+	# 500 is c 10% slower than 1000 w/ a SSD: no need to get too ambitious here
+	bundlesize = 1000
+
+	qtemplate = """
+	INSERT INTO {d} 
+		(entry_name, metrical_entry, unaccented_entry, id_number, pos, translations, entry_body)
+		VALUES %s"""
+	query = qtemplate.format(d=dictdb)
+
+	idnum = 0
+	while len(entries) > 0:
+		# speed up by inserting bundles instead of hundreds of thousands of individual items
+		# would be nice to make a sub-function, but note all the compiled regex you need...
+		bundelofrawentries = list()
+		for e in range(bundlesize):
+			try:
+				bundelofrawentries.append(entries.pop())
+			except IndexError:
+				pass
+
+		bundelofcookedentries = list()
+		for entry in bundelofrawentries:
+
+			segments = re.search(bodyfinder, entry)
+			info = segments.group(2)
+			parsedinfo = re.search(parsedinfofinder, info)
+			headinfo = re.search(headfinder, entry)
+
+			idnum = parsedinfo.group(1)
+
+			# <head extent="full" lang="greek" opt="n" orth_orig="θῠγάτηρ">θυγάτηρ</head>
+			#headfinder = re.compile(r'<head extent="(.*?)" lang="(.*?)" opt="(.*?)" orth_orig="(.*?)">(.*?)</head>')
+			entryname = headinfo.group(5)
+			metrical = headinfo.group(4)
+
+			try:
+				idnum = int(re.sub(r'^n', '', idnum))
+			except ValueError:
+				idnum = (re.sub(r'^n', '', idnum))
+				abcval = ord(idnum[-1]) - 96
+				idnum = int(idnum[:-1])
+				idnum = -1 * (idnum + (100000 * abcval))
+				print('newid', entryname, idnum)
+
+			try:
+				body = segments.group(3)
+			except AttributeError:
+				body = ''
+				print('died at', idnum, entry)
+
+			# retag translations
+			body = re.sub(r'<i>(.*?)</i>', r'<trans>\1</trans>', body)
+
+			translationlist = re.findall(transfinder, body)
+			translationlist = [t.strip() for t in translationlist]
+			# translationlist = [t.split(',') for t in translationlist]
+			# translationlist = [y for x in translationlist for y in x]
+			translationlist = [re.sub(r',$', '', t) for t in translationlist]
+			translations = ' ‖ '.join(set(translationlist))
+			stripped = cleanaccentsandvj(entryname)
+
+			# part of speech stuff
+			startofbody = body
+			partsofspeech = set(re.findall(posfinder, startofbody))
+
+			if re.findall(conjfinder, startofbody):
+				partsofspeech.add('conj.')
+			if re.findall(prepfinder, startofbody):
+				partsofspeech.add('prep.')
+			if re.findall(particlefinder, startofbody):
+				partsofspeech.add('partic.')
+			nouns = [n for n in re.findall(nounfindera, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
+			nouns += [n for n in re.findall(nounfinderb, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
+			if nouns:
+				partsofspeech.add('subst.')
+			adjs = [a for a in re.findall(twoterminationadjfinder, startofbody) if a in ['έϲ', 'εϲ', 'ον', 'όν']]
+			adjs += [a for a in re.findall(threeterminationadjfinder, startofbody) if a in ['α', 'ά', 'η', 'ή']]
+			if adjs:
+				partsofspeech.add('adj.')
+			verbs = re.findall(verbfindera, startofbody)
+			verbs += re.findall(verbfinderb, startofbody)
+			if verbs:
+				partsofspeech.add('v.')
+			if not partsofspeech and entryname and entryname[-1] == 'ω':
+				partsofspeech.add('v.')
+
+			pos = ''
+			pos += ' ‖ '.join(partsofspeech)
+			pos = pos.lower()
+
+			if idnum % 10000 == 0:
+				print('at {n}: {e}'.format(n=idnum, e=entryname))
+			bundelofcookedentries.append(tuple([entryname, metrical, stripped, idnum, pos, translations, body]))
+
+		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
+
+	return
+
+
 def mplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 	"""
 
@@ -125,8 +273,10 @@ def mplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 	return
 
 
-def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
+def oldmpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 	"""
+
+	greek-lexicon_1999.04.0057.xml version
 
 	work on dictdb entries
 	assignable to an mp worker
