@@ -8,6 +8,7 @@
 import re
 from collections import deque
 from statistics import mean, median
+from typing import List
 
 from builder.builderclasses import dbWordCountObject
 from builder.dbinteraction.connection import setconnection
@@ -50,101 +51,7 @@ def headwordcounts():
 
 	dictionarycounts = buildcountsfromlemmalist(lemmataobjectslist, countdict)
 
-	"""
-	75 items return from:
-		select * from works where workgenre IS NULL and universalid like 'gr%'
-
-	will model the other DBs after this
-	will also add Agric. as a genre for LAT
-
-	"""
-
-	knownworkgenres = [
-		'Acta',
-		'Agric.',
-		'Alchem.',
-		'Anthol.',
-		'Apocalyp.',
-		'Apocryph.',
-		'Apol.',
-		'Astrol.',
-		'Astron.',
-		'Biogr.',
-		'Bucol.',
-		'Caten.',
-		'Chronogr.',
-		'Comic.',
-		'Comm.',
-		'Concil.',
-		'Coq.',
-		'Dialog.',
-		'Docu.',
-		'Doxogr.',
-		'Eccl.',
-		'Eleg.',
-		'Encom.',
-		'Epic.',
-		'Epigr.',
-		'Epist.',
-		'Evangel.',
-		'Exeget.',
-		'Fab.',
-		'Geogr.',
-		'Gnom.',
-		'Gramm.',
-		'Hagiogr.',
-		'Hexametr.',
-		'Hist.',
-		'Homilet.',
-		'Hymn.',
-		'Hypoth.',
-		'Iamb.',
-		'Ignotum',
-		'Invectiv.',
-		'Inscr.',
-		'Jurisprud.',
-		'Lexicogr.',
-		'Liturg.',
-		'Lyr.',
-		'Magica',
-		'Math.',
-		'Mech.',
-		'Med.',
-		'Metrolog.',
-		'Mim.',
-		'Mus.',
-		'Myth.',
-		'Narr. Fict.',
-		'Nat. Hist.',
-		'Onir.',
-		'Orac.',
-		'Orat.',
-		'Paradox.',
-		'Parod.',
-		'Paroem.',
-		'Perieg.',
-		'Phil.',
-		'Physiognom.',
-		'Poem.',
-		'Polyhist.',
-		'Prophet.',
-		'Pseudepigr.',
-		'Rhet.',
-		'Satura',
-		'Satyr.',
-		'Schol.',
-		'Tact.',
-		'Test.',
-		'Theol.',
-		'Trag.'
-	]
-
-	# test for a single genre
-	# knownworkgenres = ['Satura']
-
-	cleanedknownworkgenres = [g.lower() for g in knownworkgenres]
-	cleanedknownworkgenres = [re.sub(r'[\.\s]', '', g) for g in cleanedknownworkgenres]
-
+	cleanedknownworkgenres = findextras()
 	thetable = 'dictionary_headword_wordcounts'
 	createwordcounttable(thetable, extracolumns=cleanedknownworkgenres)
 
@@ -413,3 +320,103 @@ def cohortstats(wordobjects):
 	returndict = {'h': high, 'l': low, 'a': avg, 'm': med, '#': len(wordobjects)}
 
 	return returndict
+
+
+def findextras() -> List[str]:
+	"""
+
+	75 items return from:
+		select * from works where workgenre IS NULL and universalid like 'gr%'
+
+	will model the other DBs after this
+	will also add Agric. as a genre for LAT
+
+	:return:
+	"""
+
+	knownworkgenres = [
+		'Acta',
+		'Agric.',
+		'Alchem.',
+		'Anthol.',
+		'Apocalyp.',
+		'Apocryph.',
+		'Apol.',
+		'Astrol.',
+		'Astron.',
+		'Biogr.',
+		'Bucol.',
+		'Caten.',
+		'Chronogr.',
+		'Comic.',
+		'Comm.',
+		'Concil.',
+		'Coq.',
+		'Dialog.',
+		'Docu.',
+		'Doxogr.',
+		'Eccl.',
+		'Eleg.',
+		'Encom.',
+		'Epic.',
+		'Epigr.',
+		'Epist.',
+		'Evangel.',
+		'Exeget.',
+		'Fab.',
+		'Geogr.',
+		'Gnom.',
+		'Gramm.',
+		'Hagiogr.',
+		'Hexametr.',
+		'Hist.',
+		'Homilet.',
+		'Hymn.',
+		'Hypoth.',
+		'Iamb.',
+		'Ignotum',
+		'Invectiv.',
+		'Inscr.',
+		'Jurisprud.',
+		'Lexicogr.',
+		'Liturg.',
+		'Lyr.',
+		'Magica',
+		'Math.',
+		'Mech.',
+		'Med.',
+		'Metrolog.',
+		'Mim.',
+		'Mus.',
+		'Myth.',
+		'Narr. Fict.',
+		'Nat. Hist.',
+		'Onir.',
+		'Orac.',
+		'Orat.',
+		'Paradox.',
+		'Parod.',
+		'Paroem.',
+		'Perieg.',
+		'Phil.',
+		'Physiognom.',
+		'Poem.',
+		'Polyhist.',
+		'Prophet.',
+		'Pseudepigr.',
+		'Rhet.',
+		'Satura',
+		'Satyr.',
+		'Schol.',
+		'Tact.',
+		'Test.',
+		'Theol.',
+		'Trag.'
+	]
+
+	# test for a single genre
+	# knownworkgenres = ['Satura']
+
+	cleanedknownworkgenres = [g.lower() for g in knownworkgenres]
+	cleanedknownworkgenres = [re.sub(r'[\.\s]', '', g) for g in cleanedknownworkgenres]
+	return cleanedknownworkgenres

@@ -8,12 +8,14 @@
 
 import argparse
 import configparser
-from builder.file_io.filereaders import findauthors
+
 from builder.corpusbuilder import addoneauthor, buildauthorobject
 from builder.dbinteraction.connection import setconnection
-from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, insertnewworkdata
+from builder.file_io.filereaders import findauthors
+from builder.postbuild.postbuildmetadata import boundaryfinder, calculatewordcounts, insertboundaries, insertcounts
+from builder.postbuild.secondpassdbrewrite import builddbremappers, compilenewauthors, compilenewworks, \
+	insertnewworkdata
 from builder.wordcounting.wordcountdbfunctions import deletetemporarydbs
-from builder.postbuild.postbuildmetadata import boundaryfinder, insertboundaries, calculatewordcounts, insertcounts
 
 """
 use this script to build and insert a single author into the database

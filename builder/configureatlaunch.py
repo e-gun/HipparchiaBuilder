@@ -28,8 +28,8 @@ def getcommandlineargs():
 	commandlineparser.add_argument('--christians', action='store_true', help='build the database of Christian era inscriptions')
 	commandlineparser.add_argument('--lex', action='store_true', help='build the lexica')
 	commandlineparser.add_argument('--gram', action='store_true', help='build the grammatical parsing databases')
-	commandlineparser.add_argument('--buildwordcounts', action='store_true', help='build the wordcounts manually')
-	commandlineparser.add_argument('--loadwordcounts', action='store_true', help='load the wordcounts from HipparchiaLexicalData')
+	commandlineparser.add_argument('--wordcounts', action='store_true', help='install the wordcounts')
+	commandlineparser.add_argument('--sqlloadwordcounts', action='store_true', help='load the wordcounts from HipparchiaLexicalData')
 	commandlineargs = commandlineparser.parse_args()
 
 	return commandlineargs

@@ -7,24 +7,26 @@
 """
 
 import configparser
-import psutil
 import time
 from multiprocessing import freeze_support
+from pathlib import Path
 
-from builder.configureatlaunch import getcommandlineargs, tobuildaccordingtoconfigfile
+import psutil
+
 from builder import corpusbuilder
+from builder.configureatlaunch import getcommandlineargs, tobuildaccordingtoconfigfile
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.lexica.buildlexica import analysisloader, formatgklexicon, formatlatlexicon, grammarloader
-from builder.wordcounting.databasewordcounts import monowordcounter, rediswordcounter
-from builder.wordcounting.wordcountsbyheadword import headwordcounts
+from builder.wordcounting.databasewordcounts import monowordcounter
 from builder.wordcounting.loadwordcoundsfromsql import wordcountloader
+from builder.wordcounting.wordcountsbyheadword import headwordcounts
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
 tobuild = tobuildaccordingtoconfigfile()
 commandlineargs = getcommandlineargs()
-additionalchecks = [commandlineargs.all, commandlineargs.allbutwordcounts, commandlineargs.allcorpora]
+additionalchecks = [commandlineargs.all, commandlineargs.allbutwordcounts, commandlineargs.allcorpora, commandlineargs.sqlloadwordcounts]
 ovverride = {getattr(commandlineargs, k) for k in tobuild.keys() if getattr(commandlineargs, k)}.union({a for a in additionalchecks if a})
 
 if ovverride:
@@ -38,8 +40,13 @@ if ovverride:
 		tobuild['wordcounts'] = False
 		tobuild['lex'] = False
 		tobuild['gram'] = False
+	elif commandlineargs.sqlloadwordcounts:
+		tobuild = {k: False for k in tobuild.keys()}
+		tobuild['wordcounts'] = True
 	else:
 		tobuild = {k: getattr(commandlineargs, k) for k in tobuild.keys()}
+
+# print([a for a in tobuild if tobuild[a]])
 
 start = time.time()
 
@@ -144,9 +151,11 @@ if __name__ == '__main__':
 		timestampthebuild('lm')
 
 	if tobuild['wordcounts']:
-		if commandlineargs.loadwordcounts:
-			wordcountloader()
-		elif commandlineargs.buildwordcounts:
+		if commandlineargs.sqlloadwordcounts:
+			print('loading wordcounts from sql dumps')
+			p = Path(config['wordcounts']['wordcountdir'])
+			wordcountloader(p.resolve())
+		else:
 			print('building wordcounts by (repeatedly) examining every line of every text in all available dbs: this might take a minute or two...')
 			installedmem = psutil.virtual_memory().total / 1024 / 1024 / 1024
 			requiredmem = 12

@@ -8,14 +8,18 @@
 
 import configparser
 import gzip
-from glob import glob
-from subprocess import run
+import os
+import re
+import subprocess
+from pathlib import Path
+
+from builder.dbinteraction.connection import setconnection
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
 
-def wordcountloader():
+def wordcountloader(pathtowordcounts: Path):
 	"""
 
 	load the wordcount files from an archives set of wordcounts
@@ -23,32 +27,49 @@ def wordcountloader():
 	permission problems are likely:
 		export PGPASSWORD="HIPPAWRPASSHERE"
 
-
 	$ psql --clean -U {user-name} -d {desintation_db} -f {dumpfilename.sql}
 
 	:return:
 	"""
-	try:
-		wordcountdir = config['wordcounts']['wordcountdir']
-	except KeyError:
-		print('"wordcountdir" not set in "config.ini": aborting')
-		return
+	dbconnection = setconnection(autocommit=True)
+	dbcursor = dbconnection.cursor()
 
-	wordcountfiles = glob(wordcountdir + '*sql.gz')
-	tempfile = wordcountdir+'/temp.sql'
+	addtoenv = {'PGPASSWORD': config['db']['DBPASS']}
+	theenv = {**os.environ, **addtoenv}
+
+	p = pathtowordcounts
+	# print('p', p.parts)
+
+	wordcountfiles = sorted(p.glob('*sql.gz'))
+	tempfile = p / 'temp.sql'
+	tempfile.touch(mode=0o600)
+
+	deltemplate = """
+	DROP TABLE {t}
+	"""
 
 	for f in wordcountfiles:
-		print('loading', f)
+		thetable = f.stem
+		thetable = re.sub(r'\.sql', '', thetable)
+		print('\tloading', thetable)
+		try:
+			dbcursor.execute(deltemplate.format(t=thetable))
+		except:
+			# psycopg2.errors.UndefinedTable
+			pass
+
 		with gzip.open(f, 'r') as f:
 			contents = f.read()
-		with open(tempfile, encoding='utf-8', mode='r') as f:
-			f.write(contents)
+		tempfile.write_text(contents.decode('utf-8'))
+
 		arguments = list()
 		arguments.append('psql')
-		arguments.append('--clean')
-		arguments.append('-U {u}'.format(u=config['db']['DBUSER']))
-		arguments.append('-d {d}'.format(d=config['db']['DBNAME']))
-		arguments.append('-f {f}'.format(f=tempfile))
-		run(arguments)
-		run(['rm', tempfile])
+		arguments.append('-U')
+		arguments.append('{u}'.format(u=config['db']['DBUSER']))
+		arguments.append('-d')
+		arguments.append('{d}'.format(d=config['db']['DBNAME']).strip())
+		arguments.append('-f')
+		arguments.append('{f}'.format(f=tempfile))
+		subprocess.run(arguments, env=theenv, stdout=subprocess.DEVNULL)
+		tempfile.unlink()
 	return
