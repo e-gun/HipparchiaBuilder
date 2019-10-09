@@ -14,13 +14,15 @@ from builder.dbinteraction.connection import setconnection
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
 from builder.parsers.lexica import betaconvertandsave, greekwithoutvowellengths, greekwithvowellengths, \
 	latinvowellengths, lsjgreekswapper, translationsummary
-from builder.parsers.swappers import superscripterone, superscripterzero
+from builder.parsers.swappers import superscripterone, superscripterzero, forcelunates
 
 
 def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 	"""
 
-	LOGEION version
+	LOGEION parser
+
+	Diogenes4 as the source of the data
 
 	work on dictdb entries
 	assignable to an mp worker
@@ -48,14 +50,14 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 	transfinder = re.compile(r'<trans>(.*?)</trans>')
 	parsedinfofinder = re.compile(r'orig_id="(.*?)" key="(.*?)" type="(.*?)" opt="(.*?)"')
 
+	cleanentryname = re.compile(r'<orth .*?>(.*?)</orth>')
+
 	posfinder = re.compile(r'<pos.*?>(.*?)</pos>')
 	prepfinder = re.compile(r'Prep. with')
 	conjfinder = re.compile(r'Conj\.,')
 	particlefinder = re.compile(r'Particle')
 	verbfindera = re.compile(r'<gram type="voice" .*?</gram>')
 	verbfinderb = re.compile(r'<tns.*?>(.*?)</tns>')
-
-	bodytrimmer = re.compile(r'(<bibl.*?</bibl>|<gram type="dialect".*?</gram>|<cit.*?</cit>)')
 
 	# <orth extent="full" lang="greek" opt="n">χύτρ-α</orth>, <gen lang="greek" opt="n">ἡ</gen>,
 	nounfindera = re.compile(r'<orth extent=".*?".*?</orth>, <gen.*?>(.*?)</gen>')
@@ -68,6 +70,8 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 	# 500 is c 10% slower than 1000 w/ a SSD: no need to get too ambitious here
 	bundlesize = 1000
+	# testing
+	bundlesize = 1
 
 	qtemplate = """
 	INSERT INTO {d} 
@@ -75,7 +79,7 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 		VALUES %s"""
 	query = qtemplate.format(d=dictdb)
 
-	idnum = 0
+	memory = 0
 	while len(entries) > 0:
 		# speed up by inserting bundles instead of hundreds of thousands of individual items
 		# would be nice to make a sub-function, but note all the compiled regex you need...
@@ -88,33 +92,61 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 		bundelofcookedentries = list()
 		for entry in bundelofrawentries:
+			idval = 0
+			entry = forcelunates(entry)
 
 			segments = re.search(bodyfinder, entry)
 			info = segments.group(2)
 			parsedinfo = re.search(parsedinfofinder, info)
 			headinfo = re.search(headfinder, entry)
 
-			idnum = parsedinfo.group(1)
+			try:
+				idstring = parsedinfo.group(1)
+			except AttributeError:
+				# no idstring for <div2 id="e)pauri/skw"><head extent="full" lang="greek" opt="n" orth_orig="ἐπαυρίϲκω">ἐπαυρίϲκω</head>, v. ἐπαυρέω. </div2>
+				# print('no idstring for', entry)
+				# note 'idval' and not 'idstring': we are cutting to the chase...
+				idstring = None
+				idval = memory + .1
 
 			# <head extent="full" lang="greek" opt="n" orth_orig="θῠγάτηρ">θυγάτηρ</head>
-			#headfinder = re.compile(r'<head extent="(.*?)" lang="(.*?)" opt="(.*?)" orth_orig="(.*?)">(.*?)</head>')
-			entryname = headinfo.group(5)
+			# headfinder = re.compile(r'<head extent="(.*?)" lang="(.*?)" opt="(.*?)" orth_orig="(.*?)">(.*?)</head>')
+			try:
+				entryname = headinfo.group(5)
+			except AttributeError:
+				# <div2 id="crossa)lhmenai" orig_id="n4097a" key="a)lhmenai" type="main" opt="n"><head extent="full" lang="greek" opt="n">ἀλήμεναι</head>, <orth extent="full" lang="greek" opt="n">ἀλῆναι</orth>, v. εἴλω.</div2>
+				altheadfinder = re.compile(r'<head extent="(.*?)" lang="(.*?)" opt="(.*?)">(.*?)</head>')
+				headinfo = re.search(altheadfinder, entry)
+				entryname = headinfo.group(4)
+				print('altheadfinder invoked. yielded {e}'.format(e=entryname))
+
+			# it is possible that the entryname is off:
+			# <orth extent="full" lang="greek" opt="n">ἀελλάς</orth>
+			# <orth extent="full" lang="greek" opt="n">ἀελλάς</orth>
+
+			entryname = re.sub(cleanentryname, r'\1', entryname)
+
 			metrical = headinfo.group(4)
 
 			try:
-				idnum = int(re.sub(r'^n', '', idnum))
+				idval = int(re.sub(r'^n', '', idstring))
 			except ValueError:
-				idnum = (re.sub(r'^n', '', idnum))
-				abcval = ord(idnum[-1]) - 96
-				idnum = int(idnum[:-1])
-				idnum = -1 * (idnum + (100000 * abcval))
-				print('newid', entryname, idnum)
+				# you saw something like 'n1234a' instead of 'n1234'
+				idstring = (re.sub(r'^n', '', idstring))
+				abcval = ord(idstring[-1]) - 96
+				idstring = int(idstring[:-1])
+				idval = idstring + (.1 * abcval)
+				# print('newid', entryname, idstring)
+			except TypeError:
+				# did the exception above already set idval?
+				if not idval:
+					print('failed to get id for', entry)
 
 			try:
 				body = segments.group(3)
 			except AttributeError:
-				body = ''
-				print('died at', idnum, entry)
+				body = str()
+				print('died at', idstring, entry)
 
 			# retag translations
 			body = re.sub(r'<i>(.*?)</i>', r'<trans>\1</trans>', body)
@@ -156,11 +188,22 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 			pos += ' ‖ '.join(partsofspeech)
 			pos = pos.lower()
 
-			if idnum % 10000 == 0:
-				print('at {n}: {e}'.format(n=idnum, e=entryname))
-			bundelofcookedentries.append(tuple([entryname, metrical, stripped, idnum, pos, translations, body]))
+			if idval % 10000 == 0:
+				print('at {n}: {e}'.format(n=idval, e=entryname))
 
-		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
+			memory = idval
+			bundelofcookedentries.append(tuple([entryname, metrical, stripped, idval, pos, translations, body]))
+
+		# insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
+
+		try:
+			insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
+		except:
+			# psycopg2.errors.StringDataRightTruncation: value too long for type character varying(64)
+			print('could not insert\n')
+			for bundle in bundelofcookedentries:
+				for b in bundle:
+					print(b)
 
 	return
 

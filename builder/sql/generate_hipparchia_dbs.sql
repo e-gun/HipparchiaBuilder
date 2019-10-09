@@ -1,4 +1,4 @@
--- sqltemplateversion = 12272016
+-- sqltemplateversion = 10082019
 
 -- Role: hippa_wr
 
@@ -92,11 +92,13 @@ GRANT SELECT ON TABLE public.works TO hippa_rd;
 
 -- DROP TABLE public.greek_dictionary;
 
+-- longest entry is 171 chars: λοπαδοτεμαχοϲελαχογαλεοκρανιολειψανοδριμυποτριμματοϲιλφιοκαραβομελιτοκατακεχυμενοκιχλεπικοϲϲυφοφαττοπεριϲτεραλεκτρυονοπτοκεφαλλιοκιγκλοπελειολαγῳοϲιραιοβαφητραγανοπτερύγων
+
 CREATE TABLE greek_dictionary (
-    entry_name character varying(64),
-    metrical_entry character varying(64),
-    unaccented_entry character varying(64),
-    id_number integer,
+    entry_name character varying(256),
+    metrical_entry character varying(256),
+    unaccented_entry character varying(256),
+    id_number real,
     pos character varying(64),
     translations text,
     entry_body text
@@ -176,9 +178,9 @@ CREATE INDEX gkmorph_idx
 -- DROP TABLE public.latin_dictionary;
 
 CREATE TABLE latin_dictionary (
-    entry_name character varying(64),
-    metrical_entry character varying(64),
-    id_number integer,
+    entry_name character varying(256),
+    metrical_entry character varying(256),
+    id_number real,
     entry_key character varying(64),
     pos character varying(64),
     translations text,

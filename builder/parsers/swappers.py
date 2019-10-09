@@ -90,7 +90,7 @@ def superscripterzero(digitmatch):
 	return transformed
 
 
-def forceregexsafevariants(text):
+def forceregexsafevariants(text: str) -> str:
 	"""
 
 	get rid of small variants of '+', etc.
@@ -109,7 +109,7 @@ def forceregexsafevariants(text):
 	return cleantext
 
 
-def avoidregexsafevariants(text):
+def avoidregexsafevariants(text: str) -> str:
 	"""
 
 	get rid of small variants of '+', etc.
@@ -118,6 +118,16 @@ def avoidregexsafevariants(text):
 
 	invals = "﹖﹡／﹗│﹦﹢﹪﹠﹕＇❨❩❴❵⟦⟧"
 	outvals = "?*/!|=+%&:'(){}[]"
+
+	cleantext = text.translate(str.maketrans(invals, outvals))
+
+	return cleantext
+
+
+def forcelunates(text: str) -> str:
+
+	invals = "σςΣ"
+	outvals = "ϲϲϹ"
 
 	cleantext = text.translate(str.maketrans(invals, outvals))
 

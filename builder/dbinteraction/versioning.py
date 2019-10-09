@@ -13,9 +13,10 @@ import psycopg2
 
 from builder.dbinteraction.connection import setconnection
 
-hipparchiabuilderversion = '1.2.4'
+hipparchiabuilderversion = '1.3.0b'
 #sqltemplateversion = 7242017
-sqltemplateversion = 2242018
+#sqltemplateversion = 2242018
+sqltemplateversion = 10082019
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
