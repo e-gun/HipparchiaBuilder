@@ -12,8 +12,8 @@ import re
 
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.genericworkerobject import GenericInserterObject
-from builder.lexica.mplexicalworkers import mpanalysisinsert, mpgreekdictionaryinsert, mplatindictionaryinsert, \
-	mplemmatainsert
+from builder.lexica.mplexicalworkers import mpgreekdictionaryinsert, mplatindictionaryinsert
+from builder.lexica.mpgrammarworkers import mplemmatainsert, mpanalysisinsert
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
