@@ -71,7 +71,7 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 	# 500 is c 10% slower than 1000 w/ a SSD: no need to get too ambitious here
 	bundlesize = 1000
 	# testing
-	bundlesize = 1
+	# bundlesize = 1
 
 	qtemplate = """
 	INSERT INTO {d} 
@@ -118,7 +118,7 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 				altheadfinder = re.compile(r'<head extent="(.*?)" lang="(.*?)" opt="(.*?)">(.*?)</head>')
 				headinfo = re.search(altheadfinder, entry)
 				entryname = headinfo.group(4)
-				print('altheadfinder invoked. yielded {e}'.format(e=entryname))
+				# print('altheadfinder invoked. yielded {e}'.format(e=entryname))
 
 			# it is possible that the entryname is off:
 			# <orth extent="full" lang="greek" opt="n">ἀελλάς</orth>
@@ -152,41 +152,46 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 			body = re.sub(r'<i>(.*?)</i>', r'<trans>\1</trans>', body)
 
 			translationlist = re.findall(transfinder, body)
-			translationlist = [t.strip() for t in translationlist]
-			# translationlist = [t.split(',') for t in translationlist]
-			# translationlist = [y for x in translationlist for y in x]
-			translationlist = [re.sub(r',$', '', t) for t in translationlist]
+			translationlist = [re.sub(r',$', '', t.strip()) for t in translationlist]
 			translations = ' ‖ '.join(set(translationlist))
 			stripped = cleanaccentsandvj(entryname)
 
 			# part of speech stuff
-			startofbody = body
-			partsofspeech = set(re.findall(posfinder, startofbody))
+			pos = str()
+			calculatepartofspeech = False
+			if calculatepartofspeech:
+				startofbody = body
+				partsofspeech = set(re.findall(posfinder, startofbody))
 
-			if re.findall(conjfinder, startofbody):
-				partsofspeech.add('conj.')
-			if re.findall(prepfinder, startofbody):
-				partsofspeech.add('prep.')
-			if re.findall(particlefinder, startofbody):
-				partsofspeech.add('partic.')
-			nouns = [n for n in re.findall(nounfindera, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
-			nouns += [n for n in re.findall(nounfinderb, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
-			if nouns:
-				partsofspeech.add('subst.')
-			adjs = [a for a in re.findall(twoterminationadjfinder, startofbody) if a in ['έϲ', 'εϲ', 'ον', 'όν']]
-			adjs += [a for a in re.findall(threeterminationadjfinder, startofbody) if a in ['α', 'ά', 'η', 'ή']]
-			if adjs:
-				partsofspeech.add('adj.')
-			verbs = re.findall(verbfindera, startofbody)
-			verbs += re.findall(verbfinderb, startofbody)
-			if verbs:
-				partsofspeech.add('v.')
-			if not partsofspeech and entryname and entryname[-1] == 'ω':
-				partsofspeech.add('v.')
+				if re.findall(conjfinder, startofbody):
+					partsofspeech.add('conj.')
+				if re.findall(prepfinder, startofbody):
+					partsofspeech.add('prep.')
+				if re.findall(particlefinder, startofbody):
+					partsofspeech.add('partic.')
+				nouns = [n for n in re.findall(nounfindera, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
+				nouns += [n for n in re.findall(nounfinderb, startofbody) if n in ['ὁ', 'ἡ', 'τό']]
+				if nouns:
+					partsofspeech.add('subst.')
+				adjs = [a for a in re.findall(twoterminationadjfinder, startofbody) if a in ['έϲ', 'εϲ', 'ον', 'όν']]
+				adjs += [a for a in re.findall(threeterminationadjfinder, startofbody) if a in ['α', 'ά', 'η', 'ή']]
+				if adjs:
+					partsofspeech.add('adj.')
+				verbs = re.findall(verbfindera, startofbody)
+				verbs += re.findall(verbfinderb, startofbody)
+				if verbs:
+					partsofspeech.add('v.')
+				if not partsofspeech and entryname and entryname[-1] == 'ω':
+					partsofspeech.add('v.')
 
-			pos = ''
-			pos += ' ‖ '.join(partsofspeech)
-			pos = pos.lower()
+				pos = str()
+				pos += ' ‖ '.join(partsofspeech)
+				pos = pos.lower()
+
+				if len(pos) > 64:
+					# parser screwed up and you will be unable to insert
+					# ἀλϲοκομέω is the only one at the moment [DEBUG it...]
+					pos = str()
 
 			if idval % 10000 == 0:
 				print('at {n}: {e}'.format(n=idval, e=entryname))
