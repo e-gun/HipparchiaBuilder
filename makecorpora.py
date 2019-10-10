@@ -154,7 +154,19 @@ if __name__ == '__main__':
 		timestampthebuild('lm')
 
 	if tobuild['wordcounts']:
+		sqlcounts = False
+		try:
+			if config['corporatobuild']['loadwordcountsviasql'] == 'y':
+				sqlcounts = True
+		except KeyError:
+			# you have an old config.ini that does not include this option
+			print('please set "loadwordcountsviasql" to "y" or "n" under "corporatobuild" in "config.ini"')
+			sqlcounts = False
 		if commandlineargs.sqlloadwordcounts:
+			print('loading wordcounts from sql dumps')
+			p = Path(config['wordcounts']['wordcountdir'])
+			wordcountloader(p.resolve())
+		elif sqlcounts:
 			print('loading wordcounts from sql dumps')
 			p = Path(config['wordcounts']['wordcountdir'])
 			wordcountloader(p.resolve())
