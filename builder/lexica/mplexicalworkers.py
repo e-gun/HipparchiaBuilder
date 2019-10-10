@@ -17,6 +17,7 @@ from builder.parsers.lexica import greekwithoutvowellengths, greekwithvowellengt
 from builder.parsers.swappers import forcelunates, superscripterone
 from builder.parsers.htmltounicode import htmltounicode
 
+
 def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 	"""
 
@@ -73,8 +74,6 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 	# 500 is c 10% slower than 1000 w/ a SSD: no need to get too ambitious here
 	bundlesize = 1000
-	# testing
-	# bundlesize = 1
 
 	qtemplate = """
 	INSERT INTO {d} 
@@ -195,6 +194,8 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 					# parser screwed up and you will be unable to insert
 					# ἀλϲοκομέω is the only one at the moment [DEBUG it...]
 					pos = str()
+
+			entryname = re.sub(r'(\d+)', superscripterone, entryname)
 
 			if idval % 10000 == 0:
 				print('at {n}: {e}'.format(n=idval, e=entryname))
@@ -336,8 +337,11 @@ def mplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 			# do some quickie greek replacements
 			body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
 
+			entryname = re.sub(r'(\d+)', superscripterone, entryname)
+
 			if idval % 10000 == 0:
 				print('at {n}: {e}'.format(n=idval, e=entryname))
+
 			bundelofcookedentries.append(tuple([entryname, metricalentry, idval, entryname, pos, translationlist, body]))
 
 		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)

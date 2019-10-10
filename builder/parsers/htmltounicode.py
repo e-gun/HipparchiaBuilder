@@ -49,7 +49,9 @@ def htmltounicode(htmltext: str, brevefinder=None, macrfinder=None) -> str:
 		'U': 'Ū'
 	}
 
-	if not brevefinder or not macrfinder:
+	try:
+		brevefinder
+	except NameError:
 		brevefinder = re.compile(r'&([aeiouAEIOU])breve;')
 		macrfinder = re.compile(r'&([aeiouAEIOU])macr;')
 
