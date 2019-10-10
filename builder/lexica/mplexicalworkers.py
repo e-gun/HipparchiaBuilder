@@ -15,7 +15,7 @@ from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
 from builder.parsers.lexica import greekwithoutvowellengths, greekwithvowellengths, \
 	latinvowellengths, lsjgreekswapper, translationsummary
 from builder.parsers.swappers import forcelunates, superscripterone
-
+from builder.parsers.htmltounicode import htmltounicode
 
 def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 	"""
@@ -68,6 +68,9 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 	# <orth extent="full" lang="greek" opt="n">βωμιαῖοϲ</orth>, <itype lang="greek" opt="n">α</itype>, <itype lang="greek" opt="n">ον</itype>,
 	threeterminationadjfinder = re.compile(r'<orth extent=".*?".*?</orth>, <itype.*?>(.*?)</itype>, <itype .*?>.*?</itype>, <[^g]')
 
+	brevefinder = re.compile(r'&([aeiouAEIOU])breve;')
+	macrfinder = re.compile(r'&([aeiouAEIOU])macr;')
+
 	# 500 is c 10% slower than 1000 w/ a SSD: no need to get too ambitious here
 	bundlesize = 1000
 	# testing
@@ -94,7 +97,7 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 		for entry in bundelofrawentries:
 			idval = 0
 			entry = forcelunates(entry)
-
+			entry = htmltounicode(entry, brevefinder=brevefinder, macrfinder=macrfinder)
 			segments = re.search(bodyfinder, entry)
 			info = segments.group(2)
 			parsedinfo = re.search(parsedinfofinder, info)
@@ -241,6 +244,9 @@ def mplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 	posfinder = re.compile(r'<pos.*?>(.*?)</pos>')
 	particlefinder = re.compile(r'\. particle')
 
+	brevefinder = re.compile(r'&([aeiouAEIOU])breve;')
+	macrfinder = re.compile(r'&([aeiouAEIOU])macr;')
+
 	qtemplate = """
 	INSERT INTO {d} 
 		(entry_name, metrical_entry, id_number, entry_key, pos, translations, entry_body)
@@ -263,6 +269,8 @@ def mplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 		bundelofcookedentries = list()
 		for entry in bundelofrawentries:
+			entry = htmltounicode(entry, brevefinder=brevefinder, macrfinder=macrfinder)
+
 			segments = re.search(bodyfinder, entry)
 			try:
 				body = segments.group(3)
