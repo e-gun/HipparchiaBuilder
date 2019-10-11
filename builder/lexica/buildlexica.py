@@ -12,7 +12,8 @@ from multiprocessing import Manager
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.genericworkerobject import GenericInserterObject
 from builder.lexica.mpgrammarworkers import mpanalysisinsert, mplemmatainsert
-from builder.lexica.mpgreekinserters import mpgreekdictionaryinsert, mplatindictionaryinsert
+from builder.lexica.mpgreekinserters import mpgreekdictionaryinsert
+from builder.lexica.mplatininsterters import mplatindictionaryinsert
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
