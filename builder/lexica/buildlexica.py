@@ -8,12 +8,11 @@
 
 import configparser
 from multiprocessing import Manager
-import re
 
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.genericworkerobject import GenericInserterObject
-from builder.lexica.mplexicalworkers import mpgreekdictionaryinsert, mplatindictionaryinsert
-from builder.lexica.mpgrammarworkers import mplemmatainsert, mpanalysisinsert
+from builder.lexica.mpgrammarworkers import mpanalysisinsert, mplemmatainsert
+from builder.lexica.mpgreekinserters import mpgreekdictionaryinsert, mplatindictionaryinsert
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')

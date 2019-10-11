@@ -18,8 +18,8 @@ from builder.workers import setworkercount
 try:
 	import redis
 except ImportError:
-	if current_process().name == 'MainProcess':
-		secho('redis unavailable', fg='bright_black')
+	# if current_process().name == 'MainProcess':
+	# 	secho('redis unavailable', fg='bright_black')
 	redis = None
 
 config = configparser.ConfigParser()
