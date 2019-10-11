@@ -16,6 +16,8 @@ def newmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 	the perseus citation are in multiple formats.
 	tibullus is wrong: lt0660 vs lt0060
 	cicero refs are nonstandard
+	horace work numbers have shifted
+	...
 
 	work on dictdb entries
 	assignable to an mp worker
