@@ -12,8 +12,8 @@ from multiprocessing import Manager
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.genericworkerobject import GenericInserterObject
 from builder.lexica.mpgrammarworkers import mpanalysisinsert, mplemmatainsert
-from builder.lexica.mpgreekinserters import mpgreekdictionaryinsert
-from builder.lexica.mplatininsterters import mplatindictionaryinsert
+from builder.lexica.mpgreekinserters import mpgreekdictionaryinsert, oldxmlmpgreekdictionaryinsert
+from builder.lexica.mplatininsterters import newmplatindictionaryinsert, oldmplatindictionaryinsert
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
@@ -23,16 +23,6 @@ def formatgklexicon():
 	"""
 
 	parse the XML for Liddell and Scott and insert it into the DB
-
-	TODO:
-
-	https://github.com/PerseusDL/lexica
-
-	https://github.com/helmadik/LSJLogeion
-
-	https://github.com/pjheslin/diogenes-prebuilt-data
-
-	Dik's files are too heavily pre-processed?
 
 	:return:
 	"""
@@ -48,14 +38,22 @@ def formatgklexicon():
 	entries = f.readlines()
 	f.close()
 
-	print('formatting Liddell and Scott.', len(entries), 'entries to parse')
+	print('formatting Liddell and Scott. {e} entries to parse'.format(e=len(entries)))
 
 	# testing
 	# entries = entries[1000:1010]
 
+	if config['lexica']['greeklexicon'] == 'greek-lexicon_1999.04.0057.xml':
+		# a crude and highly fallible check, but...
+		print('using the old style lexical parser')
+		inserter = oldxmlmpgreekdictionaryinsert
+	else:
+		print('using the logeion lexical parser')
+		inserter = mpgreekdictionaryinsert
+
 	manager = Manager()
 	entries = manager.list(entries)
-	workerobject = GenericInserterObject(mpgreekdictionaryinsert, argumentlist=[dictdb, entries])
+	workerobject = GenericInserterObject(inserter, argumentlist=[dictdb, entries])
 	workerobject.dothework()
 
 	return
@@ -82,10 +80,18 @@ def formatlatlexicon():
 
 	print('formatting Lewis and Short.', len(entries), 'entries to parse')
 
+	if config['lexica']['latinlexicon'] == 'latin-lexicon_1999.04.0059.xml':
+		# a crude and highly fallible check, but...
+		print('using the (reliable) old style lexical parser')
+		inserter = oldmplatindictionaryinsert
+	else:
+		print('using the (unrelaible) new sytle lexical parser')
+		inserter = newmplatindictionaryinsert
+
 	manager = Manager()
 	entries = manager.list(entries)
 
-	workerobject = GenericInserterObject(mplatindictionaryinsert, argumentlist=[dictdb, entries])
+	workerobject = GenericInserterObject(inserter, argumentlist=[dictdb, entries])
 	workerobject.dothework()
 
 	return

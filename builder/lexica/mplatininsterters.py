@@ -8,21 +8,6 @@ from builder.parsers.lexica import latinvowellengths, translationsummary, greekw
 from builder.parsers.swappers import superscripterone
 
 
-def mplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
-	"""
-
-	hand the work off to the function that is less bad
-
-	the latest xml for L&S is too far out of sync with the old disks?
-
-	:param dictdb:
-	:param entries:
-	:param dbconnection:
-	:return:
-	"""
-	return oldmplatindictionaryinsert(dictdb, entries, dbconnection)
-
-
 def newmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 	"""
 
