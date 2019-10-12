@@ -73,6 +73,10 @@ hardware recommendations:
 
 ```
 
+v.1.3.0 build time: `Build took 26.28 minutes`
+
+Hardware: 6 workers @ 4.7GHz; everything built but wordcounts which were merely loaded from SQL dumps.
+
 sample input and output:
 
 TLG:
