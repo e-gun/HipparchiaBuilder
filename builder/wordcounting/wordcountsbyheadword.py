@@ -5,10 +5,10 @@
 	License: GNU GENERAL PUBLIC LICENSE 3
 		(see LICENSE in the top level directory of the distribution)
 """
+
 import re
 from collections import deque
 from statistics import mean, median
-from typing import List
 
 from builder.builderclasses import dbWordCountObject
 from builder.dbinteraction.connection import setconnection
@@ -20,6 +20,13 @@ from builder.wordcounting.wordcountdbfunctions import createwordcounttable, inse
 	insertgenremetadata
 from builder.wordcounting.wordcounthelperfunctions import prettyprintcohortdata
 
+"""
+	75 items return from:
+		select * from works where workgenre IS NULL and universalid like 'gr%'
+
+	will model the other DBs after this
+	will also add Agric. as a genre for LAT
+"""
 
 knownworkgenres = [
 	'Acta',
@@ -132,7 +139,9 @@ def headwordcounts():
 
 	dictionarycounts = buildcountsfromlemmalist(lemmataobjectslist, countdict)
 
-	cleanedknownworkgenres = findextras()
+	cleanedknownworkgenres = [g.lower() for g in knownworkgenres]
+	cleanedknownworkgenres = [re.sub(r'[\.\s]', '', g) for g in cleanedknownworkgenres]
+
 	thetable = 'dictionary_headword_wordcounts'
 	createwordcounttable(thetable, extracolumns=cleanedknownworkgenres)
 
@@ -401,23 +410,3 @@ def cohortstats(wordobjects):
 	returndict = {'h': high, 'l': low, 'a': avg, 'm': med, '#': len(wordobjects)}
 
 	return returndict
-
-
-def findextras() -> List[str]:
-	"""
-
-	75 items return from:
-		select * from works where workgenre IS NULL and universalid like 'gr%'
-
-	will model the other DBs after this
-	will also add Agric. as a genre for LAT
-
-	:return:
-	"""
-
-	# test for a single genre
-	# knownworkgenres = ['Satura']
-
-	cleanedknownworkgenres = [g.lower() for g in knownworkgenres]
-	cleanedknownworkgenres = [re.sub(r'[\.\s]', '', g) for g in cleanedknownworkgenres]
-	return cleanedknownworkgenres
