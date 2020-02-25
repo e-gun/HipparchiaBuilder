@@ -44,6 +44,9 @@ from builder.workers import setworkercount
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
+fixingcapu = True
+authorneedscapufix = ['LAT0914']
+
 
 def buildcorpusdbs(corpusname, corpusvars):
 	"""
@@ -377,6 +380,11 @@ def initialworkparsing(authorobject, language, datapath, debugoutput=False, debu
 	filename = '{dir}{af}_1{count}_{fnc}{suffix}'
 
 	thetext = filereaders.highunicodefileload(datapath + authorobject.dataprefix+authorobject.number + '.TXT')
+
+	thisauthor = authorobject.dataprefix+authorobject.number
+	if fixingcapu and thisauthor in authorneedscapufix:
+		print('applying U -> V transformation to {a}'.format(a=thisauthor))
+		thetext = re.sub(r'U', 'V', thetext)
 
 	initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
 	greekmiddle = [colonshift, replacegreekmarkup, replacecoptic, latinfontlinemarkupprober,
