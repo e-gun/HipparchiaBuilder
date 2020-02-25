@@ -68,7 +68,8 @@ strictcapu = ['lt1672', 'lt1327', 'lt0490', 'lt0857', 'lt0458', 'lt0430', 'lt051
 strictcapu = [re.sub('lt', 'LAT', x) for x in strictcapu]
 if strictcap:
 	authorneedscapufix += strictcapu
-	authorneedscapufix = set(authorneedscapufix)
+
+authorneedscapufix = set(authorneedscapufix)
 
 
 def buildcorpusdbs(corpusname, corpusvars):
