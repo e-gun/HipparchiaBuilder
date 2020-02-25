@@ -44,8 +44,31 @@ from builder.workers import setworkercount
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
+try:
+	cu = config['misc']['capu']
+except KeyError:
+	cu = 'y'
+
+try:
+	su = config['misc']['strictcapu']
+except KeyError:
+	su = 'n'
+
 fixingcapu = True
-authorneedscapufix = ['LAT0914']
+strictcap = False
+
+if cu == 'n':
+	fixingcapu = False
+if su == 'y':
+	strictcap = True
+
+authorneedscapufix = ['LAT0914', 'LAT2806']
+# see tail of file for how to generate this list via "/testroute"
+strictcapu = ['lt1672', 'lt1327', 'lt0490', 'lt0857', 'lt0458', 'lt0430', 'lt0515', 'lt0019', 'lt0524', 'lt2028', 'lt0640', 'lt1266', 'lt0574', 'lt9510', 'lt1221', 'lt0533', 'lt1248', 'lt0454', 'lt0473', 'lt0830', 'lt1236', 'lt1203', 'lt0446', 'lt0686', 'lt0821', 'lt0064', 'lt0582', 'lt0622', 'lt0596', 'lt0926', 'lt0046', 'lt0301', 'lt0845', 'lt0425', 'lt0067', 'lt0128', 'lt1348', 'lt0917', 'lt0408', 'lt0037', 'lt0470', 'lt1294', 'lt0444', 'lt0516', 'lt0631', 'lt1342', 'lt1023', 'lt0109', 'lt1209', 'lt0127', 'lt0661', 'lt0972', 'lt0002', 'lt0097', 'lt0073', 'lt0456', 'lt0448', 'lt2002', 'lt1041', 'lt0929', 'lt1285', 'lt1002', 'lt0460', 'lt0584', 'lt0409', 'lt0034', 'lt0981', 'lt0550', 'lt0085', 'lt0536', 'lt1011', 'lt0428', 'lt0635', 'lt0436', 'lt0727', 'lt0724', 'lt0500', 'lt0537', 'lt0620', 'lt0445', 'lt0025', 'lt0474', 'lt0634', 'lt0423', 'lt1218', 'lt0721', 'lt1339', 'lt0656', 'lt0709', 'lt0324', 'lt9221', 'lt0400', 'lt1363', 'lt1263', 'lt0625', 'lt0893', 'lt0327', 'lt0452', 'lt2302', 'lt0455', 'lt0022', 'lt0996', 'lt1056', 'lt1035', 'lt0615', 'lt0498', 'lt0935', 'lt0413', 'lt1500', 'lt1212', 'lt0932', 'lt0535', 'lt0469', 'lt0088', 'lt0528', 'lt0486', 'lt0911', 'lt0140', 'lt2349', 'lt0836', 'lt1000', 'lt1291', 'lt0526', 'lt0851', 'lt0978', 'lt2331', 'lt0860', 'lt0472', 'lt0130', 'lt2301', 'lt1206', 'lt0487', 'lt0959', 'lt0662', 'lt0043', 'lt0552', 'lt1318', 'lt1380', 'lt0812', 'lt0975', 'lt0682', 'lt1251', 'lt0556', 'lt0560', 'lt0094', 'lt0112', 'lt0512', 'lt1020', 'lt1017', 'lt0684', 'lt0303', 'lt3211', 'lt1351', 'lt0590', 'lt0079', 'lt1245', 'lt0484', 'lt0532', 'lt0541', 'lt1014', 'lt0488', 'lt1297', 'lt0118', 'lt0660', 'lt0451', 'lt0984', 'lt0594', 'lt0104', 'lt0530', 'lt0869', 'lt1044', 'lt0426', 'lt1242', 'lt0416', 'lt9500', 'lt1100']
+strictcapu = [re.sub('lt', 'LAT', x) for x in strictcapu]
+if strictcap:
+	authorneedscapufix += strictcapu
+	authorneedscapufix = set(authorneedscapufix)
 
 
 def buildcorpusdbs(corpusname, corpusvars):
@@ -383,7 +406,7 @@ def initialworkparsing(authorobject, language, datapath, debugoutput=False, debu
 
 	thisauthor = authorobject.dataprefix+authorobject.number
 	if fixingcapu and thisauthor in authorneedscapufix:
-		print('applying U -> V transformation to {a}'.format(a=thisauthor))
+		# print('applying U -> V transformation to {a}'.format(a=thisauthor))
 		thetext = re.sub(r'U', 'V', thetext)
 
 	initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
@@ -484,3 +507,21 @@ def databaseloading(dbreadyversion: list, authorobject: dbAuthor, dbconnection):
 
 	# to debug return dbreadyversion
 	return
+
+
+"""
+	# find authors that have a 'U' in them
+	lt = {x for x in authordict if x[0:2] == 'lt'}
+	dbconnection = ConnectionObject()
+	cursor = dbconnection.cursor()
+	problematic = list()
+	for au in lt:
+		q = "select marked_up_line from {x} where marked_up_line like '%U%' limit 1;".format(x=au)
+		cursor.execute(q)
+		f = cursor.fetchone()
+		if f:
+			print('{a}\t{b}'.format(a=au, b=f))
+			problematic.append(au)
+	print('has CAP-U', problematic)
+	
+"""
