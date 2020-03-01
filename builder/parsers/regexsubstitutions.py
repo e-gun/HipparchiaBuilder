@@ -815,3 +815,26 @@ def tidyupterm(word: str, punct=None) -> str:
 	word = word.translate(str.maketrans(invals, outvals))
 
 	return word
+
+
+def capitalvforcapitalu(thetext: str) -> str:
+	"""
+
+	latin texts have "Ubi" instead of "Vbi"
+	Livy and Justinian even have Ualerius instead of Valerius
+
+	you need to do this right away before any markup, etc appears
+
+	a problem: Greek inside a Roman author will get mangled: "PARADOXON II: Ὅτι αϝ)τάρκηϲ ἡ ἀρετὴ πρὸϲ εϝ)δαιμονίαν."
+	This arises from: $*(/OTI AV)TA/RKHS H( A)RETH\ PRO\S EV)DAIMONI/AN.&}1
+
+	:param thetext:
+	:return:
+	"""
+	# print('applying U -> V transformation to {a}'.format(a=thisauthor))
+	thetext = re.sub(r'U', 'V', thetext)
+	uswap = lambda x: '$' + re.sub(r'V', r'U', x.group(1)) + '&'
+	lookingfor = re.compile(r'\$(.*?)&')
+	thetext = re.sub(lookingfor, uswap, thetext)
+
+	return thetext

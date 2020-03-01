@@ -34,7 +34,7 @@ from builder.parsers.copticsubstitutions import replacecoptic
 from builder.parsers.latinsubstitutions import latindiacriticals
 from builder.parsers.regexsubstitutions import addcdlabels, cleanuplingeringmesses, colonshift, \
 	debughostilesubstitutions, earlybirdsubstitutions, fixhmuoragnizationlinebyline, hexrunner, insertnewlines, \
-	lastsecondsubsitutions, replacequotationmarks, totallemmatization
+	lastsecondsubsitutions, replacequotationmarks, totallemmatization, capitalvforcapitalu
 from builder.postbuild.postbuildmetadata import buildtrigramindices, findwordcounts, insertfirstsandlasts
 from builder.postbuild.secondpassdbrewrite import assignlanguagetonewworks, builddbremappers, compilenewauthors, \
 	compilenewworks, insertnewworkdata
@@ -407,8 +407,7 @@ def initialworkparsing(authorobject, language, datapath, debugoutput=False, debu
 
 	thisauthor = authorobject.dataprefix+authorobject.number
 	if fixingcapu and thisauthor in authorneedscapufix:
-		# print('applying U -> V transformation to {a}'.format(a=thisauthor))
-		thetext = re.sub(r'U', 'V', thetext)
+		thetext = capitalvforcapitalu(thetext)
 
 	initial = [earlybirdsubstitutions, replacequotationmarks, replaceaddnlchars]
 	greekmiddle = [colonshift, replacegreekmarkup, replacecoptic, latinfontlinemarkupprober,
