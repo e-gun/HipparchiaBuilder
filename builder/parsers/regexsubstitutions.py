@@ -820,7 +820,7 @@ def tidyupterm(word: str, punct=None) -> str:
 def capitalvforcapitalu(thetext: str) -> str:
 	"""
 
-	latin texts have "Ubi" instead of "Vbi"
+	Latin texts have "Ubi" instead of "Vbi"
 	Livy and Justinian even have Ualerius instead of Valerius
 
 	you need to do this right away before any markup, etc appears
@@ -831,10 +831,11 @@ def capitalvforcapitalu(thetext: str) -> str:
 	:param thetext:
 	:return:
 	"""
+
 	# print('applying U -> V transformation to {a}'.format(a=thisauthor))
 	thetext = re.sub(r'U', 'V', thetext)
-	uswap = lambda x: '$' + re.sub(r'V', r'U', x.group(1)) + '&'
 	lookingfor = re.compile(r'\$(.*?)&')
+	uswap = lambda x: '$' + re.sub(r'V', r'U', x.group(1)) + '&'
 	thetext = re.sub(lookingfor, uswap, thetext)
 
 	return thetext
