@@ -6,16 +6,21 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
+import configparser
 import re
 
 from psycopg2.extras import execute_values as insertlistofvaluetuples
 
 from builder.dbinteraction.connection import setconnection
+from builder.lexica.repairperseuscitations import perseuslookupfixer
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
+from builder.parsers.htmltounicode import htmltounicode
 from builder.parsers.lexica import greekwithoutvowellengths, greekwithvowellengths, \
 	lsjgreekswapper, translationsummary
 from builder.parsers.swappers import forcelunates, superscripterone
-from builder.parsers.htmltounicode import htmltounicode
+
+config = configparser.ConfigParser()
+config.read('config.ini', encoding='utf8')
 
 
 def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
@@ -150,6 +155,14 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 			# retag translations
 			body = re.sub(r'<i>(.*?)</i>', r'<trans>\1</trans>', body)
+
+			try:
+				repair = config['lexica']['repairbadperseusrefs']
+			except KeyError:
+				repair = 'y'
+
+			if repair == 'y':
+				body = perseuslookupfixer(body)
 
 			translationlist = re.findall(transfinder, body)
 			translationlist = [re.sub(r',$', '', t.strip()) for t in translationlist]
