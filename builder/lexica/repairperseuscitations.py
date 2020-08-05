@@ -108,7 +108,8 @@ def latindramacitationformatconverter(entrytext: str, dbconnection=None) -> str:
 	dbcursor = dbconnection.cursor()
 	# dbconnection.setautocommit()
 
-	authorstofix = {'phi,0119': 'Plautus'}
+	authorstofix = {'phi,0119': 'Plautus',
+	                'phi,0134': 'Terence'}
 
 	citationfinder = re.compile(r'(<cit>.*?</cit>)')
 	punct = re.compile('[{s}]'.format(s=re.escape(punctuation)))
@@ -133,39 +134,71 @@ def latindramacitationformatconverter(entrytext: str, dbconnection=None) -> str:
 				q = re.search(quotefinder, c)
 				if q:
 					lineval = None
+					hit = None
 					quote = cleanaccentsandvj(stripaccents(q[1].lower()))
 					quote = re.sub(punct, str(), quote)
 					wkid = t[1]
 					# loc = t[2]
-					data = ('{a}w{w}'.format(a=adb, w=wkid), quote)
-					# print(querytemplate.format(t=adb), data)
-					dbcursor.execute(querytemplate.format(t=adb), data)
-					hit = dbcursor.fetchone()
+
+					trialnumber = 0
+					while quote and not hit:
+						trialnumber += 1
+						hit = lookforquote(adb, wkid, quote, querytemplate, dbcursor)
+						if not hit:
+							quote = shinkquote(quote)
+
 					if hit:
 						lineval = hit[0]
-						# print('converting to', lineval)
-					else:
-						# print('cound not find "{q}"'.format(q=quote))
-						# retry...
-						qs = quote.split(' ')
-						if len(qs) > 4:
-							quote = ' '.join(qs[1:-1])
-						data = ('{a}w{w}'.format(a=adb, w=wkid), quote)
-						dbcursor.execute(querytemplate.format(t=adb), data)
-						hit = dbcursor.fetchone()
-						if hit:
-							print('success on second try')
-							lineval = hit[0]
+						# print('success on try #', trialnumber)
+						# "success on try # 6" !
+
 					if lineval:
 						newcitation = re.sub(locusfinder, r'</author> \1 {lv}</bibl></cit>'.format(lv=lineval), c)
 						newcitation = re.sub(citationswap, r'\1ZZZ" rewritten="yes\3', newcitation)
 						newcitation = re.sub('ZZZ', lineval, newcitation)
+						c = re.escape(c)
 						entrytext = re.sub(c, newcitation, entrytext)
 
 	if needcleanup:
 		dbconnection.connectioncleanup()
 
 	return entrytext
+
+
+def lookforquote(adb, wkid, quote, querytemplate, dbcursor):
+	"""
+
+	the search proper
+
+	:param adb:
+	:param wkid:
+	:param quote:
+	:param querytemplate:
+	:param dbcursor:
+	:return:
+	"""
+	data = ('{a}w{w}'.format(a=adb, w=wkid), quote)
+	# print(querytemplate.format(t=adb), data)
+	dbcursor.execute(querytemplate.format(t=adb), data)
+	hit = dbcursor.fetchone()
+
+	return hit
+
+
+def shinkquote(quote: str) -> str:
+	"""
+
+	sometimes quotes span lines; this hides them from us
+
+	:param quote:
+	:return:
+	"""
+	newquote = str()
+	qs = quote.split(' ')
+	if len(qs) > 3:
+		newquote = ' '.join(qs[1:-1])
+
+	return newquote
 
 
 def perseusworkmappingfixer(entrytext: str) -> str:
