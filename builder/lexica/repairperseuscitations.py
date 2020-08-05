@@ -252,9 +252,13 @@ def oneofflatinworkremapping(entrytext: str) -> str:
 	:return:
 	"""
 
-	fixentry = fixmartial(entrytext)
+	fixers = [fixmartial, fixvarro]
 
-	return fixentry
+	fixedentry = entrytext
+	for f in fixers:
+		fixedentry = f(fixedentry)
+
+	return fixedentry
 
 
 def fixmartial(entrytext: str) -> str:
@@ -271,6 +275,46 @@ def fixmartial(entrytext: str) -> str:
 
 	newentry = re.sub(findmartial, r'"Perseus:abo:phi,1294,002:', entrytext)
 	newentry = re.sub(findspectacles, r'"Perseus:abo:phi,1294,001:\2"', newentry)
+
+	return newentry
+
+
+def fixvarro(entrytext: str) -> str:
+	"""
+
+	the DLL citations are wrong:
+		"Perseus:abo:phi,0684,001:L. L. 5:section=59"
+
+	RR too:
+		"Perseus:abo:phi,0684,001:R. R. 1:32:2"
+
+	lingering issue: 'ibidem'
+		"Perseus:abo:phi,0684,001:ib. 3:15:2"
+
+	lingering issue: DNE
+		"Perseus:abo:phi,0684,001:Sent. Mor. p. 28"
+		"Perseus:abo:phi,0684,001:Fragm. p. 241"
+
+	lingering issue: guaranteed mishit
+		"Perseus:abo:phi,0684,001:Sat. Men. 95:10"
+
+	lingering issue: might-be-right-might-not
+		"Perseus:abo:phi,0684,001:1:22"
+		[is wrong since 'vernum' is in 002 but not in 001]
+		vernum,</quote> <bibl n="Perseus:abo:phi,0684,001:33:3"
+
+
+	:param entrytext:
+	:return:
+	"""
+
+	finddll = re.compile('"(Perseus:abo:phi,0684,001:)(L. L. )(.*?):(section=)(.*?)"')
+	findrr = re.compile('"(Perseus:abo:phi,0684,)(001):(R. R. )(.*?)"')
+	findmenn = re.compile('"(Perseus:abo:phi,0684,001:Sat. Menip\. )(.*?)"')
+
+	newentry = re.sub(finddll, r'"\1\3:\5"', entrytext)
+	newentry = re.sub(findrr, r'"Perseus:abo:phi,0684,002:\4"', newentry)
+	newentry = re.sub(findmenn, r'"Perseus:abo:phi,0684,011:\2"', newentry)
 
 	return newentry
 
