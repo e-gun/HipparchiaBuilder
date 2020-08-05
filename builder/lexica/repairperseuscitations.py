@@ -141,11 +141,22 @@ def latindramacitationformatconverter(entrytext: str, dbconnection=None) -> str:
 					# loc = t[2]
 
 					trialnumber = 0
-					while quote and not hit:
-						trialnumber += 1
-						hit = lookforquote(adb, wkid, quote, querytemplate, dbcursor)
-						if not hit:
-							quote = shinkquote(quote)
+					for direction in ['reverse', 'forward', 'ends']:
+						seeking = quote
+						while seeking and not hit:
+							trialnumber += 1
+							hit = lookforquote(adb, wkid, seeking, querytemplate, dbcursor)
+							if not hit:
+								seeking = shinkquote(seeking, direction)
+
+					# if not hit:
+					# 	quote = originalquote
+					# 	quote = shinkquote(quote, direction='forward')
+					# 	while quote and not hit:
+					# 		trialnumber += 1
+					# 		hit = lookforquote(adb, wkid, quote, querytemplate, dbcursor)
+					# 		if not hit:
+					# 			quote = shinkquote(quote, direction='forward')
 
 					if hit:
 						lineval = hit[0]
@@ -157,7 +168,11 @@ def latindramacitationformatconverter(entrytext: str, dbconnection=None) -> str:
 						newcitation = re.sub(citationswap, r'\1ZZZ" rewritten="yes\3', newcitation)
 						newcitation = re.sub('ZZZ', lineval, newcitation)
 						c = re.escape(c)
-						entrytext = re.sub(c, newcitation, entrytext)
+						try:
+							entrytext = re.sub(c, newcitation, entrytext)
+						except re.error:
+							# re.error: bad escape \s at position 88
+							pass
 
 	if needcleanup:
 		dbconnection.connectioncleanup()
@@ -185,7 +200,7 @@ def lookforquote(adb, wkid, quote, querytemplate, dbcursor):
 	return hit
 
 
-def shinkquote(quote: str) -> str:
+def shinkquote(quote: str, direction: str) -> str:
 	"""
 
 	sometimes quotes span lines; this hides them from us
@@ -193,11 +208,17 @@ def shinkquote(quote: str) -> str:
 	:param quote:
 	:return:
 	"""
+
+	minimal = 2
 	newquote = str()
 	qs = quote.split(' ')
-	if len(qs) > 3:
+	if len(qs) > minimal and direction == 'reverse':
 		# newquote = ' '.join(qs[1:-1])
 		newquote = ' '.join(qs[:-1])
+	elif len(qs) > minimal and direction == 'forward':
+		newquote = ' '.join(qs[1:])
+	elif len(qs) > minimal and direction == 'ends':
+		newquote = ' '.join(qs[-1:1])
 
 	return newquote
 
