@@ -196,7 +196,8 @@ def shinkquote(quote: str) -> str:
 	newquote = str()
 	qs = quote.split(' ')
 	if len(qs) > 3:
-		newquote = ' '.join(qs[1:-1])
+		# newquote = ' '.join(qs[1:-1])
+		newquote = ' '.join(qs[:-1])
 
 	return newquote
 
