@@ -1,12 +1,16 @@
+import configparser
 import re
 
 from psycopg2.extras import execute_values as insertlistofvaluetuples
 
 from builder.dbinteraction.connection import setconnection
+from builder.lexica.repairperseuscitations import latindramacitationformatconverter
 from builder.parsers.htmltounicode import htmltounicode
-from builder.parsers.lexica import latinvowellengths, translationsummary, greekwithvowellengths
+from builder.parsers.lexica import greekwithvowellengths, latinvowellengths, translationsummary
 from builder.parsers.swappers import superscripterone
 
+config = configparser.ConfigParser()
+config.read('config.ini', encoding='utf8')
 
 def newmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 	"""
@@ -236,8 +240,8 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 				idnum = int(re.sub(r'^n', '', idnum))
 
 				# parts of speech
-				cleanbody = re.sub(etymfinder, '', body)
-				cleanbody = re.sub(badprepfinder, '', cleanbody)
+				cleanbody = re.sub(etymfinder, str(), body)
+				cleanbody = re.sub(badprepfinder, str(), cleanbody)
 				pos = list()
 				pos += list(set(re.findall(posfinder, cleanbody)))
 				if re.findall(particlefinder, cleanbody):
@@ -248,6 +252,14 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 				translationlist = translationsummary(entry, 'hi')
 				# do some quickie greek replacements
 				body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
+
+				try:
+					repair = config['lexica']['repairbadperseusrefs']
+				except KeyError:
+					repair = 'y'
+
+				if repair == 'y':
+					body = latindramacitationformatconverter(body, dbconnection)
 
 				if idnum % 10000 == 0:
 					print('at {n}: {e}'.format(n=idnum, e=entryname))
