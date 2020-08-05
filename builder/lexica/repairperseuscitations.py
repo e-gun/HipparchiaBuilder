@@ -50,6 +50,110 @@ euripides = {
 	"Tr.": ("044", "Troiades")
 }
 
+"""
+-------------+-------------------------------
+lt1017w001  | Hercules Furens
+lt1017w002  | Troades
+lt1017w003  | Phoenissae
+lt1017w004  | Medea
+lt1017w005  | Phaedra
+lt1017w006  | Oedipus
+lt1017w007  | Agamemnon
+lt1017w008  | Thyestes
+lt1017w009  | Hercules Oetaeus
+lt1017w010  | Octavia [sp.]
+lt1017w011  | Apocolocyntosis
+lt1017w012  | Dialogi
+lt1017w013  | De Beneficiis
+lt1017w014  | De Clementia
+lt1017w015  | Epistulae Morales ad Lucilium
+lt1017w016  | Naturales Quaestiones
+lt1017w017  | e Cleanthe versus
+lt1017w018  | De Vita Patris
+
+	de prov: 1
+	de cons: 2
+	de ira1: 3
+	de ira2: 4
+	de ira3: 5
+	ad marc: 6
+	vit bea: 7
+	otio: 8
+	tranq: 9
+	brev: 10
+	polyb: 11
+	helv: 12
+	
+"""
+
+seneca = {
+	'ad Helv.':  ('1017', '012:12:'),
+	'ad Marc.': ('1017', '012:6:'),
+	'ad Polyb.': ('1017', '012:11:'),
+	'Agm.': ('1017', '007:'),
+	'Agam.': ('1017', '007:'),
+	'Apoc.': ('1017', '011:'),
+	'Apocol.': ('1017', '011:'),
+	'Apocol.p.': ('1017', '011:'),
+	'Ben.': ('1017', '013:'),
+	'Benef.': ('1017', '013:'),
+	'Brev. Vit.': ('1017', '014:'),
+	'Clem.': ('1017', '012:10:'),
+	'de Clem.': ('1017', '012:10:'),
+	'de Prov.': ('1017', '012:1:'),
+	'Ep': ('1017', '015:'),
+	'Ep.': ('1017', '015:'),
+	'Consol. ad Marc.': ('1017', '012:6:'),
+	'Cons. ad Marc.': ('1017', '012:6:'),
+	'Cons. ad Helv.': ('1017', '012:12:'),
+	'Cons. ad Polyb.': ('1017', '012:11:'),
+	'Cons. Helv.': ('1017', '012:12:'),
+	'Cons. Marc.': ('1017', '012:6:'),
+	'Cons. Polyb.': ('1017', '012:11:'),
+	'Const.': ('1017', '012:2:'),
+	'Const. Sap.': ('1017', '012:2:'),
+	'Contr': ('1014', '001:'),  # the father...
+	'Contr.': ('1014', '001:'),  # the father...
+	'Controv.': ('1014', '001:'),  # the father...
+	'Exc. Contr.': ('1014', '002:'),  # the father...
+	'Exc. Controv.': ('1014', '002:'),  # the father...
+	'Excerpt. Contr.': ('1014', '002:'),  # the father...
+	'Excerpt. Controv.': ('1014', '002:'),  # the father...
+	'Helv.': ('1017', '012:12:'),
+	'Herc. Fur.': ('1017', '001:'),
+	'Herc Oet.': ('1017', '009:'),
+	'Herc. Oet.': ('1017', '009:'),
+	'Hipp.': ('1017', '005:'),
+	'Hippol.': ('1017', '005:'),
+	'Ira,': ('1017', '012:3'),  # note that we just sent I, II, and III to the same place...
+	'Lud. Mort. Claud.': ('1017', '011:'),
+	'Med.': ('1017', '004:'),
+	'Mort. Claud.': ('1017', '011:'),
+	'N. Q.': ('1017', '016:'),
+	'Oct.': ('1017', '010:'),
+	'Octav.': ('1017', '010:'),
+	'Ot. Sap.': ('1017', '012:8:'),
+	'Oed.': ('1017', '006:'),
+	'Oedip': ('1017', '006:'),
+	'Oedip.': ('1017', '006:'),
+	'Oet.': ('1017', '009:'),
+	# 'Orest.': ('1017', '006:'),  # ?!
+	'Phaedr.': ('1017', '005:'),
+	'Phoen.': ('1017', '003:'),
+	'Polyb.': ('1017', '012:11:'),
+	'Prov': ('1017', '012:1:'),
+	'Prov.': ('1017', '012:1:'),
+	'Q. N.': ('1017', '016:'),
+	'Suas.': ('1014', '003:'),  # the father...
+	'Thyest.': ('1017', '008:'),
+	'Tranq.': ('1017', '012:9:'),
+	'Tranq. An.': ('1017', '012:9:'),
+	'Tranq. Vit.': ('1017', '012:9:'),
+	'Troad.': ('1017', '002'),
+	'Vit. B.': ('1017', '012:7:'),
+	'Vit. Beat.': ('1017', '012:7:'),
+}
+
 
 def conditionalworkidswapper(match):
 	"""
@@ -148,15 +252,6 @@ def latindramacitationformatconverter(entrytext: str, dbconnection=None) -> str:
 							if not hit:
 								seeking = shinkquote(seeking, direction)
 
-					# if not hit:
-					# 	quote = originalquote
-					# 	quote = shinkquote(quote, direction='forward')
-					# 	while quote and not hit:
-					# 		trialnumber += 1
-					# 		hit = lookforquote(adb, wkid, quote, querytemplate, dbcursor)
-					# 		if not hit:
-					# 			quote = shinkquote(quote, direction='forward')
-
 					if hit:
 						lineval = hit[0]
 						# print('success on try #', trialnumber)
@@ -252,7 +347,7 @@ def oneofflatinworkremapping(entrytext: str) -> str:
 	:return:
 	"""
 
-	fixers = [fixmartial, fixvarro]
+	fixers = [fixfrontinus, fixmartial, fixseneca, fixvarro]
 
 	fixedentry = entrytext
 	for f in fixers:
@@ -270,11 +365,83 @@ def fixmartial(entrytext: str) -> str:
 	:return:
 	"""
 
-	findmartial = re.compile(r'"Perseus:abo:phi,1294,001:')
+	findmartial = re.compile(r'"Perseus:abo:phi,1294,001:(.*?)"')
 	findspectacles = re.compile(r'"Perseus:abo:phi,1294,002:(Spect. )(.*?)"')
 
-	newentry = re.sub(findmartial, r'"Perseus:abo:phi,1294,002:', entrytext)
+	newentry = re.sub(findmartial, r'"Perseus:abo:phi,1294,002:\1" rewritten="yes"', entrytext)
 	newentry = re.sub(findspectacles, r'"Perseus:abo:phi,1294,001:\2"', newentry)
+
+	return newentry
+
+
+def fixfrontinus(entrytext: str) -> str:
+	"""
+
+
+	n="Perseus:abo:phi,1245,001:Aquaed. 104"
+
+	but Aq. is 002
+
+	:param entrytext:
+	:return:
+	"""
+
+	findaquad = re.compile(r'"Perseus:abo:phi,1245,001:Aquaed\.(.*?)"')
+
+	newentry = re.sub(findaquad, r'"Perseus:abo:phi,1245,002:\1" rewritten="yes"', entrytext)
+
+	return newentry
+
+
+def fixseneca(entrytext: str) -> str:
+	"""
+
+	plenty of problems given that StE and StY are at times confused...: 1014 vs 1017
+
+	bad:
+		"Perseus:abo:phi,1014,001:Ep. 29"; EM is 1017,015
+		"Perseus:abo:phi,1014,001:Tranq. 15"; TQ is 1017,012:9:15
+		"Perseus:abo:phi,1014,001:Contr. 1 praef";
+
+	de Ira 1 vs 2 vs 3 remains a problem
+
+	'ib.' remains a problem
+
+	:param entrytext:
+	:return:
+	"""
+
+	findem = re.compile(r'"Perseus:abo:phi,1014,001:(.*?)(\d.*?)"')
+
+	newentry = re.sub(findem, senecahelper, entrytext)
+
+	return newentry
+
+
+def senecahelper(regexmatch) -> str:
+	"""
+
+	work some substitution magic on the seneca match
+
+	the key work is done by the seneca dict() above
+
+	:param regexmatch:
+	:return:
+	"""
+
+	returntext = regexmatch.group(0)
+	work = regexmatch.group(1).strip()
+	pasg = regexmatch.group(2)
+
+	senecatemplate = '"Perseus:abo:phi,{au},{wk}{loc}" rewritten="yes"'
+
+	try:
+		knownsubstitute = seneca[work]
+	except KeyError:
+		# print('unk seneca: "{w}"'.format(w=work))
+		return returntext
+
+	newentry = senecatemplate.format(au=knownsubstitute[0], wk=knownsubstitute[1], loc=pasg)
 
 	return newentry
 
@@ -312,9 +479,9 @@ def fixvarro(entrytext: str) -> str:
 	findrr = re.compile('"(Perseus:abo:phi,0684,)(001):(R. R. )(.*?)"')
 	findmenn = re.compile('"(Perseus:abo:phi,0684,001:Sat. Menip\. )(.*?)"')
 
-	newentry = re.sub(finddll, r'"\1\3:\5"', entrytext)
-	newentry = re.sub(findrr, r'"Perseus:abo:phi,0684,002:\4"', newentry)
-	newentry = re.sub(findmenn, r'"Perseus:abo:phi,0684,011:\2"', newentry)
+	newentry = re.sub(finddll, r'"\1\3:\5" rewritten="yes"', entrytext)
+	newentry = re.sub(findrr, r'"Perseus:abo:phi,0684,002:\4" rewritten="yes"', newentry)
+	newentry = re.sub(findmenn, r'"Perseus:abo:phi,0684,011:\2" rewritten="yes"', newentry)
 
 	return newentry
 
