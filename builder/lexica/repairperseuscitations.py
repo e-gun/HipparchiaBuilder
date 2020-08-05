@@ -103,7 +103,6 @@ def latindramacitationformatconverter(entrytext: str, dbconnection=None) -> str:
 	if not dbconnection:
 		needcleanup = True
 		dbconnection = setconnection()
-		# dbconnection = psycopg2.connect(user='hippa_wr', host='127.0.0.1', port=5432, database='hipparchiaDB', password='')
 
 	dbcursor = dbconnection.cursor()
 	# dbconnection.setautocommit()
@@ -180,7 +179,7 @@ def latindramacitationformatconverter(entrytext: str, dbconnection=None) -> str:
 	return entrytext
 
 
-def lookforquote(adb, wkid, quote, querytemplate, dbcursor):
+def lookforquote(adb: str, wkid: str, quote: str, querytemplate: str, dbcursor) -> tuple:
 	"""
 
 	the search proper
@@ -192,6 +191,7 @@ def lookforquote(adb, wkid, quote, querytemplate, dbcursor):
 	:param dbcursor:
 	:return:
 	"""
+
 	data = ('{a}w{w}'.format(a=adb, w=wkid), quote)
 	# print(querytemplate.format(t=adb), data)
 	dbcursor.execute(querytemplate.format(t=adb), data)
@@ -241,3 +241,37 @@ def perseusworkmappingfixer(entrytext: str) -> str:
 	fixentry = re.sub(thumbprint, conditionalworkidswapper, entrytext)
 
 	return fixentry
+
+
+def oneofflatinworkremapping(entrytext: str) -> str:
+	"""
+
+	hand off some oddballs
+
+	:param entrytext:
+	:return:
+	"""
+
+	fixentry = fixmartial(entrytext)
+
+	return fixentry
+
+
+def fixmartial(entrytext: str) -> str:
+	"""
+
+	all of martial has been assigned to work 001
+
+	:param entrytext:
+	:return:
+	"""
+
+	findmartial = re.compile(r'"Perseus:abo:phi,1294,001:')
+	findspectacles = re.compile(r'"Perseus:abo:phi,1294,002:(Spect. )(.*?)"')
+
+	newentry = re.sub(findmartial, r'"Perseus:abo:phi,1294,002:', entrytext)
+	newentry = re.sub(findspectacles, r'"Perseus:abo:phi,1294,001:\2"', newentry)
+
+	return newentry
+
+

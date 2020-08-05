@@ -4,7 +4,7 @@ import re
 from psycopg2.extras import execute_values as insertlistofvaluetuples
 
 from builder.dbinteraction.connection import setconnection
-from builder.lexica.repairperseuscitations import latindramacitationformatconverter
+from builder.lexica.repairperseuscitations import latindramacitationformatconverter, oneofflatinworkremapping
 from builder.parsers.htmltounicode import htmltounicode
 from builder.parsers.lexica import greekwithvowellengths, latinvowellengths, translationsummary
 from builder.parsers.swappers import superscripterone
@@ -260,7 +260,7 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 				if repair == 'y':
 					body = latindramacitationformatconverter(body, dbconnection)
-
+					body = oneofflatinworkremapping(body)
 				if idnum % 10000 == 0:
 					print('at {n}: {e}'.format(n=idnum, e=entryname))
 				bundelofcookedentries.append(tuple([entryname, metricalentry, idnum, key, pos, translationlist, body]))
