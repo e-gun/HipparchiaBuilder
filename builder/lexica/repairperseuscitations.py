@@ -363,13 +363,32 @@ def oneofflatinworkremapping(entrytext: str) -> str:
 	:return:
 	"""
 
-	fixers = [fixfrontinus, fixmartial, fixseneca, fixsallust, fixsuetonius, fixvarro]
+	fixers = [fixfrontinus, fixmartial, fixpropertius, fixseneca, fixsallust, fixsuetonius, fixvarro]
 
 	fixedentry = entrytext
 	for f in fixers:
 		fixedentry = f(fixedentry)
 
 	return fixedentry
+
+
+def fixfrontinus(entrytext: str) -> str:
+	"""
+
+
+	n="Perseus:abo:phi,1245,001:Aquaed. 104"
+
+	but Aq. is 002
+
+	:param entrytext:
+	:return:
+	"""
+
+	findaquad = re.compile(r'"Perseus:abo:phi,1245,001:Aquaed\.(.*?)"')
+
+	newentry = re.sub(findaquad, r'"Perseus:abo:phi,1245,002:\1" rewritten="yes"', entrytext)
+
+	return newentry
 
 
 def fixmartial(entrytext: str) -> str:
@@ -390,21 +409,20 @@ def fixmartial(entrytext: str) -> str:
 	return newentry
 
 
-def fixfrontinus(entrytext: str) -> str:
+def fixpropertius(entrytext: str) -> str:
 	"""
 
+	<bibl n="Perseus:abo:phi,1224,001:1:8:29" default="NO"><author>Prop.</author> 1, 8, 29</bibl>
 
-	n="Perseus:abo:phi,1245,001:Aquaed. 104"
-
-	but Aq. is 002
+	but propertius is lt0620
 
 	:param entrytext:
 	:return:
 	"""
 
-	findaquad = re.compile(r'"Perseus:abo:phi,1245,001:Aquaed\.(.*?)"')
+	findprop = re.compile(r'("Perseus:abo:phi),1224,(.*?" default="NO")(><author>Prop\.</author>)')
 
-	newentry = re.sub(findaquad, r'"Perseus:abo:phi,1245,002:\1" rewritten="yes"', entrytext)
+	newentry = re.sub(findprop, r'\1,0620,\2 rewritten="yes"\3', entrytext)
 
 	return newentry
 
