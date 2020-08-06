@@ -50,15 +50,6 @@ euripides = {
 	"Tr.": ("044", "Troiades")
 }
 
-"""
-lingering issue:
-
-lt1017w012  | Dialogi
-	de ira1: 3
-	de ira2: 4
-	de ira3: 5
-"""
-
 seneca = {
 	'ad Helv.':  ('1017', '012:12:'),
 	'ad Marc.': ('1017', '012:6:'),
@@ -128,27 +119,24 @@ seneca = {
 }
 
 """
-Suetonius, Gaius Tranquillus [lt1348]
+lingering issue:
 
-hipparchiaDB=# select distinct level_03_value from lt1348 where wkuniversalid='lt1348w001';
-level_03_value
-----------------
-Dom
-Vit
-Otho
-Cal
-Tit
-Tib
-Gal
-Aug
-t
-Ves
-Nero
-Cl
-Jul
-(13 rows)
-
+lt1017w012  | Dialogi
+	de ira1: 3
+	de ira2: 4
+	de ira3: 5
 """
+
+sallust = {
+	'C.': '001',
+	'Cat.': '001',
+	'J': '002',
+	'J.': '002',
+	'Jug.': '002',
+	'H.': '003',
+	'Hist.': '003'
+}
+
 suetonius = {
 	'aug.': 'Aug',
 	'cal.': 'Cal',
@@ -160,10 +148,15 @@ suetonius = {
 	'otho': 'Otho',
 	'tib.': 'Tib',
 	'tit.': 'Tit',
-	'vesp.': 'Ves',
+	'vesp.': 'Ves',  # the one that breaks the pattern
 	'vit.': 'Vit',
 }
 
+"""
+
+GREEK
+
+"""
 
 def conditionalworkidswapper(match):
 	"""
@@ -201,6 +194,32 @@ def conditionalworkidswapper(match):
 			pass
 	return newtext
 
+
+def perseusworkmappingfixer(entrytext: str) -> str:
+	"""
+
+	some perseus references are broken; attempt to fix them
+
+	turn something like
+		Perseus:abo:tlg,0006,008:2
+	into
+		Perseus:abo:tlg,0006,041:2
+
+	:param entrytext:
+	:return:
+	"""
+
+	thumbprint = re.compile(r'<bibl n="Perseus:abo:tlg,(....),(...):.*?<title>(.*?)</title>.*?</bibl>')
+	fixentry = re.sub(thumbprint, conditionalworkidswapper, entrytext)
+
+	return fixentry
+
+
+"""
+
+ROMAN DRAMA
+
+"""
 
 def latindramacitationformatconverter(entrytext: str, dbconnection=None) -> str:
 	"""
@@ -328,24 +347,11 @@ def shinkquote(quote: str, direction: str) -> str:
 	return newquote
 
 
-def perseusworkmappingfixer(entrytext: str) -> str:
-	"""
+"""
 
-	some perseus references are broken; attempt to fix them
+MISC LATIN FIXES
 
-	turn something like
-		Perseus:abo:tlg,0006,008:2
-	into
-		Perseus:abo:tlg,0006,041:2
-
-	:param entrytext:
-	:return:
-	"""
-
-	thumbprint = re.compile(r'<bibl n="Perseus:abo:tlg,(....),(...):.*?<title>(.*?)</title>.*?</bibl>')
-	fixentry = re.sub(thumbprint, conditionalworkidswapper, entrytext)
-
-	return fixentry
+"""
 
 
 def oneofflatinworkremapping(entrytext: str) -> str:
@@ -357,7 +363,7 @@ def oneofflatinworkremapping(entrytext: str) -> str:
 	:return:
 	"""
 
-	fixers = [fixfrontinus, fixmartial, fixseneca, fixsuetonius, fixvarro]
+	fixers = [fixfrontinus, fixmartial, fixseneca, fixsallust, fixsuetonius, fixvarro]
 
 	fixedentry = entrytext
 	for f in fixers:
@@ -401,6 +407,51 @@ def fixfrontinus(entrytext: str) -> str:
 	newentry = re.sub(findaquad, r'"Perseus:abo:phi,1245,002:\1" rewritten="yes"', entrytext)
 
 	return newentry
+
+
+def fixsallust(entrytext: str) -> str:
+	"""
+
+	n="Perseus:abo:phi,0631,001:J. 62:8" --> jugurtha
+
+	:param entrytext:
+	:return:
+	"""
+
+	findsallust = re.compile(r'"Perseus:abo:phi,0631,001:(.*?)\s(.*?)"')
+
+	newentry = re.sub(findsallust, sallusthelper, entrytext)
+
+	return newentry
+
+
+def sallusthelper(regexmatch) -> str:
+	"""
+
+	work some substitution magic on the sallust match
+
+	the key work is done by the seneca dict() above
+
+	:param regexmatch:
+	:return:
+	"""
+
+	returntext = regexmatch.group(0)
+	work = regexmatch.group(1).strip()
+	pasg = regexmatch.group(2)
+
+	sallusttemplate = '"Perseus:abo:phi,0631,{wk}:{loc}" rewritten="yes"'
+
+	try:
+		knownsubstitute = sallust[work]
+	except KeyError:
+		# print('unk sallust: "{w}"'.format(w=work))
+		return returntext
+
+	newentry = sallusttemplate.format(wk=knownsubstitute, loc=pasg)
+
+	return newentry
+
 
 
 def fixseneca(entrytext: str) -> str:
@@ -496,7 +547,6 @@ def suetoniushelper(regexmatch):
 	newentry = suetoniustemplate.format(wk=knownsubstitute, loc=pasg)
 
 	return newentry
-
 
 
 def fixvarro(entrytext: str) -> str:
