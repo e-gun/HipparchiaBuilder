@@ -50,6 +50,64 @@ euripides = {
 	"Tr.": ("044", "Troiades")
 }
 
+neposstrings = {
+	'Ages.': 'Ag',
+	'Alcib.': 'Alc',
+	'Arist.': 'Ar',
+	# 'Att',
+	'Cat.': 'Ca',
+	'Cato,': 'Ca',
+	'Cato': 'Ca',
+	'Chab.': 'Cha',
+	'Chabr.': 'Cha',
+	'Chabr,': 'Cha',
+	# 'Cim',
+	# 'Con',
+	'Datam.': 'Dat',
+	'Dion.': 'Di',
+	'Dion,': 'Di',
+	'Epam.': 'Ep',
+	'Eun.': 'Eum',
+	'Eun,': 'Eum',
+	'Hamilc.': 'Ham',
+	'Hann.': 'Han',
+	'Hannib.': 'Han',
+	'Iphicr.': 'Iph',
+	'Iphic.': 'Iph',
+	'Lyt.': 'Lys',
+	'Mil.': 'Milt',
+	# 'Paus',
+	'Pelop.': 'Pel',
+	'Ph.': 'Phoc',
+	'Regg.': 'Reg',
+	# 'Them',
+	'Thras.': 'Thr',
+	'Tim.': 'Timol',
+	# 'Timoth'
+}
+
+neposnumbers = {
+	'002': 'Them',
+	'004': 'Paus',
+	'005': 'Cim',
+	'006': 'Lys',
+	'007': 'Alc',
+	'009': 'Con',
+	'011': 'Iph',
+	'013': 'Timoth',
+	'014': 'Dat',
+	'015': 'Ep',
+	'016': 'Pel',
+	'017': 'Ag',
+	'018': 'Eum',
+	'019': 'Phoc',
+	'020': 'Timol',
+	'021': 'Reg',
+	'022': 'Ham',
+	'023': 'Han',
+	'025': 'Att',
+}
+
 seneca = {
 	'ad Helv.':  ('1017', '012:12:'),
 	'ad Marc.': ('1017', '012:6:'),
@@ -363,7 +421,7 @@ def oneofflatinworkremapping(entrytext: str) -> str:
 	:return:
 	"""
 
-	fixers = [fixfrontinus, fixmartial, fixpropertius, fixseneca, fixsallust, fixsuetonius, fixvarro]
+	fixers = [fixfrontinus, fixmartial, fixnepos, fixpropertius, fixseneca, fixsallust, fixsuetonius, fixvarro]
 
 	fixedentry = entrytext
 	for f in fixers:
@@ -405,6 +463,73 @@ def fixmartial(entrytext: str) -> str:
 
 	newentry = re.sub(findmartial, r'"Perseus:abo:phi,1294,002:\1" rewritten="yes"', entrytext)
 	newentry = re.sub(findspectacles, r'"Perseus:abo:phi,1294,001:\2"', newentry)
+
+	return newentry
+
+
+def fixnepos(entrytext: str) -> str:
+	"""
+
+	like many others the work is a string and not a number
+
+		<bibl n="Perseus:abo:phi,0588,001:Arist. 1:4" default="NO" valid="yes"><author>Nep.</author> Arist. 1, 4</bibl>
+
+	but there is another problem: crazy worknumbers
+
+		<bibl n="Perseus:abo:phi,0588,021:2:2" default="NO" valid="yes"><author>Nep.</author> Reg. 2, 2</bibl>
+
+	:param entrytext:
+	:return:
+	"""
+
+	findnepos = re.compile(r'<bibl n="Perseus:abo:phi,0588,(...):(.*?)\s(.*?)"(.*?)><author>(.*?)</author>\s(.*?)\s(.*?)</bibl>')
+
+	newentry = re.sub(findnepos, neposhelper, entrytext)
+
+	return newentry
+
+
+def neposhelper(regexmatch) -> str:
+	"""
+
+	use dict to substitute
+
+	:param regexmatch:
+	:return:
+	"""
+
+	returntext = regexmatch.group(0)
+	work = regexmatch.group(1)
+	life = regexmatch.group(2)
+	pasg = regexmatch.group(3)
+	tail = regexmatch.group(4)
+	auth = regexmatch.group(5)
+	wnam = regexmatch.group(6)
+	wloc = regexmatch.group(7)
+
+	nepostemplate = '<bibl n="Perseus:abo:phi,0588,{work}:{life}:{loc}" rewritten="yes" {tail}><author>{au}</author> {wn} {ll}</bibl>'
+
+	if work == '001':
+		# the work is a string and not a number
+		try:
+			knownsubstitute = neposstrings[life]
+		except KeyError:
+			# print('unk nepos: "{w}"'.format(w=work))
+			return returntext
+	else:
+		# crazy worknumbers
+		# this also means you need to adjust the way '{life}:{loc}' looks too by adding the life name up front: 'Att:...'
+		try:
+			knownsubstitute = neposnumbers[work]
+		except KeyError:
+			# print('unk neposnumber: "{w}"\t{wn}'.format(w=work, wn=wnam))
+			return returntext
+		knownsubstitute = '{ks}:{v}'.format(ks=knownsubstitute, v=life)
+
+	newentry = nepostemplate.format(work='001', life=knownsubstitute, loc=pasg, tail=tail, au=auth, wn=wnam, ll=wloc)
+
+	# if work != '001':
+	# 	print(newentry)
 
 	return newentry
 
