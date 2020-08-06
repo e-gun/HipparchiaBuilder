@@ -421,13 +421,49 @@ def oneofflatinworkremapping(entrytext: str) -> str:
 	:return:
 	"""
 
-	fixers = [fixfrontinus, fixmartial, fixnepos, fixpropertius, fixseneca, fixsallust, fixsuetonius, fixvarro]
+	fixers = [fixfrontinus, fixmartial, fixnepos, fixpropertius, fixseneca, fixsallust,
+	          fixsuetonius, fixvarro]
 
 	fixedentry = entrytext
 	for f in fixers:
 		fixedentry = f(fixedentry)
 
 	return fixedentry
+
+
+def fixcicerochapters(entrytext: str, disabled=True) -> str:
+	"""
+
+	this sort of thing is not helpful
+
+		<bibl "Perseus:abo:phi,0474,015:chapter=19" default="NO" valid="yes"><author>Cic.</author> Sull. 19 <hi rend="ital">fin.</hi></bibl>
+		n="Perseus:abo:phi,0474,015:chapter=19"
+
+	it is only Cicero issue
+
+	the example chosen sends you to Pro Sulla CHAPTER 19 to look for 'sententia',
+	but that word appears in SECTIONS 55, 60, and 63...
+
+	the code below will rewrite to give you a valid reference, but it will send you to the wrong place...
+
+	CURRENTLY DISABLED
+
+	:param entrytext:
+	:return:
+	"""
+
+	if disabled:
+		return entrytext
+
+	findchapter = re.compile(r'"Perseus:abo:phi,0474,(...):chapter=(.*?)"')
+
+	# x = re.findall(findchapter, entrytext)
+	# if x:
+	# 	print(x)
+
+	newentry = re.sub(findchapter, r'"Perseus:abo:phi,0474,\1:\2" rewritten="yes"', entrytext)
+
+	return newentry
 
 
 def fixfrontinus(entrytext: str) -> str:
