@@ -421,7 +421,7 @@ def oneofflatinworkremapping(entrytext: str) -> str:
 	:return:
 	"""
 
-	fixers = [fixfrontinus, fixmartial, fixnepos, fixpropertius, fixseneca, fixsallust,
+	fixers = [fixciceroverrinesections, fixfrontinus, fixmartial, fixnepos, fixpropertius, fixseneca, fixsallust,
 	          fixsuetonius, fixvarro]
 
 	fixedentry = entrytext
@@ -429,6 +429,78 @@ def oneofflatinworkremapping(entrytext: str) -> str:
 		fixedentry = f(fixedentry)
 
 	return fixedentry
+
+
+def fixciceroverrinesections(entrytext: str) -> str:
+	"""
+
+	this sort of thing is not helpful
+		<bibl n="Perseus:abo:phi,0474,005:5:21:section=53" default="NO" valid="yes"><author>id.</author> Verr. 2, 5, 21, § 53</bibl>
+		"Perseus:abo:phi,0474,005:5:21:section=53"
+
+	alternate version....
+
+		<bibl n="Perseus:abo:phi,0474,005:13:37" default="NO" valid="yes"><author>Cic.</author> Verr. 1, 13, 37</bibl>
+
+	note that V 1.13.37 should be 1.1.13.37 insteat (and that is still wrong because of the '13')
+
+	:param entrytext:
+	:return:
+	"""
+
+	findsection = re.compile(r'<bibl n="Perseus:abo:phi,0474,005:(.*?:)section=(.*?)" (.*?)><author>(.*?)</author> Verr\. (.), (.*?)</bibl>')
+	altfind = re.compile(r'<bibl n="Perseus:abo:phi,0474,005:(.*?:)(.*?)" (.*?)><author>(.*?)</author> Verr\. (.), (.*?)</bibl>')
+
+	# x = re.findall(findsection, entrytext)
+	# if x:
+	# 	print(x[0])
+
+	newentry = re.sub(findsection, ciceroverrinehelper, entrytext)
+	newentry = re.sub(altfind, ciceroverrinehelper, newentry)
+
+	return newentry
+
+
+def ciceroverrinehelper(regexmatch) -> str:
+	"""
+
+	need to assign the right book to the citation
+
+	the also contains the 'chapter' which we do not use
+
+	in:
+		 <bibl n="Perseus:abo:phi,0474,005:5:21:section=53" default="NO" valid="yes"><author>id.</author> Verr. 2, 5, 21, § 53</bibl>
+
+	you get
+		>>> re.findall(findsection, a)
+		[('5:21:', '53', 'default="NO" valid="yes"', 'id.', '2', '5, 21, § 53')]
+
+	:param regexmatch:
+	:return:
+	"""
+
+	returntext = regexmatch.group(0)
+	passage = regexmatch.group(1)
+	section = regexmatch.group(2)
+	tail = regexmatch.group(3)
+	auth = regexmatch.group(4)
+	vbook = regexmatch.group(5)
+	vcit = regexmatch.group(6)
+	bb = vbook
+
+	if vbook == '1':
+		vbook = '1:1'
+		bb = '1, 1'
+
+	if len(passage.split(':')) > 1:
+		passage = passage.split(':')[0]
+		passage = passage + ':'
+
+	verrinetemplate = '<bibl n="Perseus:abo:phi,0474,005:{b}:{p}{s}" {t} rewritten="yes"><author>{a}</author> Verr. {bb}, {c}</bibl>'
+
+	newentry = verrinetemplate.format(p=passage, b=vbook, s=section, t=tail, a=auth, bb=bb, c=vcit)
+
+	return newentry
 
 
 def fixcicerochapters(entrytext: str, disabled=True) -> str:
@@ -439,7 +511,7 @@ def fixcicerochapters(entrytext: str, disabled=True) -> str:
 		<bibl "Perseus:abo:phi,0474,015:chapter=19" default="NO" valid="yes"><author>Cic.</author> Sull. 19 <hi rend="ital">fin.</hi></bibl>
 		n="Perseus:abo:phi,0474,015:chapter=19"
 
-	it is only Cicero issue
+	"chapter=NN" is only Cicero issue
 
 	the example chosen sends you to Pro Sulla CHAPTER 19 to look for 'sententia',
 	but that word appears in SECTIONS 55, 60, and 63...
@@ -447,6 +519,8 @@ def fixcicerochapters(entrytext: str, disabled=True) -> str:
 	the code below will rewrite to give you a valid reference, but it will send you to the wrong place...
 
 	CURRENTLY DISABLED
+
+	RETAIN THE NOTES...
 
 	:param entrytext:
 	:return:
