@@ -51,39 +51,12 @@ euripides = {
 }
 
 """
--------------+-------------------------------
-lt1017w001  | Hercules Furens
-lt1017w002  | Troades
-lt1017w003  | Phoenissae
-lt1017w004  | Medea
-lt1017w005  | Phaedra
-lt1017w006  | Oedipus
-lt1017w007  | Agamemnon
-lt1017w008  | Thyestes
-lt1017w009  | Hercules Oetaeus
-lt1017w010  | Octavia [sp.]
-lt1017w011  | Apocolocyntosis
-lt1017w012  | Dialogi
-lt1017w013  | De Beneficiis
-lt1017w014  | De Clementia
-lt1017w015  | Epistulae Morales ad Lucilium
-lt1017w016  | Naturales Quaestiones
-lt1017w017  | e Cleanthe versus
-lt1017w018  | De Vita Patris
+lingering issue:
 
-	de prov: 1
-	de cons: 2
+lt1017w012  | Dialogi
 	de ira1: 3
 	de ira2: 4
 	de ira3: 5
-	ad marc: 6
-	vit bea: 7
-	otio: 8
-	tranq: 9
-	brev: 10
-	polyb: 11
-	helv: 12
-	
 """
 
 seneca = {
@@ -152,6 +125,43 @@ seneca = {
 	'Troad.': ('1017', '002'),
 	'Vit. B.': ('1017', '012:7:'),
 	'Vit. Beat.': ('1017', '012:7:'),
+}
+
+"""
+Suetonius, Gaius Tranquillus [lt1348]
+
+hipparchiaDB=# select distinct level_03_value from lt1348 where wkuniversalid='lt1348w001';
+level_03_value
+----------------
+Dom
+Vit
+Otho
+Cal
+Tit
+Tib
+Gal
+Aug
+t
+Ves
+Nero
+Cl
+Jul
+(13 rows)
+
+"""
+suetonius = {
+	'aug.': 'Aug',
+	'cal.': 'Cal',
+	'cl.': 'Cl',
+	'dom.': 'Dom',
+	'gal.': 'Gal',
+	'jul.': 'Jul',
+	'nero': 'Nero',
+	'otho': 'Otho',
+	'tib.': 'Tib',
+	'tit.': 'Tit',
+	'vesp.': 'Ves',
+	'vit.': 'Vit',
 }
 
 
@@ -347,7 +357,7 @@ def oneofflatinworkremapping(entrytext: str) -> str:
 	:return:
 	"""
 
-	fixers = [fixfrontinus, fixmartial, fixseneca, fixvarro]
+	fixers = [fixfrontinus, fixmartial, fixseneca, fixsuetonius, fixvarro]
 
 	fixedentry = entrytext
 	for f in fixers:
@@ -444,6 +454,49 @@ def senecahelper(regexmatch) -> str:
 	newentry = senecatemplate.format(au=knownsubstitute[0], wk=knownsubstitute[1], loc=pasg)
 
 	return newentry
+
+
+def fixsuetonius(entrytext: str) -> str:
+	"""
+
+	"Perseus:abo:phi,1348,001:life=aug.:82" --> "Perseus:abo:phi,1348,001:Aug.:82"
+
+	:param entrytext:
+	:return:
+	"""
+
+	findlife = re.compile(r'"Perseus:abo:phi,1348,001:life=(.*?)(:.*?)"')
+
+	newentry = re.sub(findlife, suetoniushelper, entrytext)
+
+	return newentry
+
+
+def suetoniushelper(regexmatch):
+	"""
+
+	substitution magic via the suetonius dict()
+
+	:param regexmatch:
+	:return:
+	"""
+
+	returntext = regexmatch.group(0)
+	work = regexmatch.group(1).strip()
+	pasg = regexmatch.group(2)
+
+	suetoniustemplate = '"Perseus:abo:phi,1348,001:{wk}{loc}" rewritten="yes"'
+
+	try:
+		knownsubstitute = suetonius[work]
+	except KeyError:
+		# print('unk suetonius: "{w}"'.format(w=work))
+		return returntext
+
+	newentry = suetoniustemplate.format(wk=knownsubstitute, loc=pasg)
+
+	return newentry
+
 
 
 def fixvarro(entrytext: str) -> str:
