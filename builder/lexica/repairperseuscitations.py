@@ -421,8 +421,8 @@ def oneofflatinworkremapping(entrytext: str) -> str:
 	:return:
 	"""
 
-	fixers = [fixciceroverrinesections, fixfrontinus, fixmartial, fixnepos, fixpropertius, fixseneca, fixsallust,
-	          fixsuetonius, fixvarro]
+	fixers = [fixciceroverrinesections, fixciceromiscsections, fixfrontinus, fixmartial, fixnepos, fixpropertius,
+	          fixseneca, fixsallust, fixsuetonius, fixvarro]
 
 	fixedentry = entrytext
 	for f in fixers:
@@ -472,7 +472,7 @@ def ciceroverrinehelper(regexmatch) -> str:
 		 <bibl n="Perseus:abo:phi,0474,005:5:21:section=53" default="NO" valid="yes"><author>id.</author> Verr. 2, 5, 21, § 53</bibl>
 
 	you get
-		>>> re.findall(findsection, a)
+		re.findall(findsection, a)
 		[('5:21:', '53', 'default="NO" valid="yes"', 'id.', '2', '5, 21, § 53')]
 
 	:param regexmatch:
@@ -499,6 +499,59 @@ def ciceroverrinehelper(regexmatch) -> str:
 	verrinetemplate = '<bibl n="Perseus:abo:phi,0474,005:{b}:{p}{s}" {t} rewritten="yes"><author>{a}</author> Verr. {bb}, {c}</bibl>'
 
 	newentry = verrinetemplate.format(p=passage, b=vbook, s=section, t=tail, a=auth, bb=bb, c=vcit)
+
+	return newentry
+
+
+def fixciceromiscsections(entrytext: str) -> str:
+	"""
+
+	RUN THE VERRINES FIRST (because it needs 'section=')
+
+	<quote lang="la">omnes de tuā virtute commemorant,</quote> <bibl n="Perseus:abo:phi,0474,058:1:1:13:section=37" default="NO" valid="yes"><author>Cic.</author> Q. Fr. 1, 1, 13, § 37</bibl>
+
+	this should just be 1.1.37
+
+	the problem is confined almost exclusively to lt0474w058
+
+	a couple of items will remain in lt0474w005 (Verr.) [these got broken and will remain broken?]
+
+	a couple in lt0474w047 (Parad. Stoic.)
+
+	:param entrytext:
+	:return:
+	"""
+
+	sectionfinder = re.compile(r'"Perseus:abo:phi,0474,(...):([^"]*?):section=(.*?)"')
+
+	newentry = re.sub(sectionfinder, ciceromiscsectionhelper, entrytext)
+
+	return newentry
+
+
+def ciceromiscsectionhelper(regexmatch) -> str:
+	"""
+
+	do the heavy lifting for fixciceromiscsections()
+
+	:param regexmatch:
+	:return:
+	"""
+
+	returntext = regexmatch.group(0)
+	thework = regexmatch.group(1)
+	passage = regexmatch.group(2)
+	section = regexmatch.group(3)
+
+	ps = passage.split(':')
+	if len(ps) > 1:
+		ps = ps[:-1]
+		passage = ':'.join(ps)
+
+	cicsectiontemplate = '"Perseus:abo:phi,0474,{w}:{p}:{s}"'
+
+	newentry = cicsectiontemplate.format(w=thework, p=passage, s=section)
+	#print('{a}\t{b}\t{c}'.format(a=newentry, b=passage, c=returntext))
 
 	return newentry
 
