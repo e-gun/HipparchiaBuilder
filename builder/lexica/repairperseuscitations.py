@@ -893,5 +893,3 @@ def fixvarro(entrytext: str) -> str:
 	newentry = re.sub(findmenn, r'"Perseus:abo:phi,0684,011:\2" rewritten="yes"', newentry)
 
 	return newentry
-
-
