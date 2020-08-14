@@ -13,6 +13,7 @@ from psycopg2.extras import execute_values as insertlistofvaluetuples
 
 from builder.dbinteraction.connection import setconnection
 from builder.lexica.repairperseuscitations import perseusworkmappingfixer
+from builder.lexica.fixtranslationtagging import translationtagrepairs
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
 from builder.parsers.htmltounicode import htmltounicode
 from builder.parsers.lexica import greekwithoutvowellengths, greekwithvowellengths, \
@@ -51,6 +52,9 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 	bodyfinder = re.compile(r'(<div2(.*?)>)(.*?)(</div2>)')
 	# <head extent="full" lang="greek" opt="n" orth_orig="θῠγάτηρ">θυγάτηρ</head>
 	headfinder = re.compile(r'<head extent="(.*?)" lang="(.*?)" opt="(.*?)" orth_orig="(.*?)">(.*?)</head>')
+	# the next will include "rewritten phrase" matches
+	# transfinder = re.compile(r'<trans.*?>(.*?)</trans>')
+	# this one will not include "rewritten phrase" matches
 	transfinder = re.compile(r'<trans>(.*?)</trans>')
 	parsedinfofinder = re.compile(r'orig_id="(.*?)" key="(.*?)" type="(.*?)" opt="(.*?)"')
 
@@ -155,6 +159,14 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 			# retag translations
 			body = re.sub(r'<i>(.*?)</i>', r'<trans>\1</trans>', body)
+
+			try:
+				repair = config['lexica']['repairtranslationtags']
+			except KeyError:
+				repair = 'y'
+
+			if repair:
+				body = translationtagrepairs(body)
 
 			try:
 				repair = config['lexica']['repairbadperseusrefs']

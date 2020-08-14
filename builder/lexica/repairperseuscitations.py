@@ -346,7 +346,7 @@ def latindramacitationformatconverter(entrytext: str, dbconnection=None) -> str:
 
 					if lineval:
 						newcitation = re.sub(locusfinder, r'</author> \1 {lv}</bibl></cit>'.format(lv=lineval), c)
-						newcitation = re.sub(citationswap, r'\1ZZZ" rewritten="yes\3', newcitation)
+						newcitation = re.sub(citationswap, r'\1ZZZ" class="rewritten\3', newcitation)
 						newcitation = re.sub('ZZZ', lineval, newcitation)
 						c = re.escape(c)
 						try:
@@ -496,7 +496,7 @@ def ciceroverrinehelper(regexmatch) -> str:
 		passage = passage.split(':')[0]
 		passage = passage + ':'
 
-	verrinetemplate = '<bibl n="Perseus:abo:phi,0474,005:{b}:{p}{s}" {t} rewritten="yes"><author>{a}</author> Verr. {bb}, {c}</bibl>'
+	verrinetemplate = '<bibl n="Perseus:abo:phi,0474,005:{b}:{p}{s}" {t} class="rewritten"><author>{a}</author> Verr. {bb}, {c}</bibl>'
 
 	newentry = verrinetemplate.format(p=passage, b=vbook, s=section, t=tail, a=auth, bb=bb, c=vcit)
 
@@ -588,7 +588,7 @@ def fixcicerochapters(entrytext: str, disabled=True) -> str:
 	# if x:
 	# 	print(x)
 
-	newentry = re.sub(findchapter, r'"Perseus:abo:phi,0474,\1:\2" rewritten="yes"', entrytext)
+	newentry = re.sub(findchapter, r'"Perseus:abo:phi,0474,\1:\2" class="rewritten"', entrytext)
 
 	return newentry
 
@@ -607,7 +607,7 @@ def fixfrontinus(entrytext: str) -> str:
 
 	findaquad = re.compile(r'"Perseus:abo:phi,1245,001:Aquaed\.(.*?)"')
 
-	newentry = re.sub(findaquad, r'"Perseus:abo:phi,1245,002:\1" rewritten="yes"', entrytext)
+	newentry = re.sub(findaquad, r'"Perseus:abo:phi,1245,002:\1" class="rewritten"', entrytext)
 
 	return newentry
 
@@ -624,7 +624,7 @@ def fixmartial(entrytext: str) -> str:
 	findmartial = re.compile(r'"Perseus:abo:phi,1294,001:(.*?)"')
 	findspectacles = re.compile(r'"Perseus:abo:phi,1294,002:(Spect. )(.*?)"')
 
-	newentry = re.sub(findmartial, r'"Perseus:abo:phi,1294,002:\1" rewritten="yes"', entrytext)
+	newentry = re.sub(findmartial, r'"Perseus:abo:phi,1294,002:\1" class="rewritten"', entrytext)
 	newentry = re.sub(findspectacles, r'"Perseus:abo:phi,1294,001:\2"', newentry)
 
 	return newentry
@@ -670,7 +670,7 @@ def neposhelper(regexmatch) -> str:
 	wnam = regexmatch.group(6)
 	wloc = regexmatch.group(7)
 
-	nepostemplate = '<bibl n="Perseus:abo:phi,0588,{work}:{life}:{loc}" rewritten="yes" {tail}><author>{au}</author> {wn} {ll}</bibl>'
+	nepostemplate = '<bibl n="Perseus:abo:phi,0588,{work}:{life}:{loc}" class="rewritten" {tail}><author>{au}</author> {wn} {ll}</bibl>'
 
 	if work == '001':
 		# the work is a string and not a number
@@ -710,7 +710,7 @@ def fixpropertius(entrytext: str) -> str:
 
 	findprop = re.compile(r'("Perseus:abo:phi),1224,(.*?" default="NO")(><author>Prop\.</author>)')
 
-	newentry = re.sub(findprop, r'\1,0620,\2 rewritten="yes"\3', entrytext)
+	newentry = re.sub(findprop, r'\1,0620,\2 class="rewritten"\3', entrytext)
 
 	return newentry
 
@@ -746,7 +746,7 @@ def sallusthelper(regexmatch) -> str:
 	work = regexmatch.group(1).strip()
 	pasg = regexmatch.group(2)
 
-	sallusttemplate = '"Perseus:abo:phi,0631,{wk}:{loc}" rewritten="yes"'
+	sallusttemplate = '"Perseus:abo:phi,0631,{wk}:{loc}" class="rewritten"'
 
 	try:
 		knownsubstitute = sallust[work]
@@ -800,7 +800,7 @@ def senecahelper(regexmatch) -> str:
 	work = regexmatch.group(1).strip()
 	pasg = regexmatch.group(2)
 
-	senecatemplate = '"Perseus:abo:phi,{au},{wk}{loc}" rewritten="yes"'
+	senecatemplate = '"Perseus:abo:phi,{au},{wk}{loc}" class="rewritten"'
 
 	try:
 		knownsubstitute = seneca[work]
@@ -842,7 +842,7 @@ def suetoniushelper(regexmatch):
 	work = regexmatch.group(1).strip()
 	pasg = regexmatch.group(2)
 
-	suetoniustemplate = '"Perseus:abo:phi,1348,001:{wk}{loc}" rewritten="yes"'
+	suetoniustemplate = '"Perseus:abo:phi,1348,001:{wk}{loc}" class="rewritten"'
 
 	try:
 		knownsubstitute = suetonius[work]
@@ -884,12 +884,12 @@ def fixvarro(entrytext: str) -> str:
 	:return:
 	"""
 
-	finddll = re.compile('"(Perseus:abo:phi,0684,001:)(L. L. )(.*?):(section=)(.*?)"')
-	findrr = re.compile('"(Perseus:abo:phi,0684,)(001):(R. R. )(.*?)"')
-	findmenn = re.compile('"(Perseus:abo:phi,0684,001:Sat. Menip\. )(.*?)"')
+	finddll = re.compile(r'"(Perseus:abo:phi,0684,001:)(L. L. )(.*?):(section=)(.*?)"')
+	findrr = re.compile(r'"(Perseus:abo:phi,0684,)(001):(R. R. )(.*?)"')
+	findmenn = re.compile(r'"(Perseus:abo:phi,0684,001:Sat. Menip\. )(.*?)"')
 
-	newentry = re.sub(finddll, r'"\1\3:\5" rewritten="yes"', entrytext)
-	newentry = re.sub(findrr, r'"Perseus:abo:phi,0684,002:\4" rewritten="yes"', newentry)
-	newentry = re.sub(findmenn, r'"Perseus:abo:phi,0684,011:\2" rewritten="yes"', newentry)
+	newentry = re.sub(finddll, r'"\1\3:\5" class="rewritten"', entrytext)
+	newentry = re.sub(findrr, r'"Perseus:abo:phi,0684,002:\4" class="rewritten"', newentry)
+	newentry = re.sub(findmenn, r'"Perseus:abo:phi,0684,011:\2" class="rewritten"', newentry)
 
 	return newentry

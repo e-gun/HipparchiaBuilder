@@ -59,7 +59,6 @@ def newmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 	bundlesize = 1000
 
-	memory = 0
 	while len(entries) > 0:
 		idval = None
 		# speed up by inserting bundles instead of hundreds of thousands of individual items
@@ -108,7 +107,7 @@ def newmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 			metricalentry = re.sub(r' \((\d)\)', superscripterone, metricalentry)
 			# kill off the tail if you still have one: fĭber" n="1
 			metricalentry = re.sub(r'(.*?)"\s.*?$', r'\1', metricalentry)
-			entryname = re.sub('(_|\^)', '', metricalentry)
+			entryname = re.sub('(_|\^)', str(), metricalentry)
 			metricalentry = latinvowellengths(metricalentry)
 
 			entryname = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', entryname)
@@ -117,18 +116,18 @@ def newmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 			# 'n1000' --> 1000
 			try:
-				idval = int(re.sub(r'^n', '', idstring))
+				idval = int(re.sub(r'^n', str(), idstring))
 			except ValueError:
 				# you saw something like 'n1234a' instead of 'n1234'
-				idstring = (re.sub(r'^n', '', idstring))
+				idstring = (re.sub(r'^n', str(), idstring))
 				abcval = ord(idstring[-1]) - 96
 				idstring = int(idstring[:-1])
 				idval = idstring + (.1 * abcval)
 				# print('newid', entryname, idstring)
 
 			# parts of speech
-			cleanbody = re.sub(etymfinder, '', body)
-			cleanbody = re.sub(badprepfinder, '', cleanbody)
+			cleanbody = re.sub(etymfinder, str(), body)
+			cleanbody = re.sub(badprepfinder, str(), cleanbody)
 			pos = list()
 			pos += list(set(re.findall(posfinder, cleanbody)))
 			if re.findall(particlefinder, cleanbody):
@@ -229,7 +228,7 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 				metricalentry = re.sub(r' \((\d)\)', superscripterone, metricalentry)
 				# kill off the tail if you still have one: fĭber" n="1
 				metricalentry = re.sub(r'(.*?)"\s.*?$', r'\1', metricalentry)
-				entryname = re.sub('(_|\^)', '', metricalentry)
+				entryname = re.sub('(_|\^)', str(), metricalentry)
 				metricalentry = latinvowellengths(metricalentry)
 
 				key = re.sub(r'(.*?)(\d)"(.*?\d)', r'\1 (\2)', key)
@@ -237,7 +236,7 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 				key = latinvowellengths(key)
 
 				# 'n1000' --> 1000
-				idnum = int(re.sub(r'^n', '', idnum))
+				idnum = int(re.sub(r'^n', str(), idnum))
 
 				# parts of speech
 				cleanbody = re.sub(etymfinder, str(), body)
