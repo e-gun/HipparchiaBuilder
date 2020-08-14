@@ -141,7 +141,7 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 	ptemplate.append('<transl>{t}</transl>')
 	ptemplate.append('<analysis>{a}</analysis>')
 	ptemplate.append('</possibility_{p}>\n')
-	ptemplate = ''.join(ptemplate)
+	ptemplate = str().join(ptemplate)
 
 	bundlesize = 1000
 
@@ -211,3 +211,21 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
 
 	return
+
+
+def mpanalysisrewrite(grammardb, entries, islatin, dbconnection):
+	"""
+
+	the stock translations included with the observed forms can be defective; a rewritten dictionary entry can fix this
+
+	1. grab all of the xref_number values from greek_lemmata [DONE & it sent you here]
+	2. then gobble up all of the greek_morphology entries that have this xref
+	3. then check each '<transl></transl>' inside of all of the possible_dictionary_forms for these entries
+
+	:param grammardb:
+	:param entries:
+	:param islatin:
+	:param dbconnection:
+	:return:
+	"""
+

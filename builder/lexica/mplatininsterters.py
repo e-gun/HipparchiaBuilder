@@ -12,6 +12,7 @@ from builder.parsers.swappers import superscripterone
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
+
 def newmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 	"""
 
@@ -40,7 +41,7 @@ def newmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 	dbconnection.setautocommit()
 
 	bodyfinder = re.compile(r'(<entryFree(.*?)>)(.*?)(</entryFree>)')
-	defectivebody = re.compile(r'(<entryFree(.*?)>)(.*?)')
+	defectivebody = re.compile(r'(<entryFree(.*?)>)(.*?)$')
 	greekfinder = re.compile(r'(<foreign lang="greek">)(.*?)(</foreign>)')
 
 	etymfinder = re.compile(r'<etym.*?</etym>')

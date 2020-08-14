@@ -229,6 +229,50 @@ def analysisloader(language: str):
 	return
 
 
+def fixmorphologytranslations(language: str):
+	"""
+
+	the stock translations included with the observed forms can be defective; a rewritten dictionary entry can fix this
+
+	hipparchiaDB=# select * from greek_morphology where observed_form='πάϲχω';
+	 observed_form |  xrefs   | prefixrefs |                                                                  possible_dictionary_forms
+	---------------+----------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+	 πάϲχω         | 80650925 |            | <possibility_1>πάϲχω<xref_value>80650925</xref_value><xref_kind>9</xref_kind><transl>have</transl><analysis>pres subj act 1st sg</analysis></possibility_1>+
+	               |          |            | <possibility_2>πάϲχω<xref_value>80650925</xref_value><xref_kind>9</xref_kind><transl>have</transl><analysis>pres ind act 1st sg</analysis></possibility_2> +
+	               |          |            |
+
+
+	hipparchiaDB=# select id_number from greek_dictionary where entry_name='πάϲχω';
+	 id_number
+	-----------
+	     79983
+
+
+	hipparchiaDB=# select dictionary_entry,xref_number from greek_lemmata where dictionary_entry='πάϲχω';
+	 dictionary_entry | xref_number
+	------------------+-------------
+	 πάϲχω            |    80650925
+
+
+	 hipparchiaDB=# select translations from greek_dictionary where entry_name='πάϲχω';
+	                                                                                                                                                                                                         translations
+	 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	  have something done to one ‖ suffer ‖ be ‖ passion ‖ opp. do ‖ to be subject to ‖ he suffer ‖ evil ‖ to be passive ‖ am I to do? ‖ changes ‖ can I help it? ‖ have experience of ‖ were to happen ‖ die ‖ come to be in a state ‖ patient, PMag. Par. ‖ to be ill, suffer ‖ feeling, to be affected ‖ to have ‖ to be ‖ suffer punishment, pay the penalty ‖ ill ‖ thou ‖ state of mind ‖ case ‖ happen ‖ come to be) in a
+	 (1 row)
+
+
+	1. grab all of the xref_number values from greek_lemmata
+	2. then gobble up all of the greek_morphology entries that have this xref
+	3. then check each '<transl></transl>' inside of all of the possible_dictionary_forms for these entries
+
+
+	:param language:
+	:return:
+	"""
+
+	return
+
+
 def resettable(tablename: str, tablestructurelist: list, indexcolumn: str):
 	"""
 

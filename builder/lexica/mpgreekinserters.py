@@ -177,8 +177,14 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 				body = perseusworkmappingfixer(body)
 
 			translationlist = re.findall(transfinder, body)
-			translationlist = [re.sub(r',$', '', t.strip()) for t in translationlist]
-			translations = ' ‖ '.join(set(translationlist))
+			translationlist = [re.sub(r',$', str(), t.strip()) for t in translationlist]
+			# interested in keeping the first two so that we can privilege the primary senses
+			# the fixed translations can be fed to the morphology summary translation
+			# if you just clean via set() you lose the order...
+			firsttwo = translationlist[:2]
+			alltrans = set(translationlist)
+			translationlist = firsttwo + [t for t in alltrans if t not in firsttwo]
+			translations = ' ‖ '.join(translationlist)
 			stripped = cleanaccentsandvj(entryname)
 
 			# part of speech stuff
