@@ -52,6 +52,15 @@ def translationtagrepairs(lexicalentry: str) -> str:
 
 	newlex = re.sub(foreigntransbibl, transphrasehelper, lexicalentry)
 
+	# might have grabbed and tagged some greek, etc.
+	# <trans class="rewritten phrase">humanity</trans>, <trans class="rewritten phrase"><cit><quote lang="greek">ἀπώλεϲαϲ τὸν ἄ.</trans>, <trans class="rewritten phrase">οὐκ ἐπλήρωϲαϲ τὴν ἐπαγγελίαν</quote></trans>
+	overzealous = re.compile(r'<trans class="rewritten phrase">(<cit><quote.*?</quote>)</trans>')
+	newlex = re.sub(overzealous, r'\1', newlex)
+
+	#  <cit><quote lang="greek">ἀπώλεϲαϲ τὸν ἄ.</trans>, <trans class="rewritten phrase">οὐκ ἐπλήρωϲαϲ τὴν ἐπαγγελίαν</quote>
+	overzealous = re.compile(r'(<cit><quote)(.*?)(</quote>)')
+	newlex = re.sub(overzealous, overzealoushelper, newlex)
+
 	return newlex
 
 
@@ -77,10 +86,29 @@ def transphrasehelper(regexmatch) -> str:
 	transgroup = ['<trans class="rewritten phrase">{t}</trans>'.format(t=t.strip()) for t in transgroup if t]
 	transgroup = ', '.join(transgroup)
 	transgroup = re.sub(r'<trans class="rewritten phrase"></trans>', str(), transgroup)
-	# might have grabbed some greek, etc.
-	# <trans class="rewritten phrase">humanity</trans>, <trans class="rewritten phrase"><cit><quote lang="greek">ἀπώλεϲαϲ τὸν ἄ.</trans>, <trans class="rewritten phrase">οὐκ ἐπλήρωϲαϲ τὴν ἐπαγγελίαν</quote></trans>
 
 	newtext = leading + transgroup + trailing
+
+	return newtext
+
+
+def overzealoushelper(regexmatch) -> str:
+	"""
+
+	strip out <trans> tags from a block
+
+	:param regexmatch:
+	:return:
+	"""
+
+	leading = regexmatch.group(1)
+	trailing = regexmatch.group(3)
+	stripgroup = regexmatch.group(2)
+
+	stripgroup = re.sub(r'<trans class="rewritten phrase">', str(), stripgroup)
+	stripgroup = re.sub(r'</trans>', str(), stripgroup)
+
+	newtext = leading + stripgroup + trailing
 
 	return newtext
 
@@ -93,3 +121,9 @@ def transphrasehelper(regexmatch) -> str:
 # tropos = re.sub(foreigntransbibl, transphrasehelper, tropos)
 # print(tropos)
 #
+
+# x = """
+# <trans class="rewritten phrase"><cit><quote lang="greek">ἀπώλεϲαϲ τὸν ἄ., οὐκ ἐπλήρωϲαϲ τὴν ἐπαγγελίαν</quote></trans><bibl n="Perseus:abo:tlg,0074,-02:2:9:3" default="NO">
+# """
+#
+# print(translationtagrepairs(x))
