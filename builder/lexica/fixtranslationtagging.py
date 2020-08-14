@@ -12,7 +12,7 @@ import re
 def translationtagrepairs(lexicalentry: str) -> str:
 	"""
 
-	you can get 'as' or 'if' or whatever as a transltion for a word because the tags can be oddly placed
+	you can get 'as' or 'if' or whatever as a translation for a word because the tags can be oddly placed
 
 	exx of botched translation tags
 
@@ -43,14 +43,21 @@ def translationtagrepairs(lexicalentry: str) -> str:
 	('<foreign lang="greek">ἑνί γέ τῳ τ.</foreign> ', '<trans>in</trans> one <trans>way</trans> or other, ', '<bibl')
 	('<foreign lang="greek">παντὶ τ.</foreign> ', '<trans>by</trans> all <trans>means,</trans> ', '<bibl')
 
+
+	another problem comes at the head of an entry:
+
+	<sense id="n79983.0" n="A" level="1" opt="n"><trans>have</trans> something <trans>done to one, suffer</trans>, opp. <trans>do</trans>, <cit><quote lang="greek">ὅϲϲʼ ἔρξαν τʼ ἔπαθόν τε</quote>
+
 	:param lexicalentry:
 	:return:
 	"""
 
 	# opening/closing a tag is a blocker: [^<]
 	foreigntransbibl = re.compile(r'(<foreign[^<]*?</foreign>\s)([^<]*?<trans>.*?)(<bibl)')
+	sensetranscit = re.compile(r'(<sense.*?>)(<trans>.*?)(<cit)')
 
 	newlex = re.sub(foreigntransbibl, transphrasehelper, lexicalentry)
+	newlex = re.sub(sensetranscit, untaggedtransphrasehelper, newlex)
 
 	# might have grabbed and tagged some greek, etc.
 	# <trans class="rewritten phrase">humanity</trans>, <trans class="rewritten phrase"><cit><quote lang="greek">ἀπώλεϲαϲ τὸν ἄ.</trans>, <trans class="rewritten phrase">οὐκ ἐπλήρωϲαϲ τὴν ἐπαγγελίαν</quote></trans>
@@ -64,7 +71,11 @@ def translationtagrepairs(lexicalentry: str) -> str:
 	return newlex
 
 
-def transphrasehelper(regexmatch) -> str:
+def untaggedtransphrasehelper(regexmatch):
+	return transphrasehelper(regexmatch, classing=False)
+
+
+def transphrasehelper(regexmatch, classing=True) -> str:
 	"""
 
 	turn something like
@@ -76,6 +87,11 @@ def transphrasehelper(regexmatch) -> str:
 	:return:
 	"""
 
+	if classing:
+		c = ' class="rewritten phrase"'
+	else:
+		c = str()
+
 	leading = regexmatch.group(1)
 	trailing = regexmatch.group(3)
 	transgroup = regexmatch.group(2)
@@ -83,9 +99,9 @@ def transphrasehelper(regexmatch) -> str:
 	transgroup = re.sub(r'<(|/)trans>', str(), transgroup)
 	transgroup = transgroup.split(',')
 
-	transgroup = ['<trans class="rewritten phrase">{t}</trans>'.format(t=t.strip()) for t in transgroup if t]
+	transgroup = ['<trans{c}>{t}</trans>'.format(c=c, t=t.strip()) for t in transgroup if t]
 	transgroup = ', '.join(transgroup)
-	transgroup = re.sub(r'<trans class="rewritten phrase"></trans>', str(), transgroup)
+	transgroup = re.sub(r'<trans{c}></trans>'.format(c=c), str(), transgroup)
 
 	newtext = leading + transgroup + trailing
 
