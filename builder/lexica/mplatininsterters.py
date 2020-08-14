@@ -173,7 +173,7 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 	dbconnection.setautocommit()
 
 	bodyfinder = re.compile(r'(<entryFree(.*?)>)(.*?)(</entryFree>)')
-	defectivebody = re.compile(r'(<entryFree(.*?)>)(.*?)')
+	defectivebody = re.compile(r'(<entryFree(.*?)>)(.*?)$')
 	greekfinder = re.compile(r'(<foreign lang="greek">)(.*?)(</foreign>)')
 
 	etymfinder = re.compile(r'<etym.*?</etym>')
@@ -209,12 +209,13 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 				try:
 					body = segments.group(3)
 				except AttributeError:
+					# AttributeError: 'NoneType' object has no attribute 'group'
 					segments = re.search(defectivebody, entry)
 					try:
 						body = segments.group(3)
 					except AttributeError:
 						print('died at', entry)
-						body = ''
+						body = str()
 				info = segments.group(2)
 				parsedinfo = re.search('id="(.*?)" type="(.*?)" key="(.*?)" opt="(.*?)"', info)
 				idnum = parsedinfo.group(1)
