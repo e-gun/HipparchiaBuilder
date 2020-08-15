@@ -12,7 +12,7 @@ from multiprocessing import Manager
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.genericworkerobject import GenericInserterObject
 from builder.lexica.mpgrammarworkers import mpanalysisinsert, mplemmatainsert
-from builder.lexica.fixmorphologydefs import mpanalysisrewrite
+from builder.lexica.fixmorphologydefs import analysisrewriter
 from builder.lexica.mpgreekinserters import mpgreekdictionaryinsert, oldxmlmpgreekdictionaryinsert
 from builder.lexica.mplatininsterters import newmplatindictionaryinsert, oldmplatindictionaryinsert
 
@@ -271,10 +271,9 @@ def fixmorphologytranslations(language: str):
 	(3 rows)
 
 	1. grab all of the xref_number values from greek_lemmata
-	2. associate the first two translations from the dictionary with this headword
-	3. then gobble up all of the greek_morphology entries that have this xref
-	4. then check each '<transl></transl>' inside of all of the possible_dictionary_forms for these entries
-
+	2. associate the first two translations from the dictionary with a xref_number
+	3. then gobble up all of the greek_morphology entries [via analysisrewriter()]
+	4. then check each '<transl></transl>' inside of all of the possible_dictionary_forms for these entries against the xref_number [via analysisrewriter()]
 
 	:param language:
 	:return:
@@ -300,29 +299,18 @@ def fixmorphologytranslations(language: str):
 	translations = dbcursor.fetchall()
 	translations = {t[0]: t[1].split(' ‖ ')[:1] for t in translations}
 
-	headwords = [(h, headwords[h], translations[h]) for h in headwords if h in translations]
-	headwords = [(h[0], h[1], ', '.join(h[2])) for h in headwords]
-
 	dbconnection.connectioncleanup()
 
-	print('fixing definitions in {lg}_morphology table. cross-referencing against {n} headwords'.format(lg=language, n=len(headwords)))
+	# xrefdict = { xref_number: translation}
+	xrefdict = {str(headwords[h]): translations[h][0] for h in headwords if h in translations}
 
-	# chunksize = 10000
-	chunksize = 500  # debug
-	formbundles = [headwords[i:i + chunksize] for i in range(0, len(headwords), chunksize)]
-	bundlecount = 0
+	# import itertools
+	# out = dict(itertools.islice(xrefdict.items(), 5))
+	# print(out)
 
-	for bundle in formbundles:
-		bundlecount += 1
-		manager = Manager()
-		items = manager.list(bundle)
+	print('fixing definitions in {lg}_morphology table. cross-referencing against {n} headwords'.format(lg=language, n=len(xrefdict)))
 
-		workerobject = GenericInserterObject(mpanalysisrewrite, argumentlist=[language, items])
-		workerobject.dothework()
-
-		if bundlecount * chunksize < len(headwords):
-			# this check prevents saying '950000 forms inserted' at the end when there are only '911871 items to load'
-			print('\t', str(bundlecount * chunksize), 'forms checked')
+	analysisrewriter(language, xrefdict, dbconnection)
 
 	return
 

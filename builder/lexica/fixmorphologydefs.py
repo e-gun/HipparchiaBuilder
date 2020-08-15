@@ -31,48 +31,33 @@ CONTEXT:  while updating tuple (43409,4) in relation "greek_morphology"
 """
 
 
-def mpanalysisrewrite(language: str, headwords, dbconnection):
+def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
 	"""
 
 	the stock translations included with the observed forms can be defective; a rewritten dictionary entry can fix this
 
 	1. grab all of the xref_number values from greek_lemmata [DONE & it sent you here]
-	2. associate the first two translations from the dictionary with this headword
-	3. then gobble up all of the greek_morphology entries that have this xref
-	4. then check each '<transl></transl>' inside of all of the possible_dictionary_forms for these entries
+	2. associate the first two translations from the dictionary with a xref_number [DONE & it sent you here]
+	3. then gobble up all of the greek_morphology entries
+	4. then check each '<transl></transl>' inside of all of the possible_dictionary_forms for these entries against the xref_number
 
-	headwords are a managed list; they come via:
+	xreftranslations is a dict:
 
-		headwords = [(h, headwords[h], translations[h]) for h in headwords if h in translations]
+		{xref: translation}
 
-	a list item is a tuple like:
+	hipparchiaDB=# select * from greek_morphology where observed_form='πάϲχω';
+	 observed_form |  xrefs   | prefixrefs |                                                                  possible_dictionary_forms
+	---------------+----------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+	 πάϲχω         | 80650925 |            | <possibility_1>πάϲχω<xref_value>80650925</xref_value><xref_kind>9</xref_kind><transl>have</transl><analysis>pres subj act 1st sg</analysis></possibility_1>+
+	               |          |            | <possibility_2>πάϲχω<xref_value>80650925</xref_value><xref_kind>9</xref_kind><transl>have</transl><analysis>pres ind act 1st sg</analysis></possibility_2> +
+	               |          |            |
 
-		(πάϲχω, 80650925, 'have something done to one, suffer')
+	First Draft MP version with managed list: "Build took 217.69 minutes"
 
-	'xrefs character varying(128)'
-
-	hipparchiaDB=# select xrefs from greek_morphology where observed_form='δεόντων';
-		xrefs
-		------------------------------
-		23101772, 23091564, 22435783
-		(1 row)
-
-
-	 # https://www.postgresql.org/docs/9.4/queries-values.html
-
-	 CREATE TEMPORARY TABLE tt AS SELECT * FROM
-	    (VALUES (1, 1, 1, 1), (2, 2, 2, 2), (3, 3, 3, 3), (4, 4, 4,4)) as t (observed_form,xrefs,prefixrefs,possible_dictionary_forms);
-
-	 hipparchiaDB=# select * from tt;
-	  observed_form | xrefs | prefixrefs | possible_dictionary_forms
-	 ---------------+-------+------------+---------------------------
-	              1 |     1 |          1 |                         1
-	              2 |     2 |          2 |                         2
-	              3 |     3 |          3 |                         3
-	              4 |     4 |          4 |                         4
+	Dict version: "Build took 7.43 minutes"
 
 	:param grammardb:
-	:param entries:
+	:param xreftranslations:
 	:param islatin:
 	:param dbconnection:
 	:return:
@@ -88,7 +73,7 @@ def mpanalysisrewrite(language: str, headwords, dbconnection):
 	newmorph = list()
 
 	# lextemplate = 'SELECT translations FROM {lg}_dictionary WHERE entry_name=%s'.format(lg=language)
-	morphtemplate = 'SELECT observed_form, xrefs, prefixrefs, possible_dictionary_forms FROM {lg}_morphology WHERE xrefs ~* %s'.format(lg=language)
+	morphtemplate = 'SELECT observed_form, xrefs, prefixrefs, possible_dictionary_forms FROM {lg}_morphology'.format(lg=language)
 
 	posfinder = re.compile(r'(<possibility.*?<xref_value>)(.*?)(</xref_value><xref_kind>.*?</xref_kind><transl>)(.*?)(</transl><analysis>.*?</analysis></possibility_\d{1,}>)')
 
@@ -98,43 +83,34 @@ def mpanalysisrewrite(language: str, headwords, dbconnection):
 		UPDATE {lg}_morphology SET possible_dictionary_forms = tempmorph_{id}.possible_dictionary_forms 
 			FROM tempmorph_{id} WHERE {lg}_morphology.observed_form = tempmorph_{id}.observed_form"""
 
-	while headwords:
-		if not len(headwords) % 100:
-			print('{h} headwords remain for dbconnection {u}'.format(h=len(headwords), u=dbconnection.uniquename))
-		try:
-			hw = headwords.pop()
-		except IndexError:
-			hw = (None, None, None)
+	# grab all morph...
+	dbcursor.execute(morphtemplate)
+	entries = dbcursor.fetchall()
 
-		theword = hw[0]
-		thexref = str(hw[1])
-		try:
-			thetrans = re.sub(r'(\w),\W*?$', r'\1', hw[2])  # clean out trailing gunk
-		except TypeError:
-			# TypeError: expected string or bytes-like object
-			thetrans = hw[2]
-
-		dbcursor.execute(morphtemplate, (thexref,))
-
-		entries = dbcursor.fetchall()
-
-		for e in entries:
-			pdf = e[3]
-			poss = re.findall(posfinder, pdf)
-			newposs = list()
-			for p in poss:
-				p = list(p)
-				if p[1] == thexref:
-					# print('{w} [{x}]: {a} --> {b}'.format(w=theword, x=thexref, a=p[3], b=thetrans))
-					p[3] = thetrans
-				newp = str().join(p)
-				newposs.append(newp)
-			newposs = '\n'.join(newposs)
-			newmorph.append((e[0], e[1], e[2], newposs))
+	for e in entries:
+		pdf = e[3]
+		poss = re.findall(posfinder, pdf)
+		newposs = list()
+		for p in poss:
+			p = list(p)
+			try:
+				p[3] = xreftranslations[p[1]]
+				# print('{p} in xrefs'.format(p=p[1]))
+			except KeyError:
+				# print('KeyError on {p}'.format(p=p[1]))
+				# there will be *plenty* of misses
+				pass
+			newp = str().join(p)
+			newposs.append(newp)
+		newposs = '\n'.join(newposs)
+		newmorph.append((e[0], e[1], e[2], newposs))
 
 	createandloadmorphtemptable(randomtableid, newmorph, dbconnection)
-	print('temptableupdater for dbconnection {u}'.format(u=dbconnection.uniquename))
+
+	print('built the new data; now updating the {lg} morphology table with the new values: this will take several minutes'.format(lg=language))
+	# this part is plenty slow....
 	dbcursor.execute(temptableupdater.format(lg=language, id=randomtableid))
+
 	dbconnection.commit()
 
 	return
@@ -157,7 +133,8 @@ def createandloadmorphtemptable(tableid: str, tabledata: list, dbconnection):
 	:param dbconnection:
 	:return:
 	"""
-	print('createandloadmorphtemptable() for dbconnection {u}'.format(u=dbconnection.uniquename))
+
+	# print('createandloadmorphtemptable() for dbconnection {u}'.format(u=dbconnection.uniquename))
 
 	dbcursor = dbconnection.cursor()
 
