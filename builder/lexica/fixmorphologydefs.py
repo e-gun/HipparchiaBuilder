@@ -5,30 +5,13 @@
 	License: GNU GENERAL PUBLIC LICENSE 3
 		(see LICENSE in the top level directory of the distribution)
 """
+
 import random
 import re
 
 from psycopg2.extras import execute_values as insertlistofvaluetuples
 
 from builder.dbinteraction.connection import setconnection
-
-"""
-
-Process Process-4:
-Traceback (most recent call last):
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.7/lib/python3.7/multiprocessing/process.py", line 297, in _bootstrap
-    self.run()
-  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.7/lib/python3.7/multiprocessing/process.py", line 99, in run
-    self._target(*self._args, **self._kwargs)
-  File "/Users/erik/hipparchia_venv/HipparchiaBuilder/builder/lexica/mpgrammarworkers.py", line 316, in mpanalysisrewrite
-    dbcursor.execute(temptableupdater.format(lg=language, id=randomtableid))
-psycopg2.errors.DeadlockDetected: deadlock detected
-DETAIL:  Process 37916 waits for ShareLock on transaction 1286139; blocked by process 37918.
-Process 37918 waits for ShareLock on transaction 1286132; blocked by process 37916.
-HINT:  See server log for query details.
-CONTEXT:  while updating tuple (43409,4) in relation "greek_morphology"
-
-"""
 
 
 def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
@@ -72,7 +55,6 @@ def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
 	# save all work in a list and then update the morph table at the very end to avoid tons of read-and-write
 	newmorph = list()
 
-	# lextemplate = 'SELECT translations FROM {lg}_dictionary WHERE entry_name=%s'.format(lg=language)
 	morphtemplate = 'SELECT observed_form, xrefs, prefixrefs, possible_dictionary_forms FROM {lg}_morphology'.format(lg=language)
 
 	posfinder = re.compile(r'(<possibility.*?<xref_value>)(.*?)(</xref_value><xref_kind>.*?</xref_kind><transl>)(.*?)(</transl><analysis>.*?</analysis></possibility_\d{1,}>)')

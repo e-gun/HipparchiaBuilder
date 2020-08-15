@@ -13,7 +13,7 @@ from psycopg2.extras import execute_values as insertlistofvaluetuples
 
 from builder.dbinteraction.connection import setconnection
 from builder.lexica.repairperseuscitations import perseusworkmappingfixer
-from builder.lexica.fixtranslationtagging import translationtagrepairs
+from builder.lexica.fixtranslationtagging import greektranslationtagrepairs
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
 from builder.parsers.htmltounicode import htmltounicode
 from builder.parsers.lexica import greekwithoutvowellengths, greekwithvowellengths, \
@@ -166,7 +166,7 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 				repair = 'y'
 
 			if repair:
-				body = translationtagrepairs(body)
+				body = greektranslationtagrepairs(body)
 
 			try:
 				repair = config['lexica']['repairbadperseusrefs']

@@ -279,6 +279,14 @@ def fixmorphologytranslations(language: str):
 	:return:
 	"""
 
+	try:
+		rewrite = config['lexical']['rewritemoprhdefinitions']
+	except KeyError:
+		rewrite = 'n'
+
+	if rewrite != 'y':
+		return
+
 	assert language in ['greek', 'latin']
 
 	dbconnection = setconnection()

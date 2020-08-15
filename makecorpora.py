@@ -147,11 +147,10 @@ if __name__ == '__main__':
 
 	if tobuild['gram']:
 		print('building grammar dbs')
-		print('"gram" is in DEBUG mode: re-enable grammarloader(), etc. later')
-		# grammarloader('greek')
-		# analysisloader('greek')
-		# grammarloader('latin')
-		# analysisloader('latin')
+		grammarloader('greek')
+		analysisloader('greek')
+		grammarloader('latin')
+		analysisloader('latin')
 		fixmorphologytranslations('greek')
 		timestampthebuild('lm')
 

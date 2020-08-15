@@ -9,7 +9,7 @@
 import re
 
 
-def translationtagrepairs(lexicalentry: str) -> str:
+def greektranslationtagrepairs(lexicalentry: str) -> str:
 	"""
 
 	you can get 'as' or 'if' or whatever as a translation for a word because the tags can be oddly placed
@@ -48,6 +48,10 @@ def translationtagrepairs(lexicalentry: str) -> str:
 
 	<sense id="n79983.0" n="A" level="1" opt="n"><trans>have</trans> something <trans>done to one, suffer</trans>, opp. <trans>do</trans>, <cit><quote lang="greek">ὅϲϲʼ ἔρξαν τʼ ἔπαθόν τε</quote>
 
+	Latin dictionary has the same issue, but different tagging:
+
+		<sense id="n3551.0" n="I" level="1" opt="n"> <hi rend="ital">Of</hi> or <hi rend="ital">from silver</hi>, <hi rend="ital">made of silver</hi> (cf. argentum, I. A.): polubrum, Liv. And. ap. <bibl default="NO"
+
 	:param lexicalentry:
 	:return:
 	"""
@@ -58,8 +62,8 @@ def translationtagrepairs(lexicalentry: str) -> str:
 	# A.1 should be the top definition
 	sensetranscit = re.compile(r'(<sense id=".*?" n="A" level="1" opt=".">)(<trans>.*?)(<cit|<auth|<bibl)')
 
-	newlex = re.sub(foreigntransbibl, transphrasehelper, lexicalentry)
-	newlex = re.sub(sensetranscit, untaggedtransphrasehelper, newlex)
+	newlex = re.sub(foreigntransbibl, greektransphrasehelper, lexicalentry)
+	newlex = re.sub(sensetranscit, greekuntaggedtransphrasehelper, newlex)
 
 	# might have grabbed and tagged some greek, etc.
 	# <trans class="rewritten phrase">humanity</trans>, <trans class="rewritten phrase"><cit><quote lang="greek">ἀπώλεϲαϲ τὸν ἄ.</trans>, <trans class="rewritten phrase">οὐκ ἐπλήρωϲαϲ τὴν ἐπαγγελίαν</quote></trans>
@@ -73,7 +77,7 @@ def translationtagrepairs(lexicalentry: str) -> str:
 	return newlex
 
 
-def untaggedtransphrasehelper(regexmatch) -> str:
+def greekuntaggedtransphrasehelper(regexmatch) -> str:
 	"""
 
 	same as next but skip the tagging as "rewritten"
@@ -85,14 +89,14 @@ def untaggedtransphrasehelper(regexmatch) -> str:
 	:return:
 	"""
 
-	newtext = transphrasehelper(regexmatch, classing=False)
+	newtext = greektransphrasehelper(regexmatch, classing=False)
 	# newtext = re.sub(r'<foreign lang="greek">(.*?)</foreign>', r'\1', newtext)
 	# newtext = re.sub(r'<etym lang="greek">(.*?)</etym>', r'\1', newtext)
 
 	return newtext
 
 
-def transphrasehelper(regexmatch, classing=True) -> str:
+def greektransphrasehelper(regexmatch, classing=True) -> str:
 	"""
 
 	turn something like
