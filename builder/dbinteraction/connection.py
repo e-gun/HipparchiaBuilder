@@ -113,7 +113,7 @@ class GenericConnectionObject(object):
 		self.curs = None
 
 	def uniquetablename(self):
-		return ''.join([random.choice('abcdefghijklmnopqrstuvwxyz') for i in range(12)])
+		return str().join([random.choice('abcdefghijklmnopqrstuvwxyz') for i in range(12)])
 
 	def setautocommit(self):
 		# other possible values are:

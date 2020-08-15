@@ -306,7 +306,8 @@ def fixmorphologytranslations(language: str):
 
 	print('fixing definitions in {lg}_morphology table. cross-referencing against {n} headwords'.format(lg=language, n=len(headwords)))
 
-	chunksize = 25000
+	# chunksize = 10000
+	chunksize = 500  # debug
 	formbundles = [headwords[i:i + chunksize] for i in range(0, len(headwords), chunksize)]
 	bundlecount = 0
 

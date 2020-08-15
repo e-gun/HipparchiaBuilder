@@ -147,7 +147,7 @@ if __name__ == '__main__':
 
 	if tobuild['gram']:
 		print('building grammar dbs')
-		print('DB mode: re-enable grammarloader(), etc. later')
+		print('"gram" is in DEBUG mode: re-enable grammarloader(), etc. later')
 		# grammarloader('greek')
 		# analysisloader('greek')
 		# grammarloader('latin')
