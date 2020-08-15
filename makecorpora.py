@@ -19,7 +19,7 @@ except ModuleNotFoundError:
 from builder import corpusbuilder
 from builder.configureatlaunch import getcommandlineargs, tobuildaccordingtoconfigfile
 from builder.dbinteraction.versioning import timestampthebuild
-from builder.lexica.buildlexica import analysisloader, formatgklexicon, formatlatlexicon, grammarloader
+from builder.lexica.buildlexica import analysisloader, formatgklexicon, formatlatlexicon, grammarloader, fixmorphologytranslations
 from builder.wordcounting.databasewordcounts import monowordcounter
 from builder.wordcounting.loadwordcoundsfromsql import wordcountloader
 from builder.wordcounting.wordcountsbyheadword import headwordcounts
@@ -147,10 +147,12 @@ if __name__ == '__main__':
 
 	if tobuild['gram']:
 		print('building grammar dbs')
-		grammarloader('greek')
-		analysisloader('greek')
-		grammarloader('latin')
-		analysisloader('latin')
+		print('DB mode: re-enable grammarloader(), etc. later')
+		# grammarloader('greek')
+		# analysisloader('greek')
+		# grammarloader('latin')
+		# analysisloader('latin')
+		fixmorphologytranslations('greek')
 		timestampthebuild('lm')
 
 	if tobuild['wordcounts']:

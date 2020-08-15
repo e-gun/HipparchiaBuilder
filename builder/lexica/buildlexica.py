@@ -11,7 +11,7 @@ from multiprocessing import Manager
 
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.genericworkerobject import GenericInserterObject
-from builder.lexica.mpgrammarworkers import mpanalysisinsert, mplemmatainsert
+from builder.lexica.mpgrammarworkers import mpanalysisinsert, mplemmatainsert, mpanalysisrewrite
 from builder.lexica.mpgreekinserters import mpgreekdictionaryinsert, oldxmlmpgreekdictionaryinsert
 from builder.lexica.mplatininsterters import newmplatindictionaryinsert, oldmplatindictionaryinsert
 
@@ -182,7 +182,7 @@ def analysisloader(language: str):
 		table = 'greek_morphology'
 		islatin = False
 	else:
-		morphfile = ''
+		morphfile = str()
 		table = 'no_such_table'
 		islatin = False
 		print('I do not know', language, '\nBad things are about to happen.')
@@ -261,14 +261,66 @@ def fixmorphologytranslations(language: str):
 	 (1 row)
 
 
+	hipparchiaDB=# SELECT * FROM greek_lemmata limit 3;
+	 dictionary_entry | xref_number |                                            derivative_forms
+	------------------+-------------+--------------------------------------------------------------------------------------------------------
+	 ζῳοπλάϲτηϲ       |    45889565 | {ζῳοπλαϲτῶν,ζῳοπλάϲται,ζῳοπλάϲταϲ,ζῳοπλάϲτηϲ}
+	 ζῳογόνοϲ         |    45877520 | {ζωιογόνοι,ζῳογόνων,ζωιογόνοϲ,ζῳογόνον,ζῳογόνῳ,ζῳογόνοϲ,ζῳογόνοιϲ,ζῳογόνοι,ζῳογόνου,ζῳογόνουϲ,ζῳογόνα}
+	 ζῳοφαγία         |    45906672 | {ζῳοφαγίαϲ,ζῳοφαγία,ζῳοφαγίαν}
+	(3 rows)
+
 	1. grab all of the xref_number values from greek_lemmata
-	2. then gobble up all of the greek_morphology entries that have this xref
-	3. then check each '<transl></transl>' inside of all of the possible_dictionary_forms for these entries
+	2. associate the first two translations from the dictionary with this headword
+	3. then gobble up all of the greek_morphology entries that have this xref
+	4. then check each '<transl></transl>' inside of all of the possible_dictionary_forms for these entries
 
 
 	:param language:
 	:return:
 	"""
+
+	assert language in ['greek', 'latin']
+
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
+
+	table = '{lg}_lemmata'.format(lg=language)
+
+	q = 'SELECT dictionary_entry, xref_number FROM {t}'.format(t=table)
+	dbcursor.execute(q)
+
+	headwords = dbcursor.fetchall()
+	headwords = {h[0]: h[1] for h in headwords if h[0]}
+
+	table = '{lg}_dictionary'.format(lg=language)
+	q = 'SELECT entry_name, translations FROM {t}'.format(t=table)
+	dbcursor.execute(q)
+
+	translations = dbcursor.fetchall()
+	translations = {t[0]: t[1].split(' ‖ ')[:2] for t in translations}
+
+	headwords = [(h, headwords[h], translations[h]) for h in headwords if h in translations]
+	headwords = [(h[0], h[1], ', '.join(h[2])) for h in headwords]
+
+	dbconnection.connectioncleanup()
+
+	print('fixing definitions in {lg}_morphology table. cross-referencing against {n} headwords'.format(lg=language, n=len(headwords)))
+
+	chunksize = 25000
+	formbundles = [headwords[i:i + chunksize] for i in range(0, len(headwords), chunksize)]
+	bundlecount = 0
+
+	for bundle in formbundles:
+		bundlecount += 1
+		manager = Manager()
+		items = manager.list(bundle)
+
+		workerobject = GenericInserterObject(mpanalysisrewrite, argumentlist=[language, items])
+		workerobject.dothework()
+
+		if bundlecount * chunksize < len(headwords):
+			# this check prevents saying '950000 forms inserted' at the end when there are only '911871 items to load'
+			print('\t', str(bundlecount * chunksize), 'forms checked')
 
 	return
 

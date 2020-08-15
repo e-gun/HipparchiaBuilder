@@ -54,7 +54,7 @@ def translationtagrepairs(lexicalentry: str) -> str:
 
 	# opening/closing a tag is a blocker: [^<]
 	foreigntransbibl = re.compile(r'(<foreign[^<]*?</foreign>\s)([^<]*?<trans>.*?)(<bibl)')
-	sensetranscit = re.compile(r'(<sense.*?>)(<trans>.*?)(<cit)')
+	sensetranscit = re.compile(r'(<sense[^<]*?>)(<trans>.*?)(<cit|<auth|<bibl)')
 
 	newlex = re.sub(foreigntransbibl, transphrasehelper, lexicalentry)
 	newlex = re.sub(sensetranscit, untaggedtransphrasehelper, newlex)
@@ -71,8 +71,23 @@ def translationtagrepairs(lexicalentry: str) -> str:
 	return newlex
 
 
-def untaggedtransphrasehelper(regexmatch):
-	return transphrasehelper(regexmatch, classing=False)
+def untaggedtransphrasehelper(regexmatch) -> str:
+	"""
+
+	same as next but skip the tagging as "rewritten"
+
+	used at entry heads and so adding the check to strip greek tags
+	but these can probably be dropped
+
+	:param regexmatch:
+	:return:
+	"""
+
+	newtext = transphrasehelper(regexmatch, classing=False)
+	# newtext = re.sub(r'<foreign lang="greek">(.*?)</foreign>', r'\1', newtext)
+	# newtext = re.sub(r'<etym lang="greek">(.*?)</etym>', r'\1', newtext)
+
+	return newtext
 
 
 def transphrasehelper(regexmatch, classing=True) -> str:

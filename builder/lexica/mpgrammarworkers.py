@@ -170,7 +170,7 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 				observedform = None
 			if observedform:
 				if islatin is True:
-					observedform = re.sub(r'[\t\s]', '', observedform)
+					observedform = re.sub(r'[\t\s]', str(), observedform)
 					observedform = re.sub(r'v', 'u', observedform)
 					observedform = latinvowellengths(observedform)
 				else:
@@ -204,7 +204,7 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 					wd = re.sub(r',', r', ', wd)
 					possibilities.append(ptemplate.format(p=number, wd=wd, xrv=elements.group(1), xrk=elements.group(2), t=elements.group(4), a=elements.group(5)))
 
-				ptext = ''.join(possibilities)
+				ptext = str().join(possibilities)
 
 				bundelofcookedentries.append(tuple([observedform, xrefs, bracketed, ptext]))
 
@@ -213,14 +213,31 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 	return
 
 
-def mpanalysisrewrite(grammardb, entries, islatin, dbconnection):
+def mpanalysisrewrite(language: str, headwords, dbconnection):
 	"""
 
 	the stock translations included with the observed forms can be defective; a rewritten dictionary entry can fix this
 
 	1. grab all of the xref_number values from greek_lemmata [DONE & it sent you here]
-	2. then gobble up all of the greek_morphology entries that have this xref
-	3. then check each '<transl></transl>' inside of all of the possible_dictionary_forms for these entries
+	2. associate the first two translations from the dictionary with this headword
+	3. then gobble up all of the greek_morphology entries that have this xref
+	4. then check each '<transl></transl>' inside of all of the possible_dictionary_forms for these entries
+
+	headwords are a managed list; they come via:
+
+		headwords = [(h, headwords[h], translations[h]) for h in headwords if h in translations]
+
+	a list item is a tuple like:
+
+		(πάϲχω, 80650925, 'have something done to one, suffer')
+
+	'xrefs character varying(128)'
+
+	hipparchiaDB=# select xrefs from greek_morphology where observed_form='δεόντων';
+		xrefs
+		------------------------------
+		23101772, 23091564, 22435783
+		(1 row)
 
 	:param grammardb:
 	:param entries:
@@ -229,3 +246,50 @@ def mpanalysisrewrite(grammardb, entries, islatin, dbconnection):
 	:return:
 	"""
 
+	if not dbconnection:
+		dbconnection = setconnection()
+
+	dbcursor = dbconnection.cursor()
+	dbconnection.setautocommit()
+
+	# save all work in a list and then update the morph table at the very end to avoid tons of read-and-write
+	newmorph = list()
+
+	# lextemplate = 'SELECT translations FROM {lg}_dictionary WHERE entry_name=%s'.format(lg=language)
+	morphtemplate = 'SELECT observed_form, xrefs, prefixrefs, possible_dictionary_forms FROM {lg}_morphology WHERE xrefs ~* %s'.format(lg=language)
+
+	posfinder = re.compile(r'(<possibility.*?<xref_value>)(.*?)(</xref_value><xref_kind>.*?</xref_kind><transl>)(.*?)(</transl><analysis>.*?</analysis></possibility_\d{1,}>)')
+
+	temptablemaker = """
+	"""
+
+	temptableupdater = """
+	"""
+
+	while headwords:
+		try:
+			hw = headwords.pop()
+		except IndexError:
+			hw = (None, None, None)
+
+		theword = hw[0]
+		thexref = str(hw[1])
+		thetrans = re.sub(r'(\w),\W*?$', r'\1', hw[2])  # clean out trailing gunk
+
+		dbcursor.execute(morphtemplate, (thexref,))
+
+		entries = dbcursor.fetchall()
+
+		for e in entries:
+			pdf = e[3]
+			poss = re.findall(posfinder, pdf)
+			newposs = list()
+			for p in poss:
+				p = list(p)
+				if p[1] == thexref:
+					print('{w} [{x}]: {a} --> {b}'.format(w=theword, x=thexref, a=p[3], b=thetrans))
+					p[3] = thetrans
+				newp = str().join(p)
+				newposs.append(newp)
+			newposs = '\n'.join(newposs)
+			newmorph.append((e[0], e[1], e[2], newposs))
