@@ -11,7 +11,8 @@ from multiprocessing import Manager
 
 from builder.dbinteraction.connection import setconnection
 from builder.dbinteraction.genericworkerobject import GenericInserterObject
-from builder.lexica.mpgrammarworkers import mpanalysisinsert, mplemmatainsert, mpanalysisrewrite
+from builder.lexica.mpgrammarworkers import mpanalysisinsert, mplemmatainsert
+from builder.lexica.fixmorphologydefs import mpanalysisrewrite
 from builder.lexica.mpgreekinserters import mpgreekdictionaryinsert, oldxmlmpgreekdictionaryinsert
 from builder.lexica.mplatininsterters import newmplatindictionaryinsert, oldmplatindictionaryinsert
 
@@ -297,7 +298,7 @@ def fixmorphologytranslations(language: str):
 	dbcursor.execute(q)
 
 	translations = dbcursor.fetchall()
-	translations = {t[0]: t[1].split(' ‖ ')[:2] for t in translations}
+	translations = {t[0]: t[1].split(' ‖ ')[:1] for t in translations}
 
 	headwords = [(h, headwords[h], translations[h]) for h in headwords if h in translations]
 	headwords = [(h[0], h[1], ', '.join(h[2])) for h in headwords]

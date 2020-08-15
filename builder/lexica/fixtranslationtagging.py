@@ -54,7 +54,9 @@ def translationtagrepairs(lexicalentry: str) -> str:
 
 	# opening/closing a tag is a blocker: [^<]
 	foreigntransbibl = re.compile(r'(<foreign[^<]*?</foreign>\s)([^<]*?<trans>.*?)(<bibl)')
-	sensetranscit = re.compile(r'(<sense[^<]*?>)(<trans>.*?)(<cit|<auth|<bibl)')
+	# sensetranscit = re.compile(r'(<sense[^<]*?>)(<trans>.*?)(<cit|<auth|<bibl)')
+	# A.1 should be the top definition
+	sensetranscit = re.compile(r'(<sense id=".*?" n="A" level="1" opt=".">)(<trans>.*?)(<cit|<auth|<bibl)')
 
 	newlex = re.sub(foreigntransbibl, transphrasehelper, lexicalentry)
 	newlex = re.sub(sensetranscit, untaggedtransphrasehelper, newlex)
