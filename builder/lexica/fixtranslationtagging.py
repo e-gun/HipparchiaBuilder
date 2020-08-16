@@ -167,8 +167,11 @@ def latintranslationtagrepairs(lexicalentry: str) -> str:
 
 	# I.1 should be the top definition
 	sensetranscit = re.compile(r'(<sense id=".*?" n="I" level="1" opt=".">) (<hi rend="ital">.*?)(:|<cit|<auth|<bibl)')
+	# the version without a whitespace...
+	altsense = re.compile(r'(<sense id=".*?" n="I" level="1" opt=".">)(<hi rend="ital">.*?)(:|<cit|<auth|<bibl)')
 
 	newlex = re.sub(sensetranscit, lainttransphrasehelper, lexicalentry)
+	newlex = re.sub(altsense, lainttransphrasehelper, newlex)
 
 	return newlex
 

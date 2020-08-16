@@ -114,11 +114,6 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 				pos = ' ‖ '.join(pos)
 				pos = pos.lower()
 
-				translationlist = translationsummary(entry, 'hi')
-
-				# do some quickie greek replacements
-				body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
-
 				try:
 					repair = config['lexica']['repairtranslationtags']
 				except KeyError:
@@ -126,6 +121,11 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 				if repair:
 					body = latintranslationtagrepairs(body)
+
+				translationlist = translationsummary(entry, 'hi')
+
+				# do some quickie greek replacements
+				body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
 
 				try:
 					repair = config['lexica']['repairbadperseusrefs']

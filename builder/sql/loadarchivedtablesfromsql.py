@@ -19,10 +19,14 @@ config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
 
 
-def wordcountloader(pathtowordcounts: Path):
+def archivedsqlloader(pathtosqlarchive: Path):
 	"""
 
 	load the wordcount files from an archives set of wordcounts
+
+	also works for the grammar dumps
+
+	note that the name of the dump file has to match the name of the target table or bad things will happen
 
 	permission problems are likely:
 		export PGPASSWORD="HIPPAWRPASSHERE"
@@ -37,7 +41,7 @@ def wordcountloader(pathtowordcounts: Path):
 	addtoenv = {'PGPASSWORD': config['db']['DBPASS']}
 	theenv = {**os.environ, **addtoenv}
 
-	p = pathtowordcounts
+	p = pathtosqlarchive
 	# print('p', p.parts)
 
 	wordcountfiles = sorted(p.glob('*sql.gz'))

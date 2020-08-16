@@ -21,7 +21,7 @@ from builder.configureatlaunch import getcommandlineargs, tobuildaccordingtoconf
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.lexica.buildlexica import analysisloader, formatgklexicon, formatlatlexicon, grammarloader, fixmorphologytranslations
 from builder.wordcounting.databasewordcounts import monowordcounter
-from builder.wordcounting.loadwordcoundsfromsql import wordcountloader
+from builder.sql.loadarchivedtablesfromsql import archivedsqlloader
 from builder.wordcounting.wordcountsbyheadword import headwordcounts
 
 config = configparser.ConfigParser()
@@ -146,14 +146,32 @@ if __name__ == '__main__':
 		timestampthebuild('lx')
 
 	if tobuild['gram']:
-		print('building grammar dbs')
-		grammarloader('greek')
-		analysisloader('greek')
-		grammarloader('latin')
-		analysisloader('latin')
-		fixmorphologytranslations('greek')
-		fixmorphologytranslations('latin')
-		timestampthebuild('lm')
+		sqlgrammar = False
+		try:
+			if config['corporatobuild']['loadprebuiltgrammarifpresent'] == 'y':
+				sqlgrammar = True
+		except KeyError:
+			sqlgrammar = True
+
+		try:
+			p = Path(config['lexica']['grammarsqldir'])
+		except KeyError:
+			print('"grammarsqldir" not set in config file; cannot load grammar via sql')
+			p = None
+			sqlgrammar = False
+
+		if not sqlgrammar:
+			print('building grammar dbs')
+			grammarloader('greek')
+			analysisloader('greek')
+			grammarloader('latin')
+			analysisloader('latin')
+			fixmorphologytranslations('greek')
+			fixmorphologytranslations('latin')
+			timestampthebuild('lm')
+		else:
+			print('loading grammar tables from sql dumps')
+			archivedsqlloader(p.resolve())
 
 	if tobuild['wordcounts']:
 		sqlcounts = False
@@ -167,11 +185,11 @@ if __name__ == '__main__':
 		if commandlineargs.sqlloadwordcounts:
 			print('loading wordcounts from sql dumps')
 			p = Path(config['wordcounts']['wordcountdir'])
-			wordcountloader(p.resolve())
+			archivedsqlloader(p.resolve())
 		elif sqlcounts:
 			print('loading wordcounts from sql dumps')
 			p = Path(config['wordcounts']['wordcountdir'])
-			wordcountloader(p.resolve())
+			archivedsqlloader(p.resolve())
 		else:
 			print('building wordcounts by (repeatedly) examining every line of every text in all available dbs: this might take a minute or two...')
 			if psutil:
