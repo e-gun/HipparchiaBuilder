@@ -89,7 +89,7 @@ def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
 
 	createandloadmorphtemptable(randomtableid, newmorph, dbconnection)
 
-	print('built the new data; now updating the {lg} morphology table with the new values: this will take several minutes'.format(lg=language))
+	print('built the new data; now updating the {lg} morphology table with the new values: this can take several minutes'.format(lg=language))
 	# this part is plenty slow....
 	dbcursor.execute(temptableupdater.format(lg=language, id=randomtableid))
 

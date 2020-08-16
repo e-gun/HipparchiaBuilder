@@ -9,11 +9,10 @@
 import configparser
 from datetime import datetime
 
-import psycopg2
-
 from builder.dbinteraction.connection import setconnection
 
-hipparchiabuilderversion = '1.4.0b'
+
+hipparchiabuilderversion = '1.4.0'
 #sqltemplateversion = 7242017
 #sqltemplateversion = 2242018
 sqltemplateversion = 10082019
