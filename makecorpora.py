@@ -152,6 +152,7 @@ if __name__ == '__main__':
 		grammarloader('latin')
 		analysisloader('latin')
 		fixmorphologytranslations('greek')
+		fixmorphologytranslations('latin')
 		timestampthebuild('lm')
 
 	if tobuild['wordcounts']:

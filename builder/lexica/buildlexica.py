@@ -280,7 +280,7 @@ def fixmorphologytranslations(language: str):
 	"""
 
 	try:
-		rewrite = config['lexical']['rewritemoprhdefinitions']
+		rewrite = config['lexica']['rewritemoprhdefinitions']
 	except KeyError:
 		rewrite = 'n'
 

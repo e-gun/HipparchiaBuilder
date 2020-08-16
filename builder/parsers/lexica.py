@@ -172,8 +172,15 @@ def translationsummary(fullentry: str, translationlabel: str) -> str:
 	depunct = '[{p}]$'.format(p=re.escape(punctuation))
 	tr = [re.sub(depunct, '', t) for t in tr]
 	tr = [t[0].lower() + t[1:] for t in tr if len(t) > 1]
-	tr = list(set(tr))
-	tr.sort()
-	translations = ' ‖ '.join(tr)
+
+	# interested in keeping the first two in order so that we can privilege the primary senses
+	# the fixed translations can be fed to the morphology summary translation
+	# if you just clean via set() you lose the order...
+	firsttwo = tr[:2]
+	alltrans = list(set(tr))
+	alltrans.sort()
+	translationlist = firsttwo + [t for t in alltrans if t not in firsttwo]
+
+	translations = ' ‖ '.join(translationlist)
 
 	return translations
