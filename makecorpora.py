@@ -151,6 +151,7 @@ if __name__ == '__main__':
 			if config['corporatobuild']['loadprebuiltgrammarifpresent'] == 'y':
 				sqlgrammar = True
 		except KeyError:
+			print('"loadprebuiltgrammarifpresent" not set in config file; will try to load anyway')
 			sqlgrammar = True
 
 		try:
