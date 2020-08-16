@@ -122,7 +122,7 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 				if repair:
 					body = latintranslationtagrepairs(body)
 
-				translationlist = translationsummary(entry, 'hi')
+				translationlist = translationsummary(body, 'hi')
 
 				# do some quickie greek replacements
 				body = re.sub(greekfinder, lambda x: greekwithvowellengths(x.group(2)), body)
