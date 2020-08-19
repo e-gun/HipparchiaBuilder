@@ -492,7 +492,7 @@ def generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance):
 	return
 
 
-def calculatetotals(masterconcorcdance):
+def calculatetotals(masterconcorcdance: dict) -> dict:
 	"""
 
 	find the Ⓣ for something like πρόϲωπον given Ⓖ Ⓛ Ⓘ Ⓓ & Ⓒ
@@ -513,7 +513,7 @@ def calculatetotals(masterconcorcdance):
 	return masterconcorcdance
 
 
-def generatemasterconcorcdancevaluetuples(masterconcorcdance, letter):
+def generatemasterconcorcdancevaluetuples(masterconcorcdance: dict, letter: str):
 	"""
 
 	entries look like:

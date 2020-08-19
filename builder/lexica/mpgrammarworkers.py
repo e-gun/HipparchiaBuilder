@@ -13,6 +13,7 @@ from psycopg2.extras import execute_values as insertlistofvaluetuples
 from builder.dbinteraction.connection import setconnection
 from builder.parsers.lexica import greekwithoutvowellengths, betaconvertandsave, latinvowellengths
 from builder.parsers.swappers import superscripterzero, superscripterone
+from builder.dbinteraction.dbloading import generatecopystream
 
 
 def mplemmatainsert(grammardb, entries, islatin, dbconnection):
@@ -155,13 +156,13 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 
 		bundelofcookedentries = list()
 		for entry in bundelofrawentries:
-			bracketed = ''
+			prefixrefs = str()
 			if re.search(bracketrefs, entry) is not None:
-				bracketed = re.findall(bracketrefs, entry)
-				bracketed = list(set(bracketed))
-				bracketed = ', '.join(bracketed)
-				bracketed = re.sub(r'[\[\]]', '', bracketed)
-				entry = re.sub(bracketrefs, '', entry)
+				prefixrefs = re.findall(bracketrefs, entry)
+				prefixrefs = list(set(prefixrefs))
+				prefixrefs = ', '.join(prefixrefs)
+				prefixrefs = re.sub(r'[\[\]]', str(), prefixrefs)
+				entry = re.sub(bracketrefs, str(), entry)
 			segments = re.search(formfinder, entry)
 			try:
 				observedform = segments[1]
@@ -205,8 +206,9 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 					possibilities.append(ptemplate.format(p=number, wd=wd, xrv=elements.group(1), xrk=elements.group(2), t=elements.group(4), a=elements.group(5)))
 
 				ptext = str().join(possibilities)
+				# ptext = re.sub(r'\n', str(), ptext)
 
-				bundelofcookedentries.append(tuple([observedform, xrefs, bracketed, ptext]))
+				bundelofcookedentries.append(tuple([observedform, xrefs, prefixrefs, ptext]))
 
 		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
 

@@ -280,7 +280,7 @@ def fixmorphologytranslations(language: str):
 	"""
 
 	try:
-		numberoftranslationstorecord = config['lexica']['numberoftranslationstorecordinmorphology']
+		numberoftranslationstorecord = int(config['lexica']['numberoftranslationstorecordinmorphology'])
 	except KeyError:
 		numberoftranslationstorecord = 2
 
@@ -310,7 +310,7 @@ def fixmorphologytranslations(language: str):
 	dbcursor.execute(q)
 
 	translations = dbcursor.fetchall()
-	translations = {t[0]: t[1].split(' ‖ ')[:numberoftranslationstorecord] for t in translations}
+	translations = {t[0]: t[1].split(' ‖ ')[:numberoftranslationstorecord] for t in translations if t}
 
 	dbconnection.connectioncleanup()
 

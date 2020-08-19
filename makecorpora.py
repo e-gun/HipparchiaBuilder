@@ -203,7 +203,7 @@ if __name__ == '__main__':
 					You have {i}G of RAM installed. 
 					The counts might fail.
 					If they do not fail, the count might be quite slow (because of "swapping")
-					[only the viery first set of counts requires the 12G of RAM]
+					[only the very first set of counts requires the 12G of RAM]
 				WARNING
 					"""
 					print(badnews.format(r=requiredmem, i=installedmem))

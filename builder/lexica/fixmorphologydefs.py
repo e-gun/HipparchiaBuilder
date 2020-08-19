@@ -57,7 +57,7 @@ def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
 
 	morphtemplate = 'SELECT observed_form, xrefs, prefixrefs, possible_dictionary_forms FROM {lg}_morphology'.format(lg=language)
 
-	possibilityfinder = re.compile(r'(<possibility.*?<xref_value>)(.*?)(</xref_value><xref_kind>.*?</xref_kind><transl>)(.*?)(</transl><analysis>.*?</analysis></possibility_\d{1,}>)')
+	possibilityfinder = re.compile(r'(<possibility_\d>)(.*?)(<xref_value>)(.*?)(</xref_value><xref_kind>.*?</xref_kind><transl>)(.*?)(</transl><analysis>.*?</analysis></possibility_\d{1,}>)')
 
 	randomtableid = str().join([random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(8)])
 
@@ -70,13 +70,25 @@ def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
 	entries = dbcursor.fetchall()
 
 	for e in entries:
-		pdf = e[3]
-		poss = re.findall(possibilityfinder, pdf)
+		# e[0]: observed_form
+		# e[1]: xrefs
+		# e[2]: prefixrefs
+		# e[3]: possible_dictionary_forms
+		dictforms = e[3]
+		poss = re.findall(possibilityfinder, dictforms)
 		newposs = list()
 		for p in poss:
+			# p[0]: '<possibility_\d>'
+			# p[1]: 'lātrōnēs, latro²'
+			# p[2]: '<xref_value>'
+			# p[3]: '40409805'
+			# p[4]: '</xref_value><xref_kind>9</xref_kind><transl>'
+			# p[5]: 'a hired servant'
+			# p[6]: '</transl><analysis>masc acc pl</analysis></possibility_1>'
 			p = list(p)
 			try:
-				p[3] = xreftranslations[p[1]]
+				p[5] = xreftranslations[p[3]]
+				# 'translation' = xreftranslations['xrval']
 				# print('{p} in xrefs'.format(p=p[1]))
 			except KeyError:
 				# print('KeyError on {p}'.format(p=p[1]))
