@@ -280,6 +280,11 @@ def fixmorphologytranslations(language: str):
 	"""
 
 	try:
+		numberoftranslationstorecord = config['lexica']['numberoftranslationstorecordinmorphology']
+	except KeyError:
+		numberoftranslationstorecord = 2
+
+	try:
 		rewrite = config['lexica']['rewritemoprhdefinitions']
 	except KeyError:
 		rewrite = 'n'
@@ -305,12 +310,12 @@ def fixmorphologytranslations(language: str):
 	dbcursor.execute(q)
 
 	translations = dbcursor.fetchall()
-	translations = {t[0]: t[1].split(' ‖ ')[:1] for t in translations}
+	translations = {t[0]: t[1].split(' ‖ ')[:numberoftranslationstorecord] for t in translations}
 
 	dbconnection.connectioncleanup()
 
 	# xrefdict = { xref_number: translation}
-	xrefdict = {str(headwords[h]): translations[h][0] for h in headwords if h in translations}
+	xrefdict = {str(headwords[h]): ', '.join(translations[h]) for h in headwords if h in translations}
 
 	# import itertools
 	# out = dict(itertools.islice(xrefdict.items(), 5))

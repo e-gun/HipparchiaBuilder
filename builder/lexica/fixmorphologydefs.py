@@ -57,7 +57,7 @@ def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
 
 	morphtemplate = 'SELECT observed_form, xrefs, prefixrefs, possible_dictionary_forms FROM {lg}_morphology'.format(lg=language)
 
-	posfinder = re.compile(r'(<possibility.*?<xref_value>)(.*?)(</xref_value><xref_kind>.*?</xref_kind><transl>)(.*?)(</transl><analysis>.*?</analysis></possibility_\d{1,}>)')
+	possibilityfinder = re.compile(r'(<possibility.*?<xref_value>)(.*?)(</xref_value><xref_kind>.*?</xref_kind><transl>)(.*?)(</transl><analysis>.*?</analysis></possibility_\d{1,}>)')
 
 	randomtableid = str().join([random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(8)])
 
@@ -71,7 +71,7 @@ def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
 
 	for e in entries:
 		pdf = e[3]
-		poss = re.findall(posfinder, pdf)
+		poss = re.findall(possibilityfinder, pdf)
 		newposs = list()
 		for p in poss:
 			p = list(p)

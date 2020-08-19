@@ -60,7 +60,7 @@ def greektranslationtagrepairs(lexicalentry: str) -> str:
 	foreigntransbibl = re.compile(r'(<foreign[^<]*?</foreign>\s)([^<]*?<trans>.*?)(<bibl)')
 	# sensetranscit = re.compile(r'(<sense[^<]*?>)(<trans>.*?)(<cit|<auth|<bibl)')
 	# A.1 should be the top definition
-	sensetranscit = re.compile(r'(<sense id=".*?" n="A" level="1" opt=".">)(<trans>.*?)(:|<cit|<auth|<bibl)')
+	sensetranscit = re.compile(r'(<sense id=".*?" n="A" level="1" opt=".">)(<trans>.*?)([.,;:()]|<cit|<auth|<bibl)')
 
 	newlex = re.sub(foreigntransbibl, greektransphrasehelper, lexicalentry)
 	newlex = re.sub(sensetranscit, greekuntaggedtransphrasehelper, newlex)
@@ -166,9 +166,9 @@ def latintranslationtagrepairs(lexicalentry: str) -> str:
 	"""
 
 	# I.1 should be the top definition
-	sensetranscit = re.compile(r'(<sense id=".*?" n="I" level="1" opt=".">) (<hi rend="ital">.*?)(:|<cit|<auth|<bibl)')
+	sensetranscit = re.compile(r'(<sense id=".*?" n="I" level="1" opt=".">) (<hi rend="ital">.*?)([.,;:()]|<cit|<auth|<bibl)')
 	# the version without a whitespace...
-	altsense = re.compile(r'(<sense id=".*?" n="I" level="1" opt=".">)(<hi rend="ital">.*?)(:|<cit|<auth|<bibl)')
+	altsense = re.compile(r'(<sense id=".*?" n="I" level="1" opt=".">)(<hi rend="ital">.*?)([.,;:()]|<cit|<auth|<bibl)')
 
 	newlex = re.sub(sensetranscit, lainttransphrasehelper, lexicalentry)
 	newlex = re.sub(altsense, lainttransphrasehelper, newlex)
