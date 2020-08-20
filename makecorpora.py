@@ -163,11 +163,11 @@ if __name__ == '__main__':
 
 		if not sqlgrammar:
 			print('building grammar dbs')
-			# grammarloader('greek')
-			# analysisloader('greek')
-			# grammarloader('latin')
+			grammarloader('greek')
+			analysisloader('greek')
+			grammarloader('latin')
 			analysisloader('latin')
-			# fixmorphologytranslations('greek')
+			fixmorphologytranslations('greek')
 			fixmorphologytranslations('latin')
 			timestampthebuild('lm')
 		else:
