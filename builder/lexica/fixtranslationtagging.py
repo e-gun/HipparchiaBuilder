@@ -109,7 +109,7 @@ def greektransphrasehelper(regexmatch, classing=True) -> str:
 	"""
 
 	if classing:
-		c = ' class="rewritten phrase"'
+		c = ' rewritten="phrase"'
 	else:
 		c = str()
 
@@ -186,7 +186,7 @@ def lainttransphrasehelper(regexmatch, classing=False) -> str:
 	"""
 
 	if classing:
-		c = ' class="rewritten phrase"'
+		c = ' rewritten="phrase"'
 	else:
 		c = str()
 
