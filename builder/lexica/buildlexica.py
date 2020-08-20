@@ -315,7 +315,7 @@ def fixmorphologytranslations(language: str):
 	dbconnection.connectioncleanup()
 
 	# xrefdict = { xref_number: translation}
-	xrefdict = {str(headwords[h]): ', '.join(translations[h]) for h in headwords if h in translations}
+	xrefdict = {str(headwords[h]): '; '.join(translations[h]) for h in headwords if h in translations}
 
 	# import itertools
 	# out = dict(itertools.islice(xrefdict.items(), 5))

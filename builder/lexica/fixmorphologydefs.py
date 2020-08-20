@@ -63,7 +63,10 @@ def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
 
 	temptableupdater = """
 		UPDATE {lg}_morphology SET possible_dictionary_forms = tempmorph_{id}.possible_dictionary_forms 
-			FROM tempmorph_{id} WHERE {lg}_morphology.observed_form = tempmorph_{id}.observed_form"""
+			FROM tempmorph_{id} 
+			WHERE 
+				{lg}_morphology.observed_form = tempmorph_{id}.observed_form AND
+				{lg}_morphology.xrefs = tempmorph_{id}.xrefs """
 
 	# grab all morph...
 	dbcursor.execute(morphtemplate)
@@ -140,6 +143,9 @@ def createandloadmorphtemptable(tableid: str, tabledata: list, dbconnection):
 	qtemplate = 'INSERT INTO tempmorph_{id} (observed_form, xrefs, prefixrefs, possible_dictionary_forms) VALUES %s'
 
 	dbcursor.execute(tabletemplate.format(id=tableid))
+
+	# lat = [x for x in tabledata if x[1] == '40409805']
+	# print('lat', lat)
 
 	insertlistofvaluetuples(dbcursor, qtemplate.format(id=tableid), tabledata)
 
