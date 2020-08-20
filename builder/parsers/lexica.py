@@ -73,44 +73,17 @@ def latinvowellengths(texttoclean: str) -> str:
 	only send items this way whose transformation will prevent successful searches
 	using the combining forms
 
-	la_^tro2 ==>
+	la_^tro ==> lā̆̄tro
 
 	:param texttoclean:
 	:return:
 	"""
 
-	# textualmarkuptuples = list()
-	#
-	# betacodetuples = (
-	# 	# (r'a_\^', u'a\u0304\u0304'),
-	# 	(r'a_', u'a\u0304'),
-	# 	(r'a\^', u'a\u0306'),
-	# 	# (r'e_\^', u'e\u0304\u0304'),
-	# 	(r'e_', u'e\u0304'),
-	# 	(r'e\^', u'e\u0306'),
-	# 	# (r'i_\^', u'i\u0304\u0304'),
-	# 	(r'i_', u'i\u0304'),
-	# 	(r'i\^', u'i\u0306'),
-	# 	# (r'o_\^', u'o\u0304\u0304'),
-	# 	(r'o_', u'o\u0304'),
-	# 	(r'o\^', u'o\u0306'),
-	# 	# (r'u_\^', u'u\u0304\u0304'),
-	# 	(r'u_', u'u\u0304'),
-	# 	(r'u\^', u'u\u0306'),
-	# 	# (r'y_\^', u'y\u0304\u0304'),
-	# 	(r'y\_', u'y\u0304'),
-	# 	(r'y\^', u'y\u0306')
-	# )
-
-	# for i in range(0, len(betacodetuples)):
-	# 	textualmarkuptuples.append((betacodetuples[i][0], betacodetuples[i][1]))
-	#
-	# for reg in textualmarkuptuples:
-	# 	texttoclean = re.sub(reg[0], reg[1], texttoclean)
-
-	betafinder = re.compile(r'([aāeēiīoōuūy])(_\^|[_^])')
-
+	betafinder = re.compile(r'([aeiouy])(_\^|[_^])')
 	texttoclean = re.sub(betafinder, latinvowellengthshelper, texttoclean)
+
+	# but sometimes the longs are already in there...
+	texttoclean = re.sub(r'([āēīōū])\^]', r'\1' + u'\u0306', texttoclean)
 
 	return texttoclean
 
@@ -119,7 +92,7 @@ def latinvowellengths(texttoclean: str) -> str:
 quantitymapper = {
 	'_': u'\u0304',
 	'^': u'\u0306',
-	'_^': u'\u0304\u0304'
+	'_^': u'\u0304\u0306'
 	}
 
 
