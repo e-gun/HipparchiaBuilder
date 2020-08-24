@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+	HipparchiaBuilder: compile a database of Greek and Latin texts
+	Copyright: E Gunderson 2016-20
+	License: GNU GENERAL PUBLIC LICENSE 3
+		(see LICENSE in the top level directory of the distribution)
+"""
+
 import configparser
 import re
 
@@ -146,6 +154,8 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 def newmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 	"""
+
+	DON'T USE THIS: NOT UP TO DATE; RESULTS WILL NOT SATISFY
 
 	new latin xml is hopeless? [lat.ls.perseus-eng1.xml]
 
