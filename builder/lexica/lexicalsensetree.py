@@ -22,7 +22,7 @@ test = """
 """
 
 
-def findprimarysenses(entrybody: str, minimumcomplexity=2) -> str:
+def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4) -> list:
 	"""
 
 	figure out what the key meanings of an entry are by scanning an entry's hierarchy
@@ -44,6 +44,7 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2) -> str:
 	sensedict = generatesensedict(entrybody)
 
 	tops = [s for s in sensedict if sensedict[s]['level'] == 1]
+	seconds = [s for s in sensedict if sensedict[s]['level'] == 2]
 	# print(tops)
 	# [1, 37, 51]
 
@@ -51,18 +52,36 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2) -> str:
 	# thirds = [s[2] for s in allsenses if s[2] == '3']
 	# fourths = [s[2] for s in allsenses if s[2] == '4']
 
-	if len(tops) < minimumcomplexity:
+	probing = tops
+
+	if len(tops) < minimumcomplexity and len(seconds) < minimumcomplexity:
 		# there is not an interesting hierarchy...
-		return str()
+		return list()
+
+	if len(tops) < minimumcomplexity:
+		try:
+			sensedict[0]['label'] = 'I'
+		except KeyError:
+			return list()
+		probing = [0] + seconds
 
 	headings = list()
 
-	for t in tops:
-		thistrans = sensedict[t]['trans']
-		toptrans = re.search(transfinder, thistrans).group(1)
-		headings.append('({a}) {b}'.format(a=sensedict[t]['label'], b=toptrans))
+	for p in probing:
+		thistrans = sensedict[p]['trans']
+		try:
+			toptrans = re.search(transfinder, thistrans).group(1)
+		except AttributeError:
+			# AttributeError: 'NoneType' object has no attribute 'group'
+			return list()
+		toptrans = re.sub(r'[;,\s]$', str(), toptrans)
+		headings.append('({a}) {b}'.format(a=sensedict[p]['label'], b=toptrans))
 
-	headings = '; '.join(headings)
+	if len(headings) > caponsensestoreturn:
+		headings = headings[:caponsensestoreturn] + ['...']
+
+	# next happens later...
+	# headings = '; '.join(headings)
 
 	return headings
 
@@ -76,6 +95,7 @@ def generatesensedict(entrybody: str) -> dict:
 	:return:
 	"""
 
+	#  you can get these "firsts" internally, too; but then the whole entry is regular?
 	firstsense = re.compile(r'<sense id=".*?\.(\d+)" n="(.*?)" level="(.*?)" opt="[ny]">(.*?)</sense>')
 	sensefinder = re.compile(r'<sense n="(.*?)" id=".*?\.(\d+)" level="(.*?)" opt="[ny]">(.*?)</sense>')
 
@@ -83,7 +103,7 @@ def generatesensedict(entrybody: str) -> dict:
 
 	fs = re.findall(firstsense, entrybody)
 	if fs:
-		fs[0] = (fs[0][1], fs[0][0], fs[0][2], fs[0][3])
+		fs = [(s[1], s[0], s[2], s[3]) for s in fs]
 	ss = re.findall(sensefinder, entrybody)
 	allsenses = fs + ss
 
@@ -94,7 +114,16 @@ def generatesensedict(entrybody: str) -> dict:
 
 	sensedict = dict()
 	for s in allsenses:
-		sensedict[int(s[1])] = {'label': s[0], 'level': int(s[2]), 'trans': s[3], 'compositelabel': str()}
+		try:
+			sensedict[int(s[1])] = {'label': s[0], 'level': int(s[2]), 'trans': s[3], 'compositelabel': str()}
+		except ValueError:
+			# ValueError: invalid literal for int() with base 10: 'A'
+			print('problem at', s)
+			# somebody has irregular tags...
+			# problem at ('2', 'B', '2', ' Hence, derivv. ')
+			# problem at ('1', 'B', '2', ' Hence derivv. ')
+			# problem at ('1', 'II', '1', ' ... ')
+			return dict()
 
 	return sensedict
 
@@ -161,10 +190,7 @@ def hierarchicalsensedict(sensedict: dict) -> dict:
 		labellength = sensedict[v]['level']
 		valuestouse = valuesdict[v][:labellength]
 		sensedict[v]['compositelabel'] = '.'.join(valuestouse)
-		print(v, ':', sensedict[v]['compositelabel'])
-
-	print('firsts', tops)
-	print('seconds', seconds)
+		# print(v, ':', sensedict[v]['compositelabel'])
 
 	return sensedict
 
@@ -194,5 +220,9 @@ def arraypaddinghelper(arraydepth, topslist, valuesdict, sensedict) -> list:
 	return valuesdict
 
 
-print(findprimarysenses(testb))
-hierarchicalsensedict(generatesensedict(testb))
+print(findprimarysenses(test))
+# sd = hierarchicalsensedict(generatesensedict(test))
+#
+# toptwo = [sd[s]['compositelabel'] for s in sd if sd[s]['level'] == 2]
+#
+# print(toptwo)
