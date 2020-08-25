@@ -7,7 +7,7 @@
 """
 
 import re
-from builder.lexica.fixtranslationtagging import latintranslationtagrepairs
+from builder.lexica.fixtranslationtagging import latintranslationtagrepairs, greektranslationtagrepairs
 
 
 def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4, language='greek') -> list:
@@ -30,16 +30,20 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 
 	if language == 'greek':
 		transfinder = re.compile(r'<trans.*?>(.*?)</trans>')
-	elif language == 'INPROGESS_latin':
+	elif language == 'latin':
 		transfinder = re.compile(r'<hi rend="ital".*?>(.*?)</hi>')
 	else:
 		return list()
 	nontransfinder = re.compile(r'(.*?)<bibl')
-	sensedict = hierarchicalsensedict(generatesensedict(entrybody))
+	sensedict = hierarchicalsensedict(generatesensedict(entrybody, language=language))
 
 	firsts = [s for s in sensedict if sensedict[s]['level'] == 1]
 	seconds = [s for s in sensedict if sensedict[s]['level'] == 2]
 	thirds = [s for s in sensedict if sensedict[s]['level'] == 3]
+
+	print(firsts)
+	# for item in [firsts, seconds, thirds]:
+	# 	print(item)
 
 	probing = firsts
 
@@ -105,7 +109,7 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 	return headings
 
 
-def generatesensedict(entrybody: str) -> dict:
+def generatesensedict(entrybody: str, language='greek') -> dict:
 	"""
 
 	organize the senses in a preliminary manner
@@ -118,7 +122,10 @@ def generatesensedict(entrybody: str) -> dict:
 	firstsense = re.compile(r'<sense id=".*?\.(\d+)" n="(.*?)" level="(.*?)" opt="[ny]">(.*?)</sense>')
 	sensefinder = re.compile(r'<sense n="(.*?)" id=".*?\.(\d+)" level="(.*?)" opt="[ny]">(.*?)</sense>')
 
-	entrybody = latintranslationtagrepairs(entrybody)
+	if language == 'greek':
+			entrybody = greektranslationtagrepairs(entrybody)
+	elif language == 'latin':
+		entrybody = latintranslationtagrepairs(entrybody)
 
 	fs = re.findall(firstsense, entrybody)
 	if fs:
@@ -249,16 +256,21 @@ def arraypaddinghelper(arraydepth, topslist, valuesdict, sensedict) -> list:
 	return valuesdict
 
 
-from builder.lexica.testentries import testi as test
-
-x = findprimarysenses(test, language='latin')
-print(x)
-
-xd = hierarchicalsensedict(generatesensedict(test))
-for x in xd:
-	print(x, xd[x]['compositelabel'])
-
-print(xd)
+# from builder.lexica.testentries import testk as test
+#
+# if re.search(r'[a-z]', test):
+# 	l = 'latin'
+# else:
+# 	l = 'greek'
+#
+# x = findprimarysenses(test, language=l)
+# print(x)
+#
+# xd = hierarchicalsensedict(generatesensedict(test))
+# for x in xd:
+# 	print(x, xd[x]['level'], xd[x]['compositelabel'])
+#
+# print(xd)
 
 # sd = hierarchicalsensedict(generatesensedict(test))
 #

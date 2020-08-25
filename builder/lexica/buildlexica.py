@@ -316,20 +316,23 @@ def fixmorphologytranslations(language: str):
 
 	# OK, this is not the fast/efficient way to go, but... [instead the info should be built into the dictionary tables]
 	# we will look for words that have multiple major subheadings A... B... C... and opt for those translations
-	q = 'SELECT entry_name, entry_body FROM {t}'.format(t=table)
-	dbcursor.execute(q)
-	entrybodies = resultiterator(dbcursor)
 
-	for b in entrybodies:
-		word = b[0]
-		body = b[1]
-		senses = findprimarysenses(body, language=language)
-		if senses:
-			try:
-				translations[word] = senses
-				# print('newsenses:', senses)
-			except KeyError:
-				pass
+	if language == 'greek':
+		# latin still to wonky
+		q = 'SELECT entry_name, entry_body FROM {t}'.format(t=table)
+		dbcursor.execute(q)
+		entrybodies = resultiterator(dbcursor)
+
+		for b in entrybodies:
+			word = b[0]
+			body = b[1]
+			senses = findprimarysenses(body, language=language)
+			if senses:
+				try:
+					translations[word] = senses
+					# print('newsenses:', senses)
+				except KeyError:
+					pass
 
 	dbconnection.connectioncleanup()
 
