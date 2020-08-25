@@ -10,7 +10,7 @@ import re
 from builder.lexica.fixtranslationtagging import latintranslationtagrepairs
 
 
-def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4) -> list:
+def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4, language='greek') -> list:
 	"""
 
 	figure out what the key meanings of an entry are by scanning an entry's hierarchy
@@ -28,7 +28,12 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 	:return:
 	"""
 
-	transfinder = re.compile(r'<trans.*?>(.*?)</trans>')
+	if language == 'greek':
+		transfinder = re.compile(r'<trans.*?>(.*?)</trans>')
+	elif language == 'INPROGESS_latin':
+		transfinder = re.compile(r'<hi rend="ital".*?>(.*?)</hi>')
+	else:
+		return list()
 	nontransfinder = re.compile(r'(.*?)<bibl')
 	sensedict = hierarchicalsensedict(generatesensedict(entrybody))
 
@@ -82,7 +87,8 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 		toptrans = toptrans.strip()
 		toptrans = re.sub(r'[;,]$', str(), toptrans)
 		# headings.append('{a}. {b}'.format(a=sensedict[p]['compositelabel'], b=toptrans))
-		headings.append('{a}. {b}'.format(a=sensedict[p]['label'], b=toptrans))
+		if toptrans:
+			headings.append('{a}. {b}'.format(a=sensedict[p]['label'], b=toptrans))
 
 	if len(headings) > caponsensestoreturn:
 		headings = headings[:caponsensestoreturn] + ['...']
@@ -145,6 +151,8 @@ def generatesensedict(entrybody: str) -> dict:
 
 def hierarchicalsensedict(sensedict: dict) -> dict:
 	"""
+
+	ONLY WORKS FOR GREEK ATM
 
 	organize this: A.II.3...
 
@@ -241,16 +249,16 @@ def arraypaddinghelper(arraydepth, topslist, valuesdict, sensedict) -> list:
 	return valuesdict
 
 
-# from builder.lexica.testentries import testa as test
-#
-# x = findprimarysenses(test)
-# print(x)
+from builder.lexica.testentries import testi as test
 
-# xd = hierarchicalsensedict(generatesensedict(test))
-# for x in xd:
-# 	print(x, xd[x]['compositelabel'])
-#
-# print(xd)
+x = findprimarysenses(test, language='latin')
+print(x)
+
+xd = hierarchicalsensedict(generatesensedict(test))
+for x in xd:
+	print(x, xd[x]['compositelabel'])
+
+print(xd)
 
 # sd = hierarchicalsensedict(generatesensedict(test))
 #

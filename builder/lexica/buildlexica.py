@@ -10,11 +10,11 @@ import configparser
 from multiprocessing import Manager
 
 from builder.dbinteraction.connection import setconnection
-from builder.dbinteraction.genericworkerobject import GenericInserterObject
 from builder.dbinteraction.dbhelperfunctions import resultiterator
-from builder.lexica.mpgrammarworkers import mpanalysisinsert, mplemmatainsert
-from builder.lexica.lexicalsensetree import findprimarysenses
+from builder.dbinteraction.genericworkerobject import GenericInserterObject
 from builder.lexica.fixmorphologydefs import analysisrewriter
+from builder.lexica.lexicalsensetree import findprimarysenses
+from builder.lexica.mpgrammarworkers import mpanalysisinsert, mplemmatainsert
 from builder.lexica.mpgreekinserters import mpgreekdictionaryinsert, oldxmlmpgreekdictionaryinsert
 from builder.lexica.mplatininsterters import newmplatindictionaryinsert, oldmplatindictionaryinsert
 
@@ -316,7 +316,6 @@ def fixmorphologytranslations(language: str):
 
 	# OK, this is not the fast/efficient way to go, but... [instead the info should be built into the dictionary tables]
 	# we will look for words that have multiple major subheadings A... B... C... and opt for those translations
-
 	q = 'SELECT entry_name, entry_body FROM {t}'.format(t=table)
 	dbcursor.execute(q)
 	entrybodies = resultiterator(dbcursor)
@@ -324,7 +323,7 @@ def fixmorphologytranslations(language: str):
 	for b in entrybodies:
 		word = b[0]
 		body = b[1]
-		senses = findprimarysenses(body)
+		senses = findprimarysenses(body, language=language)
 		if senses:
 			try:
 				translations[word] = senses
