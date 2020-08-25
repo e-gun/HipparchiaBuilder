@@ -30,7 +30,7 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 
 	transfinder = re.compile(r'<trans.*?>(.*?)</trans>')
 	nontransfinder = re.compile(r'(.*?)<bibl')
-	sensedict = generatesensedict(entrybody)
+	sensedict = hierarchicalsensedict(generatesensedict(entrybody))
 
 	firsts = [s for s in sensedict if sensedict[s]['level'] == 1]
 	seconds = [s for s in sensedict if sensedict[s]['level'] == 2]
@@ -79,7 +79,9 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 			except AttributeError:
 				# AttributeError: 'NoneType' object has no attribute 'group'
 				toptrans = str()
-		toptrans = re.sub(r'[;,\s]$', str(), toptrans)
+		toptrans = toptrans.strip()
+		toptrans = re.sub(r'[;,]$', str(), toptrans)
+		# headings.append('{a}. {b}'.format(a=sensedict[p]['compositelabel'], b=toptrans))
 		headings.append('{a}. {b}'.format(a=sensedict[p]['label'], b=toptrans))
 
 	if len(headings) > caponsensestoreturn:
@@ -239,11 +241,11 @@ def arraypaddinghelper(arraydepth, topslist, valuesdict, sensedict) -> list:
 	return valuesdict
 
 
-# from builder.lexica.testentries import testf as test
+# from builder.lexica.testentries import testa as test
 #
 # x = findprimarysenses(test)
 # print(x)
-#
+
 # xd = hierarchicalsensedict(generatesensedict(test))
 # for x in xd:
 # 	print(x, xd[x]['compositelabel'])
