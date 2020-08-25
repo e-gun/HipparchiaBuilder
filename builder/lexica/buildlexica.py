@@ -329,7 +329,6 @@ def fixmorphologytranslations(language: str):
 			try:
 				translations[word] = senses
 				# print('newsenses:', senses)
-				# this yields a distressingly small number of hits...
 			except KeyError:
 				pass
 

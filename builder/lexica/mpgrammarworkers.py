@@ -11,9 +11,8 @@ import re
 from psycopg2.extras import execute_values as insertlistofvaluetuples
 
 from builder.dbinteraction.connection import setconnection
-from builder.parsers.lexica import greekwithoutvowellengths, betaconvertandsave, latinvowellengths
-from builder.parsers.swappers import superscripterzero, superscripterone
-from builder.dbinteraction.dbloading import generatecopystream
+from builder.parsers.lexica import betaconvertandsave, greekwithoutvowellengths, latinvowellengths
+from builder.parsers.swappers import superscripterone, superscripterzero
 
 
 def mplemmatainsert(grammardb, entries, islatin, dbconnection):
