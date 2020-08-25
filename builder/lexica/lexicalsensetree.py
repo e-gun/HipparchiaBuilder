@@ -34,18 +34,8 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 	firsts = [s for s in sensedict if sensedict[s]['level'] == 1]
 	seconds = [s for s in sensedict if sensedict[s]['level'] == 2]
 	thirds = [s for s in sensedict if sensedict[s]['level'] == 3]
-	# print(tops)
-	# [1, 37, 51]
-
-	# seconds = [s[2] for s in allsenses if s[2] == '2']
-	# thirds = [s[2] for s in allsenses if s[2] == '3']
-	# fourths = [s[2] for s in allsenses if s[2] == '4']
 
 	probing = firsts
-
-	# print(len(firsts))
-	# print(len(seconds))
-	# print(len(thirds), '3rds')
 
 	if len(firsts) < minimumcomplexity and len(seconds) < minimumcomplexity and len(thirds) < minimumcomplexity:
 		# there is not an interesting hierarchy...
@@ -88,6 +78,12 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 	if len(headings) > caponsensestoreturn:
 		headings = headings[:caponsensestoreturn] + ['...']
 
+	headings = [h.strip() for h in headings if h]
+	headings = [h for h in headings if h]
+
+	if len(headings) > 1 and headings[0] == headings[1]:
+		headings = headings[1:]
+
 	# next happens later...
 	# headings = '; '.join(headings)
 
@@ -113,7 +109,12 @@ def generatesensedict(entrybody: str) -> dict:
 	if fs:
 		fs = [(s[1], s[0], s[2], s[3]) for s in fs]
 	ss = re.findall(sensefinder, entrybody)
-	allsenses = fs + ss
+
+	# avoid dupes up front if you are at risk of them
+	if fs and ss and fs == ss[0]:
+		allsenses = ss
+	else:
+		allsenses = fs + ss
 
 	# ('A', '1', '1', ' (stuff) ')
 	# ('I', '2', '2', ' (stuff) ')
