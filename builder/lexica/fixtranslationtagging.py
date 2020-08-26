@@ -229,6 +229,6 @@ def lainttransphrasehelper(regexmatch, classing=False) -> str:
 	return newtext
 
 
-# from builder.lexica.testentries import testm as test
+# from builder.lexica.testentries import testo as test
 #
 # print(latintranslationtagrepairs(test))

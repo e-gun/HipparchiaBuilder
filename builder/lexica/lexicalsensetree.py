@@ -8,6 +8,7 @@
 
 import re
 from builder.lexica.fixtranslationtagging import latintranslationtagrepairs, greektranslationtagrepairs
+from builder.lexica.falsepositives import nonsense, falseheads
 
 
 def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4, language='greek') -> list:
@@ -87,23 +88,18 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 				return list()
 		probing = [itemone] + thirds
 
-	headings = list()
+	# the latin tree is also odd because I will have a dfn but II might only introduce A, B, C...
+	if language == 'latin' and len(probing) < minimumcomplexity and len(seconds) >= minimumcomplexity:
+		probing = probing + seconds
 
-	nonsense = {'Act', 'Adj', 'Nom', 'Prep', 'A', 'Ab', 'Abl', 'Absol', 'Acc. respect.',
-	            'Dat', 'Dim', 'Fem', 'Fin', 'Fin.', 'Fut', 'Gen', 'Gen.  plur.', 'Imp',
-	            'Inf', 'Init', 'Masc', 'Nom', 'Num', 'Of', 'Part', 'Patr', 'Perf', 'Plur',
-	            'Prep', 'Pres', 'Subst', 'Sup', 'Sync', 'Temp', 'V', 'Verb', 'Voc', 'act',
-	            'adj', 'nom', 'prep', 'a', 'ab', 'abl', 'absol', 'acc. respect.', 'dat',
-	            'dim', 'fem', 'fin', 'fin.', 'fut', 'gen', 'gen. plur.', 'imp', 'inf',
-	            'init', 'masc', 'nom', 'num', 'of', 'part', 'patr', 'perf', 'plur', 'prep',
-	            'pres', 'subst', 'sup', 'sync', 'temp', 'v', 'verb', 'voc', 'part. perf.',
-	            'v. desid. a.', 'adv', 'pron', 'fem.', 'masc.', 'infra', 'neutr.', 'Neutr.',
-	            'neutr', 'Neutr', 'a.', 'Prop', 'prop', 'Plur.', 'plur.'}
+	headings = list()
 
 	for p in probing:
 		thistrans = sensedict[p]['trans']
 		alltrans = re.findall(transfinder, thistrans)
 		alltrans = [a for a in alltrans if a not in nonsense]
+		# so costly...
+
 		try:
 			toptrans = alltrans[0]
 		except IndexError:
@@ -115,6 +111,13 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 			except AttributeError:
 				# AttributeError: 'NoneType' object has no attribute 'group'
 				toptrans = str()
+
+		print('toptrans', toptrans)
+		for fh in falseheads:
+			if re.search(fh, toptrans):
+				toptrans = str()
+
+		print('toptrans', toptrans)
 		toptrans = toptrans.strip()
 		toptrans = re.sub(r'[;,:]$', str(), toptrans)
 		# there might be two bad chars at the end...
@@ -292,10 +295,8 @@ def arraypaddinghelper(arraydepth, topslist, valuesdict, sensedict) -> list:
 
 	return valuesdict
 
-# test = """
-# <orth extent="full" lang="la" opt="n">flābellum</orth>, <itype opt="n">i</itype>, <gen opt="n">n.</gen> <lbl opt="n">dim.</lbl> <etym opt="n">flabrum</etym>, <sense id="n18263.0" n="I" level="1" opt="n"><hi rend="ital">a smali fan or fly-flap</hi>.</hi> </sense><sense id="n18263.1" n="I" level="1" opt="n"> <usg type="style" opt="n">Lit.</usg>: <cit><quote lang="la">cape hoc flabellum, et ventulum huic sic facito,</quote> <bibl n="Perseus:abo:phi,0134,003:595" class="rewritten" default="NO" valid="yes"><author>Ter.</author> Eun. 595</bibl></cit>; <bibl default="NO">50</bibl>; <bibl n="Perseus:abo:phi,1294,002:3:82:10" class="rewritten" default="NO"><author>Mart.</author> 3, 82, 10</bibl>; <cit><quote lang="la">for this a peacock's tail was used,</quote> <bibl n="Perseus:abo:phi,0620,001:2:24" default="NO" class="rewritten"><author>Prop.</author> 2, 24</bibl></cit> (3, 18), 11; <bibl default="NO"><author>Hier.</author> Ep. 27, 13</bibl>.—* </sense><sense id="n18263.2" n="II" level="1" opt="n"> <usg type="style" opt="n">Trop.</usg>: <cit><quote lang="la">cujus lingua quasi flabello seditionis, illa tum est egentium concio ventilata,</quote> <trans opt="n"><tr opt="n">an exciter</tr>,</trans> <bibl default="NO"><author>Cic.</author> Fl. 23, 54</bibl></cit>.</sense>
-# (1 row)"""
-# # from builder.lexica.testentries import testh as test
+
+# from builder.lexica.testentries import testh as test
 #
 # if re.search(r'[a-z]', test):
 # 	l = 'latin'

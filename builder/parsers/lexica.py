@@ -10,6 +10,7 @@ import re
 from string import punctuation
 
 from builder.parsers.betacodeandunicodeinterconversion import replacegreekbetacode
+from builder.lexica.falsepositives import nonsense
 
 
 try:
@@ -172,6 +173,7 @@ def translationsummary(fullentry: str, translationlabel: str) -> str:
 	try:
 		tr = [t for t in tr if '.' not in t]
 		tr = [t for t in tr if t not in exclude]
+		tr = [t for t in tr if t not in nonsense]
 	except TypeError:
 		# argument of type 'NoneType' is not iterable
 		tr = list()
