@@ -317,7 +317,7 @@ def fixmorphologytranslations(language: str):
 	# OK, this is not the fast/efficient way to go, but... [instead the info should be built into the dictionary tables]
 	# we will look for words that have multiple major subheadings A... B... C... and opt for those translations
 
-	if language == 'greek':
+	if language in ['greek', 'latin']:
 		# latin still to wonky
 		q = 'SELECT entry_name, entry_body FROM {t}'.format(t=table)
 		dbcursor.execute(q)

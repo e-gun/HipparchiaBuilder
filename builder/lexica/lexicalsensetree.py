@@ -34,14 +34,28 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 		transfinder = re.compile(r'<hi rend="ital".*?>(.*?)</hi>')
 	else:
 		return list()
+
 	nontransfinder = re.compile(r'(.*?)<bibl')
 	sensedict = hierarchicalsensedict(generatesensedict(entrybody, language=language))
+
+	# the latin dictionary's first translation of its first "sense" tends to be morphology notes
+	# and the sense tree is warped
+	# 0 1 I
+	# 1 1 I
+	# 2 1 II
+	# 3 2 II.A
+
+	try:
+		if sensedict[0]['compositelabel'] == sensedict[1]['compositelabel']:
+			# sensedict.pop(0)
+			sensedict[0]['label'] = 'A'
+	except KeyError:
+		pass
 
 	firsts = [s for s in sensedict if sensedict[s]['level'] == 1]
 	seconds = [s for s in sensedict if sensedict[s]['level'] == 2]
 	thirds = [s for s in sensedict if sensedict[s]['level'] == 3]
 
-	print(firsts)
 	# for item in [firsts, seconds, thirds]:
 	# 	print(item)
 
@@ -54,20 +68,20 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 	itemone = 0
 	if len(firsts) < minimumcomplexity and len(seconds) >= minimumcomplexity:
 		try:
-			sensedict[0]['label'] = 'I'
+			sensedict[0]['label'] = 'A.I'
 		except KeyError:
 			try:
-				sensedict[1]['label'] = 'I'
+				sensedict[1]['label'] = 'A.I'
 				itemone = 1
 			except KeyError:
 				return list()
 		probing = [itemone] + seconds
 	elif len(seconds) < 2 and len(thirds) >= minimumcomplexity:
 		try:
-			sensedict[0]['label'] = '1'
+			sensedict[0]['label'] = 'I.1'
 		except KeyError:
 			try:
-				sensedict[1]['label'] = '1'
+				sensedict[1]['label'] = 'I.1'
 				itemone = 1
 			except KeyError:
 				return list()
@@ -75,13 +89,26 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 
 	headings = list()
 
+	nonsense = {'Act', 'Adj', 'Nom', 'Prep', 'A', 'Ab', 'Abl', 'Absol', 'Acc. respect.',
+	            'Dat', 'Dim', 'Fem', 'Fin', 'Fin.', 'Fut', 'Gen', 'Gen.  plur.', 'Imp',
+	            'Inf', 'Init', 'Masc', 'Nom', 'Num', 'Of', 'Part', 'Patr', 'Perf', 'Plur',
+	            'Prep', 'Pres', 'Subst', 'Sup', 'Sync', 'Temp', 'V', 'Verb', 'Voc', 'act',
+	            'adj', 'nom', 'prep', 'a', 'ab', 'abl', 'absol', 'acc. respect.', 'dat',
+	            'dim', 'fem', 'fin', 'fin.', 'fut', 'gen', 'gen. plur.', 'imp', 'inf',
+	            'init', 'masc', 'nom', 'num', 'of', 'part', 'patr', 'perf', 'plur', 'prep',
+	            'pres', 'subst', 'sup', 'sync', 'temp', 'v', 'verb', 'voc', 'part. perf.',
+	            'v. desid. a.', 'adv', 'pron', 'fem.', 'masc.', 'infra', 'neutr.', 'Neutr.',
+	            'neutr', 'Neutr', 'a.', 'Prop', 'prop', 'Plur.', 'plur.'}
+
 	for p in probing:
 		thistrans = sensedict[p]['trans']
+		alltrans = re.findall(transfinder, thistrans)
+		alltrans = [a for a in alltrans if a not in nonsense]
 		try:
-			toptrans = re.search(transfinder, thistrans).group(1)
-		except AttributeError:
-			# AttributeError: 'NoneType' object has no attribute 'group'
+			toptrans = alltrans[0]
+		except IndexError:
 			toptrans = str()
+
 		if not toptrans:
 			try:
 				toptrans = re.search(nontransfinder, thistrans).group(1)
@@ -89,10 +116,14 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 				# AttributeError: 'NoneType' object has no attribute 'group'
 				toptrans = str()
 		toptrans = toptrans.strip()
-		toptrans = re.sub(r'[;,]$', str(), toptrans)
+		toptrans = re.sub(r'[;,:]$', str(), toptrans)
+		# there might be two bad chars at the end...
+		toptrans = re.sub(r'[;,:]$', str(), toptrans)
 		# headings.append('{a}. {b}'.format(a=sensedict[p]['compositelabel'], b=toptrans))
-		if toptrans:
-			headings.append('{a}. {b}'.format(a=sensedict[p]['label'], b=toptrans))
+		if toptrans and not re.search(r'^<usg type="style" opt="n">', toptrans):
+			headings.append([sensedict[p]['label'], toptrans])
+
+	headings = ['{x}. {y}'.format(x=h[0], y=h[1]) for h in headings]
 
 	if len(headings) > caponsensestoreturn:
 		headings = headings[:caponsensestoreturn] + ['...']
@@ -102,6 +133,11 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 
 	if len(headings) > 1 and headings[0] == headings[1]:
 		headings = headings[1:]
+
+	# try:
+	# 	print(headings[0])
+	# except:
+	# 	pass
 
 	# next happens later...
 	# headings = '; '.join(headings)
@@ -123,13 +159,14 @@ def generatesensedict(entrybody: str, language='greek') -> dict:
 	sensefinder = re.compile(r'<sense n="(.*?)" id=".*?\.(\d+)" level="(.*?)" opt="[ny]">(.*?)</sense>')
 
 	if language == 'greek':
-			entrybody = greektranslationtagrepairs(entrybody)
+		entrybody = greektranslationtagrepairs(entrybody)
 	elif language == 'latin':
 		entrybody = latintranslationtagrepairs(entrybody)
 
 	fs = re.findall(firstsense, entrybody)
 	if fs:
 		fs = [(s[1], s[0], s[2], s[3]) for s in fs]
+
 	ss = re.findall(sensefinder, entrybody)
 
 	# avoid dupes up front if you are at risk of them
@@ -159,7 +196,7 @@ def generatesensedict(entrybody: str, language='greek') -> dict:
 def hierarchicalsensedict(sensedict: dict) -> dict:
 	"""
 
-	ONLY WORKS FOR GREEK ATM
+	ONLY WORKS FOR GREEK ATM; LATIN IS WONKY
 
 	organize this: A.II.3...
 
@@ -255,8 +292,10 @@ def arraypaddinghelper(arraydepth, topslist, valuesdict, sensedict) -> list:
 
 	return valuesdict
 
-
-# from builder.lexica.testentries import testk as test
+# test = """
+# <orth extent="full" lang="la" opt="n">flābellum</orth>, <itype opt="n">i</itype>, <gen opt="n">n.</gen> <lbl opt="n">dim.</lbl> <etym opt="n">flabrum</etym>, <sense id="n18263.0" n="I" level="1" opt="n"><hi rend="ital">a smali fan or fly-flap</hi>.</hi> </sense><sense id="n18263.1" n="I" level="1" opt="n"> <usg type="style" opt="n">Lit.</usg>: <cit><quote lang="la">cape hoc flabellum, et ventulum huic sic facito,</quote> <bibl n="Perseus:abo:phi,0134,003:595" class="rewritten" default="NO" valid="yes"><author>Ter.</author> Eun. 595</bibl></cit>; <bibl default="NO">50</bibl>; <bibl n="Perseus:abo:phi,1294,002:3:82:10" class="rewritten" default="NO"><author>Mart.</author> 3, 82, 10</bibl>; <cit><quote lang="la">for this a peacock's tail was used,</quote> <bibl n="Perseus:abo:phi,0620,001:2:24" default="NO" class="rewritten"><author>Prop.</author> 2, 24</bibl></cit> (3, 18), 11; <bibl default="NO"><author>Hier.</author> Ep. 27, 13</bibl>.—* </sense><sense id="n18263.2" n="II" level="1" opt="n"> <usg type="style" opt="n">Trop.</usg>: <cit><quote lang="la">cujus lingua quasi flabello seditionis, illa tum est egentium concio ventilata,</quote> <trans opt="n"><tr opt="n">an exciter</tr>,</trans> <bibl default="NO"><author>Cic.</author> Fl. 23, 54</bibl></cit>.</sense>
+# (1 row)"""
+# # from builder.lexica.testentries import testh as test
 #
 # if re.search(r'[a-z]', test):
 # 	l = 'latin'
