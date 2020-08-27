@@ -58,10 +58,10 @@ def greekwithvowellengths(ttc):
 		# ttc = re.sub(r'\^', u'/\u0306', ttc)
 		pass
 	
-	ttc = re.sub(r'\^\/', u'/\u0306', ttc)
-	ttc = re.sub(r'\_\/', u'/\u0304', ttc)
+	ttc = re.sub(r'\^/', u'/\u0306', ttc)
+	ttc = re.sub(r'_/', u'/\u0304', ttc)
 	ttc = re.sub(r'([AIU])\^', r'\1'+u'\u0306',ttc)
-	ttc = re.sub(r'([AIU])\_', r'\1' + u'\u0304', ttc)
+	ttc = re.sub(r'([AIU])_', r'\1' + u'\u0304', ttc)
 
 	ttc = replacegreekbetacode(ttc)
 	

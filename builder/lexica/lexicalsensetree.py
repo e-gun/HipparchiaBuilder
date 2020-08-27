@@ -7,6 +7,7 @@
 """
 
 import re
+
 from builder.lexica.fixtranslationtagging import latintranslationtagrepairs, greektranslationtagrepairs
 from builder.lexica.falsepositives import nonsense, falseheads
 
@@ -25,6 +26,15 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 
 	sensedict[int(s[1])] = {'label': s[0], 'level': int(s[2]), 'trans': s[3], 'compositelabel': str()}
 
+	the latin dictionary's first translation of its first "sense" tends to be morphology notes
+	and the sense tree is warped
+	0 1 I
+	1 1 I
+	2 1 II
+	3 2 II.A
+
+	this requires the invocation of 'nonsense' as well as a variety of other dodges
+
 	:param entrybody:
 	:return:
 	"""
@@ -33,18 +43,12 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 		transfinder = re.compile(r'<trans.*?>(.*?)</trans>')
 	elif language == 'latin':
 		transfinder = re.compile(r'<hi rend="ital".*?>(.*?)</hi>')
+		minimumcomplexity += 1
 	else:
 		return list()
 
 	nontransfinder = re.compile(r'(.*?)<bibl')
 	sensedict = hierarchicalsensedict(generatesensedict(entrybody, language=language))
-
-	# the latin dictionary's first translation of its first "sense" tends to be morphology notes
-	# and the sense tree is warped
-	# 0 1 I
-	# 1 1 I
-	# 2 1 II
-	# 3 2 II.A
 
 	try:
 		if sensedict[0]['compositelabel'] == sensedict[1]['compositelabel']:
@@ -93,13 +97,11 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 		probing = probing + seconds
 
 	headings = list()
-
 	for p in probing:
 		thistrans = sensedict[p]['trans']
 		alltrans = re.findall(transfinder, thistrans)
-		alltrans = [a for a in alltrans if a not in nonsense]
-		# so costly...
 
+		alltrans = [a for a in alltrans if a not in nonsense]
 		try:
 			toptrans = alltrans[0]
 		except IndexError:
@@ -112,21 +114,37 @@ def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4
 				# AttributeError: 'NoneType' object has no attribute 'group'
 				toptrans = str()
 
-		print('toptrans', toptrans)
+		toptrans = toptrans.strip()
+
+		while re.search(r'[;,:.]$', toptrans):
+			toptrans = re.sub(r'[;,:.]$', str(), toptrans)
+
+		# need to redo this check because 'nontransfidner' may have been invoked
+		if toptrans in nonsense:
+			toptrans = str()
+
 		for fh in falseheads:
 			if re.search(fh, toptrans):
 				toptrans = str()
 
-		print('toptrans', toptrans)
-		toptrans = toptrans.strip()
-		toptrans = re.sub(r'[;,:]$', str(), toptrans)
-		# there might be two bad chars at the end...
-		toptrans = re.sub(r'[;,:]$', str(), toptrans)
 		# headings.append('{a}. {b}'.format(a=sensedict[p]['compositelabel'], b=toptrans))
-		if toptrans and not re.search(r'^<usg type="style" opt="n">', toptrans):
+		if toptrans:
 			headings.append([sensedict[p]['label'], toptrans])
 
-	headings = ['{x}. {y}'.format(x=h[0], y=h[1]) for h in headings]
+	# drop sequential duplicates
+	uniqueheadings = list()
+	headings.reverse()
+
+	while headings:
+		h = headings.pop()
+		try:
+			if uniqueheadings[-1][1] != h[1]:
+				uniqueheadings.append(h)
+		except IndexError:
+			uniqueheadings.append(h)
+
+	# now you have your (mostly) unique headings...: format for output
+	headings = ['{x}. {y}'.format(x=h[0], y=h[1]) for h in uniqueheadings]
 
 	if len(headings) > caponsensestoreturn:
 		headings = headings[:caponsensestoreturn] + ['...']
@@ -296,13 +314,10 @@ def arraypaddinghelper(arraydepth, topslist, valuesdict, sensedict) -> list:
 	return valuesdict
 
 
-# from builder.lexica.testentries import testh as test
+# from builder.lexica.testentries import testm as test
 #
-# if re.search(r'[a-z]', test):
-# 	l = 'latin'
-# else:
-# 	l = 'greek'
-#
+# l = 'latin'
+# # l = 'greek'
 # x = findprimarysenses(test, language=l)
 # print(x)
 #

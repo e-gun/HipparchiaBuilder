@@ -329,7 +329,9 @@ def fixmorphologytranslations(language: str):
 			senses = findprimarysenses(body, language=language)
 			if senses:
 				try:
-					translations[word] = senses
+					# esp. with the latin dict findprimarysenses() will return just one item and is so less useful
+					if len(translations[word]) <= len(senses):
+						translations[word] = senses
 					# print('newsenses:', senses)
 				except KeyError:
 					pass

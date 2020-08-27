@@ -11,7 +11,7 @@ import re
 from psycopg2.extras import execute_values as insertlistofvaluetuples
 
 from builder.dbinteraction.connection import setconnection
-from builder.parsers.lexica import betaconvertandsave, greekwithoutvowellengths, latinvowellengths
+from builder.parsers.lexicalparsing import betaconvertandsave, greekwithoutvowellengths, latinvowellengths
 from builder.parsers.swappers import superscripterone, superscripterzero
 
 

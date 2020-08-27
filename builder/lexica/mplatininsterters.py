@@ -15,7 +15,7 @@ from builder.dbinteraction.connection import setconnection
 from builder.lexica.fixtranslationtagging import latintranslationtagrepairs
 from builder.lexica.repairperseuscitations import latindramacitationformatconverter, oneofflatinworkremapping
 from builder.parsers.htmltounicode import htmltounicode
-from builder.parsers.lexica import greekwithvowellengths, latinvowellengths, translationsummary
+from builder.parsers.lexicalparsing import greekwithvowellengths, latinvowellengths, translationsummary
 from builder.parsers.swappers import superscripterone
 
 config = configparser.ConfigParser()

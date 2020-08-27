@@ -16,7 +16,7 @@ from builder.lexica.repairperseuscitations import perseusworkmappingfixer
 from builder.lexica.fixtranslationtagging import greektranslationtagrepairs
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
 from builder.parsers.htmltounicode import htmltounicode
-from builder.parsers.lexica import greekwithoutvowellengths, greekwithvowellengths, \
+from builder.parsers.lexicalparsing import greekwithoutvowellengths, greekwithvowellengths, \
 	lsjgreekswapper, translationsummary
 from builder.parsers.swappers import forcelunates, superscripterone
 
