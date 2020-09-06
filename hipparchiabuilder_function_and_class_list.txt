@@ -1,19 +1,19 @@
 cloc --not-match-f='^j' HipparchiaBuilder/
-      66 text files.
-      66 unique files.
+      72 text files.
+      72 unique files.
       10 files ignored.
 
-github.com/AlDanial/cloc v 1.84  T=0.21 s (286.1 files/s, 80571.9 lines/s)
+github.com/AlDanial/cloc v 1.86  T=0.57 s (117.5 files/s, 34197.7 lines/s)
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Python                          49           3365           3986           8722
+Python                          55           3910           4644           9552
+XML                              7              0              0            643
 SQL                              2             69             41            254
-INI                              2             43              0            214
-XML                              6              0              0            110
+INI                              2             47              0            237
 Markdown                         1             30              0             65
 -------------------------------------------------------------------------------
-SUM:                            60           3507           4027           9365
+SUM:                            67           4056           4685          10751
 -------------------------------------------------------------------------------
 
 
@@ -95,14 +95,50 @@ builder/lexica/buildlexica.py:def formatgklexicon():
 builder/lexica/buildlexica.py:def formatlatlexicon():
 builder/lexica/buildlexica.py:def grammarloader(language: str):
 builder/lexica/buildlexica.py:def analysisloader(language: str):
+builder/lexica/buildlexica.py:def fixmorphologytranslations(language: str):
 builder/lexica/buildlexica.py:def resettable(tablename: str, tablestructurelist: list, indexcolumn: str):
 builder/lexica/buildlexica.py:def getlexicaltablestructuredict(tablename: str) -> dict:
+builder/lexica/fixmorphologydefs.py:def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
+builder/lexica/fixmorphologydefs.py:def createandloadmorphtemptable(tableid: str, tabledata: list, dbconnection):
+builder/lexica/fixtranslationtagging.py:def greektranslationtagrepairs(lexicalentry: str) -> str:
+builder/lexica/fixtranslationtagging.py:def greekuntaggedtransphrasehelper(regexmatch) -> str:
+builder/lexica/fixtranslationtagging.py:def greektransphrasehelper(regexmatch, classing=True) -> str:
+builder/lexica/fixtranslationtagging.py:def overzealoushelper(regexmatch) -> str:
+builder/lexica/fixtranslationtagging.py:def latintranslationtagrepairs(lexicalentry: str) -> str:
+builder/lexica/fixtranslationtagging.py:def lainttransphrasehelper(regexmatch, classing=False) -> str:
+builder/lexica/lexicalsensetree.py:def findprimarysenses(entrybody: str, minimumcomplexity=2, caponsensestoreturn=4, language='greek') -> list:
+builder/lexica/lexicalsensetree.py:def generatesensedict(entrybody: str, language='greek') -> dict:
+builder/lexica/lexicalsensetree.py:def hierarchicalsensedict(sensedict: dict) -> dict:
+builder/lexica/lexicalsensetree.py:def arraypaddinghelper(arraydepth, topslist, valuesdict, sensedict) -> list:
 builder/lexica/mpgrammarworkers.py:def mplemmatainsert(grammardb, entries, islatin, dbconnection):
 builder/lexica/mpgrammarworkers.py:def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 builder/lexica/mpgreekinserters.py:def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 builder/lexica/mpgreekinserters.py:def oldxmlmpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
-builder/lexica/mplatininsterters.py:def newmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 builder/lexica/mplatininsterters.py:def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
+builder/lexica/mplatininsterters.py:def newmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
+builder/lexica/repairperseuscitations.py:def conditionalworkidswapper(match):
+builder/lexica/repairperseuscitations.py:def perseusworkmappingfixer(entrytext: str) -> str:
+builder/lexica/repairperseuscitations.py:def latindramacitationformatconverter(entrytext: str, dbconnection=None) -> str:
+builder/lexica/repairperseuscitations.py:def lookforquote(adb: str, wkid: str, quote: str, querytemplate: str, dbcursor) -> tuple:
+builder/lexica/repairperseuscitations.py:def shinkquote(quote: str, direction: str) -> str:
+builder/lexica/repairperseuscitations.py:def oneofflatinworkremapping(entrytext: str) -> str:
+builder/lexica/repairperseuscitations.py:def fixciceroverrinesections(entrytext: str) -> str:
+builder/lexica/repairperseuscitations.py:def ciceroverrinehelper(regexmatch) -> str:
+builder/lexica/repairperseuscitations.py:def fixciceromiscsections(entrytext: str) -> str:
+builder/lexica/repairperseuscitations.py:def ciceromiscsectionhelper(regexmatch) -> str:
+builder/lexica/repairperseuscitations.py:def fixcicerochapters(entrytext: str, disabled=True) -> str:
+builder/lexica/repairperseuscitations.py:def fixfrontinus(entrytext: str) -> str:
+builder/lexica/repairperseuscitations.py:def fixmartial(entrytext: str) -> str:
+builder/lexica/repairperseuscitations.py:def fixnepos(entrytext: str) -> str:
+builder/lexica/repairperseuscitations.py:def neposhelper(regexmatch) -> str:
+builder/lexica/repairperseuscitations.py:def fixpropertius(entrytext: str) -> str:
+builder/lexica/repairperseuscitations.py:def fixsallust(entrytext: str) -> str:
+builder/lexica/repairperseuscitations.py:def sallusthelper(regexmatch) -> str:
+builder/lexica/repairperseuscitations.py:def fixseneca(entrytext: str) -> str:
+builder/lexica/repairperseuscitations.py:def senecahelper(regexmatch) -> str:
+builder/lexica/repairperseuscitations.py:def fixsuetonius(entrytext: str) -> str:
+builder/lexica/repairperseuscitations.py:def suetoniushelper(regexmatch):
+builder/lexica/repairperseuscitations.py:def fixvarro(entrytext: str) -> str:
 builder/parsers/betacodeandunicodeinterconversion.py:def replacegreekbetacode(texttoclean):
 builder/parsers/betacodeandunicodeinterconversion.py:def parseromaninsidegreek(texttoclean):
 builder/parsers/betacodeandunicodeinterconversion.py:def parsegreekinsidelatin(texttoclean):
@@ -224,12 +260,13 @@ builder/parsers/idtfiles.py:def idthexparser(filearray, offset, code):
 builder/parsers/idtfiles.py:def findlabelsforlevels(filearray, offset):
 builder/parsers/latinsubstitutions.py:def latindiacriticals(texttoclean: str) -> str:
 builder/parsers/latinsubstitutions.py:def latinsubstitutes(matchgroup) -> str:
-builder/parsers/lexica.py:def greekwithoutvowellengths(betagreek: str) -> str:
-builder/parsers/lexica.py:def greekwithvowellengths(ttc):
-builder/parsers/lexica.py:def latinvowellengths(texttoclean: str) -> str:
-builder/parsers/lexica.py:def betaconvertandsave(convertme: regexmatch) -> str:
-builder/parsers/lexica.py:def lsjgreekswapper(match: regexmatch) -> str:
-builder/parsers/lexica.py:def translationsummary(fullentry: str, translationlabel: str) -> str:
+builder/parsers/lexicalparsing.py:def greekwithoutvowellengths(betagreek: str) -> str:
+builder/parsers/lexicalparsing.py:def greekwithvowellengths(ttc):
+builder/parsers/lexicalparsing.py:def latinvowellengths(texttoclean: str) -> str:
+builder/parsers/lexicalparsing.py:def latinvowellengthshelper(regexmatch) -> str:
+builder/parsers/lexicalparsing.py:def betaconvertandsave(convertme: regexmatch) -> str:
+builder/parsers/lexicalparsing.py:def lsjgreekswapper(match: regexmatch) -> str:
+builder/parsers/lexicalparsing.py:def translationsummary(fullentry: str, translationlabel: str) -> str:
 builder/parsers/parse_binfiles.py:def resetbininfo(relativepath, dbconnection):
 builder/parsers/parse_binfiles.py:def npop(numbertopop, listtopop):
 builder/parsers/parse_binfiles.py:def listoflabels(rbl):
@@ -268,6 +305,7 @@ builder/parsers/regexsubstitutions.py:def cleanworkname(betacodeworkname):
 builder/parsers/regexsubstitutions.py:def colonshift(txt):
 builder/parsers/regexsubstitutions.py:def insertnewlines(txt):
 builder/parsers/regexsubstitutions.py:def tidyupterm(word: str, punct=None) -> str:
+builder/parsers/regexsubstitutions.py:def capitalvforcapitalu(thetext: str) -> str:
 builder/parsers/swappers.py:def highunicodetohex(highunicode):
 builder/parsers/swappers.py:def hutohxgrouper(matchgroup):
 builder/parsers/swappers.py:def hextohighunicode(twocharhexstring):
@@ -318,6 +356,7 @@ builder/postbuild/secondpassdbrewrite.py:def generatemodifiedtuples(results: Lis
 builder/postbuild/secondpassdbrewrite.py:def assignlanguagetonewworks(dbprefix: str):
 builder/postbuild/secondpassdbrewrite.py:def determineworklanguage(strippedlines: List[str]):
 builder/postbuild/secondpassdbrewrite.py:def insertlanguagedata(languagetuplelist: List[tuple]):
+builder/sql/loadarchivedtablesfromsql.py:def archivedsqlloader(pathtosqlarchive: Path):
 builder/wordcounting/databasewordcounts.py:def monowordcounter(restriction=None, authordict=None, workdict=None):
 builder/wordcounting/databasewordcounts.py:def monothreadedindexer(lineobjects, workername=''):
 builder/wordcounting/databasewordcounts.py:def mpwordcounter(restriction=None, authordict=None, workdict=None):
@@ -326,11 +365,10 @@ builder/wordcounting/databasewordcounts.py:def generatesearchidlist(restriction,
 builder/wordcounting/databasewordcounts.py:def generatedbdictwithranges(idlist, workdict):
 builder/wordcounting/databasewordcounts.py:def convertrangedicttolineset(dbswithranges):
 builder/wordcounting/databasewordcounts.py:def generatewordcounttablesonfirstpass(wordcounttable, masterconcorcdance):
-builder/wordcounting/databasewordcounts.py:def calculatetotals(masterconcorcdance):
-builder/wordcounting/databasewordcounts.py:def generatemasterconcorcdancevaluetuples(masterconcorcdance, letter):
+builder/wordcounting/databasewordcounts.py:def calculatetotals(masterconcorcdance: dict) -> dict:
+builder/wordcounting/databasewordcounts.py:def generatemasterconcorcdancevaluetuples(masterconcorcdance: dict, letter: str):
 builder/wordcounting/databasewordcounts.py:def rediswordcounter(restriction=None, authordict=None, workdict=None):
 builder/wordcounting/databasewordcounts.py:def redisbuildindexdict(workernumber: int):
-builder/wordcounting/loadwordcoundsfromsql.py:def wordcountloader(pathtowordcounts: Path):
 builder/wordcounting/wordcountdbfunctions.py:def createwordcounttable(tablename, extracolumns=False):
 builder/wordcounting/wordcountdbfunctions.py:def deletetemporarydbs(temprefix):
 builder/wordcounting/wordcountdbfunctions.py:def insertchronologicalmetadata(metadatadict, thetable):
