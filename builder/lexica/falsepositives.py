@@ -36,5 +36,5 @@ nonsense = {'A', 'A.', 'Ab', 'Abl', 'Abl.', 'Absol', 'Acc.  respect.', 'Acc. res
 heads = ['In gen', 'Prop', 'sync', 'Fig']
 heads = [r'^{h}\.'.format(h=h) for h in heads]
 heads = heads + [r'^<gramGrp opt="n">', r'^<hi rend="ital">', r'^Act.<hi rend="ital">', r'With <pos opt="n">',
-                 r'^<usg type="style" opt="n">', r'^Quantity:', r'^Adv.:']
+                 r'^<usg type="style" opt="n">', r'^Quantity:', r'^Adv.:', r'^Lyr.', r'^in early Greek']
 falseheads = [re.compile(h) for h in heads]
