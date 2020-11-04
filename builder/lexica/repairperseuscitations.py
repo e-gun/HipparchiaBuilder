@@ -270,11 +270,8 @@ def conditionalworkidswapper(match):
 		thumbprint = re.compile(r'<bibl n="Perseus:abo:tlg,(....),(...):.*?<title>(.*?)</title>.*?</bibl>')
 		tailtext = re.sub(thumbprint, conditionalworkidswapper, tailtext)
 		# ok, but what about fixing the other entries that remain...
-		try:
-			headtext = re.sub(thumbprint, conditionalworkidswapper, headtext)
-		except RecursionError:
-			# we did our best...
-			pass
+		# look out for a RecursionError if you miscode: not currently present after a fix to 'thumbprint'
+		headtext = re.sub(thumbprint, conditionalworkidswapper, headtext)
 		newtext = headtext + tailtext
 		return newtext
 

@@ -38,7 +38,7 @@ class Author(object):
 
 	"""
 
-	def __init__(self, number,language, uidprefix, dataprefix):
+	def __init__(self, number, language, uidprefix, dataprefix):
 		self.number = number
 		self.language = language
 		self.universalid = uidprefix+number
@@ -332,6 +332,10 @@ class dbWorkLine(object):
 	)
 
 	"""
+
+	__slots__ = ('wkuinversalid', 'db', 'authorid', 'workid', 'universalid', 'index', 'l0', 'l1', 'l2', 'l3', 'l4', 'l5',
+	             'accented', 'polytonic', 'stripped', 'annotations', 'hyphenated', 'hashyphenated')
+
 	grave = 'ὰὲὶὸὺὴὼῒῢᾲῂῲἃἓἳὃὓἣὣἂἒἲὂὒἢὢ'
 	acute = 'άέίόύήώΐΰᾴῄῴἅἕἵὅὕἥὥἄἔἴὄὔἤὤ'
 	gravetoacute = str.maketrans(grave, acute)
@@ -367,8 +371,8 @@ class dbWorkLine(object):
 			self.hashyphenated = False
 
 		if self.accented is None:
-			self.accented = ''
-			self.stripped = ''
+			self.accented = str()
+			self.stripped = str()
 
 	def locus(self):
 		"""
@@ -603,6 +607,8 @@ class dbWordCountObject(object):
 
 	"""
 
+	__slots__ = ('entryname', 't', 'g', 'l', 'd', 'i', 'c')
+
 	def __init__(self, entryname, totalcount, greekcount, latincount, docpapcount, inscriptioncount, christiancount):
 		self.entryname = entryname
 		self.t = totalcount
@@ -618,7 +624,7 @@ class dbWordCountObject(object):
 			}
 		try:
 			return elements[element]
-		except:
+		except KeyError:
 			return 0
 
 
@@ -641,6 +647,8 @@ class dbLemmaObject(object):
 	and 'evulgaret' will never be seen by the counter since the word seen in the db is 'euulgaret'
 
 	"""
+
+	__slots__ = ('dictionaryentry', 'xref', 'formandidentificationlist', 'formlist')
 
 	def __init__(self, dictionaryentry, xref, derivativeforms):
 		self.dictionaryentry = dictionaryentry
