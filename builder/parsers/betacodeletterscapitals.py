@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 	HipparchiaBuilder: compile a database of Greek and Latin texts
-	Copyright: E Gunderson 2016-20
+	Copyright: E Gunderson 2016-21
 	License: GNU GENERAL PUBLIC LICENSE 3
 		(see LICENSE in the top level directory of the distribution)
 """
@@ -447,6 +447,7 @@ def capitalcircumflex(match: regexmatch) -> str:
 	substitute = simplesubstitutions[match.group(1)]
 
 	return substitute
+
 
 def capitaladscript(match: regexmatch) -> str:
 	substitutions = {

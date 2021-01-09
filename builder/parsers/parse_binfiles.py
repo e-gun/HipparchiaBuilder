@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 	HipparchiaBuilder: generate a database of Greek and Latin texts
-	Copyright: E Gunderson 2016-20
+	Copyright: E Gunderson 2016-21
 	License: GPL 3 (see LICENSE in the top level directory of the distribution)
 """
 
