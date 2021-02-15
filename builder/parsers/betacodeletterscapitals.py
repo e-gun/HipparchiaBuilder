@@ -430,7 +430,7 @@ def capitalcircumflex(match: regexmatch) -> str:
 		'I': u'Ι\u1fc0',
 		'O': u'Ο\u1fc0',
 		'U': u'Υ\u1fc0',
-		'H': u'Η\u1fc0', # there is no capital eta with a circumflex; but TLG0063 will ask for *G*R*A*M*M*A*T*I*K*H=*S3 anyway
+		'H': u'Η\u1fc0',  # there is no capital eta with a circumflex; but TLG0063 will ask for *G*R*A*M*M*A*T*I*K*H=*S3 anyway
 		'W': u'Ω\u1fc0',
 	}
 

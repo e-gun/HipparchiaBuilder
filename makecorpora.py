@@ -8,6 +8,7 @@
 
 import configparser
 import time
+import multiprocessing
 from multiprocessing import freeze_support
 from pathlib import Path
 
@@ -23,6 +24,24 @@ from builder.lexica.buildlexica import analysisloader, formatgklexicon, formatla
 from builder.wordcounting.databasewordcounts import monowordcounter
 from builder.sql.loadarchivedtablesfromsql import archivedsqlloader
 from builder.wordcounting.wordcountsbyheadword import headwordcounts
+
+mpmethod = str()
+try:
+	# macOS now wants 'spawn' by default, but 'fork' is a lot faster...
+	# mpmethod = 'forkserver'
+	# TypeError: can't pickle psycopg2.extensions.connection objects
+	mpmethod = 'fork'
+	multiprocessing.set_start_method(mpmethod)
+except RuntimeError:
+	#   File "/usr/local/Cellar/python/3.7.6_1/Frameworks/Python.framework/Versions/3.7/lib/python3.7/multiprocessing/context.py", line 242, in set_start_method
+	#     raise RuntimeError('context has already been set')
+	# RuntimeError: context has already been set
+	pass
+except:
+	mpmethod = 'spawn'
+	multiprocessing.set_start_method(mpmethod)
+finally:
+	print('multiprocessing method set to: {m}'.format(m=mpmethod))
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')

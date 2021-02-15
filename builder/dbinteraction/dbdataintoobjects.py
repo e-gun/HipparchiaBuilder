@@ -89,7 +89,7 @@ def makeminimallineobject(index, wkuniversalid, accented_line):
 	:return:
 	"""
 
-	return dbWorkLine(wkuniversalid, index, None, None, None, None, None, None, None, accented_line, None, '', None)
+	return dbWorkLine(wkuniversalid, index, None, None, None, None, None, None, None, accented_line, None, str(), None)
 
 
 def dbauthorandworkloader(authoruid, cursor):
@@ -180,17 +180,17 @@ def graballlinesasobjects(db, linerangetuple, cursor):
 	:return:
 	"""
 
-	data = ''
+	data = str()
 
 	if linerangetuple == (-1, -1):
-		whereclause = ''
+		whereclause = str()
 	else:
 		whereclause = ' WHERE index >= %s and index <= %s'
 		data = (linerangetuple[0], linerangetuple[1])
 
 	query = 'SELECT * FROM ' + db + whereclause
 
-	if whereclause != '':
+	if whereclause:
 		cursor.execute(query, data)
 	else:
 		cursor.execute(query)

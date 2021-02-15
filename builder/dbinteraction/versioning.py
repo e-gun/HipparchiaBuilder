@@ -12,7 +12,7 @@ from datetime import datetime
 from builder.dbinteraction.connection import setconnection
 
 
-hipparchiabuilderversion = '1.4.2+'
+hipparchiabuilderversion = '1.4.3'
 #sqltemplateversion = 7242017
 #sqltemplateversion = 2242018
 sqltemplateversion = 10082019
