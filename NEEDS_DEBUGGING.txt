@@ -133,3 +133,20 @@ Prevalence (all forms): Ⓖ 1,882,746 / Ⓛ 420 / Ⓘ 48,721 / Ⓓ 22,482 / Ⓒ 
 
 Weighted distribution by corpus: Ⓖ 100 / Ⓘ 72 / Ⓓ 32 / Ⓒ 12 / Ⓛ 0
 
+
+====
+
+HYPHENATION PROBLEM
+
+    2749 does not have κατεϲκεύαϲεν in it
+
+    hipparchiaDB=# select index, accented_line, hyphenated_words  from ch0005 where index between 2746 and 2752;
+     index |           accented_line           | hyphenated_words
+    -------+-----------------------------------+------------------
+      2748 | ῥουφεῖνα ἰουδαία ἀρχιϲυνάγωγοϲ    | ἀρχιϲυνάγωγοϲ
+      2749 | κατεϲκεύα-                        |
+      2750 | ϲεν τὸ ἐνϲόριον τοῖϲ ἀπελευθέροιϲ | ἀπελευθέροιϲ
+      2751 | καὶ θρέμμαϲιν                     |
+      2752 | μηδενὸϲ ἄλλου ἐξουϲίαν ἔχοντοϲ    | ἔχοντοϲ
+    (5 rows)
+
