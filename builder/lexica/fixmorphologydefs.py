@@ -152,3 +152,136 @@ def createandloadmorphtemptable(tableid: str, tabledata: list, dbconnection):
 	dbconnection.commit()
 
 	return
+
+
+def fixgreeklemmatacapitalization():
+	"""
+
+	capitalization problem in greek
+
+	greek-analyses.txt:
+
+
+	*dhmosqenikw=n  {23331729 9 *dhmosqeniko/s      Demosthenic     fem gen pl}{23331729 9 *dhmosqeniko/s   Demosthenic     masc/neut gen pl}
+	*dhmosqenikw=s  {23331729 9 *dhmosqeniko/s      Demosthenic     adverbial}
+	*dhmosqenikw=|  {23331729 9 *dhmosqeniko/s      Demosthenic     masc/neut dat sg}
+
+
+	greek-lemmata.txt
+
+	dhmosqe/neios	23331729	dhmosqe/neia (neut nom/voc/acc pl)	dhmosqe/neion (masc acc sg) (neut nom/voc/acc sg)	dhmosqe/neios (masc nom sg)
+	dhmosqeniko/s	23331729	dhmosqenika/ (neut nom/voc/acc pl) (fem nom/voc/acc dual) (fem nom/voc sg (doric aeolic))	dhmosqenikai/ (fem nom/voc pl)	dhmosqenikai=s (fem dat pl)	dhmosqenikh/ (fem nom/voc sg (attic epic ionic))	dhmosqenikh/n (fem acc sg (attic epic ionic))	dhmosqenikh=s (fem gen sg (attic epic ionic))	dhmosqenikh=| (fem dat sg (attic epic ionic))	dhmosqeniko/n (masc acc sg) (neut nom/voc/acc sg)	dhmosqeniko/s (masc nom sg)	dhmosqenikoi/ (masc nom/voc pl)	dhmosqenikoi=s (masc/neut dat pl)	dhmosqenikou/s (masc acc pl)	dhmosqenikou= (masc/neut gen sg)	dhmosqenikw=n (fem gen pl) (masc/neut gen pl)	dhmosqenikw=s (adverbial)	dhmosqenikw=| (masc/neut dat sg)
+
+
+	*d is "Δ"
+	d is "δ"
+
+	hipparchiaDB=# select observed_form, xrefs from greek_morphology where observed_form ~* 'ημοϲθενικ';
+	observed_form |  xrefs
+	---------------+----------
+	Δημοϲθενικήν  | 23331729
+	Δημοϲθενικά   | 23331729
+	Δημοϲθενικῶϲ  | 23331729
+	Δημοϲθενικοί  | 23331729
+	...
+
+	this can be fixed via "23331729"
+
+
+	"""
+
+	print('fixing the capitalization problem in the "greek_lemmata" table')
+
+	dbconnection = setconnection()
+	dbcursor = dbconnection.cursor()
+
+	q = 'SELECT xrefs, observed_form FROM greek_morphology'
+	dbcursor.execute(q)
+	items = dbcursor.fetchall()
+
+	# note the problem with .isupper() at the bottom of this page...
+
+	islowercase = {i[0]: i[1].islower() for i in items}
+
+	q = 'SELECT dictionary_entry, xref_number FROM greek_lemmata'
+	dbcursor.execute(q)
+	items = dbcursor.fetchall()
+
+	fixme = dict()
+	for i in items:
+		xref = str(i[1])  # nice little type mismatch gotcha...
+		word = i[0]
+		low = True
+		try:
+			low = islowercase[xref]
+		except KeyError:
+			pass
+		if not low and '-' not in word:
+			# ἐπί-ὤζω should not turn into Ἐπί-ὤζω...
+			fixme[word] = word.capitalize()
+
+	tabledata = [(k, fixme[k]) for k in fixme]
+
+	randomtableid = str().join([random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(8)])
+
+	tabletemplate = """
+	CREATE TEMPORARY TABLE tempmorph_{id}
+		( observed_form VARCHAR, revisedentry VARCHAR )
+	"""
+
+	qtemplate = 'INSERT INTO tempmorph_{id} (observed_form, revisedentry) VALUES %s'
+
+	dbcursor.execute(tabletemplate.format(id=randomtableid))
+	insertlistofvaluetuples(dbcursor, qtemplate.format(id=randomtableid), tabledata)
+
+
+	temptableupdater = """
+		UPDATE greek_lemmata SET dictionary_entry = tempmorph_{id}.revisedentry
+			FROM tempmorph_{id} 
+			WHERE 
+				greek_lemmata.dictionary_entry = tempmorph_{id}.observed_form"""
+
+	dbcursor.execute(temptableupdater.format(id=randomtableid))
+
+	return
+
+
+"""
+
+	Python 3.9.5 (default, May  4 2021, 03:36:27)
+	
+	Greek vs .isupper(): seems like .islower() is properly implemented but that .isupper() is not
+
+	>>> 'ζῳώδηϲ'.islower()
+	True
+	>>> 'Δημοϲθενικοί'.islower()
+	False
+	>>> 'Δημοϲθενικοί'.isupper()
+	False
+	>>> x = 'Ἀεὶ'
+	>>> x.islower()
+	False
+	>>> x.isupper()
+	False
+	>>> x = 'εἰϲ'
+	>>> x.isupper()
+	False
+	>>> x.islower()
+	True
+	>>> x = 'ἂν'
+	>>> x.islower()
+	True
+	>>> x.isupper()
+	False
+	>>> x= 'ὦ'
+	>>> x.isupper()
+	False
+	>>> x.islower()
+	True
+
+	>>> x.capitalize()
+	'Ὦ'
+	>>> 'ἂν'.capitalize()
+	'Ἂν'
+	
+"""

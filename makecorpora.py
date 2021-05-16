@@ -21,6 +21,7 @@ from builder import corpusbuilder
 from builder.configureatlaunch import getcommandlineargs, tobuildaccordingtoconfigfile
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.lexica.buildlexica import analysisloader, formatgklexicon, formatlatlexicon, grammarloader, fixmorphologytranslations
+from builder.lexica.fixmorphologydefs import fixgreeklemmatacapitalization
 from builder.wordcounting.databasewordcounts import monowordcounter
 from builder.sql.loadarchivedtablesfromsql import archivedsqlloader
 from builder.wordcounting.wordcountsbyheadword import headwordcounts
@@ -187,6 +188,7 @@ if __name__ == '__main__':
 			grammarloader('latin')
 			analysisloader('latin')
 			fixmorphologytranslations('greek')
+			fixgreeklemmatacapitalization()
 			fixmorphologytranslations('latin')
 			timestampthebuild('lm')
 		else:
