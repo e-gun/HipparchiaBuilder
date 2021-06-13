@@ -199,7 +199,7 @@ def fixgreeklemmatacapitalization():
 	dbcursor.execute(q)
 	items = dbcursor.fetchall()
 
-	# note the problem with .isupper() at the bottom of this page...
+	# note .isupper() only yields True if *all* chars are upper.
 
 	islowercase = {i[0]: i[1].islower() for i in items}
 
@@ -245,43 +245,3 @@ def fixgreeklemmatacapitalization():
 
 	return
 
-
-"""
-
-	Python 3.9.5 (default, May  4 2021, 03:36:27)
-	
-	Greek vs .isupper(): seems like .islower() is properly implemented but that .isupper() is not
-
-	>>> 'ζῳώδηϲ'.islower()
-	True
-	>>> 'Δημοϲθενικοί'.islower()
-	False
-	>>> 'Δημοϲθενικοί'.isupper()
-	False
-	>>> x = 'Ἀεὶ'
-	>>> x.islower()
-	False
-	>>> x.isupper()
-	False
-	>>> x = 'εἰϲ'
-	>>> x.isupper()
-	False
-	>>> x.islower()
-	True
-	>>> x = 'ἂν'
-	>>> x.islower()
-	True
-	>>> x.isupper()
-	False
-	>>> x= 'ὦ'
-	>>> x.isupper()
-	False
-	>>> x.islower()
-	True
-
-	>>> x.capitalize()
-	'Ὦ'
-	>>> 'ἂν'.capitalize()
-	'Ἂν'
-	
-"""

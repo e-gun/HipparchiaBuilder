@@ -9,6 +9,8 @@
 import argparse
 import configparser
 
+PSQLVERSION = 13
+
 
 def getcommandlineargs():
 	"""
@@ -30,6 +32,7 @@ def getcommandlineargs():
 	commandlineparser.add_argument('--gram', action='store_true', help='build the grammatical parsing databases')
 	commandlineparser.add_argument('--wordcounts', action='store_true', help='install the wordcounts')
 	commandlineparser.add_argument('--sqlloadwordcounts', action='store_true', help='load the wordcounts from HipparchiaLexicalData')
+	commandlineparser.add_argument('--pgversion', type=int, default=PSQLVERSION, help='[windows only] set the major version # for psql [default={v}'.format(v=PSQLVERSION))
 	commandlineargs = commandlineparser.parse_args()
 
 	return commandlineargs

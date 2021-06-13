@@ -14,9 +14,23 @@ import subprocess
 from pathlib import Path
 
 from builder.dbinteraction.connection import setconnection
+from builder.configureatlaunch import getcommandlineargs
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='utf8')
+
+
+commandlineargs = getcommandlineargs()
+
+try:
+	subprocess.run(['psql', '-V'])
+	WIN = str()
+except FileNotFoundError:
+	WIN = '/Program Files/PostgreSQL/{psq}/bin/psql.exe'.format(psq=commandlineargs.pgversion)
+	print('NOTE: assuming PostgreSQL installed at: "{p}"'.format(p=WIN))
+	print('but the major version number might be off; be prepared to edit the value of PSQLVERSION at the top of')
+	print('"configureatlaunch.py" inside of "/buidler/" AND/OR send the proper version via the command line:')
+	print('"./makecorpora.py --pgversion 14 ...')
 
 
 def archivedsqlloader(pathtosqlarchive: Path):
@@ -78,6 +92,11 @@ def archivedsqlloader(pathtosqlarchive: Path):
 		arguments.append('{p}'.format(p=config['db']['DBPORT']).strip())
 		arguments.append('-f')
 		arguments.append('{f}'.format(f=tempfile))
-		subprocess.run(arguments, env=theenv, stdout=subprocess.DEVNULL)
+		try:
+			subprocess.run(arguments, env=theenv, stdout=subprocess.DEVNULL)
+		except FileNotFoundError:
+			# Windows....
+			arguments[0] = WIN
+			subprocess.run(arguments, env=theenv, stdout=subprocess.DEVNULL)
 		tempfile.unlink()
 	return
