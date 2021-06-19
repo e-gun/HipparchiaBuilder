@@ -5,7 +5,7 @@
 	License: GNU GENERAL PUBLIC LICENSE 3
 		(see LICENSE in the top level directory of the distribution)
 """
-
+import json
 import random
 import re
 
@@ -39,6 +39,25 @@ def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
 
 	Dict version: "Build took 7.43 minutes"
 
+	possible_dictionary_forms is going to be JSON:
+		{'NUMBER': {
+				'headword': 'WORD',
+				'scansion': 'SCAN',
+				'xref_value': 'VAL',
+				'xref_kind': 'KIND',
+				'transl': 'TRANS',
+				'analysis': 'ANAL'
+			},
+		'NUMBER': {
+				'headword': 'WORD',
+				'scansion': 'SCAN',
+				'xref_value': 'VAL',
+				'xref_kind': 'KIND',
+				'transl': 'TRANS',
+				'analysis': 'ANAL'
+			},
+		...}
+
 	:param grammardb:
 	:param xreftranslations:
 	:param islatin:
@@ -55,9 +74,9 @@ def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
 	# save all work in a list and then update the morph table at the very end to avoid tons of read-and-write
 	newmorph = list()
 
-	morphtemplate = 'SELECT observed_form, xrefs, prefixrefs, possible_dictionary_forms FROM {lg}_morphology'.format(lg=language)
+	morphtemplate = 'SELECT observed_form, xrefs, prefixrefs, possible_dictionary_forms, related_headwords FROM {lg}_morphology'.format(lg=language)
 
-	possibilityfinder = re.compile(r'(<possibility_\d>)(.*?)(<xref_value>)(.*?)(</xref_value><xref_kind>.*?</xref_kind><transl>)(.*?)(</transl><analysis>.*?</analysis></possibility_\d{1,}>)')
+	# possibilityfinder = re.compile(r'(<possibility_\d>)(.*?)(<xref_value>)(.*?)(</xref_value><xref_kind>.*?</xref_kind><transl>)(.*?)(</transl><analysis>.*?</analysis></possibility_\d{1,}>)')
 
 	randomtableid = str().join([random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(8)])
 
@@ -77,30 +96,29 @@ def analysisrewriter(language: str, xreftranslations: dict, dbconnection=None):
 		# e[1]: xrefs
 		# e[2]: prefixrefs
 		# e[3]: possible_dictionary_forms
-		dictforms = e[3]
-		poss = re.findall(possibilityfinder, dictforms)
-		newposs = list()
-		for p in poss:
-			# p[0]: '<possibility_\d>'
-			# p[1]: 'lātrōnēs, latro²'
-			# p[2]: '<xref_value>'
-			# p[3]: '40409805'
-			# p[4]: '</xref_value><xref_kind>9</xref_kind><transl>'
-			# p[5]: 'a hired servant'
-			# p[6]: '</transl><analysis>masc acc pl</analysis></possibility_1>'
-			p = list(p)
+		possibilities = e[3]
+		newposs = dict()
+		for poss in possibilities:
+			p = possibilities[poss]
+			# {
+			# 		'headword': 'WORD',
+			# 		'scansion': 'SCAN',
+			# 		'xref_value': 'VAL',
+			# 		'xref_kind': 'KIND',
+			# 		'transl': 'TRANS',
+			# 		'analysis': 'ANAL'
+			# }
 			try:
-				p[5] = xreftranslations[p[3]]
+				p['transl'] = xreftranslations[p['xref_value']]
 				# 'translation' = xreftranslations['xrval']
-				# print('{p} in xrefs'.format(p=p[1]))
+				# print('{p} in xrefs'.format(p=p['headword']))
 			except KeyError:
 				# print('KeyError on {p}'.format(p=p[1]))
 				# there will be *plenty* of misses
 				pass
-			newp = str().join(p)
-			newposs.append(newp)
-		newposs = '\n'.join(newposs)
-		newmorph.append((e[0], e[1], e[2], newposs))
+			newposs[poss] = p
+		newposs = json.dumps(newposs)
+		newmorph.append((e[0], e[1], e[2], newposs, e[4]))
 
 	createandloadmorphtemptable(randomtableid, newmorph, dbconnection)
 
@@ -117,13 +135,18 @@ def createandloadmorphtemptable(tableid: str, tabledata: list, dbconnection):
 	"""
 
 	hipparchiaDB=# \d+ greek_morphology
-	                                               Table "public.greek_morphology"
-	          Column           |          Type          | Collation | Nullable | Default | Storage  | Stats target | Description
+												   Table "public.greek_morphology"
+			  Column           |          Type          | Collation | Nullable | Default | Storage  | Stats target | Description
 	---------------------------+------------------------+-----------+----------+---------+----------+--------------+-------------
 	 observed_form             | character varying(64)  |           |          |         | extended |              |
 	 xrefs                     | character varying(128) |           |          |         | extended |              |
 	 prefixrefs                | character varying(128) |           |          |         | extended |              |
-	 possible_dictionary_forms | text                   |           |          |         | extended |              |
+	 possible_dictionary_forms | jsonb                  |           |          |         | extended |              |
+	 related_headwords         | character varying(256) |           |          |         | extended |              |
+	Indexes:
+		"greek_analysis_trgm_idx" gin (related_headwords gin_trgm_ops)
+		"greek_morphology_idx" btree (observed_form)
+	Access method: heap
 
 	:param tableid:
 	:param tabledata:
@@ -137,10 +160,10 @@ def createandloadmorphtemptable(tableid: str, tabledata: list, dbconnection):
 
 	tabletemplate = """
 	CREATE TEMPORARY TABLE tempmorph_{id}
-		( observed_form VARCHAR, xrefs VARCHAR, prefixrefs VARCHAR, possible_dictionary_forms TEXT )
+		( observed_form VARCHAR, xrefs VARCHAR, prefixrefs VARCHAR, possible_dictionary_forms JSONB, related_headwords VARCHAR)
 	"""
 
-	qtemplate = 'INSERT INTO tempmorph_{id} (observed_form, xrefs, prefixrefs, possible_dictionary_forms) VALUES %s'
+	qtemplate = 'INSERT INTO tempmorph_{id} (observed_form, xrefs, prefixrefs, possible_dictionary_forms, related_headwords) VALUES %s'
 
 	dbcursor.execute(tabletemplate.format(id=tableid))
 

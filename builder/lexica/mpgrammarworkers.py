@@ -6,6 +6,7 @@
 		(see LICENSE in the top level directory of the distribution)
 """
 
+import json
 import re
 
 from psycopg2.extras import execute_values as insertlistofvaluetuples
@@ -104,6 +105,35 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 	each inset analysis is:
 		{xrefnumber digit ancientform1,ancientform2(TAB)translation(TAB)parsinginfo}
 
+	possible_dictionary_forms is going to be JSON:
+		{'NUMBER': {
+				'headword': 'WORD',
+				'scansion': 'SCAN',
+				'xref_value': 'VAL',
+				'xref_kind': 'KIND',
+				'transl': 'TRANS',
+				'analysis': 'ANAL'
+			},
+		'NUMBER': {
+				'headword': 'WORD',
+				'scansion': 'SCAN',
+				'xref_value': 'VAL',
+				'xref_kind': 'KIND',
+				'transl': 'TRANS',
+				'analysis': 'ANAL'
+			},
+		...}
+
+	note that scansion is meaningless for the greek words
+
+	 observed_form |   xrefs   | prefixrefs |                                                                      possible_dictionary_forms
+	 βάδην         | 18068282 |            | {"1": {"scansion": "", "headword": "\u03b2\u03ac\u03b4\u03b7\u03bd", "xref_value": "18068282", "xref_kind": "9", "transl": "step by step", "analysis": "indeclform (adverb)"}}
+	 βάδιζ'        | 18070850 |            | {"1": {"scansion": "\u03b2\u03ac\u03b4\u03b9\u03b6\u03b5", "headword": "\u03b2\u03b1\u03b4\u03af\u03b6\u03c9", "xref_value": "18070850", "xref_kind": "9", "transl": "walk", "analysis": "pres imperat act 2nd sg"}, "2": {"scansion": "\u03b2\u03ac\u03b4\u03b9\u03b6\u03b5", "headword": "\u03b2\u03b1\u03b4\u03af\u03b6\u03c9", "xref_value": "18070850", "xref_kind": "9", "transl": "walk", "analysis": "imperf ind act 3rd sg (homeric ionic)"}}
+	 βάδιζε        | 18070850 |            | {"1": {"scansion": "", "headword": "\u03b2\u03b1\u03b4\u03af\u03b6\u03c9", "xref_value": "18070850", "xref_kind": "9", "transl": "walk", "analysis": "pres imperat act 2nd sg"}, "2": {"scansion": "", "headword": "\u03b2\u03b1\u03b4\u03af\u03b6\u03c9", "xref_value": "18070850", "xref_kind": "9", "transl": "walk", "analysis": "imperf ind act 3rd sg (homeric ionic)"}}
+
+	 cubabunt      | 19418734 |            | {"1": {"scansion": "cuba\u0304bunt", "headword": "cubo", "xref_value": "19418734", "xref_kind": "9", "transl": " ", "analysis": "fut ind act 3rd pl"}}
+	 cubandi       | 19418734 |            | {"1": {"scansion": "cubandi\u0304", "headword": "cubo", "xref_value": "19418734", "xref_kind": "9", "transl": " ", "analysis": "gerundive masc nom/voc pl"}, "2": {"scansion": "cubandi\u0304", "headword": "cubo", "xref_value": "19418734", "xref_kind": "9", "transl": " ", "analysis": "gerundive neut gen sg"}, "3": {"scansion": "cubandi\u0304", "headword": "cubo", "xref_value": "19418734", "xref_kind": "9", "transl": " ", "analysis": "gerundive masc gen sg"}}
+
 	:param grammardb:
 	:param entries:
 	:param islatin:
@@ -131,20 +161,10 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 	formfinder = re.compile(r'(.*?\t){(.*?)}$')
 	analysisfinder = re.compile(r'(\d+)\s(\d)\s(.*?)\t(.*?)\t(.*?$)')
 
-	qtemplate = 'INSERT INTO {gdb} (observed_form, xrefs, prefixrefs, possible_dictionary_forms) VALUES %s'
+	qtemplate = 'INSERT INTO {gdb} (observed_form, xrefs, prefixrefs, possible_dictionary_forms, related_headwords) VALUES %s'
 	query = qtemplate.format(gdb=grammardb)
 
-	ptemplate = list()
-	ptemplate.append('<possibility_{p}>{wd}')
-	ptemplate.append('<xref_value>{xrv}</xref_value>')
-	ptemplate.append('<xref_kind>{xrk}</xref_kind>')
-	ptemplate.append('<transl>{t}</transl>')
-	ptemplate.append('<analysis>{a}</analysis>')
-	ptemplate.append('</possibility_{p}>\n')
-	ptemplate = str().join(ptemplate)
-
 	bundlesize = 1000
-
 	while entries:
 		bundelofrawentries = list()
 		for e in range(bundlesize):
@@ -192,7 +212,10 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 				# <possibility_1>ἠχήϲαϲα, ἠχέω<xref_value>50902522</xref_value><xref_kind>9</xref_kind><transl>sound</transl><analysis>aor part act fem nom/voc sg (attic epic ionic)</analysis></possibility_1>
 
 				number = 0
+				pdict = dict()
+				hw = set()
 				for found in analysislist:
+					adict = dict()
 					elements = re.search(analysisfinder, found)
 					number += 1
 					if islatin is True:
@@ -201,13 +224,23 @@ def mpanalysisinsert(grammardb, entries, islatin, dbconnection):
 					else:
 						wd = greekwithoutvowellengths(elements.group(3).upper())
 						wd = re.sub(r'\d', superscripterzero, wd)
-					wd = re.sub(r',', r', ', wd)
-					possibilities.append(ptemplate.format(p=number, wd=wd, xrv=elements.group(1), xrk=elements.group(2), t=elements.group(4), a=elements.group(5)))
+					sp = wd.split(',')
+					if len(sp) > 1:
+						adict['scansion'] = sp[0]
+					else:
+						adict['scansion'] = str()
 
-				ptext = str().join(possibilities)
-				# ptext = re.sub(r'\n', str(), ptext)
-
-				bundelofcookedentries.append(tuple([observedform, xrefs, prefixrefs, ptext]))
+					adict['headword'] = sp[-1]
+					adict['xref_value'] = elements.group(1)
+					adict['xref_kind'] = elements.group(2)
+					adict['transl'] = elements.group(4)
+					adict['analysis'] = elements.group(5)
+					pdict[number] = adict
+					hw.add(sp[-1])
+					# note that this would be a moment where HServer's _getgreekbaseform(), etc could be used
+				j = json.dumps(pdict)
+				h = ' '.join(hw)
+				bundelofcookedentries.append(tuple([observedform, xrefs, prefixrefs, j, h]))
 
 		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
 

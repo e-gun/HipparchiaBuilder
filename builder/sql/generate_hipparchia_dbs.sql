@@ -154,7 +154,10 @@ CREATE INDEX gklemm_idx
 CREATE TABLE public.greek_morphology
 (
   observed_form character varying(64),
-  possible_dictionary_forms text
+  xrefs character varying(128),
+  prefixrefs character varying(128),
+  possible_dictionary_forms jsonb,
+  related_headwords character varying(256)
 )
 WITH (
   OIDS=FALSE
@@ -236,8 +239,11 @@ CREATE INDEX latlemm_idx
 
 CREATE TABLE public.latin_morphology
 (
-  observed_form character varying(64),
-  possible_dictionary_forms text
+    observed_form             character varying(64),
+    xrefs                     character varying(128),
+    prefixrefs                character varying(128),
+    possible_dictionary_forms jsonb,
+    related_headwords         character varying(256)
 )
 WITH (
   OIDS=FALSE

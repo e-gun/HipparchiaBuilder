@@ -140,6 +140,9 @@ def grammarloader(language: str):
 
 	print('loading', language, 'lemmata.', len(entries), 'items to load')
 
+	# print('TRUNCATING GRAM FOR DEBUGGING')
+	# entries = entries[:5000]
+
 	manager = Manager()
 	entries = manager.list(entries)
 
@@ -202,6 +205,9 @@ def analysisloader(language: str):
 	# http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks#1751478
 	print('loading {lg} morphology. {n} items to load'.format(lg=language, n=len(forms)))
 
+	# print('TRUNCATING ANAL FOR DEBUGGING')
+	# forms = forms[:5000]
+
 	chunksize = 50000
 	formbundles = [forms[i:i + chunksize] for i in range(0, len(forms), chunksize)]
 	bundlecount = 0
@@ -220,11 +226,10 @@ def analysisloader(language: str):
 			# this check prevents saying '950000 forms inserted' at the end when there are only '911871 items to load'
 			print('\t', str(bundlecount * chunksize), 'forms inserted')
 
-	# we will be doing some searches inside of possible_dictionary_forms: need the right kind of index for it
 	dbconnection = setconnection()
 	dbcursor = dbconnection.cursor()
 
-	q = 'CREATE INDEX {l}_analysis_trgm_idx ON {l}_morphology USING GIN ( possible_dictionary_forms gin_trgm_ops)'.format(l=language)
+	q = 'CREATE INDEX {l}_analysis_trgm_idx ON {l}_morphology USING GIN ( related_headwords gin_trgm_ops)'.format(l=language)
 	dbcursor.execute(q)
 
 	dbconnection.connectioncleanup()
@@ -418,7 +423,7 @@ def getlexicaltablestructuredict(tablename: str) -> dict:
 			'columns': ['dictionary_entry character varying(64)', 'xref_number integer', 'derivative_forms text[]'],
 			'index': 'dictionary_entry'},
 		'analysis': {
-			'columns': ['observed_form character varying(64)', 'xrefs character varying(128)', 'prefixrefs character varying(128)', 'possible_dictionary_forms text'],
+			'columns': ['observed_form character varying(64)', 'xrefs character varying(128)', 'prefixrefs character varying(128)', 'possible_dictionary_forms jsonb', 'related_headwords character varying(256)'],
 			'index': 'observed_form'},
 		'latin_dictionary': {
 			'columns': ['entry_name character varying(256)', 'metrical_entry character varying(256)', 'id_number real',
