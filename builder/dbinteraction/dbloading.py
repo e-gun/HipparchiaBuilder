@@ -5,8 +5,13 @@
 	License: GNU GENERAL PUBLIC LICENSE 3
 		(see LICENSE in the top level directory of the distribution)
 """
+
 import io
 import json
+
+import psycopg2
+
+from click import secho
 
 from builder.dbinteraction.dbhelperfunctions import workmaker
 
@@ -33,6 +38,21 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 	:param cursor:
 	:param dbconnection:
 	:return:
+	"""
+
+	failmessage = """not every version of psychopg2 knows how to do streamcopy: recent versions broke this function
+	you need to install psycopg2==2.8.5
+	try the following: 
+	
+		~/hipparchia_venv/bin/pip3 install psycopg2==2.8.5
+		
+		if this fails and tells you near the end 
+			"./psycopg/psycopg.h:36:10: fatal error: libpq-fe.h: No such file or directory"
+		
+		then you need "libpq-dev"
+		
+		on ubuntu:
+			sudo apt install libpq-dev
 	"""
 
 	dbcursor = dbconnection.cursor()
@@ -64,7 +84,11 @@ def insertworksintoauthortable(authorobject, dbreadyversion, dbconnection):
 
 	table = authorobject.universalid
 
-	dbcursor.copy_from(stream, table, sep=separator, columns=columns)
+	try:
+		dbcursor.copy_from(stream, table, sep=separator, columns=columns)
+	except psycopg2.errors.UndefinedTable:
+		print('UndefinedTable:', table)
+		secho(failmessage, fg='red')
 
 	return
 

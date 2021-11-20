@@ -267,7 +267,12 @@ def managedworker(managedwork, dbconnection):
 
 		if thework:
 			result = addoneauthor(thework[0], thework[1], thework[2], thework[3], thework[4], dbconnection)
-			print(re.sub(r'[^\x00-\x7F]+', ' ', result))
+			msg = re.sub(r'[^\x00-\x7F]+', ' ', result)
+			print('\t{msg}'.format(msg=msg))
+
+		r = len(managedwork)
+		if r > 0 and not r % 50:
+			print('{r} items remain'.format(r=r))
 
 	return
 
