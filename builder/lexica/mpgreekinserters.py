@@ -100,12 +100,19 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 				pass
 
 		bundelofcookedentries = list()
+
 		for entry in bundelofrawentries:
+			if not entry:
+				continue
 			idval = 0
 			entry = forcelunates(entry)
 			entry = htmltounicode(entry, brevefinder=brevefinder, macrfinder=macrfinder)
 			segments = re.search(bodyfinder, entry)
-			info = segments.group(2)
+			try:
+				info = segments.group(2)
+			except AttributeError:
+				# AttributeError: 'NoneType' object has no attribute 'group'
+				info = str()
 			parsedinfo = re.search(parsedinfofinder, info)
 			headinfo = re.search(headfinder, entry)
 
@@ -123,10 +130,15 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 			try:
 				entryname = headinfo.group(5)
 			except AttributeError:
+
 				# <div2 id="crossa)lhmenai" orig_id="n4097a" key="a)lhmenai" type="main" opt="n"><head extent="full" lang="greek" opt="n">ἀλήμεναι</head>, <orth extent="full" lang="greek" opt="n">ἀλῆναι</orth>, v. εἴλω.</div2>
 				altheadfinder = re.compile(r'<head extent="(.*?)" lang="(.*?)" opt="(.*?)">(.*?)</head>')
 				headinfo = re.search(altheadfinder, entry)
-				entryname = headinfo.group(4)
+				try:
+					entryname = headinfo.group(4)
+				except AttributeError:
+					# we are in serious trouble: blank XML lines, etc?
+					continue
 				# print('altheadfinder invoked. yielded {e}'.format(e=entryname))
 
 			# it is possible that the entryname is off:
@@ -155,7 +167,8 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 				body = segments.group(3)
 			except AttributeError:
 				body = str()
-				print('died at', idstring, entry)
+				# you did not run "logeion_whitespace_cleaner.sh"?
+				print('died at', entryname)
 
 			# retag translations
 			body = re.sub(r'<i>(.*?)</i>', r'<trans>\1</trans>', body)
