@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 	HipparchiaBuilder: compile a database of Greek and Latin texts
-	Copyright: E Gunderson 2016-21
+	Copyright: E Gunderson 2016-22
 	License: GNU GENERAL PUBLIC LICENSE 3
 		(see LICENSE in the top level directory of the distribution)
 """
@@ -12,7 +12,7 @@ from datetime import datetime
 from builder.dbinteraction.connection import setconnection
 
 
-hipparchiabuilderversion = '1.5.0'
+hipparchiabuilderversion = '1.5.1'
 #sqltemplateversion = 7242017
 #sqltemplateversion = 2242018
 #sqltemplateversion = 10082019
