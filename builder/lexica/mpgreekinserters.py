@@ -139,7 +139,6 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 				keyentryname = parsedinfo.group(2)
 				if re.search(r'\d$', keyentryname):
 					entryname = greekwithvowellengths(keyentryname)
-					print(entryname)
 			except AttributeError:
 				# <div2 id="crossa)lhmenai" orig_id="n4097a" key="a)lhmenai" type="main" opt="n"><head extent="full" lang="greek" opt="n">ἀλήμεναι</head>, <orth extent="full" lang="greek" opt="n">ἀλῆναι</orth>, v. εἴλω.</div2>
 				altheadfinder = re.compile(r'<head extent="(.*?)" lang="(.*?)" opt="(.*?)">(.*?)</head>')
@@ -147,8 +146,10 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 				try:
 					entryname = headinfo.group(4)
 				except AttributeError:
-					# we are in serious trouble: blank XML lines, etc?
+					# the following generates only blank lines
+					# print('continuing:', entry)
 					continue
+				# the following will produce 3 results: φένω, ἀλήμεναι, α
 				# print('altheadfinder invoked. yielded {e}'.format(e=entryname))
 
 			# it is possible that the entryname is off:
@@ -170,7 +171,7 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 				abcval = ord(idstring[-1]) - 96
 				idstring = int(idstring[:-1])
 				idval = idstring + (.1 * abcval)
-				# print('newid', entryname, idstring)
+				# print('ValueError', entryname, idstring, idval)
 			except TypeError:
 				# did the exception above already set idval?
 				if not idval:
@@ -181,7 +182,7 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 			except AttributeError:
 				body = str()
 				# you did not run "logeion_whitespace_cleaner.sh"?
-				print('died at', entryname)
+				print('mpgreekinserter died at', entryname)
 
 			# retag translations
 			body = re.sub(r'<i>(.*?)</i>', r'<trans>\1</trans>', body)
