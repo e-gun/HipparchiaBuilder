@@ -129,8 +129,18 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 			# headfinder = re.compile(r'<head extent="(.*?)" lang="(.*?)" opt="(.*?)" orth_orig="(.*?)">(.*?)</head>')
 			try:
 				entryname = headinfo.group(5)
-			except AttributeError:
 
+				# "key" contains "1" and "2", information that is otherwise going to get lost: χράω¹ vs χράω²
+				# nevertheless it is not clear that it is perfectly safe to just use parsedinfo.group(2) instead of
+				# headinfo.group(5) in every case: δυνατοὶ lost its hook to its dictionary entry when we tried this
+				# something to dig into some day...
+
+				# r'orig_id="(.*?)" key="(.*?)" type="(.*?)" opt="(.*?)"'
+				keyentryname = parsedinfo.group(2)
+				if re.search(r'\d$', keyentryname):
+					entryname = greekwithvowellengths(keyentryname)
+					print(entryname)
+			except AttributeError:
 				# <div2 id="crossa)lhmenai" orig_id="n4097a" key="a)lhmenai" type="main" opt="n"><head extent="full" lang="greek" opt="n">ἀλήμεναι</head>, <orth extent="full" lang="greek" opt="n">ἀλῆναι</orth>, v. εἴλω.</div2>
 				altheadfinder = re.compile(r'<head extent="(.*?)" lang="(.*?)" opt="(.*?)">(.*?)</head>')
 				headinfo = re.search(altheadfinder, entry)
@@ -147,7 +157,10 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 			entryname = re.sub(cleanentryname, r'\1', entryname)
 
-			metrical = headinfo.group(4)
+			try:
+				metrical = headinfo.group(4)
+			except AttributeError:
+				metrical = str()
 
 			try:
 				idval = int(re.sub(r'^n', '', idstring))
