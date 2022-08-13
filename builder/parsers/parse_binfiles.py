@@ -46,6 +46,8 @@ def resetbininfo(relativepath, dbconnection):
 	genres = buildlabellist(relativepath + bininfo['genre_clx'])
 	epithets = buildlabellist(relativepath + bininfo['epithet'])
 	locations = buildlabellist(relativepath + bininfo['location'])
+	# print('locations', locations)
+	# {'Abdera': ['0218', '0714', '1304', '1390', '1461', '1635', '2153'], 'Adramytteum': ['0174'], 'Aegae': ['1504'], ... }
 	canonfile = relativepath + bininfo['canon']
 	dates = buildlabellist(relativepath + bininfo['recorded_date'])
 	numdates = convertdatelist(dates)
@@ -68,14 +70,11 @@ def resetbininfo(relativepath, dbconnection):
 	dbloadlist(cleandates, 'recorded_date', dbconnection)
 	dbloadlist(numdates, 'converted_date', dbconnection)
 
-	dbconnection.commit()
-
 	# canoninfo: do this last so that you can reset shortname
 	print('\treading canon file')
 	loadgkcanon(canonfile)
 
 	return
-
 
 def npop(numbertopop, listtopop):
 	ret = list()
@@ -551,7 +550,7 @@ def insertlatingenres(dbconnection):
 	genres = list()
 	for w in works:
 		if w[0:6] in authortranslator:
-			genres.append((w,authortranslator[w[0:6]]))
+			genres.append((w, authortranslator[w[0:6]]))
 
 	for g in genres:
 		q = 'UPDATE works SET workgenre=%s WHERE universalid=%s'

@@ -350,3 +350,90 @@ def mpindexbuilder(universalids, commitcount, dbconnection):
 				print('\t', commitcount.value, 'indices created')
 
 	return
+
+
+def noblankauthorcolumns():
+	print('\tno empty locations or genres in the author tables')
+	dbconnection = setconnection()
+	for item in ['location', 'genres']:
+		cursor = dbconnection.cursor()
+		q = 'SELECT universalid FROM authors WHERE {item} IS NULL'.format(item=item)
+
+		cursor.execute(q)
+		authors = cursor.fetchall()
+		authors = [a[0] for a in authors]
+
+		for a in authors:
+			query = 'UPDATE authors SET {item}=%s WHERE universalid=%s'.format(item=item)
+			data = ('Unavailable', a)
+			cursor.execute(query, data)
+		dbconnection.commit()
+
+	print('\tno blank author dates')
+
+	q = 'SELECT universalid FROM authors WHERE converted_date IS NULL'
+
+	cursor.execute(q)
+	authors = cursor.fetchall()
+	authors = [a[0] for a in authors]
+
+	for a in authors:
+		query = 'UPDATE authors SET converted_date=%s WHERE universalid=%s'
+		data = (2500, a)
+		cursor.execute(query, data)
+	dbconnection.commit()
+	dbconnection.connectioncleanup()
+
+	return
+
+
+def noblankworkdata():
+
+	dbconnection = setconnection()
+	cursor = dbconnection.cursor()
+
+	defaultvals = {
+		'provenance': 'Unavailable',
+		'recorded_date': 'Unavailable',
+		'converted_date': 2500,
+		'authentic': True,
+		'worktype': 'Unavailable',
+		'workgenre': 'Unavailable',
+		'transmission': 'Unavailable',
+	}
+
+	for d in defaultvals:
+		print('\tno blank values for {d}'.format(d=d))
+		loadingcolumns = ['universalid', d]
+		q = 'SELECT universalid FROM works WHERE {d} IS NULL'.format(d=d)
+		cursor.execute(q)
+		works = cursor.fetchall()
+		works = [a[0] for a in works]
+
+		q = 'CREATE TEMP TABLE tmp_works AS SELECT * FROM works LIMIT 0'
+		cursor.execute(q)
+
+		pgcopydata = ['{a}\t{b}'.format(a=w, b=defaultvals[d]) for w in works]
+
+		rawio = io.StringIO()
+		rawio.write('\n'.join(pgcopydata))
+		rawio.seek(0)
+
+		cursor.copy_from(rawio, 'tmp_works', columns=loadingcolumns)
+		dbconnection.commit()
+		q = 'UPDATE works SET {d} = tmp_works.{d} FROM tmp_works WHERE works.universalid = tmp_works.universalid'.format(d=d)
+		cursor.execute(q)
+		dbconnection.commit()
+
+		q = 'DROP TABLE tmp_works'
+		cursor.execute(q)
+
+		# for a in works:
+		# 	query = 'UPDATE works SET authentic=%s WHERE universalid=%s'
+		# 	data = (True, a)
+		# 	cursor.execute(query, data)
+		dbconnection.commit()
+
+	dbconnection.connectioncleanup()
+
+	return

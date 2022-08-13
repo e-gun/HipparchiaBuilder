@@ -137,8 +137,9 @@ def dbauthoradder(authorobject, dbconnection):
 			VALUES 
 				(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 			"""
+	# no empty values in recorded_date or location
 	data = (uid, lang, authorobject.idxname, authorobject.aka, authorobject.shortname, authorobject.cleanname,
-			authorobject.genre, '', None, '')
+			authorobject.genre, 'Unavailable', None, 'Unavailable')
 	try:
 		cursor.execute(query, data)
 	except Exception as e:

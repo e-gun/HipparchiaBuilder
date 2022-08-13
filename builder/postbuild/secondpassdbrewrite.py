@@ -772,20 +772,28 @@ def modifyauthorsdb(newentryname: str, worktitle: str, dbcursor):
 		except AttributeError:
 			short = aka
 
+	# don't leave 'genres', 'location', or 'converted_date' blank
+	rd = 'Varia'
+	gen = 'Inscriptions'
+	cd = 2500
+
+
 	# do if... else... so that you don't do A then B (and pay the UPDATE price)
 	if newentryname[0:2] in ['in', 'ch']:
 		# inscription 'authors' can set their location via their idxname
 		loc = re.search(r'(.*?)\s\(', worktitle)
 		loc = loc.group(1)
 		loc = forceregexsafevariants(loc)
-		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, location, recorded_date) ' \
-				' VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
-		d = (newentryname, 'G', idx, aka, short, clean, loc, 'Varia')
+		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, location, recorded_date, converted_date, genres) ' \
+				' VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+		d = (newentryname, 'G', idx, aka, short, clean, loc, rd, cd, gen)
 		dbcursor.execute(q, d)
 	else:
-		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, recorded_date) ' \
-				' VALUES (%s, %s, %s, %s, %s, %s, %s)'
-		d = (newentryname, 'G', idx, aka, short, clean, 'Varia')
+		# documentary papyri
+		loc = 'Various'
+		q = 'INSERT INTO authors (universalid, language, idxname, akaname, shortname, cleanname, location, recorded_date, converted_date, genres) ' \
+				' VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+		d = (newentryname, 'G', idx, aka, short, clean, loc, rd, cd, gen)
 		dbcursor.execute(q, d)
 
 	return

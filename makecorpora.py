@@ -7,8 +7,8 @@
 """
 
 import configparser
-import time
 import multiprocessing
+import time
 from multiprocessing import freeze_support
 from pathlib import Path
 
@@ -21,6 +21,7 @@ from builder import corpusbuilder
 from builder.configureatlaunch import getcommandlineargs, tobuildaccordingtoconfigfile
 from builder.dbinteraction.versioning import timestampthebuild
 from builder.lexica.buildlexica import analysisloader, formatgklexicon, formatlatlexicon, grammarloader, fixmorphologytranslations
+from builder.postbuild.postbuildmetadata import noblankauthorcolumns, noblankworkdata
 from builder.lexica.fixmorphologydefs import fixgreeklemmatacapitalization
 from builder.wordcounting.databasewordcounts import monowordcounter
 from builder.sql.loadarchivedtablesfromsql import archivedsqlloader
@@ -154,6 +155,10 @@ if __name__ == '__main__':
 		corpusbuilder.buildcorpusdbs(corpusname, corpusvars)
 		corpusbuilder.remaptables(corpusname, corpusvars)
 		corpusbuilder.buildcorpusmetadata(corpusname, corpusvars)
+
+	print('regularizing author and work tables')
+	noblankauthorcolumns()
+	noblankworkdata()
 
 	#
 	# lexica, etc
