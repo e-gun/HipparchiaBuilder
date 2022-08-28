@@ -13,6 +13,7 @@ from psycopg2.extras import execute_values as insertlistofvaluetuples
 
 from builder.dbinteraction.connection import setconnection
 from builder.lexica.repairperseuscitations import perseusworkmappingfixer
+from builder.lexica.lexicalxmltohtml import dbGreekWord, dbLatinWord, lexicalOutputObject
 from builder.lexica.fixtranslationtagging import greektranslationtagrepairs
 from builder.parsers.betacodeandunicodeinterconversion import cleanaccentsandvj
 from builder.parsers.htmltounicode import htmltounicode
@@ -84,7 +85,7 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 	qtemplate = """
 	INSERT INTO {d} 
-		(entry_name, metrical_entry, unaccented_entry, id_number, pos, translations, entry_body)
+		(entry_name, metrical_entry, unaccented_entry, id_number, pos, translations, entry_body, html_body)
 		VALUES %s"""
 	query = qtemplate.format(d=dictdb)
 
@@ -257,7 +258,11 @@ def mpgreekdictionaryinsert(dictdb: str, entries: list, dbconnection):
 				print('at {n}: {e}'.format(n=idval, e=entryname))
 
 			memory = idval
-			bundelofcookedentries.append(tuple([entryname, metrical, stripped, idval, pos, translations, body]))
+			wo = dbGreekWord(entryname, metrical, idval, pos, translations, body, stripped)
+			oo = lexicalOutputObject(wo, "greek")
+			htm = oo.generatelexicaloutput()
+
+			bundelofcookedentries.append(tuple([entryname, metrical, stripped, idval, pos, translations, body, htm]))
 
 		# insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
 

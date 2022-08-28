@@ -44,6 +44,7 @@ def formatgklexicon():
 	print('formatting Liddell and Scott. {e} entries to parse'.format(e=len(entries)))
 
 	# testing
+	# print("formatgklexicon() not attempting to build whole lexicon...")
 	# entries = entries[1000:1010]
 
 	if config['lexica']['greeklexicon'] == 'greek-lexicon_1999.04.0057.xml':
@@ -427,11 +428,11 @@ def getlexicaltablestructuredict(tablename: str) -> dict:
 			'index': 'observed_form'},
 		'latin_dictionary': {
 			'columns': ['entry_name character varying(256)', 'metrical_entry character varying(256)', 'id_number real',
-						'entry_key character varying(64)', 'pos character varying(64)', 'translations text', 'entry_body text'],
+						'entry_key character varying(64)', 'pos character varying(64)', 'translations text', 'entry_body text', 'html_body text'],
 			'index': 'entry_name'},
 		'greek_dictionary': {
 			'columns': ['entry_name character varying(256)', 'metrical_entry character varying(256)', 'unaccented_entry character varying(256)',
-						'id_number real', 'pos character varying(64)', 'translations text', 'entry_body text'],
+						'id_number real', 'pos character varying(64)', 'translations text', 'entry_body text', 'html_body text'],
 			'index': 'entry_name'}
 	}
 

@@ -14,6 +14,7 @@ from psycopg2.extras import execute_values as insertlistofvaluetuples
 from builder.dbinteraction.connection import setconnection
 from builder.lexica.fixtranslationtagging import latintranslationtagrepairs
 from builder.lexica.repairperseuscitations import latindramacitationformatconverter, oneofflatinworkremapping
+from builder.lexica.lexicalxmltohtml import dbGreekWord, dbLatinWord, lexicalOutputObject
 from builder.parsers.htmltounicode import htmltounicode
 from builder.parsers.lexicalparsing import greekwithvowellengths, latinvowellengths, translationsummary
 from builder.parsers.swappers import superscripterone
@@ -56,7 +57,7 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 
 	qtemplate = """
 	INSERT INTO {d} 
-		(entry_name, metrical_entry, id_number, entry_key, pos, translations, entry_body)
+		(entry_name, metrical_entry, id_number, entry_key, pos, translations, entry_body, html_body)
 		VALUES %s"""
 	query = qtemplate.format(d=dictdb)
 
@@ -145,7 +146,12 @@ def oldmplatindictionaryinsert(dictdb: str, entries: list, dbconnection):
 					body = oneofflatinworkremapping(body)
 				if idnum % 10000 == 0:
 					print('at {n}: {e}'.format(n=idnum, e=entryname))
-				bundelofcookedentries.append(tuple([entryname, metricalentry, idnum, key, pos, translationlist, body]))
+
+				wo = dbLatinWord(entryname, metricalentry, idnum, pos, translationlist, body, key)
+				oo = lexicalOutputObject(wo, "latin")
+				htm = oo.generatelexicaloutput()
+
+				bundelofcookedentries.append(tuple([entryname, metricalentry, idnum, key, pos, translationlist, body, htm]))
 
 		insertlistofvaluetuples(dbcursor, query, bundelofcookedentries)
 
