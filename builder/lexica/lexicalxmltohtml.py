@@ -800,12 +800,15 @@ class lexicalOutputObject(object):
         return fullentry
 
     def generatelexicaloutput(self, countervalue=None) -> str:
-        divtemplate = '<div id="{wd}_{idx}">\n{entry}\n</div>'
-        if countervalue:
-            headingstr = '<hr /><p class="dictionaryheading" id={wd}_{wordid}>({cv})&nbsp;{ent}'
-        else:
-            headingstr = '<hr /><p class="dictionaryheading" id={wd}_{wordid}>{ent}'
-        metricsstr = '&nbsp;<span class="metrics">[{me}]</span>'
+        divtemplate = '{entry}'
+        # divtemplate = '<div id="{wd}_{idx}">\n{entry}\n</div>'
+        headingstr = ''
+        metricsstr = ''
+        # if countervalue:
+        #     headingstr = '<hr /><p class="dictionaryheading" id={wd}_{wordid}>({cv})&nbsp;{ent}'
+        # else:
+        #     headingstr = '<hr /><p class="dictionaryheading" id={wd}_{wordid}>{ent}'
+        # metricsstr = '&nbsp;<span class="metrics">[{me}]</span>'
         codestr = '&nbsp;<code>[ID: {wordid}]</code>'
         xrefstr = '&nbsp;<code>[XREF: {xref}]</code>'
 
@@ -850,7 +853,7 @@ class lexicalOutputObject(object):
         fullentry = '\n'.join(outputlist)
 
         #fullentry = divtemplate.format(wd=self.thisheadword, idx=findparserxref(w), entry=fullentry)
-        fullentry = divtemplate.format(wd=self.thisheadword, idx="", entry=fullentry)
+        fullentry = divtemplate.format(entry=fullentry)
         return fullentry
 
 
