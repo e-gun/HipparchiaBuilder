@@ -98,7 +98,7 @@ corpusvars = {
 	'inscriptions':
 			{'dataprefix': 'INS',
 			'datapath': config['io']['ins'],
-			'tmpprefix': 'XX',
+			'tmpprefix': 'xx',
 			'corpusabbrev': 'in',
 			'maxfilenumber': 8000,  # 8000+ are bibliographies
 			'minfilenumber': 0,
@@ -108,7 +108,7 @@ corpusvars = {
 	'papyri':
 			{'dataprefix': 'DDP',
 			'datapath': config['io']['ddp'],
-			'tmpprefix': 'YY',
+			'tmpprefix': 'yy',
 			'corpusabbrev': 'dp',
 			'maxfilenumber': 5000,  # maxval is 213; checklist at 9999
 			'minfilenumber': 0,
@@ -118,7 +118,7 @@ corpusvars = {
 	'christians':
 			{'dataprefix': 'CHR',
 			'datapath': config['io']['chr'],
-			'tmpprefix': 'ZZ',
+			'tmpprefix': 'zz',
 			'corpusabbrev': 'ch',
 			'maxfilenumber': 5000,  # maxval is 140; bibliographies at 9900 and 9910
 			'minfilenumber': 0,

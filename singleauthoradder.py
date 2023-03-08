@@ -68,9 +68,9 @@ if commandlineargs.skipdbload:
 mapper = {
 	'TLG': {'lg': 'G', 'db': tlg, 'uidprefix': 'gr', 'datapath': config['io']['tlg'], 'tmpprefix': None},
 	'LAT': {'lg': 'L', 'db': phi, 'uidprefix': 'lt', 'datapath': config['io']['phi'], 'tmpprefix': None},
-	'INS': {'lg': 'G', 'db': ins, 'uidprefix': 'in', 'datapath': config['io']['ins'], 'tmpprefix': 'XX'},
-	'DDP': {'lg': 'G', 'db': ddp, 'uidprefix': 'dp', 'datapath': config['io']['ddp'], 'tmpprefix': 'YY'},
-	'CHR': {'lg': 'G', 'db': chr, 'uidprefix': 'ch', 'datapath': config['io']['chr'], 'tmpprefix': 'ZZ'},
+	'INS': {'lg': 'G', 'db': ins, 'uidprefix': 'in', 'datapath': config['io']['ins'], 'tmpprefix': 'xx'},
+	'DDP': {'lg': 'G', 'db': ddp, 'uidprefix': 'dp', 'datapath': config['io']['ddp'], 'tmpprefix': 'yy'},
+	'CHR': {'lg': 'G', 'db': chr, 'uidprefix': 'ch', 'datapath': config['io']['chr'], 'tmpprefix': 'zz'},
 	}
 
 dataprefix = debugauthor[0:3]
